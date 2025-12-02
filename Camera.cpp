@@ -1,24 +1,27 @@
+/*
+* ファイル名	Camera.cpp
+* タイトル	カメラ
+* 作成者		鈴木豪
+* 作成日		12月02日
+* 更新日		12月02日
+*/
 
-//Camera.cpp
+#include"Camera.h"
+#include"keyboard.h"
+#include"Player.h"
+#include"Player2.h"
+#include"Viewport.h"
+#include"shader.h"
 
-
-#include	"Camera.h"
-#include	"keyboard.h"
-#include	"Player.h"
-#include	"Player2.h"
-#include    "Viewport.h"
-#include    "shader.h"
-
-//11/20今日はここまで
-
-//グローバル変数
+//================================================================
+//	グローバル変数
+//================================================================
 static	CAMERA	CameraObject;
 static	CAMERA  Camera2Object;
-
-XMFLOAT3		g_PlayerPosOld;//<<<<<<<<<<<<<<
+XMFLOAT3		g_PlayerPosOld;
 XMFLOAT3		g_Player2PosOld;
 
-void	Camera_Initialize()
+void Camera_Initialize()
 { 
 	CameraObject.Position = XMFLOAT3(0.0f, 3.0f, -4.0f);
 	CameraObject.AtPosition = XMFLOAT3(0.0f, 1.0f, 0.0f);
@@ -45,12 +48,12 @@ void	Camera_Initialize()
 	g_Player2PosOld = GetPlayer2Position();
 }
 
-void	Camera_Finalize()
+void Camera_Finalize()
 {
 	return;
 }
 
-void	Camera_Update()
+void Camera_Update()
 {
 	//ボールの座標取得<<<<<<<<<<<<<<<<<<<<<<
 	XMFLOAT3	pos = g_PlayerPosOld;//P1
@@ -225,7 +228,7 @@ void Camera2_Update()
 	return;
 }
 
-void	Camera_Draw()
+void Camera_Draw()
 { 
 	//P1プロジェクション行列作成
 	CameraObject.Projection = XMMatrixPerspectiveFovLH

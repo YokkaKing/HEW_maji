@@ -137,7 +137,6 @@
     <ClCompile Include="managerCollider.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="Camera.cpp" />
-    <ClCompile Include="collision.cpp" />
     <ClCompile Include="debug_ostream.cpp" />
     <ClCompile Include="direct3d.cpp" />
     <ClCompile Include="Effect.cpp" />
@@ -166,7 +165,6 @@
     <ClInclude Include="managerCollider.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="Camera.h" />
-    <ClInclude Include="collision.h" />
     <ClInclude Include="debug_ostream.h" />
     <ClInclude Include="direct3d.h" />
     <ClInclude Include="Effect.h" />

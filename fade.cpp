@@ -1,16 +1,25 @@
+/*
+* ファイル名	fade.cpp
+* タイトル	フェード
+* 作成者		久保木幹太
+* 作成日		12月02日
+* 更新日		12月02日
+*/
 
-//fade.cpp
+//================================================================
+//	インクルード
+//================================================================
+#include"fade.h"
+#include"shader.h"
 
-#include	"fade.h"
-#include	"shader.h"
-
+//================================================================
+//	グローバル変数
+//================================================================
 FadeObject	g_Fade;		//フェード処理構造体
 
 static	ID3D11ShaderResourceView* g_Texture = NULL;	//テクスチャ１枚を表すオブジェクト
 static ID3D11Device* g_pDevice = nullptr;
 static ID3D11DeviceContext* g_pContext = nullptr;
-
-
 
 void Fade_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {

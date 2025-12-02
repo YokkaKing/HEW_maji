@@ -1,16 +1,21 @@
+/*
+* ファイル名	Game.cpp
+* タイトル	ゲーム
+* 作成者		久保木幹太
+* 作成日		12月02日
+* 更新日		12月02日
+*/
 
-//Game.cpp
-
+//================================================================
+//	インクルード
+//================================================================
 #include"Manager.h"
 #include"sprite.h"
 #include"Game.h"
 #include"keyboard.h"
-//#include	"Controller.h"
-
 #include"field.h"
 #include"Effect.h"
 #include"Audio.h"
-
 #include"Camera.h"
 #include"fade.h"
 #include"Player.h"
@@ -18,14 +23,14 @@
 #include"terrain.h"
 #include"Player2.h"
 #include"Viewport.h"
+#include"direct3d.h"
 
-#include	"direct3d.h"//<<<<<<<<<<<<<<<<<<<
-
+//================================================================
+//	グローバル変数
+//================================================================
 LIGHTOBJECT		Light;//<<<<<<ライト管理オブジェクト
-
 // 全オブジェクト
 std::vector<GameObject*> g_gameObjects;
-
 static	int		g_BgmID = NULL;	//サウンド管理ID
 
 void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)

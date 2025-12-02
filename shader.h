@@ -9,9 +9,12 @@
 #ifndef SHADER_H
 #define	SHADER_H
 
-#include <d3d11.h>
-#include <DirectXMath.h>
-#include "direct3d.h"//<<<<<<<<<<<<<<
+//================================================================
+//	インクルード
+//================================================================
+#include<d3d11.h>
+#include<DirectXMath.h>
+#include"direct3d.h"//<<<<<<<<<<<<<<
 
 bool Shader_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
 void Shader_Finalize();

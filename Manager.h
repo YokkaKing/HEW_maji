@@ -1,6 +1,13 @@
+/*
+* ファイル名	Manger.h
+* タイトル	マネージャー
+* 作成者		久保木幹太
+* 作成日		12月02日
+* 更新日		12月02日
+*/
 
-//Manager.h
-#pragma once
+#ifndef MANAGER_H
+#define MANAGER_H
 
 enum SCENE
 {
@@ -18,3 +25,4 @@ void	Manager_Draw();
 
 void	SetScene(SCENE scene);
 
+#endif // MANAGER_H

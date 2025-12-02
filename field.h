@@ -1,16 +1,28 @@
+/*
+* ファイル名	field.h
+* タイトル	フィールド
+* 作成者		久保木幹太
+* 作成日		12月02日
+* 更新日		12月02日
+*/
 
-//field.h
-#pragma once
+#ifndef FIELD_H
+#define FIELD_H
 
+//================================================================
+//	マクロ定義
+//================================================================
+#define BOX_RADIUS (0.5f)
+
+//================================================================
+//	インクルード
+//================================================================
 #include <d3d11.h>
 #include <DirectXMath.h>
 #include "direct3d.h"
 #include "sprite.h"
 #include "shader.h"
 using namespace DirectX;
-
-#define BOX_RADIUS (0.5f)
-
 
 //MAP構成ブロックの種類
 enum FIELD
@@ -37,3 +49,5 @@ void Field_Draw(void);
 void Field_Update(void);
 
 MAPDATA* GetFieldMap();
+
+#endif // FIELD_H

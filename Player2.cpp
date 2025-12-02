@@ -1,5 +1,20 @@
-//Player2.cpp
+/*
+* ファイル名	Player2.cpp
+* タイトル	プレイヤー2
+* 作成者		鈴木豪
+* 作成日		12月02日
+* 更新日		12月02日
+*/
 
+//================================================================
+//	マクロ定義
+//================================================================
+#define JUMP_FORCE (0.15f)
+#define CLIMB_SPEED (JUMP_FORCE / 2.0f)
+
+//================================================================
+//	インクルード
+//================================================================
 #include"keyboard.h"
 #include"Player2.h"
 #include"Camera.h"
@@ -8,16 +23,15 @@
 #include"colliderFactory.h"
 #include"debug_ostream.h"
 
-#define JUMP_FORCE (0.15f)
-#define CLIMB_SPEED (JUMP_FORCE / 2.0f)
-
+//================================================================
+//	グローバル変数
+//================================================================
 //ボールオブジェクト
 PLAYER2	g_Player2;
-
 ID3D11Device* g_pDevice2;
 ID3D11DeviceContext* g_pContext2;
 
-void	Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
+void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
 	g_pDevice2 = pDevice;
 	g_pContext2 = pContext;
@@ -36,13 +50,8 @@ void	Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 
 	g_Player2.SetObject(g_Player2.m_position, g_Player2.m_scale, "Player2", 0);
 	EvolutionInitialize();
-
-	if (g_Player2.m_gameObject)
-	{
-		hal::dout << "登録した！！！\n";
-	}
 }
-void	Player2Finalize()
+void Player2Finalize()
 {
 	ModelRelease(g_Player2.m_model);
 }

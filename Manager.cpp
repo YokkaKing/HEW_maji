@@ -1,21 +1,28 @@
+/*
+* ファイル名	Manager.cpp
+* タイトル	マネージャー
+* 作成者		久保木幹太
+* 作成日		12月02日
+* 更新日		12月02日
+*/
 
-//Manager.cpp
+//================================================================
+//	インクルード
+//================================================================
+#include"direct3d.h"
+#include"Manager.h"
+#include"keyboard.h"
+#include"Game.h"
+#include"Title.h"
+#include"Result.h"
+#include"fade.h"
 
-#include "direct3d.h"
-#include "Manager.h"
-#include "keyboard.h"
-
-#include "Game.h"
-#include "Title.h"
-#include "Result.h"
-#include "fade.h"
-
-
-//グローバル変数
+//================================================================
+//	グローバル変数
+//================================================================
 static	SCENE	g_Scene = SCENE_NONE;	//現在のシーン番号
 
-
-void	Manager_Initialize()
+void Manager_Initialize()
 { 
 	Fade_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
 
@@ -33,13 +40,13 @@ void	Manager_Initialize()
 
 }
 
-void	Manager_Finalize()
+void Manager_Finalize()
 { 
 	Fade_Finalize();
 	SetScene(SCENE_NONE);
 }
 
-void	Manager_Update()
+void Manager_Update()
 {
 	switch (g_Scene)	//現在シーンのアップデート関数を呼び出す
 	{
@@ -62,7 +69,7 @@ void	Manager_Update()
 
 }
 
-void	Manager_Draw()
+void Manager_Draw()
 { 
 	switch (g_Scene)	//現在シーンの描画関数を呼び出す
 	{
@@ -85,7 +92,7 @@ void	Manager_Draw()
 
 }
 
-void	SetScene(SCENE scene) //シーンを切り替える
+void SetScene(SCENE scene) //シーンを切り替える
 {
 	//実行中のシーンを終了させる
 	switch (g_Scene)	//現在シーンの終了関数を呼び出す

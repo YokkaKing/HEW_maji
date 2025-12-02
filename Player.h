@@ -1,7 +1,17 @@
-#pragma once
+/*
+* ファイル名	Player.h
+* タイトル	プレイヤー
+* 作成者		久保木幹太
+* 作成日		12月02日
+* 更新日		12月02日
+*/
 
-//Player.h
+#ifndef PLAYER_H
+#define PLAYER_H
 
+//================================================================
+//	インクルード
+//================================================================
 #include<d3d11.h>
 #include<DirectXMath.h>
 #include"direct3d.h"
@@ -39,13 +49,15 @@ public:
 	void SetObject(XMFLOAT3 pos, XMFLOAT3 scl, std::string tag, int lay);
 };
 
-void	PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
-void	PlayerFinalize();
-void	PlayerUpdate();
-void	PlayerDraw();
+void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
+void PlayerFinalize();
+void PlayerUpdate();
+void PlayerDraw();
 
 XMFLOAT3 GetPlayerPosition();
 
 void Player_Jump();
 void Player_ManualMove();
 PLAYER* GetPlayer();
+
+#endif // PLAYER_H

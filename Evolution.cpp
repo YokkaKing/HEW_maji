@@ -1,18 +1,31 @@
-// Evolution.cpp
+/*
+* ファイル名	Evolution.cpp
+* タイトル	進化
+* 作成者		イトイ
+* 作成日		12月02日
+* 更新日		12月02日
+*/
 
-#include "Evolution.h"
-#include "Player.h"
-#include "keyboard.h"
-#include <cstdio>
-#include <cstdlib>
+//================================================================
+//	インクルード
+//================================================================
+#include"Evolution.h"
+#include"Player.h"
+#include"keyboard.h"
+#include<cstdio>
+#include<cstdlib>
 
+//================================================================
+//	グローバル変数
+//================================================================
 extern PLAYER g_Player;
 
-const char* INITIAL_MODEL_PATH = "asset\\model\\test.fbx";
+const char* INITIAL_MODEL_PATH;
 
 void EvolutionInitialize()
 {
     // 初期化処理
+    INITIAL_MODEL_PATH = "asset\\model\\test.fbx";
 }
 
 void EvolutionFinalize()

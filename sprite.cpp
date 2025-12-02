@@ -1,20 +1,26 @@
+/*
+* ファイル名	sprite.cpp
+* タイトル	スプライト
+* 作成者		久保木幹太
+* 作成日		12月02日
+* 更新日		12月02日
+*/
 
-//sprite.cpp
+//================================================================
+//	インクルード
+//================================================================
+#include"sprite.h"
 
-#include "sprite.h"
-
-//グローバル変数
+//================================================================
+//	グローバル変数
+//================================================================
 static constexpr int NUM_VERTEX = 6; // 使用できる最大頂点数
 static ID3D11Buffer* g_pVertexBuffer = nullptr; // 頂点バッファ
 // 注意！初期化で外部から設定されるもの。Release不要。
 static ID3D11Device* g_pDevice = nullptr;
 static ID3D11DeviceContext* g_pContext = nullptr;
 
-
-//----------------------------
-//スプライト初期化
-//----------------------------
-void		InitializeSprite()
+void InitializeSprite()
 {
 	g_pDevice = Direct3D_GetDevice();
 
@@ -27,10 +33,7 @@ void		InitializeSprite()
 	g_pDevice->CreateBuffer(&bd, NULL, &g_pVertexBuffer);
 }
 
-//----------------------------
-//スプライト終了
-//----------------------------
-void		FinalizeSprite()
+void FinalizeSprite()
 {
 	g_pVertexBuffer->Release();	//頂点バッファの解放
 }
@@ -39,7 +42,7 @@ void		FinalizeSprite()
 //=====================================
 //スプライト描画
 //=====================================
-void		DrawSprite(XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 col)
+void DrawSprite(XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 col)
 {
 
 	g_pDevice = Direct3D_GetDevice();
@@ -91,7 +94,7 @@ void		DrawSprite(XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 col)
 }
 
 
-void	DrawSpriteEx(XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 col, int bno, int wc, int hc)
+void DrawSpriteEx(XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 col, int bno, int wc, int hc)
 {
 
 	g_pDevice = Direct3D_GetDevice();
@@ -146,7 +149,7 @@ void	DrawSpriteEx(XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 col, int bno, int wc, in
 
 }
 
-void	DrawSpriteScroll(XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 col,
+void DrawSpriteScroll(XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 col,
 	XMFLOAT2 texcoord)
 {
 
@@ -194,7 +197,7 @@ void	DrawSpriteScroll(XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 col,
 }
 
 
-void	DrawSpriteExRotation(XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 col, int bno, int wc, int hc, float radian)
+void DrawSpriteExRotation(XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 col, int bno, int wc, int hc, float radian)
 {
 
 	g_pDevice = Direct3D_GetDevice();
@@ -256,14 +259,9 @@ void	DrawSpriteExRotation(XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 col, int bno, in
 
 	// ポリゴン描画命令発行
 	g_pContext->Draw(4, 0);//表示に使用する頂点数を指定
-
-
 }
 
-
-
-
-void	DrawSprite(XMFLOAT2 size, XMFLOAT4 col, int bno, int wc, int hc)
+void DrawSprite(XMFLOAT2 size, XMFLOAT4 col, int bno, int wc, int hc)
 {
 
 	g_pDevice = Direct3D_GetDevice();
@@ -314,6 +312,4 @@ void	DrawSprite(XMFLOAT2 size, XMFLOAT4 col, int bno, int wc, int hc)
 
 	// ポリゴン描画命令発行
 	g_pContext->Draw(4, 0);//表示に使用する頂点数を指定
-
-
 }

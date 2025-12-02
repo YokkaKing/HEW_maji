@@ -12,10 +12,9 @@
 // http://go.microsoft.com/fwlink/?LinkId=248929
 // http://go.microsoft.com/fwlink/?LinkID=615561
 //--------------------------------------------------------------------------------------
-#include "keyboard.h"
+#include"keyboard.h"
 
-#include <assert.h>
-//#include "debugPrintf.h"
+#include<assert.h>
 
 static_assert(sizeof(Keyboard_State) == 256 / 8, "キーボード状態構造体のサイズ不一致");
 

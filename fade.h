@@ -1,12 +1,20 @@
+/*
+* ファイル名	fade.h
+* タイトル	フェード
+* 作成者		久保木幹太
+* 作成日		12月02日
+* 更新日		12月02日
+*/
 
-//fade.h
+#ifndef FADE_H
+#define FADE_H
 
-#pragma once
-
-#include "direct3d.h"
-
-#include "sprite.h"
-#include "Manager.h"
+//================================================================
+//	インクルード
+//================================================================
+#include"direct3d.h"
+#include"sprite.h"
+#include"Manager.h"
 
 enum FADE_STATE
 {
@@ -30,9 +38,8 @@ void Fade_Finalize();
 void Fade_Update();
 void Fade_Draw();
 
-void	SetFade(int fadeframe, XMFLOAT4 color, FADE_STATE state, SCENE scene);
+void SetFade(int fadeframe, XMFLOAT4 color, FADE_STATE state, SCENE scene);
 
-FADE_STATE	GetFadeState();
+FADE_STATE GetFadeState();
 
-
-
+#endif // FADE_H

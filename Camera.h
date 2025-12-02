@@ -1,10 +1,20 @@
-#pragma once
+/*
+* ファイル名	Camera.h
+* タイトル	カメラ
+* 作成者		鈴木豪
+* 作成日		12月02日
+* 更新日		12月02日
+*/
 
-//Camera.h
+#ifndef CAMERA_H
+#define CAMERA_H
 
-#include	<d3d11.h>
-#include	<DirectXMath.h>
-#include	"direct3d.h"
+//================================================================
+//	インクルード
+//================================================================
+#include<d3d11.h>
+#include<DirectXMath.h>
+#include"direct3d.h"
 using namespace DirectX;
 
 class CAMERA
@@ -22,7 +32,6 @@ class CAMERA
 		float		NearClip;		//近面クリップ距離
 		float		FarClip;		//遠面クリップ距離
 };
-
 
 void	Camera_Initialize();
 void	Camera_Finalize();
@@ -58,3 +67,5 @@ XMFLOAT3   GetCameraPosition();
 
 XMFLOAT3   GetCamera2AtPosition();
 XMFLOAT3   GetCamera2Position();
+
+#endif // CAMERA_H

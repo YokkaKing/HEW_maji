@@ -1,7 +1,17 @@
-#pragma once
+/*
+* ファイル名	Player2.h
+* タイトル	プレイヤー2
+* 作成者		鈴木豪
+* 作成日		12月02日
+* 更新日		12月02日
+*/
 
-//Player2.h
+#ifndef PLAYER2_H
+#define PLAYER2_H
 
+//================================================================
+//	インクルード
+//================================================================
 #include<d3d11.h>
 #include<DirectXMath.h>
 #include"direct3d.h"
@@ -37,13 +47,15 @@ public:
 	void SetObject(XMFLOAT3 pos, XMFLOAT3 scl, std::string tag, int lay);
 };
 
-void	Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
-void	Player2Finalize();
-void	Player2Update();
-void	Player2Draw();
+void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
+void Player2Finalize();
+void Player2Update();
+void Player2Draw();
 
 XMFLOAT3 GetPlayer2Position();
 
 void Player2_Jump();
 void Player2_ManualMove();
 PLAYER2* GetPlayer2();
+
+#endif // PLAYER2_H

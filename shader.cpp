@@ -6,14 +6,20 @@
 --------------------------------------------------------------------------------
 
 ==============================================================================*/
-#include <d3d11.h>
-#include <DirectXMath.h>
+
+//================================================================
+//	インクルード
+//================================================================
+#include<d3d11.h>
+#include<DirectXMath.h>
 using namespace DirectX;
-#include "direct3d.h"
-#include "debug_ostream.h"
-#include <fstream>
+#include"direct3d.h"
+#include"debug_ostream.h"
+#include<fstream>
 
-
+//================================================================
+//	グローバル変数
+//================================================================
 static ID3D11VertexShader* g_pVertexShader = nullptr;//頂点シェーダー
 static ID3D11InputLayout* g_pInputLayout = nullptr;//頂点レイアウト
 static ID3D11Buffer* g_pVSConstantBuffer = nullptr;//定数バッファ1個
@@ -21,8 +27,6 @@ static ID3D11PixelShader* g_pPixelShader = nullptr;//ピクセルシェーダー
 
 static ID3D11Buffer* g_pLightConstantBuffer = nullptr;//定数バッファ1個
 static ID3D11Buffer* g_pWorldConstantBuffer = nullptr;//定数バッファ1個
-
-
 
 // 注意！初期化で外部から設定されるもの。Release不要。
 static ID3D11Device* g_pDevice = nullptr;

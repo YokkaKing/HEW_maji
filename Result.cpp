@@ -1,19 +1,27 @@
+/*
+* ファイル名	Resule.cpp
+* タイトル	リザルト
+* 作成者		久保木幹太
+* 作成日		12月02日
+* 更新日		12月02日
+*/
 
+//================================================================
+//	インクルード
+//================================================================
+#include"Manager.h"
+#include"sprite.h"
+#include"keyboard.h"
+#include"Result.h"
+#include"fade.h"
+#include"shader.h"
 
-//Result.cpp
-#include	"Manager.h"
-#include	"sprite.h"
-#include	"keyboard.h"
-
-#include	"Result.h"
-
-#include "fade.h"
-#include "shader.h"
-
+//================================================================
+//	グローバル変数
+//================================================================
 static	ID3D11ShaderResourceView* g_Texture = NULL;	//テクスチャ１枚を表すオブジェクト
 static ID3D11Device* g_pDevice = nullptr;
 static ID3D11DeviceContext* g_pContext = nullptr;
-
 
 void Result_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {

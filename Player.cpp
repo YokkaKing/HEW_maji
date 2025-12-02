@@ -1,26 +1,38 @@
+/*
+* ファイル名	Player.cpp
+* タイトル	プレイヤー
+* 作成者		久保木幹太
+* 作成日		12月02日
+* 更新日		12月02日
+*/
 
-//Player.cpp
-
-#include	"keyboard.h"
-// #include	"Controller.h"
-#include	"Player.h"
-#include	"Camera.h"
-#include	"shader.h"
-#include    "Evolution.h"
-#include	"colliderFactory.h"
-#include "debug_ostream.h"
-
-
+//================================================================
+//	マクロ定義
+//================================================================
 #define JUMP_FORCE (0.15f)
 #define CLIMB_SPEED (JUMP_FORCE / 2.0f)
 
+//================================================================
+//	インクルード
+//================================================================
+#include"keyboard.h"
+// #include	"Controller.h"
+#include"Player.h"
+#include"Camera.h"
+#include"shader.h"
+#include"Evolution.h"
+#include"colliderFactory.h"
+#include"debug_ostream.h"
+
+//================================================================
+//	グローバル変数
+//================================================================
 //ボールオブジェクト
 PLAYER	g_Player;
-
 ID3D11Device* g_pDevice;
 ID3D11DeviceContext* g_pContext;
 
-void	PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
+void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
 	g_pDevice = pDevice;
 	g_pContext = pContext;
@@ -42,7 +54,7 @@ void	PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_Player.SetObject(g_Player.m_position, g_Player.m_scale, "Player", 0);
 	EvolutionInitialize();
 }
-void	PlayerFinalize()
+void PlayerFinalize()
 {
 	ModelRelease(g_Player.m_model);
 }
@@ -138,7 +150,7 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 	g_Player.m_position.y += g_Player.m_velocity.y;
 }
 
-void	PlayerDraw() 
+void PlayerDraw() 
 {
 	//ワールド行列作成
 	XMMATRIX	scale = XMMatrixScaling(

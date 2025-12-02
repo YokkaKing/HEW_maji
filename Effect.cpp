@@ -1,11 +1,26 @@
+/*
+* ファイル名	Effect.cpp
+* タイトル	エフェクト
+* 作成者		久保木幹太
+* 作成日		12月02日
+* 更新日		12月02日
+*/
 
-//Effect.cpp
+//================================================================
+//	マクロ定義
+//================================================================
+#define	EFFECT_MAX	(100)
 
-#include "Effect.h"
-#include "sprite.h"
-#include "shader.h"
+//================================================================
+//	インクルード
+//================================================================
+#include"Effect.h"
+#include"sprite.h"
+#include"shader.h"
 
-//グローバル変数
+//================================================================
+//	グローバル変数
+//================================================================
 // 注意！初期化で外部から設定されるもの。Release不要。
 static ID3D11Device* g_pDevice = nullptr;
 static ID3D11DeviceContext* g_pContext = nullptr;
@@ -13,13 +28,9 @@ static ID3D11DeviceContext* g_pContext = nullptr;
 static ID3D11ShaderResourceView* g_Texture;
 
 //エフェクトオブジェクト
-#define	EFFECT_MAX	(100)
 static	EFFECT	g_Effect[EFFECT_MAX];
 
-
 static	XMFLOAT2 ScrollOffset = XMFLOAT2(POSITION_OFFSET_X, POSITION_OFFSET_Y);
-
-
 
 //メイン処理関数
 void Effect_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)

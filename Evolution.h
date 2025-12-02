@@ -1,8 +1,19 @@
-#pragma once
+/*
+* ファイル名	Evolution.h
+* タイトル	進化
+* 作成者		イトイ
+* 作成日		12月02日
+* 更新日		12月02日
+*/
 
-#include "Player.h" 
-#include <DirectXMath.h>
+#ifndef EVOLUTION_H
+#define EVOLUTION_H
 
+//================================================================
+//	インクルード
+//================================================================
+#include"Player.h" 
+#include<DirectXMath.h>
 using namespace DirectX;
 
 // 進化システム初期化 
@@ -13,3 +24,5 @@ void EvolvePlayer();
 
 // 進化タイプに応じたパラメーター補正を適用
 void ApplyEvolutionEffect();
+
+#endif // EVOLUTION_H

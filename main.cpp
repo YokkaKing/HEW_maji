@@ -1,47 +1,48 @@
+/*
+* ファイル名	main.cpp
+* タイトル	メイン
+* 作成者		久保木幹太
+* 作成日		12月02日
+* 更新日		12月02日
+*/
 
-//ウィンドウの表示
-#include <SDKDDKVer.h>	//利用できる最も上位の Windows プラットフォームが定義される
-#define WIN32_LEAN_AND_MEAN	//32bitアプリには不要な情報を抑止してコンパイル時間を短縮
-#include	<windows.h>
-#include	"debug_ostream.h"	//デバッグ表示
-
-#include <algorithm>			//
-#include "direct3d.h"			//
-#include "shader.h"
-#include "field.h"
-#include "sprite.h"
-#include "keyboard.h"
-#include "Player.h"
-#include "Effect.h"
-
-#include "Manager.h"
-#include "Audio.h"	//<<<<<<<<<<<<<追加
-#include "Viewport.h"
-
-///////////////////////////////////////////
+//================================================================
+//	マクロ定義
+//================================================================
+#define		CLASS_NAME	"DX21 Window"
+#define		WINDOW_CAPTION	"ポリゴン描画"
 #define		SCREEN_WIDTH	(1920)
 #define		SCREEN_HEIGHT	(1080)
 
+//================================================================
+//	インクルード
+//================================================================
+//ウィンドウの表示
+#include<SDKDDKVer.h>	//利用できる最も上位の Windows プラットフォームが定義される
+#define WIN32_LEAN_AND_MEAN	//32bitアプリには不要な情報を抑止してコンパイル時間を短縮
+#include<windows.h>
+#include"debug_ostream.h"	//デバッグ表示
+#include<algorithm>			
+#include"direct3d.h"			
+#include"shader.h"
+#include"field.h"
+#include"sprite.h"
+#include"keyboard.h"
+#include"Player.h"
+#include"Effect.h"
+#include"Manager.h"
+#include"Audio.h"
+#include"Viewport.h"
 
-//==================================
-//グローバル変数
-//==================================
+//================================================================
+//	グローバル変数
+//================================================================
 #ifdef _DEBUG	//デバッグビルドの時だけ変数が作られる
 int		g_CountFPS;			//FPSカウンター
 char	g_DebugStr[2048];	//FPS表示文字列
 #endif
 
 #pragma comment(lib, "winmm.lib")
-
-//=================================
-//マクロ定義
-//=================================
-#define		CLASS_NAME	"DX21 Window"
-#define		WINDOW_CAPTION	"ポリゴン描画"
-
-//===================================
-//プロトタイプ宣言
-//===================================
 
 //ウィンドウプロシージャ
 //コールバック関数＝＞他人が呼び出してくれる関数

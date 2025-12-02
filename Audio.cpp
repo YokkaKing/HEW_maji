@@ -1,19 +1,26 @@
+/*
+* ファイル名	Audio.cpp
+* タイトル	サウンド
+* 作成者		久保木幹太
+* 作成日		12月02日
+* 更新日		12月02日
+*/
 
-#include <d3d11.h>
-#include <DirectXMath.h>
+//================================================================
+//	インクルード
+//================================================================
+#include<d3d11.h>
+#include<DirectXMath.h>
 using namespace DirectX;
-#include "direct3d.h"
-#include "shader.h"
-#include "sprite.h"
-#include "keyboard.h"
+#include"direct3d.h"
+#include"shader.h"
+#include"sprite.h"
+#include"keyboard.h"
+#include"audio.h"
 
-#include "audio.h"
-
-
-
-
-
-
+//================================================================
+//	グローバル変数
+//================================================================
 static IXAudio2* g_Xaudio{};
 static IXAudio2MasteringVoice* g_MasteringVoice{};
 
@@ -27,20 +34,11 @@ void InitAudio()
 	g_Xaudio->CreateMasteringVoice(&g_MasteringVoice);
 }
 
-
 void UninitAudio()
 {
 	g_MasteringVoice->DestroyVoice();
 	g_Xaudio->Release();
 }
-
-
-
-
-
-
-
-
 
 struct AUDIO
 {
@@ -53,8 +51,6 @@ struct AUDIO
 
 #define AUDIO_MAX 100
 static AUDIO g_Audio[AUDIO_MAX]{};
-
-
 
 int LoadAudio(const char *FileName)
 {
@@ -71,9 +67,6 @@ int LoadAudio(const char *FileName)
 
 	if (index == -1)
 		return -1;
-
-
-
 
 	// サウンドデータ読込
 	WAVEFORMATEX wfx = { 0 };
@@ -137,9 +130,6 @@ int LoadAudio(const char *FileName)
 	return index;
 }
 
-
-
-
 void UnloadAudio(int Index)
 {
 	g_Audio[Index].SourceVoice->Stop();
@@ -148,10 +138,6 @@ void UnloadAudio(int Index)
 	delete[] g_Audio[Index].SoundData;
 	g_Audio[Index].SoundData = nullptr;
 }
-
-
-
-
 
 void PlayAudio(int Index, bool Loop)
 {
@@ -183,6 +169,3 @@ void PlayAudio(int Index, bool Loop)
 	g_Audio[Index].SourceVoice->Start();
 
 }
-
-
-

@@ -1,13 +1,21 @@
+/*
+* ファイル名	Effect.h
+* タイトル	エフェクト
+* 作成者		久保木幹太
+* 作成日		12月02日
+* 更新日		12月02日
+*/
 
-//Effect.h
+#ifndef EFFECT_H
+#define EFFECT_H
 
-#pragma once
-
-
-#include <d3d11.h>
-#include <DirectXMath.h>
+//================================================================
+//	インクルード
+//================================================================
+#include<d3d11.h>
+#include<DirectXMath.h>
 using namespace DirectX;
-#include "direct3d.h"
+#include"direct3d.h"
 
 class EFFECT
 {
@@ -25,3 +33,4 @@ void Effect_Draw();
 
 void CreateEffect(XMFLOAT2 Position);	//エフェクト作成
 
+#endif // EFFECT_H

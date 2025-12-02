@@ -1,10 +1,21 @@
-#pragma once
+/*
+* ファイル名	Audio.h
+* タイトル	サウンド
+* 作成者		久保木幹太
+* 作成日		12月02日
+* 更新日		12月02日
+*/
 
-#include <xaudio2.h>
+#ifndef AUDIO_H
+#define AUDIO_H
+
+//================================================================
+//	インクルード
+//================================================================
+#include<xaudio2.h>
 
 void InitAudio();		//サウンドの初期化
 void UninitAudio();		//サウンドの終了
-
 
 int LoadAudio(const char* FileName);		//サウンドデータ読み込み
 void UnloadAudio(int Index);				//サウンドデータ解放（停止）
@@ -27,10 +38,6 @@ PlayAudio(g_BgmID, true);	//サウンドデータ再生(ループあり)
 
 //終了時
 UnloadAudio(g_BgmID);		//サウンドデータ解放（停止）
-
-
 */
 
-
-
-
+#endif // AUDIO_H
