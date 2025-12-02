@@ -1,0 +1,27 @@
+#pragma once
+
+// collision.h
+
+#include <d3d11.h>
+#include <DirectXMath.h>
+#include "direct3d.h"
+#include "sprite.h"
+#include "shader.h"
+using namespace DirectX;
+
+#include "field.h"
+#include "Player.h"
+
+#define COE (0.5f) // îΩî≠åWêî
+
+//float PlayerField_Collision();
+
+enum COLLISION_HIT
+{
+    HIT_NONE = 0,    // ìñÇΩÇ¡ÇƒÇ»Ç¢
+    HIT_GROUND,        // ínñ Ç…ìñÇΩÇ¡ÇΩ
+    HIT_WALL_0,        // ï«Ç…-ZÇ©ÇÁìñÇΩÇ¡ÇΩ
+    HIT_WALL_1,        // ï«Ç…+XÇ©ÇÁìñÇΩÇ¡ÇΩ
+    HIT_WALL_2,        // ï«Ç…+ZÇ©ÇÁìñÇΩÇ¡ÇΩ
+    HIT_WALL_3,        // ï«Ç…-XÇ©ÇÁìñÇΩÇ¡ÇΩ
+};
