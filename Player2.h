@@ -18,6 +18,7 @@
 using namespace DirectX;
 #include"model.h"
 #include"gameObject.h"
+#include"IWeapon.h"
 
 enum class EVOLUTION_TYPE2
 {
@@ -42,9 +43,18 @@ public:
 	float           FrictionRate;   // 速度減衰率
 	EVOLUTION_TYPE2  EvolutionType;  // 進化タイプ (A or B or NONE)
 	PLAYER2_STATE	State;		//状態
+	IWeapon* m_currentWeapon = nullptr; // 現在装備中の武器
+	float			m_maxHp = 100.0f; // 最大体力
+	float			m_currentHp;	 // 現在の体力
+	bool			m_isDead = false; // 死亡フラグ
+	XMFLOAT3 m_rotation; // 武器を回転させる
+	//武器操作関数
+	void EquipWeapon(IWeapon* weapon); // 武器を装備する
+	void TryAttack(const XMFLOAT3& direction); // 攻撃を試みる
 public:
 	void OnCollision(const CollisionInfo& info)override;
 	void SetObject(XMFLOAT3 pos, XMFLOAT3 scl, std::string tag, int lay);
+	void TakeDamage(float damage);
 };
 
 void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);

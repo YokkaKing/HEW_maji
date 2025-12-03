@@ -51,7 +51,7 @@ public:
     GameObject* m_gameObject = nullptr;
 
     std::vector<std::shared_ptr<Component>> components;
-
+    bool m_isEnable = true;
 public:
     template <typename T, typename... Args>
     std::shared_ptr<T> AddComponent(Args&&... args)

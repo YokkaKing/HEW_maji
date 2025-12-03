@@ -23,6 +23,7 @@
 #include"colliderFactory.h"
 #include"debug_ostream.h"
 
+
 //================================================================
 //	グローバル変数
 //================================================================
@@ -30,6 +31,15 @@
 PLAYER2	g_Player2;
 ID3D11Device* g_pDevice2;
 ID3D11DeviceContext* g_pContext2;
+
+void Player2Die()
+{
+	hal::dout << "Player2 died!" << std::endl;
+	// ここにゲームオーバー画面への遷移、リスポーン処理など
+
+	g_Player2.m_gameObject->m_isEnable = false;
+	g_Player2.State = PLAYER2_STATE::PLAYER2_STATE_IDLE;
+}
 
 void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
@@ -48,16 +58,52 @@ void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 
 	g_Player2.m_acceleration = XMFLOAT3(0.0f, -9.8f / 600.0f * 0.5f, 0.0f);
 
+	g_Player2.m_currentHp = g_Player2.m_maxHp;
+	g_Player2.m_isDead = false;
+
 	g_Player2.SetObject(g_Player2.m_position, g_Player2.m_scale, "Player2", 0);
 	EvolutionInitialize();
+
+	//Sword* newSword = new Sword();
+	//newSword->Initialize(pDevice, pContext);
+	//g_Player2.EquipWeapon(newSword);
 }
 void Player2Finalize()
 {
 	ModelRelease(g_Player2.m_model);
+	if (g_Player2.m_currentWeapon)
+	{
+		delete g_Player2.m_currentWeapon;
+		g_Player2.m_currentWeapon = nullptr;
+	}
 }
 void	Player2Update()
 {
+	//武器の更新と攻撃終了判定
+	if (g_Player2.m_currentWeapon)
+	{
+		g_Player2.m_currentWeapon->Update(1.0f / 60.0f);
+		if (g_Player2.m_currentWeapon->ShouldEndAttack())
+		{
+			g_Player2.m_currentWeapon->EndAttack();
+		}
+	}
+
+	//攻撃入力のチェック (例: KK_Oキー)
+	if (Keyboard_IsKeyDownTrigger(KK_O))
+	{
+		if (g_Player2.m_currentWeapon && !g_Player2.m_currentWeapon->IsAttacking())
+		{
+			g_Player2.m_currentWeapon->StartAttack(g_Player2.m_position, g_Player2.m_rotation);
+		}
+	}
 	Player2_ManualMove();
+	//死亡判定
+	if (g_Player2.m_currentHp <= 0.0f && !g_Player2.m_isDead)
+	{
+		g_Player2.m_isDead = true;
+		Player2Die();
+	}
 }
 
 void Player2_ManualMove()
@@ -189,7 +235,24 @@ PLAYER2* GetPlayer2()
 {
 	return &g_Player2;
 }
+void PLAYER2::TakeDamage(float damage)
+{
+	if (m_isDead) return;
 
+	m_currentHp -= damage;
+
+	hal::dout << "Player2 took " << damage << " damage. HP remaining: " << m_currentHp << std::endl;
+}
+
+// 武器を装備する
+void PLAYER2::EquipWeapon(IWeapon* weapon)
+{
+	if (m_currentWeapon)
+	{
+		delete m_currentWeapon;
+	}
+	m_currentWeapon = weapon;
+}
 void PLAYER2::OnCollision(const CollisionInfo& info)
 {
 	if (!info.isHit) return;
@@ -197,6 +260,12 @@ void PLAYER2::OnCollision(const CollisionInfo& info)
 	// --- まずタグで相手を識別 ---
 	if (info.other)
 	{
+		if (info.other->m_tag == "PlayerAttack")
+		{
+			TakeDamage(10.0f); // 10ダメージを与える
+			return;
+		}
+
 		// 例えば壁・木だけコリジョン有効
 		if (info.other->m_tag == "Wall" ||
 			info.other->m_tag == "Tree")

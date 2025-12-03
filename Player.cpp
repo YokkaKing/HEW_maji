@@ -32,6 +32,18 @@ PLAYER	g_Player;
 ID3D11Device* g_pDevice;
 ID3D11DeviceContext* g_pContext;
 
+void PlayerDie()
+{
+	hal::dout << "Player died!" << std::endl;
+	//死亡処理
+
+	// 例: プレイヤーを非表示にする
+	g_Player.m_gameObject->m_isEnable = false;
+
+	// 例: 入力を受け付けないようにする（状態をIDLEにするなど）
+	g_Player.State = PLAYER_STATE::PLAYER_STATE_IDLE;
+}
+
 void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
 	g_pDevice = pDevice;
@@ -50,6 +62,8 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_Player.m_acceleration = XMFLOAT3(0.0f, -9.8f / 600.0f * 0.5f, 0.0f);
 	g_Player.FrictionRate = 0.98f;
 	g_Player.EvolutionType = EVOLUTION_TYPE::EVOLUTION_TYPE_NONE;
+	g_Player.m_currentHp = g_Player.m_maxHp;
+	g_Player.m_isDead = false;
 
 	g_Player.SetObject(g_Player.m_position, g_Player.m_scale, "Player", 0);
 	EvolutionInitialize();
@@ -57,12 +71,45 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 void PlayerFinalize()
 {
 	ModelRelease(g_Player.m_model);
+	//武器の解放
+	if (g_Player.m_currentWeapon)
+	{
+		delete g_Player.m_currentWeapon;
+		g_Player.m_currentWeapon = nullptr;
+	}
 }
 void	PlayerUpdate()
 {
 	EvolvePlayer();           // Eキーで進化タイプを選択（一度だけ実行）
 	ApplyEvolutionEffect();   // 進化タイプに応じたパラメータを適用
+	if (g_Player.m_isDead)return;	//死亡している場合は更新処理をスキップ
+	//装備中の武器を更新する
+	if (g_Player.m_currentWeapon)
+	{
+		g_Player.m_currentWeapon->Update(1.0f / 60.0f); // 1/60秒で更新
+		//攻撃終了判定
+		if (g_Player.m_currentWeapon->ShouldEndAttack())
+		{
+			g_Player.m_currentWeapon->EndAttack();
+		}
+	}
+	//攻撃入力のチェック
+	if (Keyboard_IsKeyDownTrigger(KK_C))
+	{
+		// プレイヤーの現在攻撃中フラグをチェック
+		if (g_Player.m_currentWeapon && !g_Player.m_currentWeapon->IsAttacking())
+		{
+			// 武器側で必要な位置と回転を渡して攻撃開始
+			g_Player.m_currentWeapon->StartAttack(g_Player.m_position, g_Player.m_rotation);
+		}
+	}
 	Player_ManualMove();
+	//死亡判定
+	if (g_Player.m_currentHp <= 0.0f && !g_Player.m_isDead)
+	{
+		g_Player.m_isDead = true;
+		PlayerDie();
+	}
 }
 
 void Player_ManualMove() // 新しい手動移動関数として作成
@@ -70,8 +117,8 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 	g_Player.m_gameObject->m_position = g_Player.m_position;
 
 	// カメラの前方向ベクトル
-	float forwardX = GetCameraPosition().x - GetCameraAtPosition().x;
-	float forwardZ = GetCameraPosition().z - GetCameraAtPosition().z;
+	float forwardX = GetCameraAtPosition().x - GetCameraPosition().x;
+	float forwardZ = GetCameraAtPosition().z - GetCameraPosition().z;
 
 	if (!g_Player.m_isGround) // 地面についてないときに重力発動
 	{
@@ -91,8 +138,16 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 	}
 
 	float len = sqrtf(forwardX * forwardX + forwardZ * forwardZ);
-	forwardX /= len;
-	forwardZ /= len;
+	if (len > 0.0f)
+	{
+		forwardX /= len;
+		forwardZ /= len;
+	}
+	else
+	{
+		forwardX = 0.0f;
+		forwardZ = 0.0f;
+	}
 
 	// カメラの右方向ベクトル
 	float rightX = forwardZ;    // 右方向は前方向ベクトルを90度回転
@@ -106,11 +161,11 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 	if (Keyboard_IsKeyDown(KK_W))
 	{
 		// ベクトルが逆だから移動が逆になる
-		speed = -0.1f;
+		speed = +0.1f;
 	}
 	if (Keyboard_IsKeyDown(KK_S))
 	{
-		speed = 0.1f;
+		speed = -0.1f;
 	}
 
 	moveX += forwardX * speed;
@@ -120,11 +175,11 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 	float strafe = 0.0f;
 	if (Keyboard_IsKeyDown(KK_A))
 	{
-		strafe = +0.1f;  // 左
+		strafe = -0.1f;  // 左
 	}
 	if (Keyboard_IsKeyDown(KK_D))
 	{
-		strafe = -0.1f;  // 右
+		strafe = +0.1f;  // 右
 	}
 	moveX += rightX * strafe;
 	moveZ += rightZ * strafe;
@@ -196,13 +251,61 @@ PLAYER* GetPlayer()
 	return &g_Player;
 }
 
+void PLAYER::TakeDamage(float damage)
+{
+	if (m_isDead) return;
+
+	m_currentHp -= damage;
+	
+	// デバッグ出力でダメージ表示
+	hal::dout << "Player took " << damage << " damage. HP remaining: " << m_currentHp << std::endl;
+	
+
+}
+
+//武器を装備する
+void PLAYER::EquipWeapon(IWeapon* weapon)
+{
+	// 古い武器があれば解放する
+	if (m_currentWeapon)
+	{
+		delete m_currentWeapon;
+	}
+	m_currentWeapon = weapon;
+}
+
+//攻撃を試みる
+void PLAYER::TryAttack(const XMFLOAT3& direction)
+{
+	if (m_currentWeapon && !m_currentWeapon->IsAttacking())
+	{
+		m_currentWeapon->StartAttack(m_position, m_rotation);
+		// 攻撃が成功した場合、クールダウンはAttack内で設定される
+	}
+	else if (m_currentWeapon)
+	{
+		// デバッグ出力: クールダウン中
+		hal::dout<< "Attack on cooldown!" << std::endl; 
+	}
+}
+
 void PLAYER::OnCollision(const CollisionInfo& info)
 {
 	if (!info.isHit) return;
+	if (m_isDead) return; //死亡していたら衝突処理を無視
 
 	// --- まずタグで相手を識別 ---
 	if (info.other)
 	{
+		//敵の攻撃に当たった場合
+		if (info.other->m_tag == "Player2Attack")
+		{
+			//ダメージを受ける
+			TakeDamage(10.0f); // 10ダメージを与える（数値は適宜調整）
+			return;
+		}
+
+
 		// 例えば壁・木だけコリジョン有効
 		if (info.other->m_tag == "Wall" ||
 			info.other->m_tag == "Tree")
