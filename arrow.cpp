@@ -5,6 +5,7 @@
 #include "direct3d.h"
 #include "shader.h"
 #include "Camera.h"
+#include"debug_ostream.h"
 
 Arrow::Arrow()
     : center(0.0f, 0.0f, 0.0f),
@@ -38,6 +39,13 @@ void Arrow::Finalize()
         ModelRelease(m_model);
         m_model = nullptr;
     }
+}
+
+// IWeapon::StartAttackの実装
+// プレイヤーの位置と回転を受け取り、当たり判定を生成/有効化する
+void Arrow::StartAttack(const XMFLOAT3& playerPosition, const XMFLOAT3& playerRotation)
+{
+    
 }
 
 // プレイヤーの向いている方向に矢を撃つ //追加
@@ -131,7 +139,7 @@ void Arrow::Draw(const XMFLOAT3& playerPosition, const XMFLOAT3& playerRotation)
 }
 
 void Arrow::Update(float deltaTime)
-//{
+{
     if (isActive) 
     {
         m_AttackFrameTimer++;

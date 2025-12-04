@@ -62,6 +62,7 @@ public:
 	std::vector<GameObject*> walls;	// •Ç‚Ì“–‚½‚è”»’è‚Ì‘S‚Ä
 	std::vector<GameObject*> trees;	// –Ø‚Ì“–‚½‚è”»’è‚Ì‘S‚Ä
 
+	bool m_isChange[4] = { false, false, false, false }; // •Ïg‚µ‚½‚©
 public:
 	void SetObject(XMFLOAT3 pos, XMFLOAT3 scl, std::string tag, int lay);
 

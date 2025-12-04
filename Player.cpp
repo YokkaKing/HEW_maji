@@ -121,8 +121,6 @@ void	PlayerUpdate()
 
 void Player_ManualMove() // 新しい手動移動関数として作成
 {
-	g_Player.m_gameObject->m_position = g_Player.m_position;
-
 	// カメラの前方向ベクトル
 	float forwardX = GetCameraAtPosition().x - GetCameraPosition().x;
 	float forwardZ = GetCameraAtPosition().z - GetCameraPosition().z;
@@ -309,7 +307,6 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 			return;
 		}
 
-
 		// 例えば壁・木だけコリジョン有効
 		if (info.other->m_tag == "Wall" ||
 			info.other->m_tag == "Tree")
@@ -340,7 +337,43 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 				m_velocity.z = 0;
 			}
 		}
-		else if (info.other->m_tag == "Lift" ||
+
+		if (info.other->m_tag == "Player2")
+		{
+			auto INFO = info;
+
+			INFO.normal.x *= -1;
+			INFO.normal.y *= -1;
+			INFO.normal.z *= -1;
+
+			//================================================================
+			//	押し戻し
+			//================================================================
+			m_position.x += INFO.normal.x * INFO.penetration;
+			m_position.y += INFO.normal.y * INFO.penetration;
+			m_position.z += INFO.normal.z * INFO.penetration;
+
+			//================================================================
+			//	地面判定
+			//================================================================
+			if (INFO.normal.y > 0.7f)
+			{
+				m_isGround = true;
+				m_velocity.y = 0;
+			}
+
+			//================================================================
+			//	壁判定
+			//================================================================
+			float horiz = fabs(INFO.normal.x) + fabs(INFO.normal.z);
+			if (horiz > 0.7f)
+			{
+				m_velocity.x = 0;
+				m_velocity.z = 0;
+			}
+		}
+		
+		if (info.other->m_tag == "Lift" ||
 			info.other->m_tag == "HILL")
 		{
 			//================================================================
@@ -386,10 +419,16 @@ void PLAYER::SetObject(XMFLOAT3 pos, XMFLOAT3 scl, std::string tag, int lay)
 		lay
 	);
 
-	m_gameObject = obj;
+	m_position = obj->m_position;
+	m_scale = obj->m_scale;
+	m_tag = obj->m_tag;
+	m_layer = obj->m_layer;
 
 	for (auto& col : obj->GetColliders<>())
 	{
-		col->owner = &g_Player;
+		col->owner = this;
+		this->components.push_back(col);
 	}
+
+	delete obj;
 }

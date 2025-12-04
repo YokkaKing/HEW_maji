@@ -55,7 +55,7 @@ void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_Player2.m_rotation = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	g_Player2.m_velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
-	g_Player2.m_scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
+	g_Player2.m_scale = XMFLOAT3(0.5f, 0.5f, 0.5f);
 
 	g_Player2.State = PLAYER2_STATE::PLAYER2_STATE_MOVE;
 
@@ -116,8 +116,6 @@ void	Player2Update()
 
 void Player2_ManualMove()
 {
-	g_Player2.m_gameObject->m_position = g_Player2.m_position;
-
 	// カメラの前方向ベクトル
 	float forwardX = GetCamera2Position().x - GetCamera2AtPosition().x;
 	float forwardZ = GetCamera2Position().z - GetCamera2AtPosition().z;
@@ -202,9 +200,9 @@ void	Player2Draw()
 {
 	//ワールド行列作成
 	XMMATRIX	scale = XMMatrixScaling(
-		g_Player2.m_scale.x,
-		g_Player2.m_scale.y,
-		g_Player2.m_scale.z);
+		1.0f,
+		1.0f,
+		1.0f);
 	XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
 		g_Player2.m_rotation.x,
 		g_Player2.m_rotation.y,
@@ -303,7 +301,37 @@ void PLAYER2::OnCollision(const CollisionInfo& info)
 				m_velocity.z = 0;
 			}
 		}
-		else if (info.other->m_tag == "Lift" ||
+
+		if (info.other->m_tag == "Player")
+		{
+			//================================================================
+			//	押し戻し
+			//================================================================
+			m_position.x += info.normal.x * info.penetration;
+			m_position.y += info.normal.y * info.penetration;
+			m_position.z += info.normal.z * info.penetration;
+
+			//================================================================
+			//	地面判定
+			//================================================================
+			if (info.normal.y > 0.7f)
+			{
+				m_isGround = true;
+				m_velocity.y = 0;
+			}
+
+			//================================================================
+			//	壁判定
+			//================================================================
+			float horiz = fabs(info.normal.x) + fabs(info.normal.z);
+			if (horiz > 0.7f)
+			{
+				m_velocity.x = 0;
+				m_velocity.z = 0;
+			}
+		}
+
+		if (info.other->m_tag == "Lift" ||
 			info.other->m_tag == "HILL")
 		{
 			//================================================================
@@ -349,10 +377,16 @@ void PLAYER2::SetObject(XMFLOAT3 pos, XMFLOAT3 scl, std::string tag, int lay)
 		lay
 	);
 
-	m_gameObject = obj;
+	m_position = obj->m_position;
+	m_scale = obj->m_scale;
+	m_tag = obj->m_tag;
+	m_layer = obj->m_layer;
 
 	for (auto& col : obj->GetColliders<>())
 	{
-		col->owner = &g_Player2;
+		col->owner = this;
+		this->components.push_back(col);
 	}
+
+	delete obj;
 }

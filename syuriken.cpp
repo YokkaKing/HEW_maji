@@ -5,6 +5,7 @@
 #include "direct3d.h"
 #include "shader.h"
 #include "Camera.h"
+#include"debug_ostream.h"
 
 Syuriken::Syuriken()
     : center(0.0f, 0.0f, 0.0f),

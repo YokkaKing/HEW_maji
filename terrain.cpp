@@ -42,7 +42,7 @@ MODEL* blockModel = nullptr;
 // 地形::丘 の座標データ
 const std::vector<std::vector<std::vector<std::string>>> Hill =
 {
-	{ // Y = 0 // Z->+
+	{ // Y = 0 // Z->+ // X↓+
 		{"anananananan"},
 		{"nnnnnnnnnnna"},
 		{"annnnnnnnnnn"},
@@ -134,63 +134,360 @@ const std::vector<std::vector<std::vector<std::string>>> Hill =
 //	n -> 何もなし
 //	文字は分かりやすいやつでa,b,cとか
 //================================================================
-const std::vector<std::vector<std::vector<std::string>>> Wall =
-{
-	{ // Y = 0 // Z->+
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnannnnnan"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnannnnnan"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
+const std::vector<std::vector<std::vector<std::string>>> Hills =
+{// -> プレイヤーの初期視点
+	// 16個
+	{
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
 	},
 	{
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnbnnnnbnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnbnnnnbnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
 	},
 	{
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnncnnncnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnncnnncnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
 	},
 	{
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnndndnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnndndnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+	},
+	{
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+	},
+	{
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+	},
+	{
+		{"annnnnnnnnnnnnnnnnna"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"annnnnnnnnnnnnnnnnna"},
+	},
+	{
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nbnnnnnnnnnnnnnnnnbn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nbnnnnnnnnnnnnnnnnbn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+	},
+	{
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nncnnnnnnnnnnnnnncnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nncnnnnnnnnnnnnnncnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+	},
+	{
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnndnnnnnnnnnnnndnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnndnnnnnnnnnnnndnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+	},
+	{
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnennnnnnnnnnennnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnennnnnnnnnnennnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+	},
+	{
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnfnnnnnnnnfnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnfnnnnnnnnfnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+	},
+	{
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnngnnnnnngnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnngnnnnnngnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+	},
+	{
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnhnnnnhnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnhnnnnhnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+	},
+	{
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnninninnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnninninnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+	},
+	{
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnjjnnnnnnnnn"},
+		{"nnnnnnnnnjjnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
 	},
 };
 
@@ -199,19 +496,20 @@ void TerrainInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_pDevice = pDevice;
 	g_pContext = pContext;
 
-	g_Terrain.m_model = ModelLoad("asset\\model\\rock.fbx");
+	g_Terrain.m_model = ModelLoad("asset\\model\\hill.fbx");
 	blockModel = ModelLoad("asset\\model\\block.fbx");
 
-	g_Terrain.m_position = XMFLOAT3(0.0f, 0.5f, 2.0f);
+	g_Terrain.m_position = GetPlayerPosition();
 	g_Terrain.m_rotation = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	g_Terrain.m_velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
-	g_Terrain.m_scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
+	g_Terrain.m_scale = XMFLOAT3(5.0f, 5.0f, 5.0f);
+	g_Terrain.m_position.y -= 7.0f; // 下に設定
+	g_Terrain.m_motherPosition = g_Terrain.m_position;
 
-	g_Terrain.m_motherPosition = g_Terrain.m_position;	// マザーポジションをプレイヤーのポジションと同期
-
-	// g_Terrain.PixelObjects(Hill, TERRAIN_TYPE::HILL, g_Terrain.m_motherPosition);
-	g_Terrain.SimpleObjects(Wall, {0.25f, 0.25f, 0.25f}, TERRAIN_TYPE::HILL, g_Terrain.m_motherPosition);
+	//g_Terrain.PixelObjects(Hill, TERRAIN_TYPE::HILL, g_Terrain.m_motherPosition);
+	g_Terrain.SimpleObjects(Hills, { 0.25f, 0.25f, 0.25f }, TERRAIN_TYPE::HILL, g_Terrain.m_motherPosition);
+	//hal::dout << "座標 : (" << g_Terrain.slopes[0]->m_position.x << "," << g_Terrain.slopes[0]->m_position.y << "," << g_Terrain.slopes[0]->m_position.z << ")\n";
 }
 void TerrainFinalize()
 {
@@ -220,24 +518,34 @@ void TerrainFinalize()
 }
 void TerrainUpdate()
 {
-	g_Terrain.UpdateObject(g_Terrain.hills);
-
 	if (Keyboard_IsKeyDown(KK_R))
 	{
-		g_Terrain.Move(0.0f, 0.1f, 0.0f);
+		g_Terrain.m_isChange[0] = true;
 	}
-	if (Keyboard_IsKeyDown(KK_T))
+
+	// 変身してなければ追従
+	if (!g_Terrain.m_isChange[0])
 	{
-		g_Terrain.Move(0.0f, -0.1f, 0.0f);
+		g_Terrain.m_position = GetPlayerPosition();
+		g_Terrain.m_position.y -= 7.0f; // 下に設定
+		g_Terrain.m_motherPosition = g_Terrain.m_position;
 	}
+	else
+	{
+		if (g_Terrain.m_position.y < -0.4f)
+		{
+			g_Terrain.Move(0.0f, 0.1f, 0.0f);
+		}
+	}
+	g_Terrain.UpdateObject(g_Terrain.hills);
 }
 void TerrainDraw()
 {
 	//ワールド行列作成
 	XMMATRIX	scale = XMMatrixScaling(
-		1.0f,
-		1.0f,
-		1.0f);
+		g_Terrain.m_scale.x,
+		g_Terrain.m_scale.y,
+		g_Terrain.m_scale.z);
 	XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
 		g_Terrain.m_rotation.x,
 		g_Terrain.m_rotation.y,
@@ -259,6 +567,27 @@ void TerrainDraw()
 
 	//モデルの描画リクエスト
 	ModelDraw(g_Terrain.m_model);
+
+	//for (int i = 0; i < g_Terrain.slopes.size(); i++)
+	//{
+	//	// ワールド行列作成
+	//	XMMATRIX scale = XMMatrixScaling(
+	//		1.0f, 1.0f, 1.0f); // スロープは頂点指定なのでスケールは1にしておく
+	//	XMMATRIX rotation = XMMatrixRotationRollPitchYaw(
+	//		0.0f, 0.0f, 0.0f); // 回転も必要なら入れる
+	//	XMMATRIX translation = XMMatrixTranslation(
+	//		g_Terrain.slopes[i]->m_position.x,
+	//		g_Terrain.slopes[i]->m_position.y,
+	//		g_Terrain.slopes[i]->m_position.z);
+
+	//	XMMATRIX world = scale * rotation * translation;
+
+	//	// シェーダーへ行列をセット
+	//	Shader_SetWorldMatrix(world);
+
+	//	// ブロックモデルで描画（簡単に可視化用）
+	//	ModelDraw(blockModel);
+	//}
 
 	//for (int i = 0; i < g_Terrain.hills.size(); i++)
 	//{
@@ -290,6 +619,7 @@ void TerrainDraw()
 	//	ModelDraw(blockModel);
 	//}
 }
+// 簡単な四角形の当たり判定を作る場合
 void TERRAIN::SetObject(XMFLOAT3 pos, XMFLOAT3 scl, std::string tag, int lay)
 {
 	GameObject* obj = ColliderFactory::CreateBoxObject(
@@ -430,7 +760,7 @@ size_t TERRAIN::CountObjectType(const std::vector<std::vector<std::vector<char>>
 		}
 	}
 
-	count /= 4; // 文字はそれぞれ8文字ずつあるから8で割る
+	count /= 4; // 文字はそれぞれ4文字ずつあるから4で割る
 
 	return count;
 }
@@ -563,15 +893,27 @@ std::vector<TERRAIN_OBJECT> TERRAIN::InitializeObject(const std::vector<std::vec
 // 当たり判定の座標を更新する
 void TERRAIN::UpdateObject(std::vector<GameObject*> terrain)
 {
-	for (int i = 0; i < terrain.size(); i++)
+	if (!m_isChange[0])
 	{
-		if (Keyboard_IsKeyDown(KK_R))
+		XMFLOAT3 pos;
+		// 変身してなければプレイヤーと同じ動きをする
+		for (int i = 0; i < terrain.size(); i++)
 		{
-			terrain[i]->Move(0.0f, 0.1f, 0.0f);
+			pos.x = m_motherPosition.x + terrain[i]->m_velocity.x;
+			pos.y = m_motherPosition.y + terrain[i]->m_velocity.y;
+			pos.z = m_motherPosition.z + terrain[i]->m_velocity.z;
+
+			terrain[i]->m_position = pos;
 		}
-		if (Keyboard_IsKeyDown(KK_T))
+	}
+	else
+	{
+		for (int i = 0; i < terrain.size(); i++)
 		{
-			terrain[i]->Move(0.0f, -0.1f, 0.0f);
+			if (m_position.y < -0.4f)
+			{
+				terrain[i]->Move(0.0f, 0.1f, 0.0f);
+			}
 		}
 	}
 }
@@ -593,6 +935,7 @@ void TERRAIN::CreateHit(std::vector<TERRAIN_OBJECT> terrain, XMFLOAT3 motherPosi
 		case TERRAIN_TYPE::HILL:
 			SetObject(pos, terrain[i].m_size, "HILL", 0);
 			hills[i]->m_position = pos;	// 座標を格納
+			hills[i]->m_velocity = terrain[i].m_distance;
 			hills[i]->m_scale = terrain[i].m_size;
 			break;
 
@@ -612,15 +955,17 @@ void TERRAIN::CreateHit(std::vector<TERRAIN_OBJECT> terrain, XMFLOAT3 motherPosi
 		}
 	}
 }
-
+// ブロック単位で当たり判定を設置できる
 void TERRAIN::PixelObjects(const std::vector<std::vector<std::vector<std::string>>> terrain, TERRAIN_TYPE type, XMFLOAT3 motherPosition)
 {
 	// 当たり判定を追加する
 	CreateHit(InitializeObject(ConvertTerrain(terrain), type), motherPosition);
 }
-
+// 直方体や立方体など、大まかな範囲で当たり判定を設置できる
 void TERRAIN::SimpleObjects(const std::vector<std::vector<std::vector<std::string>>> terrain, XMFLOAT3 size, TERRAIN_TYPE type, XMFLOAT3 motherPosition)
 {
+	auto conTerrain = ConvertTerrain(terrain);
+	auto countType = CountObjectType(conTerrain);
 	// 当たり判定を追加する
-	CreateHit(InitializeObject(ConvertTerrain(terrain), VolumeObject(ConvertTerrain(terrain), CountObjectType(ConvertTerrain(terrain)), size), CountObjectType(ConvertTerrain(terrain)), type), motherPosition);
+	CreateHit(InitializeObject(conTerrain, VolumeObject(conTerrain, countType, size), countType, type), motherPosition);
 }
