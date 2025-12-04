@@ -51,7 +51,7 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_pDevice = pDevice;
 	g_pContext = pContext;
 
-	g_Player.m_model = ModelLoad("asset\\model\\test.fbx");
+	g_Player.m_model = ModelLoad("asset\\model\\char_hammer.fbx");
 
 	g_Player.m_position = XMFLOAT3(0.0f, 0.5f, 1.0f);
 	g_Player.m_rotation = XMFLOAT3(0.0f, 0.0f, 0.0f);
@@ -189,6 +189,15 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 	g_Player.m_velocity.x = moveX;
 	g_Player.m_velocity.z = moveZ;
 
+	// モデルの向きを移動方向に合わせる
+	XMFLOAT3 moveDir = { g_Player.m_velocity.x, 0.0f, g_Player.m_velocity.z };
+	float length = sqrtf(moveDir.x * moveDir.x + moveDir.z * moveDir.z);
+	if (length > 0.001f) // 移動しているときだけ向きを変える
+	{
+		// Y軸回転角を計算
+		g_Player.m_rotation.y = atan2f(moveDir.x, moveDir.z); // atan2f(X,Z)でY回転
+	}
+
 	// Aボタンを押した && コヨーテタイムが0.0fより大きい
 	if (g_Controller.IsButtonPushed(ControllerButton::A_BUTTON) && g_Player.m_koyoteTime > 0.0f) //Aボタン**
 	{
@@ -210,16 +219,16 @@ void PlayerDraw()
 {
 	//ワールド行列作成
 	XMMATRIX	scale = XMMatrixScaling(
-		1.0f,
-		1.0f,
-		1.0f);
+		0.05f,
+		0.05f,
+		0.05f);
 	XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
 		g_Player.m_rotation.x,
 		g_Player.m_rotation.y,
 		g_Player.m_rotation.z);
 	XMMATRIX	translation = XMMatrixTranslation(
 		g_Player.m_position.x,
-		g_Player.m_position.y,
+		g_Player.m_position.y - 0.25f,
 		g_Player.m_position.z);
 	XMMATRIX	world = scale * rotation * translation;
 
