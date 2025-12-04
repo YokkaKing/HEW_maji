@@ -15,8 +15,8 @@
 //================================================================
 //	インクルード
 //================================================================
-#include"keyboard.h"
-// #include	"Controller.h"
+//#include"keyboard.h"
+#include"Controller.h"
 #include"Player.h"
 #include"Camera.h"
 #include"shader.h"
@@ -31,6 +31,8 @@
 PLAYER	g_Player;
 ID3D11Device* g_pDevice;
 ID3D11DeviceContext* g_pContext;
+
+Controller g_Controller(0); //ID 0のコントローラーを使用
 
 void PlayerDie()
 {
@@ -67,6 +69,10 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 
 	g_Player.SetObject(g_Player.m_position, g_Player.m_scale, "Player", 0);
 	EvolutionInitialize();
+
+	//Sword* newSword = new Sword();
+	//newSword->Initialize(pDevice, pContext);
+	//g_Player2.EquipWeapon(newSword);
 }
 void PlayerFinalize()
 {
@@ -80,6 +86,8 @@ void PlayerFinalize()
 }
 void	PlayerUpdate()
 {
+	g_Controller.Update();//毎フレームコントローラーの状態を更新
+
 	EvolvePlayer();           // Eキーで進化タイプを選択（一度だけ実行）
 	ApplyEvolutionEffect();   // 進化タイプに応じたパラメータを適用
 	if (g_Player.m_isDead)return;	//死亡している場合は更新処理をスキップ
@@ -93,16 +101,15 @@ void	PlayerUpdate()
 			g_Player.m_currentWeapon->EndAttack();
 		}
 	}
-	//攻撃入力のチェック
-	if (Keyboard_IsKeyDownTrigger(KK_C))
+	//攻撃入力のチェック (例: KK_Oキー)
+	if (g_Controller.IsButtonPushed(ControllerButton::X_BUTTON))//xボタン
 	{
-		// プレイヤーの現在攻撃中フラグをチェック
 		if (g_Player.m_currentWeapon && !g_Player.m_currentWeapon->IsAttacking())
 		{
-			// 武器側で必要な位置と回転を渡して攻撃開始
 			g_Player.m_currentWeapon->StartAttack(g_Player.m_position, g_Player.m_rotation);
 		}
 	}
+
 	Player_ManualMove();
 	//死亡判定
 	if (g_Player.m_currentHp <= 0.0f && !g_Player.m_isDead)
@@ -158,14 +165,12 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 	float moveZ = 0.0f;
 
 	float speed = 0.0f;
-	if (Keyboard_IsKeyDown(KK_W))
+	float stickY = g_Controller.GetLeftStickY();
+	if (fabs(stickY) > 0.05f) // デッドゾーンを設定 (必要に応じて調整)
 	{
 		// ベクトルが逆だから移動が逆になる
-		speed = +0.1f;
-	}
-	if (Keyboard_IsKeyDown(KK_S))
-	{
-		speed = -0.1f;
+		// 左スティック上方向 (+1.0f) で前進 (speed = -0.1f) に対応
+		speed = stickY * 0.1f;
 	}
 
 	moveX += forwardX * speed;
@@ -173,13 +178,11 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 
 	// 横移動
 	float strafe = 0.0f;
-	if (Keyboard_IsKeyDown(KK_A))
+	float stickX = g_Controller.GetLeftStickX();
+	if (fabs(stickX) > 0.05f) // デッドゾーンを設定 (必要に応じて調整)
 	{
-		strafe = -0.1f;  // 左
-	}
-	if (Keyboard_IsKeyDown(KK_D))
-	{
-		strafe = +0.1f;  // 右
+		// 左スティック左方向 (-1.0f) で左移動 (strafe = +0.1f) に対応
+		strafe = stickX * 0.1f;
 	}
 	moveX += rightX * strafe;
 	moveZ += rightZ * strafe;
@@ -188,8 +191,8 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 	g_Player.m_velocity.x = moveX;
 	g_Player.m_velocity.z = moveZ;
 
-	// スペース押した && コヨーテタイムが0.0fより大きい
-	if (Keyboard_IsKeyDownTrigger(KK_SPACE) && g_Player.m_koyoteTime > 0.0f)
+	// Aボタンを押した && コヨーテタイムが0.0fより大きい
+	if (g_Controller.IsButtonPushed(ControllerButton::A_BUTTON) && g_Player.m_koyoteTime > 0.0f) //Aボタン**
 	{
 		g_Player.m_velocity.y = JUMP_FORCE;
 		g_Player.m_isGround = false;
@@ -235,6 +238,7 @@ void PlayerDraw()
 	ModelDraw(g_Player.m_model);
 
 }
+
 
 XMFLOAT3 GetPlayerPosition()
 {

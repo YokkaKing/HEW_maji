@@ -64,6 +64,8 @@ void PlayerFinalize();
 void PlayerUpdate();
 void PlayerDraw();
 
+void PlayerDrawHUD();
+
 XMFLOAT3 GetPlayerPosition();
 
 void Player_Jump();
