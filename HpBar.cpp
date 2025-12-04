@@ -1,5 +1,5 @@
 /*
-* ÉtÉ@ÉCÉãñº	Title.cpp
+* ÉtÉ@ÉCÉãñº	Hpbar.cpp
 * É^ÉCÉgÉã	É^ÉCÉgÉã
 * çÏê¨é“		ãvï€ñÿä≤ëæ
 * çÏê¨ì˙		12åé02ì˙
@@ -12,7 +12,7 @@
 #include"Manager.h"
 #include"sprite.h"
 #include"keyboard.h"
-#include"Title.h"
+#include"Hpbar.h"
 #include"fade.h"
 #include"shader.h"
 
@@ -23,7 +23,7 @@ static	ID3D11ShaderResourceView* g_Texture = NULL;	//ÉeÉNÉXÉ`ÉÉÇPñáÇï\Ç∑ÉIÉuÉWÉ
 static ID3D11Device* g_pDevice = nullptr;
 static ID3D11DeviceContext* g_pContext = nullptr;
 
-void Title_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
+void Hpbar_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
 	g_pDevice = pDevice;
 	g_pContext = pContext;
@@ -31,35 +31,27 @@ void Title_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	//ÉeÉNÉXÉ`ÉÉì«Ç›çûÇ›Ç»Ç«
 	TexMetadata		metadata;
 	ScratchImage	image;
-	LoadFromWICFile(L"asset\\texture\\Title.png", WIC_FLAGS_NONE, &metadata, image);
+	LoadFromWICFile(L"asset\\texture\\Player1HpBar.png", WIC_FLAGS_NONE, &metadata, image);
 	CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_Texture);
 	assert(g_Texture);//ì«Ç›çûÇ›é∏îséûÇ…É_ÉCÉAÉçÉOÇï\é¶
 
 	//ÉtÉFÅ[ÉhÉCÉìÇÃÉZÉbÉg
-	XMFLOAT4	color = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
-	SetFade(60.0f, color, FADE_IN, SCENE_GAME);
+	XMFLOAT4	color = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+
 
 }
-void Title_Finalize()
+void Hpbar_Finalize()
 {
 	//ÉeÉNÉXÉ`ÉÉÇÃâï˙Ç»Ç«
 	SAFE_RELEASE(g_Texture);
 
 }
-void Title_Update()
+void Hpbar_Update()
 { 
-	//ÉLÅ[ì¸óÕÉ`ÉFÉbÉN
-	//ÉXÉ^Å[ÉgÉ{É^ÉìÇ™âüÇ≥ÇÍÇΩÇÁÉVÅ[ÉìÇêÿÇËë÷Ç¶
-	//ÉtÉFÅ[ÉhèàóùíÜÇÕÉLÅ[ÇéÛÇØïtÇØÇ»Ç¢
-	if (Keyboard_IsKeyDownTrigger(KK_ENTER) && (GetFadeState() == FADE_NONE))
-	{
-		//ÉtÉFÅ[ÉhÉAÉEÉgÇ≥ÇπÇƒÉVÅ[ÉìÇêÿÇËë÷Ç¶ÇÈ
-		XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
-		SetFade(40.0f, color, FADE_OUT, SCENE_GAME);
-	}
+
 
 }
-void Title_Draw()
+void Hpbar_Draw()
 {
     // ÉVÉFÅ[É_Å[Çï`âÊÉpÉCÉvÉâÉCÉìÇ…ê›íË
     Shader_Begin();
@@ -84,12 +76,12 @@ void Title_Draw()
     g_pContext->PSSetShaderResources(0, 1, &g_Texture);
 
     // BlendState ê›íË
-    SetBlendState(BLENDSTATE_NONE);
+    SetBlendState(BLENDSTATE_ALFA);
 
     // êFÇ∆à íuÅEÉTÉCÉYÇê›íË
     XMFLOAT4 col = { 1.0f, 1.0f, 1.0f, 1.0f };
-    XMFLOAT2 pos = { SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 };
-    XMFLOAT2 size = { SCREEN_WIDTH, SCREEN_HEIGHT };
+    XMFLOAT2 pos = {400, SCREEN_HEIGHT-200 };
+    XMFLOAT2 size = { SCREEN_WIDTH/3, SCREEN_HEIGHT/7 };
 
     // ï`âÊ
     DrawSprite(pos, size, col);

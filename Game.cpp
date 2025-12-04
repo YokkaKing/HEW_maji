@@ -24,7 +24,7 @@
 #include"Player2.h"
 #include"Viewport.h"
 #include"direct3d.h"
-
+#include "HpBar.h"
 //================================================================
 //	グローバル変数
 //================================================================
@@ -42,7 +42,7 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	PlayerInitialize(pDevice, pContext); // ボールの初期化
 	Player2Initialize(pDevice, pContext);
 	Camera_Initialize();	//カメラ初期化
-
+	Hpbar_Initialize(pDevice, pContext);
 	//ビューポートの初期化
 	Viewport_Initialize(Direct3D_GetWindowHandle());
 
@@ -75,6 +75,7 @@ void Game_Finalize()
 	PlayerFinalize();	// ボールの終了処理
 	Player2Finalize();
 	Camera_Finalize();	//カメラ終了処理
+	Hpbar_Finalize();
 
 	//UnloadAudio(g_BgmID);//サウンドの解放
 }
@@ -90,6 +91,7 @@ void Game_Update()
 	Player2Update();
 	Field_Update();
 	TerrainUpdate();
+	Hpbar_Update();
 	ManagerCollider::UpdateAllCollisions();
 	//キー入力チェック
 	//スタートボタンが押されたらシーンを切り替え
@@ -126,9 +128,10 @@ void Game_Draw()
 	Shader_SetMatrix(GetViewMatrix() * GetProjectionMatrix());
 	Field_Draw();
 	TerrainDraw();
+
 	PlayerDraw();
 	Player2Draw();
-
+	Hpbar_Draw();
 //================================================================
 //	画面分割用関数(右画面)
 //================================================================
@@ -140,7 +143,7 @@ void Game_Draw()
 	TerrainDraw();
 	PlayerDraw();
 	Player2Draw();
-
+	Hpbar_Draw();
 
 	//2D描画
 	Light.SetEnable(FALSE);			//ライティングOFF
