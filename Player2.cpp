@@ -16,6 +16,7 @@
 //	インクルード
 //================================================================
 #include"keyboard.h"
+//#include"controller.h"
 #include"Player2.h"
 #include"Camera.h"
 #include"shader.h"
@@ -31,6 +32,8 @@
 PLAYER2	g_Player2;
 ID3D11Device* g_pDevice2;
 ID3D11DeviceContext* g_pContext2;
+
+
 
 void Player2Die()
 {
@@ -79,6 +82,9 @@ void Player2Finalize()
 }
 void	Player2Update()
 {
+	EvolvePlayer2();           // Eキーで進化タイプを選択（一度だけ実行）
+	ApplyEvolutionEffect2();   // 進化タイプに応じたパラメータを適用
+	if (g_Player2.m_isDead)return;	//死亡している場合は更新処理をスキップ
 	//武器の更新と攻撃終了判定
 	if (g_Player2.m_currentWeapon)
 	{
@@ -89,11 +95,13 @@ void	Player2Update()
 		}
 	}
 
-	//攻撃入力のチェック (例: KK_Oキー)
-	if (Keyboard_IsKeyDownTrigger(KK_O))
+	//攻撃入力のチェック
+	if (Keyboard_IsKeyDownTrigger(KK_C))
 	{
+		// プレイヤーの現在攻撃中フラグをチェック
 		if (g_Player2.m_currentWeapon && !g_Player2.m_currentWeapon->IsAttacking())
 		{
+			// 武器側で必要な位置と回転を渡して攻撃開始
 			g_Player2.m_currentWeapon->StartAttack(g_Player2.m_position, g_Player2.m_rotation);
 		}
 	}
@@ -111,8 +119,8 @@ void Player2_ManualMove()
 	g_Player2.m_gameObject->m_position = g_Player2.m_position;
 
 	// カメラの前方向ベクトル
-	float forwardX = GetCameraPosition().x - GetCameraAtPosition().x;
-	float forwardZ = GetCameraPosition().z - GetCameraAtPosition().z;
+	float forwardX = GetCamera2Position().x - GetCamera2AtPosition().x;
+	float forwardZ = GetCamera2Position().z - GetCamera2AtPosition().z;
 
 	if (!g_Player2.m_isGround) // 地面についてないときに重力発動
 	{
@@ -144,14 +152,13 @@ void Player2_ManualMove()
 	float moveZ = 0.0f;
 
 	float speed = 0.0f;
-	if (Keyboard_IsKeyDown(KK_U))
+	if (Keyboard_IsKeyDown(KK_W))
 	{
-		// ベクトルが逆だから移動が逆になる
 		speed = -0.1f;
 	}
-	if (Keyboard_IsKeyDown(KK_J))
+	if (Keyboard_IsKeyDown(KK_S))
 	{
-		speed = 0.1f;
+		speed = +0.1f;
 	}
 
 	moveX += forwardX * speed;
@@ -159,11 +166,11 @@ void Player2_ManualMove()
 
 	// 横移動
 	float strafe = 0.0f;
-	if (Keyboard_IsKeyDown(KK_H))
+	if (Keyboard_IsKeyDown(KK_A))
 	{
 		strafe = +0.1f;  // 左
 	}
-	if (Keyboard_IsKeyDown(KK_K))
+	if (Keyboard_IsKeyDown(KK_D))
 	{
 		strafe = -0.1f;  // 右
 	}
