@@ -8,6 +8,7 @@
 
 #include"Camera.h"
 #include"keyboard.h"
+#include"Controller.h"
 #include"Player.h"
 #include"Player2.h"
 #include"Viewport.h"
@@ -20,6 +21,7 @@ static	CAMERA	CameraObject;
 static	CAMERA  Camera2Object;
 XMFLOAT3		g_PlayerPosOld;
 XMFLOAT3		g_Player2PosOld;
+extern Controller g_Controller;
 
 void Camera_Initialize()
 { 
@@ -78,19 +80,27 @@ void Camera_Update()
 
 	//注視点を中心にカメラの位置を回転（Y軸回転）
 	float	Rotation = 0.0f;
-	if (Keyboard_IsKeyDown(KK_Q))
-	{
-		Rotation = 1.0f;
-	}
-	if (Keyboard_IsKeyDown(KK_E))
-	if (Keyboard_IsKeyDown(KK_LEFT))
-	{
-		Rotation = 1.0f;
-	}
-	if (Keyboard_IsKeyDown(KK_RIGHT))
-	{
-		Rotation = -1.0f;
-	}
+	//右スティックのX軸の傾きを取得
+	Rotation = g_Controller.GetRightStickX();
+	// スティックの入力値を回転速度に変換
+	Rotation *= 1.5f;
+	//if (Keyboard_IsKeyDown(KK_Q))
+	//{
+	//	Rotation = 1.0f;
+	//}
+	//if (Keyboard_IsKeyDown(KK_E))
+	//{
+	//	Rotation = -1.0f;
+	//}
+	//if (Keyboard_IsKeyDown(KK_LEFT))
+	//{
+	//	Rotation = 1.0f;
+	//}
+	//if (Keyboard_IsKeyDown(KK_RIGHT))
+	//{
+	//	Rotation = -1.0f;
+	//}
+
 
 	//注視点からカメラへのベクトル
 	//P1
