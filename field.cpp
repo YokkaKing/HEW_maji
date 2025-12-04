@@ -200,89 +200,41 @@ static UINT	Box_idxdata[6 * 6] =
 };
 
 //マップデータ配列
-MAPDATA		Map[] =
+std::vector<MAPDATA> Map;
+
+// マップチップ
+const std::vector<std::vector<std::string>> Stage =
 {
-	{XMFLOAT3(0.0f, -0.5f, 0.0f), FIELD_BOX},//START
-
-	{XMFLOAT3(-5.0f, -0.5f, 1.0f), FIELD_BOX},//START
-	{XMFLOAT3(-4.0f, -0.5f, 1.0f), FIELD_BOX},//START
-	{XMFLOAT3(-4.0f, 0.5f, 1.0f), FIELD_OBT},//START
-	{XMFLOAT3(-3.0f, -0.5f, 1.0f), FIELD_BOX},//START
-	{XMFLOAT3(-2.0f, -0.5f, 1.0f), FIELD_BOX},//START
-	{XMFLOAT3(-1.0f, -0.5f, 1.0f), FIELD_BOX},//START
-	{XMFLOAT3(-0.0f, -0.5f, 1.0f), FIELD_BOX},//START
-	{XMFLOAT3( 1.0f, -0.5f, 1.0f), FIELD_BOX},//START
-	{XMFLOAT3( 2.0f, -0.5f, 1.0f), FIELD_BOX},//START
-	{XMFLOAT3( 3.0f, -0.5f, 1.0f), FIELD_BOX},//START
-	{XMFLOAT3( 4.0f, -0.5f, 1.0f), FIELD_BOX},//START
-	{XMFLOAT3( 5.0f, -0.5f, 1.0f), FIELD_BOX},//START
-
-	{XMFLOAT3(-5.0f, -0.5f, 2.0f), FIELD_BOX},//START
-	{XMFLOAT3(-4.0f, -0.5f, 2.0f), FIELD_BOX},//START
-//	{XMFLOAT3(-3.0f, -0.5f, 2.0f), FIELD_BOX},//START
-	{XMFLOAT3(-2.0f, -0.5f, 2.0f), FIELD_BOX},//START
-	{XMFLOAT3(-1.0f, -0.5f, 2.0f), FIELD_BOX},//START
-	{XMFLOAT3(-0.0f, -0.5f, 2.0f), FIELD_BOX},//START
-	{XMFLOAT3(1.0f, -0.5f, 2.0f), FIELD_BOX},//START
-	{XMFLOAT3(2.0f, -0.5f, 2.0f), FIELD_BOX},//START
-//	{XMFLOAT3(3.0f, -0.5f, 2.0f), FIELD_BOX},//START
-	{XMFLOAT3(4.0f, -0.5f, 2.0f), FIELD_BOX},//START
-	{XMFLOAT3(5.0f, -0.5f, 2.0f), FIELD_BOX},//START
-
-//	{XMFLOAT3(-5.0f, -0.5f, 3.0f), FIELD_BOX},//START
-//	{XMFLOAT3(-4.0f, -0.5f, 3.0f), FIELD_BOX},//START
-	{XMFLOAT3(-3.0f, -0.5f, 3.0f), FIELD_BOX},//START
-	{XMFLOAT3(-2.0f, 0.5f, 3.0f), FIELD_OBT},//START
-	{XMFLOAT3(-1.0f, -0.5f, 3.0f), FIELD_BOX},//START
-	{XMFLOAT3(-0.0f, -0.5f, 3.0f), FIELD_BOX},//START
-	{XMFLOAT3(1.0f, -0.5f, 3.0f), FIELD_BOX},//START
-	{XMFLOAT3(2.0f, 0.5f, 3.0f), FIELD_BOX},//START
-	{XMFLOAT3(3.0f, -0.5f, 3.0f), FIELD_BOX},//START
-//	{XMFLOAT3(4.0f, -0.5f, 3.0f), FIELD_BOX},//START
-//	{XMFLOAT3(5.0f, -0.5f, 3.0f), FIELD_BOX},//START
-
-	{XMFLOAT3(-5.0f, -0.5f, 4.0f), FIELD_BOX},//START
-	{XMFLOAT3(-4.0f, -0.5f, 4.0f), FIELD_BOX},//START
-	{XMFLOAT3(-3.0f, -0.5f, 4.0f), FIELD_BOX},//START
-	{XMFLOAT3(-2.0f, -0.5f, 4.0f), FIELD_BOX},//START
-//	{XMFLOAT3(-1.0f, -0.5f, 4.0f), FIELD_BOX},//START
-//	{XMFLOAT3(-0.0f, -0.5f, 4.0f), FIELD_BOX},//START
-//	{XMFLOAT3(1.0f, -0.5f, 4.0f), FIELD_BOX},//START
-	{XMFLOAT3(2.0f, -0.5f, 4.0f), FIELD_BOX},//START
-	{XMFLOAT3(3.0f, -0.5f, 4.0f), FIELD_BOX},//START
-	{XMFLOAT3(4.0f, -0.5f, 4.0f), FIELD_BOX},//START
-	{XMFLOAT3(5.0f, -0.5f, 4.0f), FIELD_BOX},//START
-
-	{XMFLOAT3(-5.0f, -0.5f, 5.0f), FIELD_BOX},//START
-	{XMFLOAT3(-4.0f, -0.5f, 5.0f), FIELD_BOX},//START
-	{XMFLOAT3(-3.0f, -0.5f, 5.0f), FIELD_BOX},//START
-	{XMFLOAT3(-2.0f, -0.5f, 5.0f), FIELD_BOX},//START
-//	{XMFLOAT3(-1.0f, -0.5f, 5.0f), FIELD_BOX},//START
-//	{XMFLOAT3(-0.0f, -0.5f, 5.0f), FIELD_BOX},//START
-//	{XMFLOAT3(1.0f, -0.5f, 5.0f), FIELD_BOX},//START
-	{XMFLOAT3(2.0f, -0.5f, 5.0f), FIELD_BOX},//START
-	{XMFLOAT3(3.0f, -0.5f, 5.0f), FIELD_BOX},//START
-	{XMFLOAT3(4.0f, -0.5f, 5.0f), FIELD_BOX},//START
-	{XMFLOAT3(5.0f, -0.5f, 5.0f), FIELD_BOX},//START
-
-	{XMFLOAT3(-5.0f, -0.5f, 6.0f), FIELD_BOX},//START
-//	{XMFLOAT3(-4.0f, -0.5f, 6.0f), FIELD_BOX},//START
-	{XMFLOAT3(-3.0f, -0.5f, 6.0f), FIELD_BOX},//START
-//	{XMFLOAT3(-2.0f, -0.5f, 6.0f), FIELD_BOX},//START
-	{XMFLOAT3(-1.0f, -0.5f, 6.0f), FIELD_BOX},//START
-	{XMFLOAT3(-0.0f, -0.5f, 6.0f), FIELD_BOX},//START
-	{XMFLOAT3(1.0f, -0.5f, 6.0f), FIELD_BOX},//START
-//	{XMFLOAT3(2.0f, -0.5f, 6.0f), FIELD_BOX},//START
-	{XMFLOAT3(3.0f, -0.5f, 6.0f), FIELD_BOX},//START
-//	{XMFLOAT3(4.0f, -0.5f, 6.0f), FIELD_BOX},//START
-	{XMFLOAT3(5.0f, -0.5f, 6.0f), FIELD_BOX},//START
-
-	{XMFLOAT3(0.0f, -0.5f, 7.0f), FIELD_BOX},//GOAL
-
-
-
-	{XMFLOAT3(2.0f, -1.0f, 5.0f), FIELD_MAX}//MAPデータ終了
+	{ // Y=0				// Z->+
+		{"nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"},
+		{"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
+		{"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
+		{"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
+		{"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}, // X=0
+		{"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
+		{"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
+		{"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
+		{"nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"},
+	},
+	{ // Y=0				// Z->+
+		{"nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnonnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"}, // X=0
+		{"nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"},
+	},
 };
+
+//================================================================
+//	プロトタイプ宣言
+//================================================================
+std::vector<std::vector<std::vector<char>>> ConvertStage();
+size_t CountBlocks(const std::vector<std::vector<std::vector<char>>>& Stage);
+void InitializeMap(size_t blocks);
 
 void Field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
@@ -296,6 +248,66 @@ void Field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	CreateShaderResourceView(pDevice, image.GetImages(),
 		image.GetImageCount(), metadata, &g_Texture);
 	assert(g_Texture);
+
+	auto MapChip = ConvertStage();
+	size_t blocks = CountBlocks(MapChip);
+	InitializeMap(blocks);
+
+	// ブロック作成
+	int loop = 0;
+
+	char c;
+
+	// 3D座標計算
+	float posX;  // 行 → X+
+	float posY;  // 高さ → Y+
+	float posZ;  // 列 → Z+
+
+	for (int y = 0; y < MapChip.size(); y++)      // 高さ
+	{
+		for (int x = 0; x < MapChip[y].size(); x++)  // 行 → X+
+		{
+			for (int z = 0; z < MapChip[y][x].size(); z++) // 列 → Z+
+			{
+				c = MapChip[y][x][z];
+
+				if (c == 'n') continue;
+
+				posX = x * 1.0f - (MapChip[y].size() / 2);
+				posY = y * 1.0f;
+				posZ = z * 1.0f;
+
+				switch (c)
+				{
+				case 'b':
+					Map[loop].pos = { posX, posY, posZ };
+					Map[loop].no = FIELD_BOX;
+					loop++;
+					break;
+
+				case 'o':
+					Map[loop].pos = { posX, posY, posZ };
+					Map[loop].no = FIELD_OBT;
+					loop++;
+					break;
+
+				case 'l':
+					Map[loop].pos = { posX, posY, posZ };
+					Map[loop].no = FIELD_LIFT;
+					loop++;
+					break;
+
+				default:
+					break;
+				}
+			}
+		}
+	}
+
+	loop++;
+
+	Map[loop].pos = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	Map[loop].no = FIELD_MAX;
 
 	// 当たり判定を付ける処理
 	for (int i = 0; i < std::size(Map); i++)
@@ -516,9 +528,58 @@ void CreateBox()
 		//インデックスデータをバッファへコピー
 		CopyMemory(&index[0], &Box_idxdata[0], sizeof(UINT) * 6 * 6);
 		g_pContext->Unmap(g_IndexBuffer, 0);
-
 	}
-
-
 }
 
+std::vector<std::vector<std::vector<char>>> ConvertStage()
+{
+	std::vector<std::vector<std::vector<char>>> map;
+
+	map.reserve(Stage.size());
+
+	for (const auto& layer : Stage) // Y方向
+	{
+		map.emplace_back();
+		map.back().reserve(layer.size());
+
+		for (const auto& row : layer) // Z方向
+		{
+			// string → char 配列に変換
+			map.back().emplace_back(row.begin(), row.end());
+		}
+	}
+
+	return map;
+}
+
+size_t CountBlocks(const std::vector<std::vector<std::vector<char>>>& Stage)
+{
+	size_t count = 0;
+
+	for (const auto& layer : Stage)
+	{
+		for (const auto& row : layer)
+		{
+			for (char c : row)
+			{
+				if (c != 'n')
+					count++;
+			}
+		}
+	}
+
+	count += 2;
+
+	return count;
+}
+
+void InitializeMap(size_t blocks)
+{
+	Map.clear();
+	Map.reserve(blocks); // あらかじめ必要数を確保
+
+	for (size_t i = 0; i < blocks; i++)
+	{
+		Map.push_back(MAPDATA{}); // 空の MAPDATA を追加
+	}
+}
