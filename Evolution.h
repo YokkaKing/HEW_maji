@@ -13,6 +13,7 @@
 //	インクルード
 //================================================================
 #include"Player.h" 
+#include"Player2.h"
 #include<DirectXMath.h>
 using namespace DirectX;
 
@@ -25,4 +26,9 @@ void EvolvePlayer();
 // 進化タイプに応じたパラメーター補正を適用
 void ApplyEvolutionEffect();
 
+
+//================================
+void EvolvePlayer2();
+void ApplyEvolutionEffect2();
+//===============================
 #endif // EVOLUTION_H

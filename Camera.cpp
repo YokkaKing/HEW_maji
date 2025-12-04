@@ -83,7 +83,7 @@ void Camera_Update()
 	//右スティックのX軸の傾きを取得
 	Rotation = g_Controller.GetRightStickX();
 	// スティックの入力値を回転速度に変換
-	Rotation *= 1.5f;
+	Rotation *= -1.5f;
 	//if (Keyboard_IsKeyDown(KK_Q))
 	//{
 	//	Rotation = 1.0f;
