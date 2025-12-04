@@ -61,36 +61,36 @@ void Title_Update()
 }
 void Title_Draw()
 {
-	// シェーダーを描画パイプラインに設定
-	Shader_Begin();
+    // シェーダーを描画パイプラインに設定
+    Shader_Begin();
 
-	// 画面サイズ取得
-	const float SCREEN_WIDTH = (float)Direct3D_GetBackBufferWidth();
-	const float SCREEN_HEIGHT = (float)Direct3D_GetBackBufferHeight();
+    // 画面サイズ取得
+    const float SCREEN_WIDTH = (float)Direct3D_GetBackBufferWidth();
+    const float SCREEN_HEIGHT = (float)Direct3D_GetBackBufferHeight();
 
-	// 頂点シェーダーに変換行列を設定
-	Shader_SetMatrix(XMMatrixOrthographicOffCenterLH(
-		0.0f,
-		SCREEN_WIDTH,
-		SCREEN_HEIGHT,
-		0.0f,
-		0.0f,
-		1.0f));
-	//---------------------------------------------------
+    // 頂点シェーダーに正射影行列を設定
+    Shader_SetMatrix(XMMatrixOrthographicOffCenterLH(
+        0.0f,
+        SCREEN_WIDTH,
+        SCREEN_HEIGHT,
+        0.0f,
+        0.0f,
+        1.0f));
 
+    // World 行列は単位行列を設定
+    Shader_SetWorldMatrix(XMMatrixIdentity());
 
-		//テクスチャをセット
-	g_pContext->PSSetShaderResources(0, 1, &g_Texture);//g_Textureを使うように設定する
+    // テクスチャをセット
+    g_pContext->PSSetShaderResources(0, 1, &g_Texture);
 
-	static XMFLOAT2 texcoord = { 0.0f, 0.0f };
+    // BlendState 設定
+    SetBlendState(BLENDSTATE_NONE);
 
-	//スプライト描画
-	SetBlendState(BLENDSTATE_NONE);//ブレンド無し
-	XMFLOAT4 col = { 1.0f, 1.0f, 1.0f, 1.0f };	//スプライトの色
-	XMFLOAT2 pos = { SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 };
-	XMFLOAT2 size = { SCREEN_WIDTH, SCREEN_HEIGHT };
-	DrawSprite(pos, size, col);//1枚絵を表示
+    // 色と位置・サイズを設定
+    XMFLOAT4 col = { 1.0f, 1.0f, 1.0f, 1.0f };
+    XMFLOAT2 pos = { SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 };
+    XMFLOAT2 size = { SCREEN_WIDTH, SCREEN_HEIGHT };
 
+    // 描画
+    DrawSprite(pos, size, col);
 }
-
-
