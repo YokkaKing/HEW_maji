@@ -82,7 +82,7 @@ void Player2Finalize()
 }
 void	Player2Update()
 {
-	EvolvePlayer2();           // Eキーで進化タイプを選択（一度だけ実行）
+	EvolvePlayer2();           // Eキーで進化タイプを選択
 	ApplyEvolutionEffect2();   // 進化タイプに応じたパラメータを適用
 	if (g_Player2.m_isDead)return;	//死亡している場合は更新処理をスキップ
 	//武器の更新と攻撃終了判定
