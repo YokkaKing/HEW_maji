@@ -1,13 +1,13 @@
 /*
-* ƒtƒ@ƒCƒ‹–¼	Title.cpp
-* ƒ^ƒCƒgƒ‹	ƒ^ƒCƒgƒ‹
-* ì¬Ò		‹v•Û–ØŠ²‘¾
-* ì¬“ú		12Œ02“ú
-* XV“ú		12Œ02“ú
+* ãƒ•ã‚¡ã‚¤ãƒ«å	Title.cpp
+* ã‚¿ã‚¤ãƒˆãƒ«	ã‚¿ã‚¤ãƒˆãƒ«
+* ä½œæˆè€…		ä¹…ä¿æœ¨å¹¹å¤ª
+* ä½œæˆæ—¥		12æœˆ02æ—¥
+* æ›´æ–°æ—¥		12æœˆ02æ—¥
 */
 
 //================================================================
-//	ƒCƒ“ƒNƒ‹[ƒh
+//	ã‚¤ãƒ³ã‚¯ãƒ«ãƒ¼ãƒ‰
 //================================================================
 #include"Manager.h"
 #include"sprite.h"
@@ -17,9 +17,9 @@
 #include"shader.h"
 
 //================================================================
-//	ƒOƒ[ƒoƒ‹•Ï”
+//	ã‚°ãƒ­ãƒ¼ãƒãƒ«å¤‰æ•°
 //================================================================
-static	ID3D11ShaderResourceView* g_Texture = NULL;	//ƒeƒNƒXƒ`ƒƒ‚P–‡‚ğ•\‚·ƒIƒuƒWƒFƒNƒg
+static	ID3D11ShaderResourceView* g_Texture = NULL;	//ãƒ†ã‚¯ã‚¹ãƒãƒ£ï¼‘æšã‚’è¡¨ã™ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆ
 static ID3D11Device* g_pDevice = nullptr;
 static ID3D11DeviceContext* g_pContext = nullptr;
 
@@ -28,32 +28,32 @@ void Title_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_pDevice = pDevice;
 	g_pContext = pContext;
 
-	//ƒeƒNƒXƒ`ƒƒ“Ç‚İ‚İ‚È‚Ç
+	//ãƒ†ã‚¯ã‚¹ãƒãƒ£èª­ã¿è¾¼ã¿ãªã©
 	TexMetadata		metadata;
 	ScratchImage	image;
 	LoadFromWICFile(L"asset\\texture\\Title.png", WIC_FLAGS_NONE, &metadata, image);
 	CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_Texture);
-	assert(g_Texture);//“Ç‚İ‚İ¸”s‚Éƒ_ƒCƒAƒƒO‚ğ•\¦
+	assert(g_Texture);//èª­ã¿è¾¼ã¿å¤±æ•—æ™‚ã«ãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã‚’è¡¨ç¤º
 
-	//ƒtƒF[ƒhƒCƒ“‚ÌƒZƒbƒg
+	//ãƒ•ã‚§ãƒ¼ãƒ‰ã‚¤ãƒ³ã®ã‚»ãƒƒãƒˆ
 	XMFLOAT4	color = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
 	SetFade(60.0f, color, FADE_IN, SCENE_GAME);
 
 }
 void Title_Finalize()
 {
-	//ƒeƒNƒXƒ`ƒƒ‚Ì‰ğ•ú‚È‚Ç
+	//ãƒ†ã‚¯ã‚¹ãƒãƒ£ã®è§£æ”¾ãªã©
 	SAFE_RELEASE(g_Texture);
 
 }
 void Title_Update()
 { 
-	//ƒL[“ü—Íƒ`ƒFƒbƒN
-	//ƒXƒ^[ƒgƒ{ƒ^ƒ“‚ª‰Ÿ‚³‚ê‚½‚çƒV[ƒ“‚ğØ‚è‘Ö‚¦
-	//ƒtƒF[ƒhˆ—’†‚ÍƒL[‚ğó‚¯•t‚¯‚È‚¢
+	//ã‚­ãƒ¼å…¥åŠ›ãƒã‚§ãƒƒã‚¯
+	//ã‚¹ã‚¿ãƒ¼ãƒˆãƒœã‚¿ãƒ³ãŒæŠ¼ã•ã‚ŒãŸã‚‰ã‚·ãƒ¼ãƒ³ã‚’åˆ‡ã‚Šæ›¿ãˆ
+	//ãƒ•ã‚§ãƒ¼ãƒ‰å‡¦ç†ä¸­ã¯ã‚­ãƒ¼ã‚’å—ã‘ä»˜ã‘ãªã„
 	if (Keyboard_IsKeyDownTrigger(KK_ENTER) && (GetFadeState() == FADE_NONE))
 	{
-		//ƒtƒF[ƒhƒAƒEƒg‚³‚¹‚ÄƒV[ƒ“‚ğØ‚è‘Ö‚¦‚é
+		//ãƒ•ã‚§ãƒ¼ãƒ‰ã‚¢ã‚¦ãƒˆã•ã›ã¦ã‚·ãƒ¼ãƒ³ã‚’åˆ‡ã‚Šæ›¿ãˆã‚‹
 		XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
 		SetFade(40.0f, color, FADE_OUT, SCENE_GAME);
 	}
@@ -61,14 +61,14 @@ void Title_Update()
 }
 void Title_Draw()
 {
-    // ƒVƒF[ƒ_[‚ğ•`‰æƒpƒCƒvƒ‰ƒCƒ“‚Éİ’è
+    // ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã‚’æç”»ãƒ‘ã‚¤ãƒ—ãƒ©ã‚¤ãƒ³ã«è¨­å®š
     Shader_Begin();
 
-    // ‰æ–ÊƒTƒCƒYæ“¾
+    // ç”»é¢ã‚µã‚¤ã‚ºå–å¾—
     const float SCREEN_WIDTH = (float)Direct3D_GetBackBufferWidth();
     const float SCREEN_HEIGHT = (float)Direct3D_GetBackBufferHeight();
 
-    // ’¸“_ƒVƒF[ƒ_[‚É³Ë‰es—ñ‚ğİ’è
+    // é ‚ç‚¹ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã«æ­£å°„å½±è¡Œåˆ—ã‚’è¨­å®š
     Shader_SetMatrix(XMMatrixOrthographicOffCenterLH(
         0.0f,
         SCREEN_WIDTH,
@@ -77,22 +77,22 @@ void Title_Draw()
         0.0f,
         1.0f));
 
-    // World s—ñ‚Í’PˆÊs—ñ‚ğİ’è
+    // World è¡Œåˆ—ã¯å˜ä½è¡Œåˆ—ã‚’è¨­å®š
     Shader_SetWorldMatrix(XMMatrixIdentity());
 
-    // ƒeƒNƒXƒ`ƒƒ‚ğƒZƒbƒg
+    // ãƒ†ã‚¯ã‚¹ãƒãƒ£ã‚’ã‚»ãƒƒãƒˆ
     g_pContext->PSSetShaderResources(0, 1, &g_Texture);
 
-    // BlendState İ’è
+    // BlendState è¨­å®š
     SetBlendState(BLENDSTATE_NONE);
 
-    // F‚ÆˆÊ’uEƒTƒCƒY‚ğİ’è
+    // è‰²ã¨ä½ç½®ãƒ»ã‚µã‚¤ã‚ºã‚’è¨­å®š
     XMFLOAT4 col = { 1.0f, 1.0f, 1.0f, 1.0f };
     XMFLOAT2 pos = { SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 };
     XMFLOAT2 size = { SCREEN_WIDTH, SCREEN_HEIGHT };
 
-    // •`‰æ
+    // æç”»
     DrawSprite(pos, size, col);
-}
 
+}
 

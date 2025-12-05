@@ -49,7 +49,7 @@ void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_pDevice2 = pDevice;
 	g_pContext2 = pContext;
 
-	g_Player2.m_model = ModelLoad("asset\\model\\ball.fbx");
+	g_Player2.m_model = ModelLoad("asset\\model\\char_bow.fbx");
 
 	g_Player2.m_position = XMFLOAT3(2.0f, 0.5f, 2.0f);
 	g_Player2.m_rotation = XMFLOAT3(0.0f, 0.0f, 0.0f);
@@ -179,6 +179,15 @@ void Player2_ManualMove()
 	g_Player2.m_velocity.x = moveX;
 	g_Player2.m_velocity.z = moveZ;
 
+	// モデルの向きを移動方向に合わせる
+	XMFLOAT3 moveDir = { g_Player2.m_velocity.x, 0.0f, g_Player2.m_velocity.z };
+	float length = sqrtf(moveDir.x * moveDir.x + moveDir.z * moveDir.z);
+	if (length > 0.001f) // 移動しているときだけ向きを変える
+	{
+		// Y軸回転角を計算
+		g_Player2.m_rotation.y = atan2f(moveDir.x, moveDir.z); // atan2f(X,Z)でY回転
+	}
+
 	// スペース押した && コヨーテタイムが0.0fより大きい
 	if (Keyboard_IsKeyDownTrigger(KK_SPACE) && g_Player2.m_koyoteTime > 0.0f)
 	{
@@ -200,16 +209,16 @@ void	Player2Draw()
 {
 	//ワールド行列作成
 	XMMATRIX	scale = XMMatrixScaling(
-		1.0f,
-		1.0f,
-		1.0f);
+		0.05f,
+		0.05f,
+		0.05f);
 	XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
 		g_Player2.m_rotation.x,
 		g_Player2.m_rotation.y,
 		g_Player2.m_rotation.z);
 	XMMATRIX	translation = XMMatrixTranslation(
 		g_Player2.m_position.x,
-		g_Player2.m_position.y,
+		g_Player2.m_position.y - 0.25f,
 		g_Player2.m_position.z);
 	XMMATRIX	world = scale * rotation * translation;
 
