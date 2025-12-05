@@ -1,5 +1,5 @@
 ﻿/*
-* ファイル名	Hpbar.cpp
+* ファイル名	Timer.cpp
 * タイトル	タイトル
 * 作成者		久保木幹太
 * 作成日		12月02日
@@ -12,10 +12,10 @@
 #include"Manager.h"
 #include"sprite.h"
 #include"keyboard.h"
-#include"Hpbar.h"
+
 #include"fade.h"
 #include"shader.h"
-
+#include "timer.h"
 //================================================================
 //	グローバル変数
 //================================================================
@@ -23,7 +23,7 @@ static	ID3D11ShaderResourceView* g_Texture = NULL;	//テクスチャ１枚を表
 static ID3D11Device* g_pDevice = nullptr;
 static ID3D11DeviceContext* g_pContext = nullptr;
 
-void Hpbar_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
+void Timer_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
 	g_pDevice = pDevice;
 	g_pContext = pContext;
@@ -31,7 +31,7 @@ void Hpbar_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	//テクスチャ読み込みなど
 	TexMetadata		metadata;
 	ScratchImage	image;
-	LoadFromWICFile(L"asset\\texture\\Player1HpBar.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+	LoadFromWICFile(L"asset\\texture\\timer.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
 	CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_Texture);
 	assert(g_Texture);//読み込み失敗時にダイアログを表示
 
@@ -40,18 +40,18 @@ void Hpbar_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 
 
 }
-void Hpbar_Finalize()
+void Timer_Finalize()
 {
 	//テクスチャの解放など
 	SAFE_RELEASE(g_Texture);
 
 }
-void Hpbar_Update()
+void Timer_Update()
 { 
 
 
 }
-void Hpbar_Draw()
+void Timer_Draw()
 {
     // シェーダーを描画パイプラインに設定
     Shader_Begin();
@@ -80,8 +80,8 @@ void Hpbar_Draw()
 
     // 色と位置・サイズを設定
     XMFLOAT4 col = { 1.0f, 1.0f, 1.0f, 1.0f };
-    XMFLOAT2 pos = {400, SCREEN_HEIGHT-100 };
-    XMFLOAT2 size = { SCREEN_WIDTH/3, SCREEN_HEIGHT/8 };
+    XMFLOAT2 pos = {SCREEN_WIDTH/2, 100 };
+    XMFLOAT2 size = { SCREEN_WIDTH/5, SCREEN_HEIGHT/10 };
 
     // 描画
     DrawSprite(pos, size, col);
