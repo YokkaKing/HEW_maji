@@ -131,7 +131,15 @@ void Game_Draw()
 
 	PlayerDraw();
 	Player2Draw();
-	Hpbar_Draw();
+	//==========lightがtrueだとUIが暗く見えるので、一回解除=========
+	Light.SetEnable(FALSE);			//ライティングOFF
+	Shader_SetLight(Light.Light);	//ライト構造体をシェーダーへセット
+	SetDepthTest(FALSE);
+	Hpbar_Draw(); //<--HpBar描画
+	Light.SetEnable(TRUE);			//ライティングON
+	Shader_SetLight(Light.Light);	//ライト構造体をシェーダーへセット
+	SetDepthTest(TRUE);
+	//============lightをまたtrueにして、camera2に影響がないように================
 //================================================================
 //	画面分割用関数(右画面)
 //================================================================
@@ -143,10 +151,11 @@ void Game_Draw()
 	TerrainDraw();
 	PlayerDraw();
 	Player2Draw();
-	Hpbar_Draw();
+	
 
 	//2D描画
 	Light.SetEnable(FALSE);			//ライティングOFF
 	Shader_SetLight(Light.Light);	//ライト構造体をシェーダーへセット
 	SetDepthTest(FALSE);
+	Hpbar_Draw();
 }

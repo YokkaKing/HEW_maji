@@ -1,13 +1,13 @@
-/*
-* ƒtƒ@ƒCƒ‹–¼	Hpbar.cpp
-* ƒ^ƒCƒgƒ‹	ƒ^ƒCƒgƒ‹
-* ì¬Ò		‹v•Û–ØŠ²‘¾
-* ì¬“ú		12Œ02“ú
-* XV“ú		12Œ02“ú
+ï»¿/*
+* ãƒ•ã‚¡ã‚¤ãƒ«å	Hpbar.cpp
+* ã‚¿ã‚¤ãƒˆãƒ«	ã‚¿ã‚¤ãƒˆãƒ«
+* ä½œæˆè€…		ä¹…ä¿æœ¨å¹¹å¤ª
+* ä½œæˆæ—¥		12æœˆ02æ—¥
+* æ›´æ–°æ—¥		12æœˆ02æ—¥
 */
 
 //================================================================
-//	ƒCƒ“ƒNƒ‹[ƒh
+//	ã‚¤ãƒ³ã‚¯ãƒ«ãƒ¼ãƒ‰
 //================================================================
 #include"Manager.h"
 #include"sprite.h"
@@ -17,9 +17,9 @@
 #include"shader.h"
 
 //================================================================
-//	ƒOƒ[ƒoƒ‹•Ï”
+//	ã‚°ãƒ­ãƒ¼ãƒãƒ«å¤‰æ•°
 //================================================================
-static	ID3D11ShaderResourceView* g_Texture = NULL;	//ƒeƒNƒXƒ`ƒƒ‚P–‡‚ğ•\‚·ƒIƒuƒWƒFƒNƒg
+static	ID3D11ShaderResourceView* g_Texture = NULL;	//ãƒ†ã‚¯ã‚¹ãƒãƒ£ï¼‘æšã‚’è¡¨ã™ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆ
 static ID3D11Device* g_pDevice = nullptr;
 static ID3D11DeviceContext* g_pContext = nullptr;
 
@@ -28,21 +28,21 @@ void Hpbar_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_pDevice = pDevice;
 	g_pContext = pContext;
 
-	//ƒeƒNƒXƒ`ƒƒ“Ç‚İ‚İ‚È‚Ç
+	//ãƒ†ã‚¯ã‚¹ãƒãƒ£èª­ã¿è¾¼ã¿ãªã©
 	TexMetadata		metadata;
 	ScratchImage	image;
-	LoadFromWICFile(L"asset\\texture\\Player1HpBar.png", WIC_FLAGS_NONE, &metadata, image);
+	LoadFromWICFile(L"asset\\texture\\Player1HpBar.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
 	CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_Texture);
-	assert(g_Texture);//“Ç‚İ‚İ¸”s‚Éƒ_ƒCƒAƒƒO‚ğ•\¦
+	assert(g_Texture);//èª­ã¿è¾¼ã¿å¤±æ•—æ™‚ã«ãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã‚’è¡¨ç¤º
 
-	//ƒtƒF[ƒhƒCƒ“‚ÌƒZƒbƒg
+	//ãƒ•ã‚§ãƒ¼ãƒ‰ã‚¤ãƒ³ã®ã‚»ãƒƒãƒˆ
 	XMFLOAT4	color = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 
 
 }
 void Hpbar_Finalize()
 {
-	//ƒeƒNƒXƒ`ƒƒ‚Ì‰ğ•ú‚È‚Ç
+	//ãƒ†ã‚¯ã‚¹ãƒãƒ£ã®è§£æ”¾ãªã©
 	SAFE_RELEASE(g_Texture);
 
 }
@@ -53,14 +53,14 @@ void Hpbar_Update()
 }
 void Hpbar_Draw()
 {
-    // ƒVƒF[ƒ_[‚ğ•`‰æƒpƒCƒvƒ‰ƒCƒ“‚Éİ’è
+    // ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã‚’æç”»ãƒ‘ã‚¤ãƒ—ãƒ©ã‚¤ãƒ³ã«è¨­å®š
     Shader_Begin();
 
-    // ‰æ–ÊƒTƒCƒYæ“¾
+    // ç”»é¢ã‚µã‚¤ã‚ºå–å¾—
     const float SCREEN_WIDTH = (float)Direct3D_GetBackBufferWidth();
     const float SCREEN_HEIGHT = (float)Direct3D_GetBackBufferHeight();
 
-    // ’¸“_ƒVƒF[ƒ_[‚É³Ë‰es—ñ‚ğİ’è
+    // é ‚ç‚¹ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã«æ­£å°„å½±è¡Œåˆ—ã‚’è¨­å®š
     Shader_SetMatrix(XMMatrixOrthographicOffCenterLH(
         0.0f,
         SCREEN_WIDTH,
@@ -69,21 +69,21 @@ void Hpbar_Draw()
         0.0f,
         1.0f));
 
-    // World s—ñ‚Í’PˆÊs—ñ‚ğİ’è
+    // World è¡Œåˆ—ã¯å˜ä½è¡Œåˆ—ã‚’è¨­å®š
     Shader_SetWorldMatrix(XMMatrixIdentity());
 
-    // ƒeƒNƒXƒ`ƒƒ‚ğƒZƒbƒg
+    // ãƒ†ã‚¯ã‚¹ãƒãƒ£ã‚’ã‚»ãƒƒãƒˆ
     g_pContext->PSSetShaderResources(0, 1, &g_Texture);
 
-    // BlendState İ’è
+    // BlendState è¨­å®š
     SetBlendState(BLENDSTATE_ALFA);
 
-    // F‚ÆˆÊ’uEƒTƒCƒY‚ğİ’è
+    // è‰²ã¨ä½ç½®ãƒ»ã‚µã‚¤ã‚ºã‚’è¨­å®š
     XMFLOAT4 col = { 1.0f, 1.0f, 1.0f, 1.0f };
-    XMFLOAT2 pos = {400, SCREEN_HEIGHT-200 };
+    XMFLOAT2 pos = {400, SCREEN_HEIGHT-100 };
     XMFLOAT2 size = { SCREEN_WIDTH/3, SCREEN_HEIGHT/7 };
 
-    // •`‰æ
+    // æç”»
     DrawSprite(pos, size, col);
 }
 
