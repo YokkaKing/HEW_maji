@@ -1,5 +1,5 @@
 ﻿/*
-* ファイル名	Hpbar.cpp
+* ファイル名	HpBar2.cpp
 * タイトル	タイトル
 * 作成者		久保木幹太
 * 作成日		12月02日
@@ -12,7 +12,7 @@
 #include"Manager.h"
 #include"sprite.h"
 #include"keyboard.h"
-#include"Hpbar.h"
+#include"HpBar2.h"
 #include"fade.h"
 #include"shader.h"
 
@@ -23,7 +23,7 @@ static	ID3D11ShaderResourceView* g_Texture = NULL;	//テクスチャ１枚を表
 static ID3D11Device* g_pDevice = nullptr;
 static ID3D11DeviceContext* g_pContext = nullptr;
 
-void Hpbar_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
+void HpBar2_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
 	g_pDevice = pDevice;
 	g_pContext = pContext;
@@ -31,7 +31,7 @@ void Hpbar_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	//テクスチャ読み込みなど
 	TexMetadata		metadata;
 	ScratchImage	image;
-	LoadFromWICFile(L"asset\\texture\\Player1HpBar.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+	LoadFromWICFile(L"asset\\texture\\Player2Hpbar.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
 	CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_Texture);
 	assert(g_Texture);//読み込み失敗時にダイアログを表示
 
@@ -40,18 +40,18 @@ void Hpbar_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 
 
 }
-void Hpbar_Finalize()
+void HpBar2_Finalize()
 {
 	//テクスチャの解放など
 	SAFE_RELEASE(g_Texture);
 
 }
-void Hpbar_Update()
+void HpBar2_Update()
 { 
 
 
 }
-void Hpbar_Draw()
+void HpBar2_Draw()
 {
     // シェーダーを描画パイプラインに設定
     Shader_Begin();
