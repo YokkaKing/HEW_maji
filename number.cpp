@@ -1,5 +1,5 @@
 ﻿/*
-* ファイル名	Timer.cpp
+* ファイル名	Number.cpp
 * タイトル	タイトル
 * 作成者		久保木幹太
 * 作成日		12月02日
@@ -15,15 +15,20 @@
 
 #include"fade.h"
 #include"shader.h"
-#include "timer.h"
+#include "number.h"
+//================================================================
+//	マクロ定義
+//================================================================
+#define NUMBER_MAX (2)
 //================================================================
 //	グローバル変数
 //================================================================
 static	ID3D11ShaderResourceView* g_Texture = NULL;	//テクスチャ１枚を表すオブジェクト
 static ID3D11Device* g_pDevice = nullptr;
 static ID3D11DeviceContext* g_pContext = nullptr;
+static float time;
 
-void Timer_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
+void Number_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
 	g_pDevice = pDevice;
 	g_pContext = pContext;
@@ -31,28 +36,34 @@ void Timer_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	//テクスチャ読み込みなど
 	TexMetadata		metadata;
 	ScratchImage	image;
-	LoadFromWICFile(L"asset\\texture\\timer.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+	LoadFromWICFile(L"asset\\texture\\number.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
 	CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_Texture);
 	assert(g_Texture);//読み込み失敗時にダイアログを表示
 
 	//フェードインのセット
 	XMFLOAT4	color = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-
+    time = 60.0f;
 
 }
-void Timer_Finalize()
+void Number_Finalize()
 {
 	//テクスチャの解放など
 	SAFE_RELEASE(g_Texture);
 
 }
-void Timer_Update()
+void Number_Update()
 { 
-
-
+    float frame = 1 / 60.0f;
+    time -= frame;
 }
-void Timer_Draw()
+void Number_Draw()
 {
+    int PatNo[2] = { 0,0 };
+    int temp = (int)time;
+
+    PatNo[0] = temp / 10;
+    PatNo[1] = temp % 10;
+   
     // シェーダーを描画パイプラインに設定
     Shader_Begin();
 
@@ -74,17 +85,20 @@ void Timer_Draw()
 
     // テクスチャをセット
     g_pContext->PSSetShaderResources(0, 1, &g_Texture);
-
-    // BlendState 設定
-    SetBlendState(BLENDSTATE_ALFA);
-
     // 色と位置・サイズを設定
     XMFLOAT4 col = { 1.0f, 1.0f, 1.0f, 1.0f };
-    XMFLOAT2 pos = {SCREEN_WIDTH/2, 100 };
-    XMFLOAT2 size = { SCREEN_WIDTH/6, SCREEN_HEIGHT/12 };
+    XMFLOAT2 pos = { SCREEN_WIDTH / 2-40, 90 };
+    XMFLOAT2 size = { 150, 80 };
+    // BlendState 設定
+    SetBlendState(BLENDSTATE_ALFA);
+    for (int i = 0; i < NUMBER_MAX; i++)
+    {
 
-    // 描画
-    DrawSprite(pos, size, col);
+        // 描画
+        DrawSpriteEx(pos, size, col, PatNo[i], 5, 2);
+		pos.x += size.x-42; // 次の数字の位置調整
+    }
+
 }
 
 
