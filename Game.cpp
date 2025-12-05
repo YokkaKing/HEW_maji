@@ -27,6 +27,7 @@
 #include "HpBar.h"
 #include "HpBar2.h"
 #include "timer.h"
+#include "number.h"
 //================================================================
 //	グローバル変数
 //================================================================
@@ -48,6 +49,7 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	Hpbar_Initialize(pDevice, pContext);
 	HpBar2_Initialize(pDevice, pContext);
 	Timer_Initialize(pDevice, pContext);
+	Number_Initialize(pDevice, pContext);
 	//========================
 	//ビューポートの初期化
 	Viewport_Initialize(Direct3D_GetWindowHandle());
@@ -87,6 +89,7 @@ void Game_Finalize()
 	Hpbar_Finalize();
 	HpBar2_Finalize();
 	Timer_Finalize();
+	Number_Finalize();
 	//=====================
 	//UnloadAudio(g_BgmID);//サウンドの解放
 }
@@ -106,6 +109,7 @@ void Game_Update()
 	Hpbar_Update();
 	HpBar2_Update();
 	Timer_Update();
+	Number_Update();
 	//=====================
 	ManagerCollider::UpdateAllCollisions();
 	//キー入力チェック
@@ -146,6 +150,7 @@ void Game_Draw()
 	PlayerDraw();
 	Player2Draw();
 
+
 	//==========lightがtrueだとUIが暗く見えるので、一回解除=========
 	Light.SetEnable(FALSE);			//ライティングOFF
 	Shader_SetLight(Light.Light);	//ライト構造体をシェーダーへセット
@@ -153,6 +158,7 @@ void Game_Draw()
 	//===UI描画========
 	Hpbar_Draw(); //<--HpBar描画
 	Timer_Draw();
+	Number_Draw();
 	//================
 	Light.SetEnable(TRUE);			//ライティングON
 	Shader_SetLight(Light.Light);	//ライト構造体をシェーダーへセット
@@ -178,4 +184,5 @@ void Game_Draw()
 	SetDepthTest(FALSE);
 	HpBar2_Draw();
 	Timer_Draw();
+	Number_Draw();
 }
