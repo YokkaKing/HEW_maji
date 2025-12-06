@@ -23,6 +23,7 @@
 #include"Evolution.h"
 #include"colliderFactory.h"
 #include"debug_ostream.h"
+#include "keyboard.h"
 
 //================================================================
 //	グローバル変数
@@ -64,7 +65,9 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_Player.m_acceleration = XMFLOAT3(0.0f, -9.8f / 600.0f * 0.5f, 0.0f);
 	g_Player.FrictionRate = 0.98f;
 	g_Player.EvolutionType = EVOLUTION_TYPE::EVOLUTION_TYPE_NONE;
-	g_Player.m_currentHp = g_Player.m_maxHp;
+	g_Player.m_currentHp = g_Player.m_maxHp-10;
+	//g_Player.m_currentHp = g_Player.m_maxHp - 10; HPデバッグ用
+
 	g_Player.m_isDead = false;
 
 	g_Player.SetObject(g_Player.m_position, g_Player.m_scale, "Player", 0);
@@ -86,6 +89,7 @@ void PlayerFinalize()
 }
 void	PlayerUpdate()
 {
+
 	g_Controller.Update();//毎フレームコントローラーの状態を更新
 
 	EvolvePlayer();           // Eキーで進化タイプを選択（一度だけ実行）
@@ -261,7 +265,14 @@ PLAYER* GetPlayer()
 {
 	return &g_Player;
 }
-
+float Player_GetHP() 
+{
+	return g_Player.m_currentHp; 
+}
+float Player_GetMaxHp()
+{
+	return g_Player.m_maxHp;
+}
 void PLAYER::TakeDamage(float damage)
 {
 	if (m_isDead) return;
