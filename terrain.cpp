@@ -21,6 +21,7 @@
 #include"shader.h"
 #include"Camera.h"
 #include"Player.h"
+#include"Player2.h"
 #include<string>
 
 //================================================================
@@ -491,133 +492,234 @@ const std::vector<std::vector<std::vector<std::string>>> Hills =
 	},
 };
 
+// 壁の当たり判定
+const std::vector<std::vector<std::vector<std::string>>> Walls =
+{
+	{
+		{"annnnnnnna"},
+		{"cnnnnnnnnd"},
+		{"nnnnnnnnnn"},
+		{"nnnnnnnnnn"},
+		{"nnnnnnnnnn"},
+		{"nnnnnnnnnn"},
+		{"nnnnnnnnnn"},
+		{"nnnnnnnnnn"},
+		{"cnnnnnnnnd"},
+		{"bnnnnnnnnb"},
+	},
+	{
+		{"nnnnnnnnnn"},
+		{"nnnnnnnnnn"},
+		{"nnnnnnnnnn"},
+		{"nnnnnnnnnn"},
+		{"nnnnnnnnnn"},
+		{"nnnnnnnnnn"},
+		{"nnnnnnnnnn"},
+		{"nnnnnnnnnn"},
+		{"nnnnnnnnnn"},
+		{"nnnnnnnnnn"},
+	},
+	{
+		{"annnnnnnna"},
+		{"cnnnnnnnnd"},
+		{"nnnnnnnnnn"},
+		{"nnnnnnnnnn"},
+		{"nnnnnnnnnn"},
+		{"nnnnnnnnnn"},
+		{"nnnnnnnnnn"},
+		{"nnnnnnnnnn"},
+		{"cnnnnnnnnd"},
+		{"bnnnnnnnnb"},
+	},
+};
+
 void TerrainInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
 	g_pDevice = pDevice;
 	g_pContext = pContext;
 
-	g_Terrain.m_model = ModelLoad("asset\\model\\hill.fbx");
+	g_Terrain.m_moveTerrain[0] = ModelLoad("asset\\model\\hill.fbx");
+	g_Terrain.m_moveTerrain[1] = ModelLoad("asset\\model\\wall.fbx");
 	blockModel = ModelLoad("asset\\model\\block.fbx");
 
-	g_Terrain.m_position = GetPlayerPosition();
-	g_Terrain.m_rotation = XMFLOAT3(0.0f, 0.0f, 0.0f);
-	g_Terrain.m_velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	g_Terrain.m_motherPosition[0] = GetPlayerPosition();
+	g_Terrain.m_motherPosition[1] = GetPlayer2Position();
+	g_Terrain.m_terrainScale[0] = { 5.0f, 5.0f, 5.0f };
+	g_Terrain.m_terrainScale[1] = { 10.0f, 6.5f, 10.0f };
+	g_Terrain.m_terrainRotation[0] = { 0.0f,0.0f,0.0f };
+	g_Terrain.m_terrainRotation[1] = { 0.0f,0.0f,0.0f };
 
-	g_Terrain.m_scale = XMFLOAT3(5.0f, 5.0f, 5.0f);
-	g_Terrain.m_position.y -= 7.0f; // 下に設定
-	g_Terrain.m_motherPosition = g_Terrain.m_position;
+	g_Terrain.m_motherPosition[0].y -= 5.0f;
+	g_Terrain.m_motherPosition[1].y -= 3.0f;
+
+	g_Terrain.m_coolTime[0] = 0.0f;
+	g_Terrain.m_coolTime[1] = 0.0f;
 
 	//g_Terrain.PixelObjects(Hill, TERRAIN_TYPE::HILL, g_Terrain.m_motherPosition);
-	g_Terrain.SimpleObjects(Hills, { 0.25f, 0.25f, 0.25f }, TERRAIN_TYPE::HILL, g_Terrain.m_motherPosition);
+
+	// 丘の当たり判定
+	g_Terrain.SimpleObjects(Hills, { 0.25f, 0.25f, 0.25f }, TERRAIN_TYPE::HILL, g_Terrain.m_motherPosition[0]);
+	g_Terrain.SimpleObjects(Walls, { 1.0f, 1.0f, 1.0f }, TERRAIN_TYPE::WALL, g_Terrain.m_motherPosition[1]);
 	//hal::dout << "座標 : (" << g_Terrain.slopes[0]->m_position.x << "," << g_Terrain.slopes[0]->m_position.y << "," << g_Terrain.slopes[0]->m_position.z << ")\n";
 }
 void TerrainFinalize()
 {
-	ModelRelease(g_Terrain.m_model);
+	//ModelRelease(g_Terrain.m_model);
 	ModelRelease(blockModel);
+
+	for (int i = 0; i < 2; i++)
+	{
+		ModelRelease(g_Terrain.m_moveTerrain[i]);
+		g_Terrain.m_isChange[i] = false;
+	}
 }
 void TerrainUpdate()
 {
 	if (Keyboard_IsKeyDown(KK_R))
 	{
-		g_Terrain.m_isChange[0] = true;
+		// クールタイムがあれば発動できない
+		if (g_Terrain.m_coolTime[0] <= 0)
+		{
+			g_Terrain.m_isChange[0] = true; // 1Pの変身を確認
+			g_Terrain.m_coolTime[0] = 60.0f;
+		}
 	}
 
-	// 変身してなければ追従
+	if (Keyboard_IsKeyDown(KK_L))
+	{
+		// クールタイムがあれば発動できない
+		if (g_Terrain.m_coolTime[1] <= 0)
+		{
+			g_Terrain.m_isChange[1] = true; // 2Pの変身を確認
+			g_Terrain.m_coolTime[1] = 60.0f;
+		}
+	}
+
+	// 変身したら-する
+	if (g_Terrain.m_isChange[0])
+	{
+		// クールタイムあったら-する
+		if (g_Terrain.m_coolTime[0] > 0.0f)
+		{
+			g_Terrain.m_coolTime[0] -= 1.0f / 10.0f;
+		}
+		else // 無かったら
+		{
+			g_Terrain.m_coolTime[0] = 0.0f;	// クールタイムをなくす
+			g_Terrain.m_isChange[0] = false; // 変身を解く
+		}
+	}
+	// 変身したら-する
+	if (g_Terrain.m_isChange[1])
+	{
+		// クールタイムあったら-する
+		if (g_Terrain.m_coolTime[1] > 0.0f)
+		{
+			g_Terrain.m_coolTime[1] -= 1.0f / 10.0f;
+		}
+		else // 無かったら
+		{
+			g_Terrain.m_coolTime[1] = 0.0f;	// クールタイムをなくす
+			g_Terrain.m_isChange[1] = false; // 変身を解く
+		}
+	}
+
+	// 変身してなければ追従P1
 	if (!g_Terrain.m_isChange[0])
 	{
-		g_Terrain.m_position = GetPlayerPosition();
-		g_Terrain.m_position.y -= 7.0f; // 下に設定
-		g_Terrain.m_motherPosition = g_Terrain.m_position;
+		g_Terrain.m_motherPosition[0] = GetPlayerPosition();
+		g_Terrain.m_motherPosition[0].y -= 5.0f; // 下に設定
+		g_Terrain.UpdateObject(g_Terrain.hills, g_Terrain.m_motherPosition[0], FALSE); // P1の地形の当たり判定
 	}
 	else
 	{
-		if (g_Terrain.m_position.y < -0.4f)
+		// 変身したら上昇
+		if (g_Terrain.m_motherPosition[0].y < -0.5f)
 		{
-			g_Terrain.Move(0.0f, 0.1f, 0.0f);
+			g_Terrain.m_motherPosition[0].y += 0.1f;
+			g_Terrain.UpdateObject(g_Terrain.hills, g_Terrain.m_motherPosition[0], TRUE); // P1の地形の当たり判定
 		}
 	}
-	g_Terrain.UpdateObject(g_Terrain.hills);
+
+	// 変身してなければ追従P2
+	if (!g_Terrain.m_isChange[1])
+	{
+		g_Terrain.m_motherPosition[1] = GetPlayer2Position();
+		g_Terrain.m_motherPosition[1].y -= 3.0f; // 下に設定
+		g_Terrain.UpdateObject(g_Terrain.walls, g_Terrain.m_motherPosition[1], FALSE); // P2の地形の当たり判定
+	}
+	else
+	{
+		// 変身したら上昇
+		if (g_Terrain.m_motherPosition[1].y < 1.5f)
+		{
+			g_Terrain.m_motherPosition[1].y += 0.1f;
+			g_Terrain.UpdateObject(g_Terrain.walls, g_Terrain.m_motherPosition[1], TRUE); // P2の地形の当たり判定
+		}
+	}
 }
 void TerrainDraw()
 {
-	//ワールド行列作成
-	XMMATRIX	scale = XMMatrixScaling(
-		g_Terrain.m_scale.x,
-		g_Terrain.m_scale.y,
-		g_Terrain.m_scale.z);
-	XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
-		g_Terrain.m_rotation.x,
-		g_Terrain.m_rotation.y,
-		g_Terrain.m_rotation.z);
-	XMMATRIX	translation = XMMatrixTranslation(
-		g_Terrain.m_position.x,
-		g_Terrain.m_position.y,
-		g_Terrain.m_position.z);
-	XMMATRIX	world = scale * rotation * translation;
+	// 1Pが変身してないときは描画しない
+	if (g_Terrain.m_isChange[0])
+	{
+		//ワールド行列作成
+		XMMATRIX	scale = XMMatrixScaling(
+			g_Terrain.m_terrainScale[0].x,
+			g_Terrain.m_terrainScale[0].y,
+			g_Terrain.m_terrainScale[0].z);
+		XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
+			g_Terrain.m_terrainRotation[0].x,
+			g_Terrain.m_terrainRotation[0].y,
+			g_Terrain.m_terrainRotation[0].z);
+		XMMATRIX	translation = XMMatrixTranslation(
+			g_Terrain.m_motherPosition[0].x,
+			g_Terrain.m_motherPosition[0].y,
+			g_Terrain.m_motherPosition[0].z);
+		XMMATRIX	world = scale * rotation * translation;
 
-	//変換行列作成
-	XMMATRIX	view = GetViewMatrix();
-	XMMATRIX	projection = GetProjectionMatrix();
-	XMMATRIX	wvp = world * view * projection;
+		//変換行列作成
+		XMMATRIX	view = GetViewMatrix();
+		XMMATRIX	projection = GetProjectionMatrix();
+		XMMATRIX	wvp = world * view * projection;
 
-	//シェーダーへ行列をセット
-	Shader_SetWorldMatrix(world);
-	// Shader_SetMatrix(wvp);
+		//シェーダーへ行列をセット
+		Shader_SetWorldMatrix(world);
+		// Shader_SetMatrix(wvp);
 
-	//モデルの描画リクエスト
-	ModelDraw(g_Terrain.m_model);
+		//モデルの描画リクエスト
+		ModelDraw(g_Terrain.m_moveTerrain[0]);
+	}
+	// 2Pが変身してないときは描画しない
+	if (g_Terrain.m_isChange[1])
+	{
+		//ワールド行列作成
+		XMMATRIX	scale = XMMatrixScaling(
+			g_Terrain.m_terrainScale[1].x,
+			g_Terrain.m_terrainScale[1].y,
+			g_Terrain.m_terrainScale[1].z);
+		XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
+			g_Terrain.m_terrainRotation[1].x,
+			g_Terrain.m_terrainRotation[1].y,
+			g_Terrain.m_terrainRotation[1].z);
+		XMMATRIX	translation = XMMatrixTranslation(
+			g_Terrain.m_motherPosition[1].x,
+			g_Terrain.m_motherPosition[1].y,
+			g_Terrain.m_motherPosition[1].z);
+		XMMATRIX	world = scale * rotation * translation;
 
-	//for (int i = 0; i < g_Terrain.slopes.size(); i++)
-	//{
-	//	// ワールド行列作成
-	//	XMMATRIX scale = XMMatrixScaling(
-	//		1.0f, 1.0f, 1.0f); // スロープは頂点指定なのでスケールは1にしておく
-	//	XMMATRIX rotation = XMMatrixRotationRollPitchYaw(
-	//		0.0f, 0.0f, 0.0f); // 回転も必要なら入れる
-	//	XMMATRIX translation = XMMatrixTranslation(
-	//		g_Terrain.slopes[i]->m_position.x,
-	//		g_Terrain.slopes[i]->m_position.y,
-	//		g_Terrain.slopes[i]->m_position.z);
+		//変換行列作成
+		XMMATRIX	view = GetViewMatrix();
+		XMMATRIX	projection = GetProjectionMatrix();
+		XMMATRIX	wvp = world * view * projection;
 
-	//	XMMATRIX world = scale * rotation * translation;
+		//シェーダーへ行列をセット
+		Shader_SetWorldMatrix(world);
+		// Shader_SetMatrix(wvp);
 
-	//	// シェーダーへ行列をセット
-	//	Shader_SetWorldMatrix(world);
-
-	//	// ブロックモデルで描画（簡単に可視化用）
-	//	ModelDraw(blockModel);
-	//}
-
-	//for (int i = 0; i < g_Terrain.hills.size(); i++)
-	//{
-	//	//ワールド行列作成
-	//	XMMATRIX	scale = XMMatrixScaling(
-	//		g_Terrain.hills[i]->m_scale.x,
-	//		g_Terrain.hills[i]->m_scale.y,
-	//		g_Terrain.hills[i]->m_scale.z);
-	//	XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
-	//		0.0f,
-	//		0.0f,
-	//		0.0f);
-	//	XMMATRIX	translation = XMMatrixTranslation(
-	//		g_Terrain.hills[i]->m_position.x,
-	//		g_Terrain.hills[i]->m_position.y,
-	//		g_Terrain.hills[i]->m_position.z);
-	//	XMMATRIX	world = scale * rotation * translation;
-
-	//	//変換行列作成
-	//	XMMATRIX	view = GetViewMatrix();
-	//	XMMATRIX	projection = GetProjectionMatrix();
-	//	XMMATRIX	wvp = world * view * projection;
-
-	//	//シェーダーへ行列をセット
-	//	Shader_SetWorldMatrix(world);
-	//	// Shader_SetMatrix(wvp);
-
-	//	//モデルの描画リクエスト
-	//	ModelDraw(blockModel);
-	//}
+		//モデルの描画リクエスト
+		ModelDraw(g_Terrain.m_moveTerrain[1]);
+	}
 }
 // 簡単な四角形の当たり判定を作る場合
 void TERRAIN::SetObject(XMFLOAT3 pos, XMFLOAT3 scl, std::string tag, int lay)
@@ -634,7 +736,7 @@ void TERRAIN::SetObject(XMFLOAT3 pos, XMFLOAT3 scl, std::string tag, int lay)
 		terrainObjects.push_back(obj);
 
 		if (obj->m_tag == "HILL") hills.push_back(obj);
-		if (obj->m_tag == "WALL") walls.push_back(obj);
+		if (obj->m_tag == "Wall") walls.push_back(obj);
 		if (obj->m_tag == "TREE") trees.push_back(obj);
 	}
 }
@@ -891,17 +993,17 @@ std::vector<TERRAIN_OBJECT> TERRAIN::InitializeObject(const std::vector<std::vec
 	return terrain;
 }
 // 当たり判定の座標を更新する
-void TERRAIN::UpdateObject(std::vector<GameObject*> terrain)
+void TERRAIN::UpdateObject(std::vector<GameObject*> terrain, XMFLOAT3 motherPosition, bool move)
 {
-	if (!m_isChange[0])
+	if (!move)
 	{
 		XMFLOAT3 pos;
 		// 変身してなければプレイヤーと同じ動きをする
 		for (int i = 0; i < terrain.size(); i++)
 		{
-			pos.x = m_motherPosition.x + terrain[i]->m_velocity.x;
-			pos.y = m_motherPosition.y + terrain[i]->m_velocity.y;
-			pos.z = m_motherPosition.z + terrain[i]->m_velocity.z;
+			pos.x = motherPosition.x + terrain[i]->m_velocity.x;
+			pos.y = motherPosition.y + terrain[i]->m_velocity.y;
+			pos.z = motherPosition.z + terrain[i]->m_velocity.z;
 
 			terrain[i]->m_position = pos;
 		}
@@ -910,10 +1012,7 @@ void TERRAIN::UpdateObject(std::vector<GameObject*> terrain)
 	{
 		for (int i = 0; i < terrain.size(); i++)
 		{
-			if (m_position.y < -0.4f)
-			{
-				terrain[i]->Move(0.0f, 0.1f, 0.0f);
-			}
+			terrain[i]->Move(0.0f, 0.1f, 0.0f);
 		}
 	}
 }
@@ -940,8 +1039,10 @@ void TERRAIN::CreateHit(std::vector<TERRAIN_OBJECT> terrain, XMFLOAT3 motherPosi
 			break;
 
 		case TERRAIN_TYPE::WALL:
-			SetObject(pos, terrain[i].m_size, "WALL", 0);
+			SetObject(pos, terrain[i].m_size, "Wall", 0);
 			walls[i]->m_position = pos;	// 座標を格納
+			walls[i]->m_velocity = terrain[i].m_distance;
+			walls[i]->m_scale = terrain[i].m_size;
 			break;
 
 		case TERRAIN_TYPE::TREE:
