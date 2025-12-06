@@ -15,7 +15,7 @@
 //================================================================
 //	インクルード
 //================================================================
-//#include"keyboard.h"
+#include"keyboard.h"
 #include"Controller.h"
 #include"Player.h"
 #include"Camera.h"
@@ -88,8 +88,10 @@ void	PlayerUpdate()
 {
 	g_Controller.Update();//毎フレームコントローラーの状態を更新
 
-	EvolvePlayer();           // Eキーで進化タイプを選択（一度だけ実行）
-	ApplyEvolutionEffect();   // 進化タイプに応じたパラメータを適用
+	//EvolvePlayer();     
+	EvolvePlayer3();
+	//ApplyEvolutionEffect();   // 進化タイプに応じたパラメータを適用
+	ApplyEvolutionEffect3();   // 進化タイプに応じたパラメータを適用
 	if (g_Player.m_isDead)return;	//死亡している場合は更新処理をスキップ
 	//装備中の武器を更新する
 	if (g_Player.m_currentWeapon)
@@ -102,7 +104,8 @@ void	PlayerUpdate()
 		}
 	}
 	//攻撃入力のチェック (例: KK_Oキー)
-	if (g_Controller.IsButtonPushed(ControllerButton::X_BUTTON))//xボタン
+	if (Keyboard_IsKeyDownTrigger(KK_C))
+	//if (g_Controller.IsButtonPushed(ControllerButton::X_BUTTON))//xボタン
 	{
 		if (g_Player.m_currentWeapon && !g_Player.m_currentWeapon->IsAttacking())
 		{
@@ -171,6 +174,16 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 		speed = stickY * 0.1f;
 	}
 
+
+	if (Keyboard_IsKeyDown(KK_W))
+	{
+		speed = +0.1f;
+	}
+	if (Keyboard_IsKeyDown(KK_S))
+	{
+		speed = -0.1f;
+	}
+
 	moveX += forwardX * speed;
 	moveZ += forwardZ * speed;
 
@@ -181,6 +194,15 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 	{
 		// 左スティック左方向 (-1.0f) で左移動 (strafe = +0.1f) に対応
 		strafe = stickX * 0.1f;
+	}
+
+	if (Keyboard_IsKeyDown(KK_A))
+	{
+		strafe = -0.1f;  // 左
+	}
+	if (Keyboard_IsKeyDown(KK_D))
+	{
+		strafe = +0.1f;  // 右
 	}
 	moveX += rightX * strafe;
 	moveZ += rightZ * strafe;
@@ -199,7 +221,8 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 	}
 
 	// Aボタンを押した && コヨーテタイムが0.0fより大きい
-	if (g_Controller.IsButtonPushed(ControllerButton::A_BUTTON) && g_Player.m_koyoteTime > 0.0f) //Aボタン**
+	if (Keyboard_IsKeyDownTrigger(KK_SPACE) && g_Player.m_koyoteTime > 0.0f)
+	//if (g_Controller.IsButtonPushed(ControllerButton::A_BUTTON) && g_Player.m_koyoteTime > 0.0f) //Aボタン**
 	{
 		g_Player.m_velocity.y = JUMP_FORCE;
 		g_Player.m_isGround = false;

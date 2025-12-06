@@ -96,7 +96,7 @@ void	Player2Update()
 	}
 
 	//攻撃入力のチェック
-	if (Keyboard_IsKeyDownTrigger(KK_C))
+	if (Keyboard_IsKeyDownTrigger(KK_N))
 	{
 		// プレイヤーの現在攻撃中フラグをチェック
 		if (g_Player2.m_currentWeapon && !g_Player2.m_currentWeapon->IsAttacking())
@@ -150,11 +150,11 @@ void Player2_ManualMove()
 	float moveZ = 0.0f;
 
 	float speed = 0.0f;
-	if (Keyboard_IsKeyDown(KK_W))
+	if (Keyboard_IsKeyDown(KK_U))
 	{
 		speed = -0.1f;
 	}
-	if (Keyboard_IsKeyDown(KK_S))
+	if (Keyboard_IsKeyDown(KK_J))
 	{
 		speed = +0.1f;
 	}
@@ -164,11 +164,11 @@ void Player2_ManualMove()
 
 	// 横移動
 	float strafe = 0.0f;
-	if (Keyboard_IsKeyDown(KK_A))
+	if (Keyboard_IsKeyDown(KK_H))
 	{
 		strafe = +0.1f;  // 左
 	}
-	if (Keyboard_IsKeyDown(KK_D))
+	if (Keyboard_IsKeyDown(KK_K))
 	{
 		strafe = -0.1f;  // 右
 	}
