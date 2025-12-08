@@ -57,6 +57,7 @@ public:
 	void OnCollision(const CollisionInfo& info)override;
 	void SetObject(XMFLOAT3 pos, XMFLOAT3 scl, std::string tag, int lay);
 	void TakeDamage(float damage);
+	
 };
 
 void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
@@ -70,6 +71,8 @@ XMFLOAT3 GetPlayerPosition();
 
 void Player_Jump();
 void Player_ManualMove();
+float Player_GetHP();
+float Player_GetMaxHp();
 PLAYER* GetPlayer();
 
 #endif // PLAYER_H
