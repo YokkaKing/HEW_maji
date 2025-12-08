@@ -41,7 +41,10 @@ void PlayerDie()
 	//死亡処理
 
 	// 例: プレイヤーを非表示にする
-	g_Player.m_gameObject->m_isEnable = false;
+	if (g_Player.m_gameObject != nullptr)
+	{
+		g_Player.m_gameObject->m_isEnable = false;
+	}
 
 	// 例: 入力を受け付けないようにする（状態をIDLEにするなど）
 	g_Player.State = PLAYER_STATE::PLAYER_STATE_IDLE;
@@ -80,6 +83,11 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 void PlayerFinalize()
 {
 	ModelRelease(g_Player.m_model);
+	if (g_Player.m_gameObject)
+	{
+		delete g_Player.m_gameObject;
+		g_Player.m_gameObject = nullptr;
+	}
 	//武器の解放
 	if (g_Player.m_currentWeapon)
 	{
@@ -111,6 +119,7 @@ void	PlayerUpdate()
 	if (Keyboard_IsKeyDownTrigger(KK_C))
 	//if (g_Controller.IsButtonPushed(ControllerButton::X_BUTTON))//xボタン
 	{
+		g_Player.m_currentHp -= 100.0f;
 		if (g_Player.m_currentWeapon && !g_Player.m_currentWeapon->IsAttacking())
 		{
 			g_Player.m_currentWeapon->StartAttack(g_Player.m_position, g_Player.m_rotation);
@@ -462,16 +471,17 @@ void PLAYER::SetObject(XMFLOAT3 pos, XMFLOAT3 scl, std::string tag, int lay)
 		lay
 	);
 
-	m_position = obj->m_position;
-	m_scale = obj->m_scale;
-	m_tag = obj->m_tag;
-	m_layer = obj->m_layer;
-
-	for (auto& col : obj->GetColliders<>())
+	m_gameObject = obj;
+	if (m_gameObject)
 	{
-		col->owner = this;
-		this->components.push_back(col);
+		m_position = m_gameObject->m_position;
+		m_scale = m_gameObject->m_scale;
+		m_tag = m_gameObject->m_tag;
+		m_layer = m_gameObject->m_layer;
+		for (auto& col : obj->GetColliders<>())
+		{
+			col->owner = this;
+			this->components.push_back(col);
+		}
 	}
-
-	delete obj;
 }
