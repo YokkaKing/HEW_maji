@@ -40,7 +40,7 @@ void PlayerDie()
 	hal::dout << "Player died!" << std::endl;
 	//死亡処理
 
-	// 例: プレイヤーを非表示にする
+	//プレイヤーを非表示にする
 	if (g_Player.m_gameObject != nullptr)
 	{
 		g_Player.m_gameObject->m_isEnable = false;
@@ -115,11 +115,11 @@ void	PlayerUpdate()
 			g_Player.m_currentWeapon->EndAttack();
 		}
 	}
-	//攻撃入力のチェック (例: KK_Oキー)
+	//攻撃入力のチェック
 	if (Keyboard_IsKeyDownTrigger(KK_C))
 	//if (g_Controller.IsButtonPushed(ControllerButton::X_BUTTON))//xボタン
 	{
-		g_Player.m_currentHp -= 100.0f;
+		g_Player.m_currentHp -= 10.0f;
 		if (g_Player.m_currentWeapon && !g_Player.m_currentWeapon->IsAttacking())
 		{
 			g_Player.m_currentWeapon->StartAttack(g_Player.m_position, g_Player.m_rotation);
