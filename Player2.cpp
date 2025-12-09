@@ -253,7 +253,14 @@ void Player2_Jump()
 {
 	g_Player2.State = PLAYER2_STATE::PLAYER2_STATE_MOVE;
 }
-
+float Player2_GetHp()
+{
+	return g_Player2.m_currentHp;
+}
+float Player2_GetMaxHp()
+{	
+	return g_Player2.m_maxHp;
+}
 PLAYER2* GetPlayer2()
 {
 	return &g_Player2;

@@ -66,6 +66,8 @@ XMFLOAT3 GetPlayer2Position();
 
 void Player2_Jump();
 void Player2_ManualMove();
+float Player2_GetHp();
+float Player2_GetMaxHp();
 PLAYER2* GetPlayer2();
 
 #endif // PLAYER2_H
