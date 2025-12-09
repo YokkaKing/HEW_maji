@@ -1,5 +1,5 @@
-/*
-* ファイル名	Title.cpp
+﻿/*
+* ファイル名	Hp.cpp
 * タイトル	タイトル
 * 作成者		久保木幹太
 * 作成日		12月02日
@@ -12,18 +12,18 @@
 #include"Manager.h"
 #include"sprite.h"
 #include"keyboard.h"
-#include"Title.h"
+#include"Hp.h"
 #include"fade.h"
 #include"shader.h"
-
+#include "player.h"
 //================================================================
 //	グローバル変数
 //================================================================
 static	ID3D11ShaderResourceView* g_Texture = NULL;	//テクスチャ１枚を表すオブジェクト
 static ID3D11Device* g_pDevice = nullptr;
 static ID3D11DeviceContext* g_pContext = nullptr;
-
-void Title_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
+HP g_hp;
+void Hp_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
 	g_pDevice = pDevice;
 	g_pContext = pContext;
@@ -31,35 +31,41 @@ void Title_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	//テクスチャ読み込みなど
 	TexMetadata		metadata;
 	ScratchImage	image;
-	LoadFromWICFile(L"asset\\texture\\Title.png", WIC_FLAGS_NONE, &metadata, image);
+	LoadFromWICFile(L"asset\\texture\\Hp.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
 	CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_Texture);
 	assert(g_Texture);//読み込み失敗時にダイアログを表示
 
 	//フェードインのセット
-	XMFLOAT4	color = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
-	SetFade(60.0f, color, FADE_IN, SCENE_GAME);
+    g_hp.col = { 1.0f, 1.0f, 1.0f, 1.0f };
+    g_hp.pos = { 475, 1018 };
+    g_hp.size = { 345, 30 };
+    g_hp.m_hp = 0.0f;
+    g_hp.maxHpBarSizeX = g_hp.size.x;
+    g_hp.hpOldSizeX = g_hp.size.x;
+    g_hp.maxHpBarPosX = g_hp.pos.x;
+
 
 }
-void Title_Finalize()
+void Hp_Finalize()
 {
 	//テクスチャの解放など
 	SAFE_RELEASE(g_Texture);
 
 }
-void Title_Update()
+void Hp_Update()
 { 
-	//キー入力チェック
-	//スタートボタンが押されたらシーンを切り替え
-	//フェード処理中はキーを受け付けない
-	if (Keyboard_IsKeyDownTrigger(KK_ENTER) && (GetFadeState() == FADE_NONE))
-	{
-		//フェードアウトさせてシーンを切り替える
-		XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
-		SetFade(40.0f, color, FADE_OUT, SCENE_GAME);
-	}
 
+
+    float hpLength; //hpの長さ比率　（例：MAX HP:100　current HP:50 -> HPの長さが50%)
+    g_hp.m_hp= Player_GetHP();  // get体力
+    hpLength = g_hp.m_hp / Player_GetMaxHp(); // 比率のために現在のHPをMAXHPで割る
+    g_hp.size.x = g_hp.maxHpBarSizeX * hpLength; //HPバー最大サイズを比率で割る
+    //sizeが減ったら画像が中央を基準で短くなるので、位置をずらす
+    g_hp.pos.x = g_hp.maxHpBarPosX - ((g_hp.hpOldSizeX - g_hp.size.x) / 2.22); 
+  
+   
 }
-void Title_Draw()
+void Hp_Draw()
 {
     // シェーダーを描画パイプラインに設定
     Shader_Begin();
@@ -84,15 +90,24 @@ void Title_Draw()
     g_pContext->PSSetShaderResources(0, 1, &g_Texture);
 
     // BlendState 設定
-    SetBlendState(BLENDSTATE_NONE);
+    SetBlendState(BLENDSTATE_ALFA);
 
-    // 色と位置・サイズを設定
-    XMFLOAT4 col = { 1.0f, 1.0f, 1.0f, 1.0f };
-    XMFLOAT2 pos = { SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 };
-    XMFLOAT2 size = { SCREEN_WIDTH, SCREEN_HEIGHT };
 
-    // 描画
-    DrawSprite(pos, size, col);
-
+    //体力の色の変更
+    if (g_hp.m_hp >= (Player_GetMaxHp()/2)+1)
+    {
+        DrawSpriteEx(g_hp.pos, g_hp.size, g_hp.col, 0, 1, 3);
+    }
+    else if (g_hp.m_hp >= (Player_GetMaxHp() / 4) +1 )
+    {
+        DrawSpriteEx(g_hp.pos, g_hp.size, g_hp.col, 1, 1, 3);
+    }
+    else
+    {
+        DrawSpriteEx(g_hp.pos, g_hp.size, g_hp.col, 2, 1, 3);
+    }
+    
+    
 }
+
 

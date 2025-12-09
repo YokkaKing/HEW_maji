@@ -39,8 +39,11 @@ void Player2Die()
 {
 	hal::dout << "Player2 died!" << std::endl;
 	// ここにゲームオーバー画面への遷移、リスポーン処理など
-
-	g_Player2.m_gameObject->m_isEnable = false;
+	//プレイヤーを非表示にする
+	if (g_Player2.m_gameObject != nullptr)
+	{
+		g_Player2.m_gameObject->m_isEnable = false;
+	}
 	g_Player2.State = PLAYER2_STATE::PLAYER2_STATE_IDLE;
 }
 
@@ -49,7 +52,7 @@ void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_pDevice2 = pDevice;
 	g_pContext2 = pContext;
 
-	g_Player2.m_model = ModelLoad("asset\\model\\ball.fbx");
+	g_Player2.m_model = ModelLoad("asset\\model\\char_bow.fbx");
 
 	g_Player2.m_position = XMFLOAT3(2.0f, 0.5f, 2.0f);
 	g_Player2.m_rotation = XMFLOAT3(0.0f, 0.0f, 0.0f);
@@ -74,6 +77,11 @@ void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 void Player2Finalize()
 {
 	ModelRelease(g_Player2.m_model);
+	if (g_Player2.m_gameObject)
+	{
+		delete g_Player2.m_gameObject;
+		g_Player2.m_gameObject = nullptr;
+	}
 	if (g_Player2.m_currentWeapon)
 	{
 		delete g_Player2.m_currentWeapon;
@@ -96,8 +104,9 @@ void	Player2Update()
 	}
 
 	//攻撃入力のチェック
-	if (Keyboard_IsKeyDownTrigger(KK_C))
+	if (Keyboard_IsKeyDownTrigger(KK_N))
 	{
+		g_Player2.m_currentHp -= 10.0f;
 		// プレイヤーの現在攻撃中フラグをチェック
 		if (g_Player2.m_currentWeapon && !g_Player2.m_currentWeapon->IsAttacking())
 		{
@@ -150,11 +159,11 @@ void Player2_ManualMove()
 	float moveZ = 0.0f;
 
 	float speed = 0.0f;
-	if (Keyboard_IsKeyDown(KK_W))
+	if (Keyboard_IsKeyDown(KK_U))
 	{
 		speed = -0.1f;
 	}
-	if (Keyboard_IsKeyDown(KK_S))
+	if (Keyboard_IsKeyDown(KK_J))
 	{
 		speed = +0.1f;
 	}
@@ -164,11 +173,11 @@ void Player2_ManualMove()
 
 	// 横移動
 	float strafe = 0.0f;
-	if (Keyboard_IsKeyDown(KK_A))
+	if (Keyboard_IsKeyDown(KK_H))
 	{
 		strafe = +0.1f;  // 左
 	}
-	if (Keyboard_IsKeyDown(KK_D))
+	if (Keyboard_IsKeyDown(KK_K))
 	{
 		strafe = -0.1f;  // 右
 	}
@@ -178,6 +187,15 @@ void Player2_ManualMove()
 	// 最終速度
 	g_Player2.m_velocity.x = moveX;
 	g_Player2.m_velocity.z = moveZ;
+
+	// モデルの向きを移動方向に合わせる
+	XMFLOAT3 moveDir = { g_Player2.m_velocity.x, 0.0f, g_Player2.m_velocity.z };
+	float length = sqrtf(moveDir.x * moveDir.x + moveDir.z * moveDir.z);
+	if (length > 0.001f) // 移動しているときだけ向きを変える
+	{
+		// Y軸回転角を計算
+		g_Player2.m_rotation.y = atan2f(moveDir.x, moveDir.z); // atan2f(X,Z)でY回転
+	}
 
 	// スペース押した && コヨーテタイムが0.0fより大きい
 	if (Keyboard_IsKeyDownTrigger(KK_SPACE) && g_Player2.m_koyoteTime > 0.0f)
@@ -200,16 +218,16 @@ void	Player2Draw()
 {
 	//ワールド行列作成
 	XMMATRIX	scale = XMMatrixScaling(
-		1.0f,
-		1.0f,
-		1.0f);
+		0.05f,
+		0.05f,
+		0.05f);
 	XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
 		g_Player2.m_rotation.x,
 		g_Player2.m_rotation.y,
 		g_Player2.m_rotation.z);
 	XMMATRIX	translation = XMMatrixTranslation(
 		g_Player2.m_position.x,
-		g_Player2.m_position.y,
+		g_Player2.m_position.y - 0.25f,
 		g_Player2.m_position.z);
 	XMMATRIX	world = scale * rotation * translation;
 
@@ -370,23 +388,26 @@ void PLAYER2::OnCollision(const CollisionInfo& info)
 
 void PLAYER2::SetObject(XMFLOAT3 pos, XMFLOAT3 scl, std::string tag, int lay)
 {
-	GameObject* obj = ColliderFactory::CreateBoxObject(
+	GameObject* obj = ColliderFactory::CreateBoxObject
+	(
 		pos,
 		scl,
 		tag,
 		lay
 	);
 
-	m_position = obj->m_position;
-	m_scale = obj->m_scale;
-	m_tag = obj->m_tag;
-	m_layer = obj->m_layer;
-
-	for (auto& col : obj->GetColliders<>())
+	m_gameObject = obj;
+	if (m_gameObject)
 	{
-		col->owner = this;
-		this->components.push_back(col);
-	}
+		m_position = m_gameObject->m_position;
+		m_scale = m_gameObject->m_scale;
+		m_tag = m_gameObject->m_tag;
+		m_layer = m_gameObject->m_layer;
 
-	delete obj;
+		for (auto& col : obj->GetColliders<>())
+		{
+			col->owner = this;
+			this->components.push_back(col);
+		}
+	}
 }

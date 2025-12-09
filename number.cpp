@@ -1,5 +1,5 @@
-/*
-* ファイル名	Title.cpp
+﻿/*
+* ファイル名	Number.cpp
 * タイトル	タイトル
 * 作成者		久保木幹太
 * 作成日		12月02日
@@ -12,18 +12,23 @@
 #include"Manager.h"
 #include"sprite.h"
 #include"keyboard.h"
-#include"Title.h"
+
 #include"fade.h"
 #include"shader.h"
-
+#include "number.h"
+//================================================================
+//	マクロ定義
+//================================================================
+#define NUMBER_MAX (2)
 //================================================================
 //	グローバル変数
 //================================================================
 static	ID3D11ShaderResourceView* g_Texture = NULL;	//テクスチャ１枚を表すオブジェクト
 static ID3D11Device* g_pDevice = nullptr;
 static ID3D11DeviceContext* g_pContext = nullptr;
+static float time;
 
-void Title_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
+void Number_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
 	g_pDevice = pDevice;
 	g_pContext = pContext;
@@ -31,36 +36,34 @@ void Title_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	//テクスチャ読み込みなど
 	TexMetadata		metadata;
 	ScratchImage	image;
-	LoadFromWICFile(L"asset\\texture\\Title.png", WIC_FLAGS_NONE, &metadata, image);
+	LoadFromWICFile(L"asset\\texture\\number.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
 	CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_Texture);
 	assert(g_Texture);//読み込み失敗時にダイアログを表示
 
 	//フェードインのセット
-	XMFLOAT4	color = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
-	SetFade(60.0f, color, FADE_IN, SCENE_GAME);
+	XMFLOAT4	color = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+    time = 60.0f;
 
 }
-void Title_Finalize()
+void Number_Finalize()
 {
 	//テクスチャの解放など
 	SAFE_RELEASE(g_Texture);
 
 }
-void Title_Update()
+void Number_Update()
 { 
-	//キー入力チェック
-	//スタートボタンが押されたらシーンを切り替え
-	//フェード処理中はキーを受け付けない
-	if (Keyboard_IsKeyDownTrigger(KK_ENTER) && (GetFadeState() == FADE_NONE))
-	{
-		//フェードアウトさせてシーンを切り替える
-		XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
-		SetFade(40.0f, color, FADE_OUT, SCENE_GAME);
-	}
-
+    float frame = 1 / 60.0f;
+    time -= frame;
 }
-void Title_Draw()
+void Number_Draw()
 {
+    int PatNo[2] = { 0,0 };
+    int temp = (int)time;
+
+    PatNo[0] = temp / 10;
+    PatNo[1] = temp % 10;
+   
     // シェーダーを描画パイプラインに設定
     Shader_Begin();
 
@@ -82,17 +85,20 @@ void Title_Draw()
 
     // テクスチャをセット
     g_pContext->PSSetShaderResources(0, 1, &g_Texture);
-
-    // BlendState 設定
-    SetBlendState(BLENDSTATE_NONE);
-
     // 色と位置・サイズを設定
     XMFLOAT4 col = { 1.0f, 1.0f, 1.0f, 1.0f };
-    XMFLOAT2 pos = { SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 };
-    XMFLOAT2 size = { SCREEN_WIDTH, SCREEN_HEIGHT };
+    XMFLOAT2 pos = { SCREEN_WIDTH / 2-40, 90 };
+    XMFLOAT2 size = { 150, 80 };
+    // BlendState 設定
+    SetBlendState(BLENDSTATE_ALFA);
+    for (int i = 0; i < NUMBER_MAX; i++)
+    {
 
-    // 描画
-    DrawSprite(pos, size, col);
+        // 描画
+        DrawSpriteEx(pos, size, col, PatNo[i], 5, 2);
+		pos.x += size.x-42; // 次の数字の位置調整
+    }
 
 }
+
 

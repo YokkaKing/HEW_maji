@@ -24,7 +24,11 @@
 #include"Player2.h"
 #include"Viewport.h"
 #include"direct3d.h"
-
+#include "HpBar.h"
+#include "HpBar2.h"
+#include "timer.h"
+#include "number.h"
+#include "Hp.h"
 //================================================================
 //	グローバル変数
 //================================================================
@@ -42,7 +46,13 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	PlayerInitialize(pDevice, pContext); // ボールの初期化
 	Player2Initialize(pDevice, pContext);
 	Camera_Initialize();	//カメラ初期化
-
+	//===========UI===========
+	Hpbar_Initialize(pDevice, pContext);
+	HpBar2_Initialize(pDevice, pContext);
+	Timer_Initialize(pDevice, pContext);
+	Number_Initialize(pDevice, pContext);
+	Hp_Initialize(pDevice, pContext);
+	//========================
 	//ビューポートの初期化
 	Viewport_Initialize(Direct3D_GetWindowHandle());
 
@@ -76,6 +86,14 @@ void Game_Finalize()
 	Player2Finalize();
 	Camera_Finalize();	//カメラ終了処理
 
+
+	//=======UI===========
+	Hpbar_Finalize();
+	HpBar2_Finalize();
+	Timer_Finalize();
+	Number_Finalize();
+	Hp_Finalize();
+	//=====================
 	//UnloadAudio(g_BgmID);//サウンドの解放
 }
 
@@ -90,6 +108,13 @@ void Game_Update()
 	Player2Update();
 	Field_Update();
 	TerrainUpdate();
+	//=======UI===========
+	Hpbar_Update();
+	HpBar2_Update();
+	Timer_Update();
+	Number_Update();
+	Hp_Update();
+	//=====================
 	ManagerCollider::UpdateAllCollisions();
 	//キー入力チェック
 	//スタートボタンが押されたらシーンを切り替え
@@ -129,6 +154,22 @@ void Game_Draw()
 	PlayerDraw();
 	Player2Draw();
 
+
+	//==========lightがtrueだとUIが暗く見えるので、一回解除=========
+	Light.SetEnable(FALSE);			//ライティングOFF
+	Shader_SetLight(Light.Light);	//ライト構造体をシェーダーへセット
+	SetDepthTest(FALSE);
+	//===UI描画========
+	Hpbar_Draw(); //<--HpBar描画
+	Timer_Draw();
+	Number_Draw();
+	Hp_Draw();
+	//================
+	Light.SetEnable(TRUE);			//ライティングON
+	Shader_SetLight(Light.Light);	//ライト構造体をシェーダーへセット
+	SetDepthTest(TRUE);
+	//============lightをまたtrueにして、camera2に影響がないように================
+
 //================================================================
 //	画面分割用関数(右画面)
 //================================================================
@@ -140,10 +181,13 @@ void Game_Draw()
 	TerrainDraw();
 	PlayerDraw();
 	Player2Draw();
-
+	
 
 	//2D描画
 	Light.SetEnable(FALSE);			//ライティングOFF
 	Shader_SetLight(Light.Light);	//ライト構造体をシェーダーへセット
 	SetDepthTest(FALSE);
+	HpBar2_Draw();
+	Timer_Draw();
+	Number_Draw();
 }

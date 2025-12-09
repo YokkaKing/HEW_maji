@@ -15,7 +15,7 @@
 //================================================================
 //	インクルード
 //================================================================
-//#include"keyboard.h"
+#include"keyboard.h"
 #include"Controller.h"
 #include"Player.h"
 #include"Camera.h"
@@ -23,6 +23,7 @@
 #include"Evolution.h"
 #include"colliderFactory.h"
 #include"debug_ostream.h"
+#include "keyboard.h"
 
 //================================================================
 //	グローバル変数
@@ -39,8 +40,11 @@ void PlayerDie()
 	hal::dout << "Player died!" << std::endl;
 	//死亡処理
 
-	// 例: プレイヤーを非表示にする
-	g_Player.m_gameObject->m_isEnable = false;
+	//プレイヤーを非表示にする
+	if (g_Player.m_gameObject != nullptr)
+	{
+		g_Player.m_gameObject->m_isEnable = false;
+	}
 
 	// 例: 入力を受け付けないようにする（状態をIDLEにするなど）
 	g_Player.State = PLAYER_STATE::PLAYER_STATE_IDLE;
@@ -51,7 +55,7 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_pDevice = pDevice;
 	g_pContext = pContext;
 
-	g_Player.m_model = ModelLoad("asset\\model\\test.fbx");
+	g_Player.m_model = ModelLoad("asset\\model\\char_hammer.fbx");
 
 	g_Player.m_position = XMFLOAT3(0.0f, 0.5f, 1.0f);
 	g_Player.m_rotation = XMFLOAT3(0.0f, 0.0f, 0.0f);
@@ -64,7 +68,9 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_Player.m_acceleration = XMFLOAT3(0.0f, -9.8f / 600.0f * 0.5f, 0.0f);
 	g_Player.FrictionRate = 0.98f;
 	g_Player.EvolutionType = EVOLUTION_TYPE::EVOLUTION_TYPE_NONE;
-	g_Player.m_currentHp = g_Player.m_maxHp;
+	g_Player.m_currentHp = g_Player.m_maxHp-10;
+	//g_Player.m_currentHp = g_Player.m_maxHp - 10; HPデバッグ用
+
 	g_Player.m_isDead = false;
 
 	g_Player.SetObject(g_Player.m_position, g_Player.m_scale, "Player", 0);
@@ -77,6 +83,11 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 void PlayerFinalize()
 {
 	ModelRelease(g_Player.m_model);
+	if (g_Player.m_gameObject)
+	{
+		delete g_Player.m_gameObject;
+		g_Player.m_gameObject = nullptr;
+	}
 	//武器の解放
 	if (g_Player.m_currentWeapon)
 	{
@@ -86,10 +97,13 @@ void PlayerFinalize()
 }
 void	PlayerUpdate()
 {
+
 	g_Controller.Update();//毎フレームコントローラーの状態を更新
 
-	EvolvePlayer();           // Eキーで進化タイプを選択（一度だけ実行）
-	ApplyEvolutionEffect();   // 進化タイプに応じたパラメータを適用
+	//EvolvePlayer();     
+	EvolvePlayer3();
+	//ApplyEvolutionEffect();   // 進化タイプに応じたパラメータを適用
+	ApplyEvolutionEffect3();   // 進化タイプに応じたパラメータを適用
 	if (g_Player.m_isDead)return;	//死亡している場合は更新処理をスキップ
 	//装備中の武器を更新する
 	if (g_Player.m_currentWeapon)
@@ -101,9 +115,11 @@ void	PlayerUpdate()
 			g_Player.m_currentWeapon->EndAttack();
 		}
 	}
-	//攻撃入力のチェック (例: KK_Oキー)
-	if (g_Controller.IsButtonPushed(ControllerButton::X_BUTTON))//xボタン
+	//攻撃入力のチェック
+	if (Keyboard_IsKeyDownTrigger(KK_C))
+	//if (g_Controller.IsButtonPushed(ControllerButton::X_BUTTON))//xボタン
 	{
+		g_Player.m_currentHp -= 10.0f;
 		if (g_Player.m_currentWeapon && !g_Player.m_currentWeapon->IsAttacking())
 		{
 			g_Player.m_currentWeapon->StartAttack(g_Player.m_position, g_Player.m_rotation);
@@ -171,6 +187,16 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 		speed = stickY * 0.1f;
 	}
 
+
+	if (Keyboard_IsKeyDown(KK_W))
+	{
+		speed = +0.1f;
+	}
+	if (Keyboard_IsKeyDown(KK_S))
+	{
+		speed = -0.1f;
+	}
+
 	moveX += forwardX * speed;
 	moveZ += forwardZ * speed;
 
@@ -182,6 +208,15 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 		// 左スティック左方向 (-1.0f) で左移動 (strafe = +0.1f) に対応
 		strafe = stickX * 0.1f;
 	}
+
+	if (Keyboard_IsKeyDown(KK_A))
+	{
+		strafe = -0.1f;  // 左
+	}
+	if (Keyboard_IsKeyDown(KK_D))
+	{
+		strafe = +0.1f;  // 右
+	}
 	moveX += rightX * strafe;
 	moveZ += rightZ * strafe;
 
@@ -189,8 +224,18 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 	g_Player.m_velocity.x = moveX;
 	g_Player.m_velocity.z = moveZ;
 
+	// モデルの向きを移動方向に合わせる
+	XMFLOAT3 moveDir = { g_Player.m_velocity.x, 0.0f, g_Player.m_velocity.z };
+	float length = sqrtf(moveDir.x * moveDir.x + moveDir.z * moveDir.z);
+	if (length > 0.001f) // 移動しているときだけ向きを変える
+	{
+		// Y軸回転角を計算
+		g_Player.m_rotation.y = atan2f(moveDir.x, moveDir.z); // atan2f(X,Z)でY回転
+	}
+
 	// Aボタンを押した && コヨーテタイムが0.0fより大きい
-	if (g_Controller.IsButtonPushed(ControllerButton::A_BUTTON) && g_Player.m_koyoteTime > 0.0f) //Aボタン**
+	if (Keyboard_IsKeyDownTrigger(KK_SPACE) && g_Player.m_koyoteTime > 0.0f)
+	//if (g_Controller.IsButtonPushed(ControllerButton::A_BUTTON) && g_Player.m_koyoteTime > 0.0f) //Aボタン**
 	{
 		g_Player.m_velocity.y = JUMP_FORCE;
 		g_Player.m_isGround = false;
@@ -210,16 +255,16 @@ void PlayerDraw()
 {
 	//ワールド行列作成
 	XMMATRIX	scale = XMMatrixScaling(
-		1.0f,
-		1.0f,
-		1.0f);
+		0.05f,
+		0.05f,
+		0.05f);
 	XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
 		g_Player.m_rotation.x,
 		g_Player.m_rotation.y,
 		g_Player.m_rotation.z);
 	XMMATRIX	translation = XMMatrixTranslation(
 		g_Player.m_position.x,
-		g_Player.m_position.y,
+		g_Player.m_position.y - 0.25f,
 		g_Player.m_position.z);
 	XMMATRIX	world = scale * rotation * translation;
 
@@ -252,7 +297,14 @@ PLAYER* GetPlayer()
 {
 	return &g_Player;
 }
-
+float Player_GetHP() 
+{
+	return g_Player.m_currentHp; 
+}
+float Player_GetMaxHp()
+{
+	return g_Player.m_maxHp;
+}
 void PLAYER::TakeDamage(float damage)
 {
 	if (m_isDead) return;
@@ -419,16 +471,17 @@ void PLAYER::SetObject(XMFLOAT3 pos, XMFLOAT3 scl, std::string tag, int lay)
 		lay
 	);
 
-	m_position = obj->m_position;
-	m_scale = obj->m_scale;
-	m_tag = obj->m_tag;
-	m_layer = obj->m_layer;
-
-	for (auto& col : obj->GetColliders<>())
+	m_gameObject = obj;
+	if (m_gameObject)
 	{
-		col->owner = this;
-		this->components.push_back(col);
+		m_position = m_gameObject->m_position;
+		m_scale = m_gameObject->m_scale;
+		m_tag = m_gameObject->m_tag;
+		m_layer = m_gameObject->m_layer;
+		for (auto& col : obj->GetColliders<>())
+		{
+			col->owner = this;
+			this->components.push_back(col);
+		}
 	}
-
-	delete obj;
 }

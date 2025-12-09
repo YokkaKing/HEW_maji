@@ -10,6 +10,12 @@
 #define TERRAIN_H
 
 //================================================================
+//	マクロ定義
+//================================================================
+#define MOVE_TERRAIN_TYPE (2)
+#define CHANGE_FLAG (4)
+ 
+//================================================================
 //	インクルード
 //================================================================
 #include <d3d11.h>
@@ -55,14 +61,18 @@ class TERRAIN : public GameObject
 {
 public:
 	// マザーポジション,こいつが動くと他が連動して動く
-	XMFLOAT3 m_motherPosition{};
+	XMFLOAT3 m_motherPosition[2] = {};
 	// 作成したオブジェクトを保存する器
 	std::vector<GameObject*> terrainObjects;
 	std::vector<GameObject*> hills;	// 丘の当たり判定の全て
 	std::vector<GameObject*> walls;	// 壁の当たり判定の全て
 	std::vector<GameObject*> trees;	// 木の当たり判定の全て
 
-	bool m_isChange[4] = { false, false, false, false }; // 変身したか
+	MODEL* m_moveTerrain[MOVE_TERRAIN_TYPE] = {}; // 地形で使うモデル
+	XMFLOAT3 m_terrainScale[MOVE_TERRAIN_TYPE] = {}; // 各地形の大きさ
+	XMFLOAT3 m_terrainRotation[MOVE_TERRAIN_TYPE] = {};	// 各地形の回転
+	bool m_isChange[CHANGE_FLAG] = { false, false }; // 変身したか
+	FLOAT m_coolTime[2] = {}; // 変身時間(仮) 今後は他のファイルから持ってくる予定
 public:
 	void SetObject(XMFLOAT3 pos, XMFLOAT3 scl, std::string tag, int lay);
 
@@ -87,7 +97,7 @@ public:
 
 public:
 	// 各オブジェクトを更新する処理
-	void UpdateObject(std::vector<GameObject*> terrain);
+	void UpdateObject(std::vector<GameObject*> terrain, XMFLOAT3 motherPosition, bool move);
 	// 自動で当たり判定を作り出す
 	void CreateHit(std::vector<TERRAIN_OBJECT> terrain, XMFLOAT3 motherPosition);
 
