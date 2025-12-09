@@ -39,8 +39,11 @@ void Player2Die()
 {
 	hal::dout << "Player2 died!" << std::endl;
 	// ここにゲームオーバー画面への遷移、リスポーン処理など
-
-	g_Player2.m_gameObject->m_isEnable = false;
+	//プレイヤーを非表示にする
+	if (g_Player2.m_gameObject != nullptr)
+	{
+		g_Player2.m_gameObject->m_isEnable = false;
+	}
 	g_Player2.State = PLAYER2_STATE::PLAYER2_STATE_IDLE;
 }
 
@@ -74,6 +77,11 @@ void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 void Player2Finalize()
 {
 	ModelRelease(g_Player2.m_model);
+	if (g_Player2.m_gameObject)
+	{
+		delete g_Player2.m_gameObject;
+		g_Player2.m_gameObject = nullptr;
+	}
 	if (g_Player2.m_currentWeapon)
 	{
 		delete g_Player2.m_currentWeapon;
@@ -96,8 +104,9 @@ void	Player2Update()
 	}
 
 	//攻撃入力のチェック
-	if (Keyboard_IsKeyDownTrigger(KK_C))
+	if (Keyboard_IsKeyDownTrigger(KK_N))
 	{
+		g_Player2.m_currentHp -= 10.0f;
 		// プレイヤーの現在攻撃中フラグをチェック
 		if (g_Player2.m_currentWeapon && !g_Player2.m_currentWeapon->IsAttacking())
 		{
@@ -150,11 +159,11 @@ void Player2_ManualMove()
 	float moveZ = 0.0f;
 
 	float speed = 0.0f;
-	if (Keyboard_IsKeyDown(KK_W))
+	if (Keyboard_IsKeyDown(KK_U))
 	{
 		speed = -0.1f;
 	}
-	if (Keyboard_IsKeyDown(KK_S))
+	if (Keyboard_IsKeyDown(KK_J))
 	{
 		speed = +0.1f;
 	}
@@ -164,11 +173,11 @@ void Player2_ManualMove()
 
 	// 横移動
 	float strafe = 0.0f;
-	if (Keyboard_IsKeyDown(KK_A))
+	if (Keyboard_IsKeyDown(KK_H))
 	{
 		strafe = +0.1f;  // 左
 	}
-	if (Keyboard_IsKeyDown(KK_D))
+	if (Keyboard_IsKeyDown(KK_K))
 	{
 		strafe = -0.1f;  // 右
 	}
@@ -379,23 +388,26 @@ void PLAYER2::OnCollision(const CollisionInfo& info)
 
 void PLAYER2::SetObject(XMFLOAT3 pos, XMFLOAT3 scl, std::string tag, int lay)
 {
-	GameObject* obj = ColliderFactory::CreateBoxObject(
+	GameObject* obj = ColliderFactory::CreateBoxObject
+	(
 		pos,
 		scl,
 		tag,
 		lay
 	);
 
-	m_position = obj->m_position;
-	m_scale = obj->m_scale;
-	m_tag = obj->m_tag;
-	m_layer = obj->m_layer;
-
-	for (auto& col : obj->GetColliders<>())
+	m_gameObject = obj;
+	if (m_gameObject)
 	{
-		col->owner = this;
-		this->components.push_back(col);
-	}
+		m_position = m_gameObject->m_position;
+		m_scale = m_gameObject->m_scale;
+		m_tag = m_gameObject->m_tag;
+		m_layer = m_gameObject->m_layer;
 
-	delete obj;
+		for (auto& col : obj->GetColliders<>())
+		{
+			col->owner = this;
+			this->components.push_back(col);
+		}
+	}
 }
