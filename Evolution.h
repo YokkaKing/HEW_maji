@@ -30,5 +30,7 @@ void ApplyEvolutionEffect();
 //================================
 void EvolvePlayer2();
 void ApplyEvolutionEffect2();
+void EvolvePlayer3();
+void ApplyEvolutionEffect3();
 //===============================
 #endif // EVOLUTION_H

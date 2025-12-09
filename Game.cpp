@@ -29,6 +29,7 @@
 #include "timer.h"
 #include "number.h"
 #include "Hp.h"
+#include "Hp2.h"
 //================================================================
 //	グローバル変数
 //================================================================
@@ -52,6 +53,8 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	Timer_Initialize(pDevice, pContext);
 	Number_Initialize(pDevice, pContext);
 	Hp_Initialize(pDevice, pContext);
+	Hp2_Initialize(pDevice, pContext);
+
 	//========================
 	//ビューポートの初期化
 	Viewport_Initialize(Direct3D_GetWindowHandle());
@@ -93,6 +96,8 @@ void Game_Finalize()
 	Timer_Finalize();
 	Number_Finalize();
 	Hp_Finalize();
+	Hp2_Finalize();
+
 	//=====================
 	//UnloadAudio(g_BgmID);//サウンドの解放
 }
@@ -114,6 +119,8 @@ void Game_Update()
 	Timer_Update();
 	Number_Update();
 	Hp_Update();
+	Hp2_Update();
+
 	//=====================
 	ManagerCollider::UpdateAllCollisions();
 	//キー入力チェック
@@ -164,6 +171,7 @@ void Game_Draw()
 	Timer_Draw();
 	Number_Draw();
 	Hp_Draw();
+
 	//================
 	Light.SetEnable(TRUE);			//ライティングON
 	Shader_SetLight(Light.Light);	//ライト構造体をシェーダーへセット
@@ -190,4 +198,5 @@ void Game_Draw()
 	HpBar2_Draw();
 	Timer_Draw();
 	Number_Draw();
+	Hp2_Draw();
 }

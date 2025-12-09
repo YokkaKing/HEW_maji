@@ -15,7 +15,7 @@
 //================================================================
 //	インクルード
 //================================================================
-//#include"keyboard.h"
+#include"keyboard.h"
 #include"Controller.h"
 #include"Player.h"
 #include"Camera.h"
@@ -40,8 +40,11 @@ void PlayerDie()
 	hal::dout << "Player died!" << std::endl;
 	//死亡処理
 
-	// 例: プレイヤーを非表示にする
-	g_Player.m_gameObject->m_isEnable = false;
+	//プレイヤーを非表示にする
+	if (g_Player.m_gameObject != nullptr)
+	{
+		g_Player.m_gameObject->m_isEnable = false;
+	}
 
 	// 例: 入力を受け付けないようにする（状態をIDLEにするなど）
 	g_Player.State = PLAYER_STATE::PLAYER_STATE_IDLE;
@@ -65,7 +68,7 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_Player.m_acceleration = XMFLOAT3(0.0f, -9.8f / 600.0f * 0.5f, 0.0f);
 	g_Player.FrictionRate = 0.98f;
 	g_Player.EvolutionType = EVOLUTION_TYPE::EVOLUTION_TYPE_NONE;
-	g_Player.m_currentHp = g_Player.m_maxHp-10;
+	g_Player.m_currentHp = g_Player.m_maxHp;
 	//g_Player.m_currentHp = g_Player.m_maxHp - 10; HPデバッグ用
 
 	g_Player.m_isDead = false;
@@ -80,6 +83,11 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 void PlayerFinalize()
 {
 	ModelRelease(g_Player.m_model);
+	if (g_Player.m_gameObject)
+	{
+		delete g_Player.m_gameObject;
+		g_Player.m_gameObject = nullptr;
+	}
 	//武器の解放
 	if (g_Player.m_currentWeapon)
 	{
@@ -92,8 +100,10 @@ void	PlayerUpdate()
 
 	g_Controller.Update();//毎フレームコントローラーの状態を更新
 
-	EvolvePlayer();           // Eキーで進化タイプを選択（一度だけ実行）
-	ApplyEvolutionEffect();   // 進化タイプに応じたパラメータを適用
+	//EvolvePlayer();     
+	EvolvePlayer3();
+	//ApplyEvolutionEffect();   // 進化タイプに応じたパラメータを適用
+	ApplyEvolutionEffect3();   // 進化タイプに応じたパラメータを適用
 	if (g_Player.m_isDead)return;	//死亡している場合は更新処理をスキップ
 	//装備中の武器を更新する
 	if (g_Player.m_currentWeapon)
@@ -105,9 +115,11 @@ void	PlayerUpdate()
 			g_Player.m_currentWeapon->EndAttack();
 		}
 	}
-	//攻撃入力のチェック (例: KK_Oキー)
-	if (g_Controller.IsButtonPushed(ControllerButton::X_BUTTON))//xボタン
+	//攻撃入力のチェック
+	if (Keyboard_IsKeyDownTrigger(KK_C))
+	//if (g_Controller.IsButtonPushed(ControllerButton::X_BUTTON))//xボタン
 	{
+		g_Player.m_currentHp -= 10.0f;
 		if (g_Player.m_currentWeapon && !g_Player.m_currentWeapon->IsAttacking())
 		{
 			g_Player.m_currentWeapon->StartAttack(g_Player.m_position, g_Player.m_rotation);
@@ -175,6 +187,16 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 		speed = stickY * 0.1f;
 	}
 
+
+	if (Keyboard_IsKeyDown(KK_W))
+	{
+		speed = +0.1f;
+	}
+	if (Keyboard_IsKeyDown(KK_S))
+	{
+		speed = -0.1f;
+	}
+
 	moveX += forwardX * speed;
 	moveZ += forwardZ * speed;
 
@@ -185,6 +207,15 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 	{
 		// 左スティック左方向 (-1.0f) で左移動 (strafe = +0.1f) に対応
 		strafe = stickX * 0.1f;
+	}
+
+	if (Keyboard_IsKeyDown(KK_A))
+	{
+		strafe = -0.1f;  // 左
+	}
+	if (Keyboard_IsKeyDown(KK_D))
+	{
+		strafe = +0.1f;  // 右
 	}
 	moveX += rightX * strafe;
 	moveZ += rightZ * strafe;
@@ -203,7 +234,8 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 	}
 
 	// Aボタンを押した && コヨーテタイムが0.0fより大きい
-	if (g_Controller.IsButtonPushed(ControllerButton::A_BUTTON) && g_Player.m_koyoteTime > 0.0f) //Aボタン**
+	if (Keyboard_IsKeyDownTrigger(KK_SPACE) && g_Player.m_koyoteTime > 0.0f)
+	//if (g_Controller.IsButtonPushed(ControllerButton::A_BUTTON) && g_Player.m_koyoteTime > 0.0f) //Aボタン**
 	{
 		g_Player.m_velocity.y = JUMP_FORCE;
 		g_Player.m_isGround = false;
@@ -439,16 +471,17 @@ void PLAYER::SetObject(XMFLOAT3 pos, XMFLOAT3 scl, std::string tag, int lay)
 		lay
 	);
 
-	m_position = obj->m_position;
-	m_scale = obj->m_scale;
-	m_tag = obj->m_tag;
-	m_layer = obj->m_layer;
-
-	for (auto& col : obj->GetColliders<>())
+	m_gameObject = obj;
+	if (m_gameObject)
 	{
-		col->owner = this;
-		this->components.push_back(col);
+		m_position = m_gameObject->m_position;
+		m_scale = m_gameObject->m_scale;
+		m_tag = m_gameObject->m_tag;
+		m_layer = m_gameObject->m_layer;
+		for (auto& col : obj->GetColliders<>())
+		{
+			col->owner = this;
+			this->components.push_back(col);
+		}
 	}
-
-	delete obj;
 }

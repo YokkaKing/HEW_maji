@@ -84,23 +84,17 @@ void Camera_Update()
 	Rotation = g_Controller.GetRightStickX();
 	// スティックの入力値を回転速度に変換
 	Rotation *= -1.5f;
-	//if (Keyboard_IsKeyDown(KK_Q))
-	//{
-	//	Rotation = 1.0f;
-	//}
-	//if (Keyboard_IsKeyDown(KK_E))
-	//{
-	//	Rotation = -1.0f;
-	//}
-	//if (Keyboard_IsKeyDown(KK_LEFT))
-	//{
-	//	Rotation = 1.0f;
-	//}
-	//if (Keyboard_IsKeyDown(KK_RIGHT))
-	//{
-	//	Rotation = -1.0f;
-	//}
 
+	//===============================
+	if (Keyboard_IsKeyDown(KK_Q))
+	{
+		Rotation = 1.0f;
+	}
+	if (Keyboard_IsKeyDown(KK_E))
+	{
+		Rotation = -1.0f;
+	}
+	//==============================
 
 	//注視点からカメラへのベクトル
 	//P1
@@ -194,11 +188,11 @@ void Camera2_Update()
 	Camera2Object.AtPosition.z = g_Player2PosOld.z;
 
 	float	Rotation2 = 0.0f;
-	if (Keyboard_IsKeyDown(KK_UP))
+	if (Keyboard_IsKeyDown(KK_LEFT))
 	{
 		Rotation2 = 1.0f;
 	}
-	if (Keyboard_IsKeyDown(KK_DOWN))
+	if (Keyboard_IsKeyDown(KK_RIGHT))
 	{
 		Rotation2 = -1.0f;
 	}

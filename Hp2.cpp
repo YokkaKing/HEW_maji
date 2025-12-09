@@ -1,5 +1,5 @@
 ﻿/*
-* ファイル名	Hp.cpp
+* ファイル名	Hp2.cpp
 * タイトル	タイトル
 * 作成者		久保木幹太
 * 作成日		12月02日
@@ -12,18 +12,19 @@
 #include"Manager.h"
 #include"sprite.h"
 #include"keyboard.h"
-#include"Hp.h"
+#include"Hp2.h"
 #include"fade.h"
 #include"shader.h"
 #include "player.h"
+#include "Player2.h"
 //================================================================
 //	グローバル変数
 //================================================================
 static	ID3D11ShaderResourceView* g_Texture = NULL;	//テクスチャ１枚を表すオブジェクト
 static ID3D11Device* g_pDevice = nullptr;
 static ID3D11DeviceContext* g_pContext = nullptr;
-HP g_hp;
-void Hp_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
+HP2 g_hp2;
+void Hp2_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
 	g_pDevice = pDevice;
 	g_pContext = pContext;
@@ -36,36 +37,36 @@ void Hp_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	assert(g_Texture);//読み込み失敗時にダイアログを表示
 
 	//フェードインのセット
-    g_hp.col = { 1.0f, 1.0f, 1.0f, 1.0f };
-    g_hp.pos = { 500, 1006 };
-    g_hp.size = { 354, 31 };
-    g_hp.m_hp = 0.0f;
-    g_hp.maxHpBarSizeX = g_hp.size.x;
-    g_hp.hpOldSizeX = g_hp.size.x;
-    g_hp.maxHpBarPosX = g_hp.pos.x;
+    g_hp2.col = { 1.0f, 1.0f, 1.0f, 1.0f };
+    g_hp2.pos = { 500, 1006 };
+    g_hp2.size = { 354, 31 };
+    g_hp2.m_hp = 0.0f;
+    g_hp2.maxHpBarSizeX = g_hp2.size.x;
+    g_hp2.hpOldSizeX = g_hp2.size.x;
+    g_hp2.maxHpBarPosX = g_hp2.pos.x;
 
 
 }
-void Hp_Finalize()
+void Hp2_Finalize()
 {
 	//テクスチャの解放など
 	SAFE_RELEASE(g_Texture);
 
 }
-void Hp_Update()
+void Hp2_Update()
 { 
 
 
-    float hpLength; //hpの長さ比率　（例：MAX HP:100　current HP:50 -> HPの長さが50%)
-    g_hp.m_hp= Player_GetHP();  // get体力
-    hpLength = g_hp.m_hp / Player_GetMaxHp(); // 比率のために現在のHPをMAXHPで割る
-    g_hp.size.x = g_hp.maxHpBarSizeX * hpLength; //HPバー最大サイズを比率で割る
+    float hp2Length; //hp2の長さ比率　（例：MAX HP2:100　current HP2:50 -> HP2の長さが50%)
+    g_hp2.m_hp= Player2_GetHp();  // get体力
+    hp2Length = g_hp2.m_hp / Player2_GetMaxHp(); // 比率のために現在のHP2をMAXHP2で割る
+    g_hp2.size.x = g_hp2.maxHpBarSizeX * hp2Length; //HP2バー最大サイズを比率で割る
     //sizeが減ったら画像が中央を基準で短くなるので、位置をずらす
-    g_hp.pos.x = g_hp.maxHpBarPosX - ((g_hp.hpOldSizeX - g_hp.size.x) / 2.05); 
+    g_hp2.pos.x = g_hp2.maxHpBarPosX - ((g_hp2.hpOldSizeX - g_hp2.size.x) / 2.05);
   
    
 }
-void Hp_Draw()
+void Hp2_Draw()
 {
     // シェーダーを描画パイプラインに設定
     Shader_Begin();
@@ -94,17 +95,17 @@ void Hp_Draw()
 
 
     //体力の色の変更
-    if (g_hp.m_hp >= (Player_GetMaxHp()/2)+1)
+    if (g_hp2.m_hp >= (Player2_GetMaxHp()/2)+1)
     {
-        DrawSpriteEx(g_hp.pos, g_hp.size, g_hp.col, 0, 1, 3);
+        DrawSpriteEx(g_hp2.pos, g_hp2.size, g_hp2.col, 0, 1, 3);
     }
-    else if (g_hp.m_hp >= (Player_GetMaxHp() / 4) +1 )
+    else if (g_hp2.m_hp >= (Player2_GetMaxHp() / 4) +1 )
     {
-        DrawSpriteEx(g_hp.pos, g_hp.size, g_hp.col, 1, 1, 3);
+        DrawSpriteEx(g_hp2.pos, g_hp2.size, g_hp2.col, 1, 1, 3);
     }
     else
     {
-        DrawSpriteEx(g_hp.pos, g_hp.size, g_hp.col, 2, 1, 3);
+        DrawSpriteEx(g_hp2.pos, g_hp2.size, g_hp2.col, 2, 1, 3);
     }
     
     
