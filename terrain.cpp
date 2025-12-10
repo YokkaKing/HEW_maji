@@ -572,6 +572,11 @@ void TerrainFinalize()
 		ModelRelease(g_Terrain.m_moveTerrain[i]);
 		g_Terrain.m_isChange[i] = false;
 	}
+
+	g_Terrain.terrainObjects.clear();
+	g_Terrain.hills.clear();
+	g_Terrain.walls.clear();
+	g_Terrain.trees.clear();
 }
 void TerrainUpdate()
 {
@@ -719,6 +724,66 @@ void TerrainDraw()
 
 		//モデルの描画リクエスト
 		ModelDraw(g_Terrain.m_moveTerrain[1]);
+	}
+
+	for (int i = 0; i < g_Terrain.hills.size(); i++)
+	{
+		//ワールド行列作成
+		XMMATRIX	scale = XMMatrixScaling(
+			g_Terrain.hills[i]->m_scale.x,
+			g_Terrain.hills[i]->m_scale.y,
+			g_Terrain.hills[i]->m_scale.z);
+		XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
+			g_Terrain.hills[i]->m_rotation.x,
+			g_Terrain.hills[i]->m_rotation.y,
+			g_Terrain.hills[i]->m_rotation.z);
+		XMMATRIX	translation = XMMatrixTranslation(
+			g_Terrain.hills[i]->m_position.x,
+			g_Terrain.hills[i]->m_position.y,
+			g_Terrain.hills[i]->m_position.z);
+		XMMATRIX	world = scale * rotation * translation;
+
+		//変換行列作成
+		XMMATRIX	view = GetViewMatrix();
+		XMMATRIX	projection = GetProjectionMatrix();
+		XMMATRIX	wvp = world * view * projection;
+
+		//シェーダーへ行列をセット
+		Shader_SetWorldMatrix(world);
+		// Shader_SetMatrix(wvp);
+
+		//モデルの描画リクエスト
+		ModelDraw(blockModel);
+	}
+
+	for (int i = 0; i < g_Terrain.walls.size(); i++)
+	{
+		//ワールド行列作成
+		XMMATRIX	scale = XMMatrixScaling(
+			g_Terrain.walls[i]->m_scale.x,
+			g_Terrain.walls[i]->m_scale.y,
+			g_Terrain.walls[i]->m_scale.z);
+		XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
+			g_Terrain.walls[i]->m_rotation.x,
+			g_Terrain.walls[i]->m_rotation.y,
+			g_Terrain.walls[i]->m_rotation.z);
+		XMMATRIX	translation = XMMatrixTranslation(
+			g_Terrain.walls[i]->m_position.x,
+			g_Terrain.walls[i]->m_position.y,
+			g_Terrain.walls[i]->m_position.z);
+		XMMATRIX	world = scale * rotation * translation;
+
+		//変換行列作成
+		XMMATRIX	view = GetViewMatrix();
+		XMMATRIX	projection = GetProjectionMatrix();
+		XMMATRIX	wvp = world * view * projection;
+
+		//シェーダーへ行列をセット
+		Shader_SetWorldMatrix(world);
+		// Shader_SetMatrix(wvp);
+
+		//モデルの描画リクエスト
+		ModelDraw(blockModel);
 	}
 }
 // 簡単な四角形の当たり判定を作る場合
