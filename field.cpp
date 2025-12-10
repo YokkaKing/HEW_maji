@@ -29,8 +29,6 @@ static	ID3D11Buffer* g_IndexBuffer = NULL;
 //テクスチャ変数
 static ID3D11ShaderResourceView* g_Texture;
 
-static std::vector<std::unique_ptr<GameObject>> g_FieldObjects;
-
 #define		BOX_NUM_VERTEX	(24)
 
 //BOX作成関数
@@ -583,34 +581,5 @@ void InitializeMap(size_t blocks)
 	for (size_t i = 0; i < blocks; i++)
 	{
 		Map.push_back(MAPDATA{}); // 空の MAPDATA を追加
-	}
-}
-
-void SetObject(XMFLOAT3 pos, XMFLOAT3 scl, std::string tag, int lay)
-{
-	// ファクトリの戻り値 (生のポインタ) を unique_ptr で受け取り、所有権を確保
-	std::unique_ptr<GameObject> obj_owner(
-		ColliderFactory::CreateBoxObject(pos, scl, tag, lay)
-	);
-
-	GameObject* raw_ptr = obj_owner.get(); // 生のポインタを取得（参照用）
-
-	if (raw_ptr != nullptr)
-	{
-		g_FieldObjects.push_back(std::move(obj_owner));
-	}
-}
-void SetObject(XMFLOAT3 pos, float radius, std::string tag, int lay)
-{
-	// ファクトリの戻り値 (生のポインタ) を unique_ptr で受け取り、所有権を確保
-	std::unique_ptr<GameObject> obj_owner(
-		ColliderFactory::CreateSphereObject(pos, radius, tag, lay)
-	);
-
-	GameObject* raw_ptr = obj_owner.get(); // 生のポインタを取得（参照用）
-
-	if (raw_ptr != nullptr)
-	{
-		g_FieldObjects.push_back(std::move(obj_owner));
 	}
 }

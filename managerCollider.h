@@ -56,7 +56,6 @@ public:
     // Colliderの登録、削除
     static void AddCollider(std::shared_ptr<Collider> collider);
     static void RemoveCollider(std::shared_ptr<Collider> collider);
-    static void ClearCollider();
 
     // 登録された全コライダー間の衝突チェック
     static void UpdateAllCollisions();
