@@ -726,6 +726,7 @@ void TerrainDraw()
 		ModelDraw(g_Terrain.m_moveTerrain[1]);
 	}
 
+	/*
 	for (int i = 0; i < g_Terrain.hills.size(); i++)
 	{
 		//ワールド行列作成
@@ -785,24 +786,25 @@ void TerrainDraw()
 		//モデルの描画リクエスト
 		ModelDraw(blockModel);
 	}
+	*/
 }
 // 簡単な四角形の当たり判定を作る場合
 void TERRAIN::SetObject(XMFLOAT3 pos, XMFLOAT3 scl, std::string tag, int lay)
 {
-	GameObject* obj = ColliderFactory::CreateBoxObject(
-		pos,
-		scl,
-		tag,
-		lay
+	// ファクトリの戻り値 (生のポインタ) を unique_ptr で受け取り、所有権を確保
+	std::unique_ptr<GameObject> obj_owner(
+		ColliderFactory::CreateBoxObject(pos, scl, tag, lay)
 	);
 
-	if (obj != nullptr)
-	{
-		terrainObjects.push_back(obj);
+	GameObject* raw_ptr = obj_owner.get(); // 生のポインタを取得（参照用）
 
-		if (obj->m_tag == "HILL") hills.push_back(obj);
-		if (obj->m_tag == "Wall") walls.push_back(obj);
-		if (obj->m_tag == "TREE") trees.push_back(obj);
+	if (raw_ptr != nullptr)
+	{
+		if (raw_ptr->m_tag == "HILL") hills.push_back(raw_ptr);
+		if (raw_ptr->m_tag == "Wall") walls.push_back(raw_ptr);
+		if (raw_ptr->m_tag == "TREE") trees.push_back(raw_ptr);
+
+		terrainObjects.push_back(std::move(obj_owner));
 	}
 }
 // string型で書いたオブジェクトの当たり判定をchar型にして効率よくする

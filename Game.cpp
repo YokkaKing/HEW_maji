@@ -97,8 +97,8 @@ void Game_Finalize()
 	Number_Finalize();
 	Hp_Finalize();
 	Hp2_Finalize();
-
 	//=====================
+	ManagerCollider::ClearCollider();
 	//UnloadAudio(g_BgmID);//ƒTƒEƒ“ƒh‚Ì‰ð•ú
 }
 

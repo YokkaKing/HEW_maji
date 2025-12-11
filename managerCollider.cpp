@@ -44,6 +44,11 @@ void ManagerCollider::RemoveCollider(std::shared_ptr<Collider> collider)
     colliders.erase(std::remove(colliders.begin(), colliders.end(), collider), colliders.end());
 }
 
+void ManagerCollider::ClearCollider()
+{
+    colliders.clear();
+}
+
 //================================================================
 //  衝突チェック（全オブジェクト）
 //================================================================

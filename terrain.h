@@ -63,7 +63,7 @@ public:
 	// マザーポジション,こいつが動くと他が連動して動く
 	XMFLOAT3 m_motherPosition[2] = {};
 	// 作成したオブジェクトを保存する器
-	std::vector<GameObject*> terrainObjects;
+	std::vector<std::unique_ptr<GameObject>> terrainObjects;
 	std::vector<GameObject*> hills;	// 丘の当たり判定の全て
 	std::vector<GameObject*> walls;	// 壁の当たり判定の全て
 	std::vector<GameObject*> trees;	// 木の当たり判定の全て

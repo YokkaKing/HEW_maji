@@ -395,26 +395,23 @@ void PLAYER2::OnCollision(const CollisionInfo& info)
 
 void PLAYER2::SetObject(XMFLOAT3 pos, XMFLOAT3 scl, std::string tag, int lay)
 {
-	GameObject* obj = ColliderFactory::CreateBoxObject
-	(
-		pos,
-		scl,
-		tag,
-		lay
+	// unique_ptrで受け取ることで、スコープを抜けたら自動的にdeleteされる
+	std::unique_ptr<GameObject> obj_ptr(
+		ColliderFactory::CreateBoxObject(pos, scl, tag, lay)
 	);
+	// obj_ptr.get() で元のポインタを取得
+	GameObject* obj = obj_ptr.get();
 
-	m_gameObject = obj;
-	if (m_gameObject)
+	// プロパティをコピー
+	m_position = obj->m_position;
+	m_scale = obj->m_scale;
+	m_tag = obj->m_tag;
+	m_layer = obj->m_layer;
+
+	// コライダーの所有権をこのPLAYERオブジェクトに移す
+	for (auto& col : obj->GetColliders<>())
 	{
-		m_position = m_gameObject->m_position;
-		m_scale = m_gameObject->m_scale;
-		m_tag = m_gameObject->m_tag;
-		m_layer = m_gameObject->m_layer;
-
-		for (auto& col : obj->GetColliders<>())
-		{
-			col->owner = this;
-			this->components.push_back(col);
-		}
+		col->owner = this;
+		this->components.push_back(col);
 	}
 }
