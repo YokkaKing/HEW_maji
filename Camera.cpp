@@ -3,7 +3,7 @@
 * タイトル	カメラ
 * 作成者		鈴木豪
 * 作成日		12月02日
-* 更新日		12月02日
+* 更新日		12月11日
 */
 
 #include"Camera.h"
@@ -13,6 +13,7 @@
 #include"Player2.h"
 #include"Viewport.h"
 #include"shader.h"
+#include "terrain.h"
 
 //================================================================
 //	グローバル変数
@@ -22,6 +23,12 @@ static	CAMERA  Camera2Object;
 XMFLOAT3		g_PlayerPosOld;
 XMFLOAT3		g_Player2PosOld;
 extern Controller g_Controller;
+extern TERRAIN g_Terrain;
+extern PLAYER g_Player;
+extern PLAYER g_Player2;
+
+// カメラが障害物から離れるためのパディング距離
+const float CAMERA_COLLISION_PADDING = 0.2f;
 
 void Camera_Initialize()
 { 
@@ -84,33 +91,12 @@ void Camera_Update()
 	Rotation = g_Controller.GetRightStickX();
 	// スティックの入力値を回転速度に変換
 	Rotation *= -1.5f;
-	//if (Keyboard_IsKeyDown(KK_Q))
-	//{
-	//	Rotation = 1.0f;
-	//}
-	//if (Keyboard_IsKeyDown(KK_E))
-	//{
-	//	Rotation = -1.0f;
-	//}
-	//if (Keyboard_IsKeyDown(KK_LEFT))
-	//{
-	//	Rotation = 1.0f;
-	//}
-	//if (Keyboard_IsKeyDown(KK_RIGHT))
-	//{
-	//	Rotation = -1.0f;
-	//}
-
 
 	//注視点からカメラへのベクトル
 	//P1
 	XMFLOAT2 vec;
 	vec.x = CameraObject.Position.x - CameraObject.AtPosition.x;
 	vec.y = CameraObject.Position.z - CameraObject.AtPosition.z;
-
-	//XMFLOAT2 vec2;// 横と前後(x,z)地面に対して平行な移動
-	//vec2.x = CameraObject.Position.y - CameraObject.AtPosition.y;
-	//vec2.y = CameraObject.Position.z - CameraObject.AtPosition.z;// vec変数はXMFLOAT2のためyに値を入れているが実際の値はz
 
 	//ベクトルの回転
 	float co = cosf(XMConvertToRadians(Rotation));
@@ -122,37 +108,53 @@ void Camera_Update()
 	CameraObject.Position.x += CameraObject.AtPosition.x;
 	CameraObject.Position.z += CameraObject.AtPosition.z;
 
-	// Rotation2(X軸回転)
-	//CameraObject.Position.y = (vec2.x * co2 - vec2.y * si2);
-	//CameraObject.Position.z = (vec2.x * si2 + vec2.y * co2);
-	//CameraObject.Position.y += CameraObject.AtPosition.y;
-	//CameraObject.Position.z += CameraObject.AtPosition.z;
+	//=====================================
+	//	レイキャスティング処理
+	//=====================================
 
-	////vecを正規化する
-	//float len = sqrtf(vec.x * vec.x + vec.y * vec.y);
-	//vec.x /= len;
-	//vec.y /= len;
+	//理想的なカメラ位置を保存 
+	XMFLOAT3 P_ideal = CameraObject.Position; // 現在の位置を理想位置とする
+	XMFLOAT3 P_player = CameraObject.AtPosition;
 
-	////注視点の方向へ移動する
-	//float	speed = 0.0f;
-	//if (Keyboard_IsKeyDown(KK_W))
-	//{
-	//	speed = -0.1f;
-	//}
-	//if (Keyboard_IsKeyDown(KK_S))
-	//{
-	//	speed = 0.1f;
-	//}
+	XMVECTOR V_ideal = XMLoadFloat3(&P_ideal);
+	XMVECTOR V_player = XMLoadFloat3(&P_player);
+	XMVECTOR idealToPlayer = XMVectorSubtract(V_player, V_ideal);
+	float maxDistance = XMVectorGetX(XMVector3Length(idealToPlayer));
+	XMVECTOR dir = XMVector3Normalize(idealToPlayer);
 
-	////今回の移動量ベクトル
-	//vec.x *= speed;
-	//vec.y *= speed;
+	XMFLOAT3 dir_f3;
+	XMStoreFloat3(&dir_f3, dir);
 
-	////座標と注視点へ移動量を加算
-	//CameraObject.Position.x += vec.x;
-	//CameraObject.Position.z += vec.y;
-	//CameraObject.AtPosition.x += vec.x;
-	//CameraObject.AtPosition.z += vec.y;
+	//Raycast 構造体を初期化
+	Raycast cameraRay(P_ideal, dir_f3); // コンストラクタで方向が正規化される
+
+	//衝突情報の初期化
+	Ray_HitInfo nearestHit; // Ray_HitInfo を使用
+	nearestHit.m_distance = maxDistance;
+
+	//--- 地形オブジェクトに対する衝突判定 ---
+	PerformCameraRaycast(g_Terrain.hills, cameraRay, nearestHit);
+	PerformCameraRaycast(g_Terrain.walls, cameraRay, nearestHit);
+	//------------------------------------------
+
+	if (nearestHit.m_distance < maxDistance) // 衝突が発生した場合
+	{
+		//衝突点から PADDING 分だけ手前にカメラを移動
+		float actualDistance = nearestHit.m_distance - CAMERA_COLLISION_PADDING;
+
+		//最低限の距離を確保 (パディング距離未満にはしない)
+		if (actualDistance < 0.0f) actualDistance = 0.0f;
+
+		//P_final = P_ideal + dir * actualDistance
+		XMVECTOR finalPos = XMVectorAdd(V_ideal, XMVectorScale(dir, actualDistance));
+		XMStoreFloat3(&CameraObject.Position, finalPos);
+
+		//衝突がカメラの注視点に近すぎる場合（カメラがプレイヤーを追い越す場合など）は、位置を制限することも考慮されます。
+
+		SetCameraPosition(CameraObject.Position);
+	}
+
+
 
 	//FOVの変更(P1)
 	if (Keyboard_IsKeyDown(KK_Z))
@@ -216,6 +218,52 @@ void Camera2_Update()
 	Camera2Object.Position.z = (vec2.x * si2 + vec2.y * co2);
 	Camera2Object.Position.x += Camera2Object.AtPosition.x;
 	Camera2Object.Position.z += Camera2Object.AtPosition.z;
+
+	//=====================================
+	//	レイキャスティング処理
+	//=====================================
+	
+	//理想的なカメラ位置を保存 
+	XMFLOAT3 P_ideal2 = Camera2Object.Position;
+	XMFLOAT3 P_player2 = Camera2Object.AtPosition;
+
+	XMVECTOR V_ideal2 = XMLoadFloat3(&P_ideal2);
+	XMVECTOR V_player2 = XMLoadFloat3(&P_player2);
+	XMVECTOR idealToPlayer2 = XMVectorSubtract(V_player2, V_ideal2);
+	float maxDistance2 = XMVectorGetX(XMVector3Length(idealToPlayer2));
+	XMVECTOR dir = XMVector3Normalize(idealToPlayer2);
+
+	XMFLOAT3 dir_f3;
+	XMStoreFloat3(&dir_f3, dir);
+
+	//Raycast 構造体を初期化
+	Raycast cameraRay2(P_ideal2, dir_f3);
+
+	//衝突情報の初期化
+	Ray_HitInfo nearestHit2;
+	nearestHit2.m_distance = maxDistance2;
+
+	//--- 地形オブジェクトに対する衝突判定 ---
+	PerformCameraRaycast(g_Terrain.hills, cameraRay2, nearestHit2);
+	PerformCameraRaycast(g_Terrain.walls, cameraRay2, nearestHit2);
+	//------------------------------------------
+
+	if (nearestHit2.m_distance < maxDistance2)
+	{
+		//衝突点から PADDING 分だけ手前にカメラを移動
+		float actualDistance = nearestHit2.m_distance - CAMERA_COLLISION_PADDING;
+
+		if (actualDistance < 0.0f) actualDistance = 0.0f;
+
+		//P_final = P_ideal + dir * actualDistance
+		XMVECTOR finalPos = XMVectorAdd(V_ideal2, XMVectorScale(dir, actualDistance));
+		XMStoreFloat3(&Camera2Object.Position, finalPos);
+
+		SetCamera2Position(Camera2Object.Position);
+	}
+
+
+
 	//FOVの変更(P2)
 	if (Keyboard_IsKeyDown(KK_N))
 	{
@@ -407,5 +455,88 @@ XMFLOAT3 GetCamera2Position()
 {
 	return Camera2Object.Position;
 }
+
+void PerformCameraRaycast(const std::vector<GameObject*>& gameObjects, Raycast& cameraRay, Ray_HitInfo& nearestHit)
+{
+	for (GameObject* gameObj : gameObjects)
+	{
+		if (gameObj && gameObj->m_isEnable)
+		{ //有効なオブジェクトのみ
+			auto colliders = gameObj->GetColliders<Collider>();
+
+			for (const auto& collider : colliders)
+			{
+				if (collider->type == ColliderType::Box)
+				{
+					if (gameObj->m_tag != "Player" || gameObj->m_tag != "Player2")
+					{
+					
+					//BoxColliderの場合
+					const BoxCollider* boxCollider = static_cast<const BoxCollider*>(collider.get());
+					InterSector::InterSects(cameraRay, boxCollider, nearestHit);
+					}
+				}
+				// SphereColliderなど、他のコライダーがある場合はここに追加
+
+			}
+		}
+	}
+}
+//====================================
+//	メモ書き
+//====================================
+
+	//XMFLOAT2 vec2;// 横と前後(x,z)地面に対して平行な移動
+	//vec2.x = CameraObject.Position.y - CameraObject.AtPosition.y;
+	//vec2.y = CameraObject.Position.z - CameraObject.AtPosition.z;// vec変数はXMFLOAT2のためyに値を入れているが実際の値はz
+
+	// Rotation2(X軸回転)
+	//CameraObject.Position.y = (vec2.x * co2 - vec2.y * si2);
+	//CameraObject.Position.z = (vec2.x * si2 + vec2.y * co2);
+	//CameraObject.Position.y += CameraObject.AtPosition.y;
+	//CameraObject.Position.z += CameraObject.AtPosition.z;
+
+	////vecを正規化する
+	//float len = sqrtf(vec.x * vec.x + vec.y * vec.y);
+	//vec.x /= len;
+	//vec.y /= len;
+
+	////注視点の方向へ移動する
+	//float	speed = 0.0f;
+	//if (Keyboard_IsKeyDown(KK_W))
+	//{
+	//	speed = -0.1f;
+	//}
+	//if (Keyboard_IsKeyDown(KK_S))
+	//{
+	//	speed = 0.1f;
+	//}
+
+	////今回の移動量ベクトル
+	//vec.x *= speed;
+	//vec.y *= speed;
+
+	////座標と注視点へ移動量を加算
+	//CameraObject.Position.x += vec.x;
+	//CameraObject.Position.z += vec.y;
+	//CameraObject.AtPosition.x += vec.x;
+	//CameraObject.AtPosition.z += vec.y;
+
+	//if (Keyboard_IsKeyDown(KK_Q))
+	//{
+	//	Rotation = 1.0f;
+	//}
+	//if (Keyboard_IsKeyDown(KK_E))
+	//{
+	//	Rotation = -1.0f;
+	//}
+	//if (Keyboard_IsKeyDown(KK_LEFT))
+	//{
+	//	Rotation = 1.0f;
+	//}
+	//if (Keyboard_IsKeyDown(KK_RIGHT))
+	//{
+	//	Rotation = -1.0f;
+	//}
 
 

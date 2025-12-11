@@ -80,6 +80,7 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 
 void Game_Finalize()
 {
+	Viewport_Reset();	// スクリーンサイズをフルスクリーンに戻す(画面分割終了)
 	Field_Finalize();	// フィールドの終了処理
 	TerrainFinalize();
 	PlayerFinalize();	// ボールの終了処理

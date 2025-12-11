@@ -3,7 +3,7 @@
 * タイトル	画面分割
 * 作成者		鈴木豪
 * 作成日		11月20日
-* 更新日		12月02日
+* 更新日		12月09日
 */
 
 #ifndef VIEWPPORT_H
@@ -24,5 +24,6 @@ extern D3D11_VIEWPORT g_LeftViewPort;
 extern D3D11_VIEWPORT g_RightViewPort;
 
 bool Viewport_Initialize(HWND hWnd);
+void Viewport_Reset();
 
 #endif // VIEWPPORT_H

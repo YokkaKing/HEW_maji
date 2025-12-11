@@ -16,13 +16,17 @@
 #include<DirectXMath.h>
 #include"direct3d.h"
 using namespace DirectX;
+#include "gameObject.h"
+#include "Raycasting.h"
 
 class CAMERA
 {
 	public:
-		XMFLOAT3	Position;		//座標
+		XMFLOAT3	Position;		//座標 (実際のカメラの位置)
 		XMFLOAT3	AtPosition;		//注視点
 		XMFLOAT3	UpVector;		//上方ベクトル
+
+		XMFLOAT3	IdealPosition;	//障害物がない場合のカメラの理想的な位置
 
 		XMMATRIX	View;			//ビュー行列
 		XMMATRIX	Projection;		//プロジェクション行列
@@ -39,6 +43,9 @@ void	Camera_Update();
 void    Camera2_Update();
 void	Camera_Draw();
 void    Camera2_Draw();
+
+//カメラレイ組み込み用関数
+void	PerformCameraRaycast(const std::vector<GameObject*>& gameObjects, Raycast& cameraRay, Ray_HitInfo& nearestHit);
 
 void	SetCameraFov(float);
 void	SetCameraAspect(float);
