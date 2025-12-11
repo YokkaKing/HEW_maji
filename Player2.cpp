@@ -23,6 +23,7 @@
 #include"Evolution.h"
 #include"colliderFactory.h"
 #include"debug_ostream.h"
+#include "fade.h"
 
 
 //================================================================
@@ -45,6 +46,10 @@ void Player2Die()
 		g_Player2.m_gameObject->m_isEnable = false;
 	}
 	g_Player2.State = PLAYER2_STATE::PLAYER2_STATE_IDLE;
+	
+	//フェードアウトさせてシーンを切り替える
+	XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
+	SetFade(40.0f, color, FADE_OUT, SCENE_RESULT);
 }
 
 void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
