@@ -23,6 +23,7 @@
 #include"Evolution.h"
 #include"colliderFactory.h"
 #include"debug_ostream.h"
+#include"fade.h"
 #include "keyboard.h"
 
 //================================================================
@@ -48,6 +49,11 @@ void PlayerDie()
 
 	// 例: 入力を受け付けないようにする（状態をIDLEにするなど）
 	g_Player.State = PLAYER_STATE::PLAYER_STATE_IDLE;
+
+
+	//フェードアウトさせてシーンを切り替える
+	XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
+	SetFade(40.0f, color, FADE_OUT, SCENE_RESULT);
 }
 
 void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
