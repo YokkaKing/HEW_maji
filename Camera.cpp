@@ -25,7 +25,7 @@ XMFLOAT3		g_Player2PosOld;
 extern Controller g_Controller;
 extern TERRAIN g_Terrain;
 extern PLAYER g_Player;
-extern PLAYER g_Player2;
+extern PLAYER2 g_Player2;
 
 // カメラが障害物から離れるためのパディング距離
 const float CAMERA_COLLISION_PADDING = 0.2f;
@@ -263,7 +263,6 @@ void Camera2_Update()
 	}
 
 
-
 	//FOVの変更(P2)
 	if (Keyboard_IsKeyDown(KK_N))
 	{
@@ -468,13 +467,13 @@ void PerformCameraRaycast(const std::vector<GameObject*>& gameObjects, Raycast& 
 			{
 				if (collider->type == ColliderType::Box)
 				{
-					if (gameObj->m_tag != "Player" || gameObj->m_tag != "Player2")
-					{
+					//if (gameObj->m_tag != "Player" || gameObj->m_tag != "Player2")
+					//{
 					
 					//BoxColliderの場合
 					const BoxCollider* boxCollider = static_cast<const BoxCollider*>(collider.get());
 					InterSector::InterSects(cameraRay, boxCollider, nearestHit);
-					}
+					//}
 				}
 				// SphereColliderなど、他のコライダーがある場合はここに追加
 
