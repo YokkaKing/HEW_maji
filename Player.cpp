@@ -125,7 +125,7 @@ void	PlayerUpdate()
 	if (Keyboard_IsKeyDownTrigger(KK_C))
 	//if (g_Controller.IsButtonPushed(ControllerButton::X_BUTTON))//xƒ{ƒ^ƒ“
 	{
-		g_Player.m_currentHp -= 10.0f;
+		//g_Player.m_currentHp -= 10.0f;
 		if (g_Player.m_currentWeapon && !g_Player.m_currentWeapon->IsAttacking())
 		{
 			g_Player.m_currentWeapon->StartAttack(g_Player.m_position, g_Player.m_rotation);
