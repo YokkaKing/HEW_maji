@@ -25,6 +25,8 @@
 #include"debug_ostream.h"
 #include"fade.h"
 #include "keyboard.h"
+#include "hammer.h"
+#include"sword.h"
 
 //================================================================
 //	グローバル変数
@@ -82,9 +84,34 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_Player.SetObject(g_Player.m_position, g_Player.m_scale, "Player", 0);
 	EvolutionInitialize();
 
+
+	////追加
+	Sword* newSword = new Sword();
+	newSword->Initialize(pDevice, pContext);
+	newSword->SetObject(
+		XMFLOAT3(0.0f, 0.0f, 0.5f),    // プレイヤーの少し前方に設定 (仮の値)
+		XMFLOAT3(0.5f, 0.5f, 0.5f),    // 当たり判定を大きめに設定 (仮の値)
+		"Sword",
+		0
+	);
+	newSword->m_isEnable = false;
+	g_Player.EquipWeapon(newSword);
+
+	//追加
+	//Hammer* newHammer = new Hammer();
+	//newHammer->Initialize(pDevice, pContext);
+	//newHammer->SetObject(
+	//	XMFLOAT3(0.0f, 0.0f, 0.5f),    // プレイヤーの少し前方に設定 (仮の値)
+	//	XMFLOAT3(0.5f, 0.5f, 0.5f),    // 当たり判定を大きめに設定 (仮の値)
+	//	"Hammer",
+	//	0
+	//);
+	//newHammer->m_isEnable = false;
+	//g_Player.EquipWeapon(newHammer);
+
 	//Sword* newSword = new Sword();
 	//newSword->Initialize(pDevice, pContext);
-	//g_Player2.EquipWeapon(newSword);
+	//g_Player.EquipWeapon(newSword);
 }
 void PlayerFinalize()
 {

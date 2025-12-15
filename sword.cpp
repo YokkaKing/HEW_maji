@@ -17,19 +17,6 @@
 #include "Player2.h"
 #include "Player.h"
 
-void DrawColliderBox(
-    const XMFLOAT3& worldPosition,
-    const XMFLOAT3& worldScale,
-    const XMFLOAT4& color)
-{
-    hal::dout
-        << "[DEBUG_DRAW] Box Drawn at ("
-        << worldPosition.x << ", " << worldPosition.y << ", " << worldPosition.z
-        << ") Scale: (" << worldScale.x << ", " << worldScale.y << ", " << worldScale.z
-        << ") Color: R" << color.x << std::endl;
-}
-
-
 Sword::Sword()
 {
     m_tag = "Sword";
@@ -62,6 +49,7 @@ void Sword::StartAttack(const XMFLOAT3& playerPosition, const XMFLOAT3& playerRo
 
     m_isAttacking = true;
     m_attackTimer = 0.0f;
+    m_isEnable = true;
     hal::dout << "Sword attack started." << std::endl;
 
     m_position = playerPosition;
@@ -75,6 +63,7 @@ void Sword::EndAttack()
 
     m_isAttacking = false;
     m_attackTimer = 0.0f;
+    m_isEnable = false;
     hal::dout << "Sword attack ended." << std::endl;
 }
 
@@ -83,6 +72,8 @@ void Sword::OnCollision(const CollisionInfo& info)
     // 当たり判定が有効なとき（攻撃中）にのみ、衝突処理を行う
     if (m_isAttacking)
     {
+        hal::dout << "Sword hit something! Tag: " << info.other->m_tag << std::endl;
+
         // 衝突相手がPlayer2であるかをタグでチェック
         if (info.other->m_tag == "Player2")
         {
@@ -150,11 +141,6 @@ void Sword::Draw(const XMFLOAT3& playerPosition, const XMFLOAT3& playerRotation)
     if (m_isAttacking)
     {
         auto colliders = this->GetColliders<Collider>();
-
-        for (auto& col : colliders)
-        {            // 赤色 (R=1.0) で描画
-            DrawColliderBox(m_position, m_scale, { 1.0f, 0.0f, 0.0f, 0.5f });
-        }
     }
 }
 
