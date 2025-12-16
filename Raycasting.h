@@ -60,6 +60,8 @@ public:
 	float m_distance = FLT_MAX; //float型で表現できる最大の有限値
 	XMFLOAT3 m_position = { 0.0f, 0.0f, 0.0f }; //衝突座標
 	XMFLOAT3 m_normal = { 0.0f, 0.0f, 0.0f };   //衝突面の法線ベクトル
+	GameObject* m_hitObject = nullptr;
+	bool m_isTransparent = false; //透過フラグ　(カメラが障害物の内部に存在している場合trueにして透過処理(ブレンド設定を変更)する必要あり)
 public:
 	//衝突が発生したかどうか
 	bool HasHit() const { return m_distance < FLT_MAX; }
@@ -198,7 +200,7 @@ public:
 		//BoxColliderとGameObjectの情報を取得
 		GameObject* owner = boxCollider->owner;
 		XMFLOAT3 halfSize = boxCollider->HalfSize();
-		const float Epsilon = 0.0000001f;
+		const float Epsilon = 0.001f;
 
 		//ワールド座標からローカル座標への変換行列を計算
 
@@ -230,20 +232,33 @@ public:
 
 		//ローカルレイとAABB（軸並行境界ボックス）の交差判定 (Slab法)
 
-		//ボックスの境界 (ローカル座標)
-		XMFLOAT3 Min_L = { -halfSize.x, -halfSize.y, -halfSize.z };
-		XMFLOAT3 Max_L = { halfSize.x, halfSize.y, halfSize.z };
-
 		float tmin = -FLT_MAX;
 		float tmax = FLT_MAX;
 
-		//XYZの各軸についてスラブ判定を実行
+		//X軸の判定
 		for (int i = 0; i < 3; ++i)
 		{
+			//ボックスの境界 (ローカル座標)
+			XMFLOAT3 Min_L = { -halfSize.x, -halfSize.y, -halfSize.z };
+			XMFLOAT3 Max_L = { halfSize.x, halfSize.y, halfSize.z };
+			
+			//halfSize.x, halfSize.y, halfSize.zの値を取得
+			//float half_size_i = (&halfSize.x)[i];
+			//float min_b = -half_size_i; //-HalfSize
+			//float max_b = half_size_i;  //+HalfSize
+
 			float origin = (&localRay.m_origin.x)[i];
 			float direction = (&localRay.m_direction.x)[i];
+
 			float min_b = (&Min_L.x)[i];
 			float max_b = (&Max_L.x)[i];
+
+			////Y軸(i == 1)の衝突判定を無視する
+			//if (i == 1)
+			//{
+			//	//Y軸方向の衝突判定を完全にスキップして、X, Z軸のみでtmin/tmaxを制約する
+			//	continue;
+			//}
 
 			if (fabs(direction) < Epsilon) {
 				//レイが軸と平行な場合
@@ -275,6 +290,9 @@ public:
 		{
 			//既存のヒット距離より近い場合のみ更新
 			hit.m_distance = tmin;
+
+			//m_hitObjectの設定 コライダーのowner(GameObject*)を格納する
+			hit.m_hitObject = boxCollider->owner;
 
 			//衝突点の計算 (ローカル座標)
 			XMFLOAT3 hitPosition_L = localRay.GetPoint(tmin);

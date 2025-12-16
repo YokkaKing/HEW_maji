@@ -155,7 +155,6 @@ void Game_Draw()
 	PlayerDraw();
 	Player2Draw();
 
-
 	//==========lightがtrueだとUIが暗く見えるので、一回解除=========
 	Light.SetEnable(FALSE);			//ライティングOFF
 	Shader_SetLight(Light.Light);	//ライト構造体をシェーダーへセット

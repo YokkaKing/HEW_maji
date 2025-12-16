@@ -18,17 +18,19 @@
 //================================================================
 //	グローバル変数
 //================================================================
-static	CAMERA	CameraObject;
-static	CAMERA  Camera2Object;
+static CAMERA	CameraObject;
+static CAMERA  Camera2Object;
 XMFLOAT3		g_PlayerPosOld;
 XMFLOAT3		g_Player2PosOld;
 extern Controller g_Controller;
 extern TERRAIN g_Terrain;
 extern PLAYER g_Player;
 extern PLAYER2 g_Player2;
+extern std::vector<GameObject*> g_gameObjects;
 
 // カメラが障害物から離れるためのパディング距離
 const float CAMERA_COLLISION_PADDING = 0.2f;
+const float FIXED_DELTATIME = 1.0f / 60.0f;
 
 void Camera_Initialize()
 { 
@@ -42,6 +44,9 @@ void Camera_Initialize()
 
 	CameraObject.Fov = 45.0f;
 	Camera2Object.Fov = 45.0f;
+
+	CameraObject.suzukiTime = 0.0f;
+	Camera2Object.suzukiTime = 0.0f;
 
 	float width = (float)Direct3D_GetBackBufferWidth();
 	float height = (float)Direct3D_GetBackBufferHeight();
@@ -108,52 +113,54 @@ void Camera_Update()
 	CameraObject.Position.x += CameraObject.AtPosition.x;
 	CameraObject.Position.z += CameraObject.AtPosition.z;
 
-	//=====================================
-	//	レイキャスティング処理
-	//=====================================
+	//===========================================
+	//	レイキャスティング処理(クリッピング回避)
+	//===========================================
 
 	//理想的なカメラ位置を保存 
-	XMFLOAT3 P_ideal = CameraObject.Position; // 現在の位置を理想位置とする
+	XMFLOAT3 P_ideal = CameraObject.Position;
 	XMFLOAT3 P_player = CameraObject.AtPosition;
 
 	XMVECTOR V_ideal = XMLoadFloat3(&P_ideal);
 	XMVECTOR V_player = XMLoadFloat3(&P_player);
 	XMVECTOR idealToPlayer = XMVectorSubtract(V_player, V_ideal);
-	float maxDistance = XMVectorGetX(XMVector3Length(idealToPlayer));
+	float maxDistance = XMVectorGetX(XMVector3Length(idealToPlayer));//レイの最大距離
 	XMVECTOR dir = XMVector3Normalize(idealToPlayer);
 
 	XMFLOAT3 dir_f3;
 	XMStoreFloat3(&dir_f3, dir);
 
 	//Raycast 構造体を初期化
-	Raycast cameraRay(P_ideal, dir_f3); // コンストラクタで方向が正規化される
+	Raycast cameraRay(P_ideal, dir_f3);
 
 	//衝突情報の初期化
-	Ray_HitInfo nearestHit; // Ray_HitInfo を使用
+	Ray_HitInfo nearestHit;
 	nearestHit.m_distance = maxDistance;
+	nearestHit.m_hitObject = nullptr;
 
-	//--- 地形オブジェクトに対する衝突判定 ---
-	PerformCameraRaycast(g_Terrain.hills, cameraRay, nearestHit);
-	PerformCameraRaycast(g_Terrain.walls, cameraRay, nearestHit);
-	//------------------------------------------
-
-	if (nearestHit.m_distance < maxDistance) // 衝突が発生した場合
+	//全ての透過オブジェクトフラグをリセット
+	for (auto obj : g_gameObjects)
 	{
-		//衝突点から PADDING 分だけ手前にカメラを移動
-		float actualDistance = nearestHit.m_distance - CAMERA_COLLISION_PADDING;
-
-		//最低限の距離を確保 (パディング距離未満にはしない)
-		if (actualDistance < 0.0f) actualDistance = 0.0f;
-
-		//P_final = P_ideal + dir * actualDistance
-		XMVECTOR finalPos = XMVectorAdd(V_ideal, XMVectorScale(dir, actualDistance));
-		XMStoreFloat3(&CameraObject.Position, finalPos);
-
-		//衝突がカメラの注視点に近すぎる場合（カメラがプレイヤーを追い越す場合など）は、位置を制限することも考慮されます。
-
-		SetCameraPosition(CameraObject.Position);
+		obj->m_isTransparent = false;
 	}
 
+	//--- 地形オブジェクトに対する衝突判定 ---
+	//PerformCameraRaycast(g_Terrain.hills, cameraRay, nearestHit);
+	PerformCameraRaycast(g_gameObjects, cameraRay, nearestHit);
+	//------------------------------------------
+
+	//衝突オブジェクトの処理
+	if (nearestHit.m_hitObject != nullptr)
+	{
+		//衝突したオブジェクトがterrain.wallだった場合透過フラグを立てる
+		//※他の障害物オブジェクトでも同様の処理を入れる必要あり
+		if (nearestHit.m_hitObject->m_tag == "HILL" || nearestHit.m_hitObject->m_tag == "WALL")
+		{
+			//プレイヤーが視認できない (レイがプレイヤーに到達する前に障害物に遮られた)
+			//衝突した障害物に透過フラグを立てる
+			nearestHit.m_hitObject->m_isTransparent = true;
+		}
+	}
 
 
 	//FOVの変更(P1)
@@ -242,26 +249,25 @@ void Camera2_Update()
 	//衝突情報の初期化
 	Ray_HitInfo nearestHit2;
 	nearestHit2.m_distance = maxDistance2;
+	nearestHit2.m_hitObject = nullptr;
 
-	//--- 地形オブジェクトに対する衝突判定 ---
-	PerformCameraRaycast(g_Terrain.hills, cameraRay2, nearestHit2);
-	PerformCameraRaycast(g_Terrain.walls, cameraRay2, nearestHit2);
-	//------------------------------------------
+		//--- 地形オブジェクトに対する衝突判定 ---
+		PerformCameraRaycast(g_gameObjects, cameraRay2, nearestHit2);
+		//PerformCameraRaycast(g_Terrain.walls, cameraRay2, nearestHit2);
+		//------------------------------------------
 
-	if (nearestHit2.m_distance < maxDistance2)
-	{
-		//衝突点から PADDING 分だけ手前にカメラを移動
-		float actualDistance = nearestHit2.m_distance - CAMERA_COLLISION_PADDING;
-
-		if (actualDistance < 0.0f) actualDistance = 0.0f;
-
-		//P_final = P_ideal + dir * actualDistance
-		XMVECTOR finalPos = XMVectorAdd(V_ideal2, XMVectorScale(dir, actualDistance));
-		XMStoreFloat3(&Camera2Object.Position, finalPos);
-
-		SetCamera2Position(Camera2Object.Position);
-	}
-
+	//衝突オブジェクトの処理
+		if (nearestHit2.m_hitObject != nullptr)
+		{
+			//衝突したオブジェクトがterrain.wallだった場合透過フラグを立てる
+			//※他の障害物オブジェクトでも同様の処理を入れる必要あり
+			if (nearestHit2.m_hitObject->m_tag == "HILL" || nearestHit2.m_hitObject->m_tag == "WALL")
+			{
+				//プレイヤーが視認できない (レイがプレイヤーに到達する前に障害物に遮られた)
+				//衝突した障害物に透過フラグを立てる
+				nearestHit2.m_hitObject->m_isTransparent = true;
+			}
+		}
 
 	//FOVの変更(P2)
 	if (Keyboard_IsKeyDown(KK_N))
@@ -417,6 +423,16 @@ void	SetCamera2UpVector(XMFLOAT3 up)
 	Camera2Object.UpVector = up;
 }
 
+CAMERA& GetCameraObj()
+{
+	return CameraObject;
+}
+
+CAMERA& GetCamera2Obj()
+{
+	return Camera2Object;
+}
+
 XMMATRIX	GetViewMatrix()
 { 
 	return	CameraObject.View;
@@ -465,17 +481,27 @@ void PerformCameraRaycast(const std::vector<GameObject*>& gameObjects, Raycast& 
 
 			for (const auto& collider : colliders)
 			{
-				if (collider->type == ColliderType::Box)
-				{
-					//if (gameObj->m_tag != "Player" || gameObj->m_tag != "Player2")
-					//{
-					
-					//BoxColliderの場合
-					const BoxCollider* boxCollider = static_cast<const BoxCollider*>(collider.get());
-					InterSector::InterSects(cameraRay, boxCollider, nearestHit);
-					//}
+				Ray_HitInfo tempHit = nearestHit;
+
+				//if (collider->type == ColliderType::Box)
+				if(auto boxCollider = std::dynamic_pointer_cast<BoxCollider>(collider))
+				{//BoxColliderの場合
+
+					//const BoxCollider* boxCollider = static_cast<const BoxCollider*>(collider.get());
+					//InterSector::InterSects(cameraRay, boxCollider, nearestHit);
+
+					//shared_ptrから生のポインタ(boxCollider.get())を取得して渡す
+					bool hit = InterSector::InterSects(cameraRay, boxCollider.get(), tempHit);
+
+					//InterSectsがtrueを返した場合(より近い衝突)を検出した場合
+					//tempHitの持つ全ての情報(m_hitObject含む)でnearesthitを完全に更新する
+					if (hit)
+					{
+						nearestHit = tempHit;
+					}
 				}
 				// SphereColliderなど、他のコライダーがある場合はここに追加
+
 
 			}
 		}
