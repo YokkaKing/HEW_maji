@@ -16,7 +16,7 @@
 //	インクルード
 //================================================================
 #include"keyboard.h"
-//#include"controller.h"
+#include"controller.h"
 #include"Player2.h"
 #include"Camera.h"
 #include"shader.h"
@@ -25,6 +25,8 @@
 #include"debug_ostream.h"
 #include "fade.h"
 
+#include "IWeapon.h"
+#include "arrow.h"
 
 //================================================================
 //	グローバル変数
@@ -34,6 +36,7 @@ PLAYER2	g_Player2;
 ID3D11Device* g_pDevice2;
 ID3D11DeviceContext* g_pContext2;
 
+Controller g_Controller(0); //ID 0のコントローラーを使用
 
 
 void Player2Die()
@@ -75,9 +78,9 @@ void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_Player2.SetObject(g_Player2.m_position, g_Player2.m_scale, "Player2", 0);
 	EvolutionInitialize();
 
-	//Sword* newSword = new Sword();
-	//newSword->Initialize(pDevice, pContext);
-	//g_Player2.EquipWeapon(newSword);
+	Arrow* newArrow = new Arrow();
+	newArrow->Initialize(pDevice, pContext);
+	g_Player2.EquipWeapon(newArrow);
 }
 void Player2Finalize()
 {
@@ -95,6 +98,8 @@ void Player2Finalize()
 }
 void	Player2Update()
 {
+	g_Controller.Update();
+
 	EvolvePlayer2();           // Eキーで進化タイプを選択
 	ApplyEvolutionEffect2();   // 進化タイプに応じたパラメータを適用
 	if (g_Player2.m_isDead)return;	//死亡している場合は更新処理をスキップ
@@ -106,17 +111,62 @@ void	Player2Update()
 		{
 			g_Player2.m_currentWeapon->EndAttack();
 		}
-	}
 
-	//攻撃入力のチェック
-	if (Keyboard_IsKeyDownTrigger(KK_N))
-	{
-		g_Player2.m_currentHp -= 10.0f;
-		// プレイヤーの現在攻撃中フラグをチェック
-		if (g_Player2.m_currentWeapon && !g_Player2.m_currentWeapon->IsAttacking())
+
+		////攻撃入力のチェック
+		//if (Keyboard_IsKeyDownTrigger(KK_N))
+		//{
+		//	g_Player2.m_currentHp -= 10.0f;
+		//	// プレイヤーの現在攻撃中フラグをチェック
+		//	if (g_Player2.m_currentWeapon && !g_Player2.m_currentWeapon->IsAttacking())
+		//	{
+		//		// 武器側で必要な位置と回転を渡して攻撃開始
+		//		g_Player2.m_currentWeapon->StartAttack(g_Player2.m_position, g_Player2.m_rotation);
+		//	}
+		//}
+		bool isAPressed = g_Controller.IsButtonDown(ControllerButton::A_BUTTON); //
+		bool isAReleased = g_Controller.IsButtonReleased(ControllerButton::A_BUTTON); //
+
+		// 武器タイプを取得し、switch文で分岐
+		WEAPON_TYPE type = g_Player2.m_currentWeapon->GetWeaponType();
+
+		switch (type)
 		{
-			// 武器側で必要な位置と回転を渡して攻撃開始
-			g_Player2.m_currentWeapon->StartAttack(g_Player2.m_position, g_Player2.m_rotation);
+		case WEAPON_TYPE::ARROW:
+		{
+			// ARROW の場合: HandleInput（チャージ）が必要
+			// ※ この場合、HandleInputを持つArrow型にキャストする必要があります。
+			// 依存を減らすためIWeaponにHandleInputを持たせるか、
+			// dynamic_castを許容するか、設計選択が必要です。
+			// => ここでは、**IWeaponを継承した特殊な入力を持つ型**とみなし、dynamic_castを再利用します。
+
+			Arrow* arrowWeapon = dynamic_cast<Arrow*>(g_Player2.m_currentWeapon);
+			if (arrowWeapon)
+			{
+				arrowWeapon->HandleInput(isAPressed, isAReleased,
+					g_Player2.m_position, g_Player2.m_rotation); //
+			}
+			break;
+		}
+		case WEAPON_TYPE::SWORD:
+		case WEAPON_TYPE::SHURIKEN:
+		case WEAPON_TYPE::SPEAR:
+		{
+			// SWORD, SHURIKEN, SPEAR などチャージ不要な武器の場合
+			// Aボタンを押した瞬間に攻撃開始
+			if (g_Controller.IsButtonPushed(ControllerButton::A_BUTTON))
+			{
+				if (!g_Player2.m_currentWeapon->IsAttacking()) //
+				{
+					g_Player2.m_currentWeapon->StartAttack(g_Player2.m_position, g_Player2.m_rotation); //
+				}
+			}
+			break;
+		}
+		case WEAPON_TYPE::NONE:
+		default:
+			// 装備なし、または未定義の武器
+			break;
 		}
 	}
 	Player2_ManualMove();
