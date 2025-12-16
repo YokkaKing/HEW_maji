@@ -44,6 +44,12 @@ public:
     {
         return owner->GetWorldPosition();
     }
+
+    void SetEnable(bool enable) { m_enable = enable; }
+    bool IsEnable() const { return m_enable; }
+
+private:
+    bool m_enable = true; // “–‚½‚è”»’è‚ðŽæ‚é‚©
 };
 
 //================================================================

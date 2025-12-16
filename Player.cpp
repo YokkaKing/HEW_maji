@@ -70,6 +70,8 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_Player.m_velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	
 	g_Player.m_scale = XMFLOAT3(0.5f, 0.5f, 0.5f);
+	g_Player.m_tag = "Player";
+	g_Player.m_layer = 0;
 
 	g_Player.State = PLAYER_STATE::PLAYER_STATE_MOVE;
 
@@ -81,46 +83,17 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 
 	g_Player.m_isDead = false;
 
-	g_Player.SetObject(g_Player.m_position, g_Player.m_scale, "Player", 0);
+	auto collider = g_Player.AddComponent<BoxCollider>(&g_Player, g_Player.m_scale);
+	ManagerCollider::AddCollider(collider);
+
 	EvolutionInitialize();
-
-
-	////追加
-	Sword* newSword = new Sword();
-	newSword->Initialize(pDevice, pContext);
-	newSword->SetObject(
-		XMFLOAT3(0.0f, 0.0f, 0.5f),    // プレイヤーの少し前方に設定 (仮の値)
-		XMFLOAT3(0.5f, 0.5f, 0.5f),    // 当たり判定を大きめに設定 (仮の値)
-		"Sword",
-		0
-	);
-	newSword->m_isEnable = false;
-	g_Player.EquipWeapon(newSword);
-
-	//追加
-	//Hammer* newHammer = new Hammer();
-	//newHammer->Initialize(pDevice, pContext);
-	//newHammer->SetObject(
-	//	XMFLOAT3(0.0f, 0.0f, 0.5f),    // プレイヤーの少し前方に設定 (仮の値)
-	//	XMFLOAT3(0.5f, 0.5f, 0.5f),    // 当たり判定を大きめに設定 (仮の値)
-	//	"Hammer",
-	//	0
-	//);
-	//newHammer->m_isEnable = false;
-	//g_Player.EquipWeapon(newHammer);
-
-	//Sword* newSword = new Sword();
-	//newSword->Initialize(pDevice, pContext);
-	//g_Player.EquipWeapon(newSword);
 }
 void PlayerFinalize()
 {
 	ModelRelease(g_Player.m_model);
-	if (g_Player.m_gameObject)
-	{
-		delete g_Player.m_gameObject;
-		g_Player.m_gameObject = nullptr;
-	}
+
+	ManagerCollider::ClearCollider();
+
 	//武器の解放
 	if (g_Player.m_currentWeapon)
 	{
@@ -492,29 +465,5 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 		{
 			return; // 他は無視
 		}
-	}
-}
-
-void PLAYER::SetObject(XMFLOAT3 pos, XMFLOAT3 scl, std::string tag, int lay)
-{
-	// unique_ptrで受け取ることで、スコープを抜けたら自動的にdeleteされる
-	std::unique_ptr<GameObject> obj_ptr(
-		ColliderFactory::CreateBoxObject(pos, scl, tag, lay)
-	);
-	// obj_ptr.get() で元のポインタを取得
-	GameObject* obj = obj_ptr.get();
-
-	// プロパティをコピー
-	m_position = obj->m_position;
-	m_scale = obj->m_scale;
-	m_tag = obj->m_tag;
-	m_layer = obj->m_layer;
-
-	// コライダーの所有権をこのPLAYERオブジェクトに移す
-	for (auto& col : obj->GetColliders<>())
-	{
-		col->owner = this;
-
-		this->components.push_back(col);
 	}
 }

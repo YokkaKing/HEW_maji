@@ -36,7 +36,7 @@ PLAYER2	g_Player2;
 ID3D11Device* g_pDevice2;
 ID3D11DeviceContext* g_pContext2;
 
-Controller g_Controller(0); //ID 0のコントローラーを使用
+Controller g_Controller2(0); //ID 0のコントローラーを使用
 
 
 void Player2Die()
@@ -67,6 +67,8 @@ void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_Player2.m_velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
 	g_Player2.m_scale = XMFLOAT3(0.5f, 0.5f, 0.5f);
+	g_Player2.m_tag = "Player2";
+	g_Player2.m_layer = 0;
 
 	g_Player2.State = PLAYER2_STATE::PLAYER2_STATE_MOVE;
 
@@ -75,7 +77,9 @@ void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_Player2.m_currentHp = g_Player2.m_maxHp;
 	g_Player2.m_isDead = false;
 
-	g_Player2.SetObject(g_Player2.m_position, g_Player2.m_scale, "Player2", 0);
+	auto collider = g_Player2.AddComponent<BoxCollider>(&g_Player2, g_Player2.m_scale);
+	ManagerCollider::AddCollider(collider);
+
 	EvolutionInitialize();
 
 	Arrow* newArrow = new Arrow();
@@ -85,11 +89,9 @@ void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 void Player2Finalize()
 {
 	ModelRelease(g_Player2.m_model);
-	if (g_Player2.m_gameObject)
-	{
-		delete g_Player2.m_gameObject;
-		g_Player2.m_gameObject = nullptr;
-	}
+
+	ManagerCollider::ClearCollider();
+
 	if (g_Player2.m_currentWeapon)
 	{
 		delete g_Player2.m_currentWeapon;
@@ -98,7 +100,7 @@ void Player2Finalize()
 }
 void	Player2Update()
 {
-	g_Controller.Update();
+	g_Controller2.Update();
 
 	EvolvePlayer2();           // Eキーで進化タイプを選択
 	ApplyEvolutionEffect2();   // 進化タイプに応じたパラメータを適用
@@ -124,8 +126,8 @@ void	Player2Update()
 		//		g_Player2.m_currentWeapon->StartAttack(g_Player2.m_position, g_Player2.m_rotation);
 		//	}
 		//}
-		bool isAPressed = g_Controller.IsButtonDown(ControllerButton::A_BUTTON); //
-		bool isAReleased = g_Controller.IsButtonReleased(ControllerButton::A_BUTTON); //
+		bool isAPressed = g_Controller2.IsButtonDown(ControllerButton::A_BUTTON); //
+		bool isAReleased = g_Controller2.IsButtonReleased(ControllerButton::A_BUTTON); //
 
 		// 武器タイプを取得し、switch文で分岐
 		WEAPON_TYPE type = g_Player2.m_currentWeapon->GetWeaponType();
@@ -154,7 +156,7 @@ void	Player2Update()
 		{
 			// SWORD, SHURIKEN, SPEAR などチャージ不要な武器の場合
 			// Aボタンを押した瞬間に攻撃開始
-			if (g_Controller.IsButtonPushed(ControllerButton::A_BUTTON))
+			if (g_Controller2.IsButtonPushed(ControllerButton::A_BUTTON))
 			{
 				if (!g_Player2.m_currentWeapon->IsAttacking()) //
 				{
@@ -445,28 +447,5 @@ void PLAYER2::OnCollision(const CollisionInfo& info)
 		{
 			return; // 他は無視
 		}
-	}
-}
-
-void PLAYER2::SetObject(XMFLOAT3 pos, XMFLOAT3 scl, std::string tag, int lay)
-{
-	// unique_ptrで受け取ることで、スコープを抜けたら自動的にdeleteされる
-	std::unique_ptr<GameObject> obj_ptr(
-		ColliderFactory::CreateBoxObject(pos, scl, tag, lay)
-	);
-	// obj_ptr.get() で元のポインタを取得
-	GameObject* obj = obj_ptr.get();
-
-	// プロパティをコピー
-	m_position = obj->m_position;
-	m_scale = obj->m_scale;
-	m_tag = obj->m_tag;
-	m_layer = obj->m_layer;
-
-	// コライダーの所有権をこのPLAYERオブジェクトに移す
-	for (auto& col : obj->GetColliders<>())
-	{
-		col->owner = this;
-		this->components.push_back(col);
 	}
 }
