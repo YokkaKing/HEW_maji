@@ -52,6 +52,7 @@ public:
 
     std::vector<std::shared_ptr<Component>> components;
     bool m_isEnable = true;
+    bool m_isTransparent = false; //“§‰ßƒtƒ‰ƒO
 public:
     template <typename T, typename... Args>
     std::shared_ptr<T> AddComponent(Args&&... args)

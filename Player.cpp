@@ -361,7 +361,8 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 
 		// 例えば壁・木だけコリジョン有効
 		if (info.other->m_tag == "Wall" ||
-			info.other->m_tag == "Tree")
+			info.other->m_tag == "Tree" ||
+			info.other->m_tag == "WALL")
 		{
 			//================================================================
 			//	押し戻し
