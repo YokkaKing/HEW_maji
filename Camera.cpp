@@ -97,6 +97,17 @@ void Camera_Update()
 	// スティックの入力値を回転速度に変換
 	Rotation *= -1.5f;
 
+	//===============================
+	if (Keyboard_IsKeyDown(KK_Q))
+	{
+		Rotation = 1.0f;
+	}
+	if (Keyboard_IsKeyDown(KK_E))
+	{
+		Rotation = -1.0f;
+	}
+	//==============================
+
 	//注視点からカメラへのベクトル
 	//P1
 	XMFLOAT2 vec;
