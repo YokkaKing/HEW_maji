@@ -3,7 +3,7 @@
 * タイトル	画面分割
 * 作成者		鈴木豪
 * 作成日		11月20日
-* 更新日		12月02日
+* 更新日		12月09日
 */
 
 //================================================================
@@ -38,4 +38,24 @@ bool Viewport_Initialize(HWND hWnd)
 	g_RightViewPort.MaxDepth = 1.0f;
 
 	return true;
+}
+
+void Viewport_Reset()
+{
+	ID3D11DeviceContext* g_pContext = Direct3D_GetDeviceContext();
+
+	//フルスクリーンの値に戻す
+	D3D11_VIEWPORT DefaultScreen = {
+		0.0f, //TopLeftX
+		0.0f, //TopLeftY
+		(float)Direct3D_GetBackBufferWidth(),//width
+		(float)Direct3D_GetBackBufferHeight(),//height
+		0.0f, //MinDepth
+		1.0f  //MaxDepth
+	};
+
+	if (g_pContext)
+	{
+		g_pContext->RSSetViewports(1, &DefaultScreen);
+	}
 }
