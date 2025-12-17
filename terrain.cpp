@@ -726,6 +726,7 @@ void TerrainDraw()
 		ModelDraw(g_Terrain.m_moveTerrain[1]);
 	}
 
+	/*
 	for (int i = 0; i < g_Terrain.hills.size(); i++)
 	{
 		//ワールド行列作成
@@ -785,6 +786,7 @@ void TerrainDraw()
 		//モデルの描画リクエスト
 		ModelDraw(blockModel);
 	}
+	*/
 }
 // 簡単な四角形の当たり判定を作る場合
 void TERRAIN::SetObject(XMFLOAT3 pos, XMFLOAT3 scl, std::string tag, int lay)

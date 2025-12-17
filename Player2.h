@@ -53,7 +53,6 @@ public:
 	void TryAttack(const XMFLOAT3& direction); // UŒ‚‚ğ‚İ‚é
 public:
 	void OnCollision(const CollisionInfo& info)override;
-	void SetObject(XMFLOAT3 pos, XMFLOAT3 scl, std::string tag, int lay);
 	void TakeDamage(float damage);
 };
 

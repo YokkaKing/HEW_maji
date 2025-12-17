@@ -23,7 +23,10 @@
 #include"Evolution.h"
 #include"colliderFactory.h"
 #include"debug_ostream.h"
+#include"fade.h"
 #include "keyboard.h"
+#include "hammer.h"
+#include"sword.h"
 
 //================================================================
 //	グローバル変数
@@ -48,6 +51,11 @@ void PlayerDie()
 
 	// 例: 入力を受け付けないようにする（状態をIDLEにするなど）
 	g_Player.State = PLAYER_STATE::PLAYER_STATE_IDLE;
+
+
+	//フェードアウトさせてシーンを切り替える
+	XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
+	SetFade(40.0f, color, FADE_OUT, SCENE_RESULT);
 }
 
 void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
@@ -62,6 +70,8 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_Player.m_velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	
 	g_Player.m_scale = XMFLOAT3(0.5f, 0.5f, 0.5f);
+	g_Player.m_tag = "Player";
+	g_Player.m_layer = 0;
 
 	g_Player.State = PLAYER_STATE::PLAYER_STATE_MOVE;
 
@@ -73,21 +83,17 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 
 	g_Player.m_isDead = false;
 
-	g_Player.SetObject(g_Player.m_position, g_Player.m_scale, "Player", 0);
-	EvolutionInitialize();
+	auto collider = g_Player.AddComponent<BoxCollider>(&g_Player, g_Player.m_scale);
+	ManagerCollider::AddCollider(collider);
 
-	//Sword* newSword = new Sword();
-	//newSword->Initialize(pDevice, pContext);
-	//g_Player2.EquipWeapon(newSword);
+	EvolutionInitialize();
 }
 void PlayerFinalize()
 {
 	ModelRelease(g_Player.m_model);
-	if (g_Player.m_gameObject)
-	{
-		delete g_Player.m_gameObject;
-		g_Player.m_gameObject = nullptr;
-	}
+
+	ManagerCollider::ClearCollider();
+
 	//武器の解放
 	if (g_Player.m_currentWeapon)
 	{
@@ -119,7 +125,7 @@ void	PlayerUpdate()
 	if (Keyboard_IsKeyDownTrigger(KK_C))
 	//if (g_Controller.IsButtonPushed(ControllerButton::X_BUTTON))//xボタン
 	{
-		g_Player.m_currentHp -= 10.0f;
+		//g_Player.m_currentHp -= 10.0f;
 		if (g_Player.m_currentWeapon && !g_Player.m_currentWeapon->IsAttacking())
 		{
 			g_Player.m_currentWeapon->StartAttack(g_Player.m_position, g_Player.m_rotation);
@@ -459,29 +465,5 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 		{
 			return; // 他は無視
 		}
-	}
-}
-
-void PLAYER::SetObject(XMFLOAT3 pos, XMFLOAT3 scl, std::string tag, int lay)
-{
-	// unique_ptrで受け取ることで、スコープを抜けたら自動的にdeleteされる
-	std::unique_ptr<GameObject> obj_ptr(
-		ColliderFactory::CreateBoxObject(pos, scl, tag, lay)
-	);
-	// obj_ptr.get() で元のポインタを取得
-	GameObject* obj = obj_ptr.get();
-
-	// プロパティをコピー
-	m_position = obj->m_position;
-	m_scale = obj->m_scale;
-	m_tag = obj->m_tag;
-	m_layer = obj->m_layer;
-
-	// コライダーの所有権をこのPLAYERオブジェクトに移す
-	for (auto& col : obj->GetColliders<>())
-	{
-		col->owner = this;
-
-		this->components.push_back(col);
 	}
 }
