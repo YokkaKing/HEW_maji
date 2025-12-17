@@ -24,9 +24,8 @@
 #include"colliderFactory.h"
 #include"debug_ostream.h"
 #include"fade.h"
-#include "keyboard.h"
-#include "hammer.h"
 #include"sword.h"
+#include<memory>
 
 //================================================================
 //	グローバル変数
@@ -79,31 +78,24 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_Player.FrictionRate = 0.98f;
 	g_Player.EvolutionType = EVOLUTION_TYPE::EVOLUTION_TYPE_NONE;
 	g_Player.m_currentHp = g_Player.m_maxHp;
-	//g_Player.m_currentHp = g_Player.m_maxHp - 10; HPデバッグ用
-
 	g_Player.m_isDead = false;
 
+	// プレイヤーの当たり判定の追加
 	auto collider = g_Player.AddComponent<BoxCollider>(&g_Player, g_Player.m_scale);
 	ManagerCollider::AddCollider(collider);
+
+	// のちのちセレクト画面から分岐できるようにする
+	// 自分をownerとして武器を生成
+	g_Player.m_currentWeapon = std::make_unique<Sword>(&g_Player, FALSE); // 1Pです
 
 	EvolutionInitialize();
 }
 void PlayerFinalize()
 {
 	ModelRelease(g_Player.m_model);
-
-	ManagerCollider::ClearCollider();
-
-	//武器の解放
-	if (g_Player.m_currentWeapon)
-	{
-		delete g_Player.m_currentWeapon;
-		g_Player.m_currentWeapon = nullptr;
-	}
 }
 void	PlayerUpdate()
 {
-
 	g_Controller.Update();//毎フレームコントローラーの状態を更新
 
 	//EvolvePlayer();     
@@ -111,25 +103,28 @@ void	PlayerUpdate()
 	//ApplyEvolutionEffect();   // 進化タイプに応じたパラメータを適用
 	ApplyEvolutionEffect3();   // 進化タイプに応じたパラメータを適用
 	if (g_Player.m_isDead)return;	//死亡している場合は更新処理をスキップ
-	//装備中の武器を更新する
+
+//================================================================
+//	攻撃処理
+//================================================================
+	// CキーかAボタンで
+	if (Keyboard_IsKeyDownTrigger(KK_C) || g_Controller.IsButtonPushed(ControllerButton::A_BUTTON))
+	{
+		// 武器があるか
+		if (g_Player.m_currentWeapon)
+		{
+			g_Player.m_currentWeapon->Attack(); // 攻撃
+		}
+
+		hal::dout << "Playerから攻撃した！\n";
+	}
+
+//================================================================
+//	武器の更新
+//================================================================
 	if (g_Player.m_currentWeapon)
 	{
-		g_Player.m_currentWeapon->Update(1.0f / 60.0f); // 1/60秒で更新
-		//攻撃終了判定
-		if (g_Player.m_currentWeapon->ShouldEndAttack())
-		{
-			g_Player.m_currentWeapon->EndAttack();
-		}
-	}
-	//攻撃入力のチェック
-	if (Keyboard_IsKeyDownTrigger(KK_C))
-	//if (g_Controller.IsButtonPushed(ControllerButton::X_BUTTON))//xボタン
-	{
-		//g_Player.m_currentHp -= 10.0f;
-		if (g_Player.m_currentWeapon && !g_Player.m_currentWeapon->IsAttacking())
-		{
-			g_Player.m_currentWeapon->StartAttack(g_Player.m_position, g_Player.m_rotation);
-		}
+		g_Player.m_currentWeapon->Update();
 	}
 
 	Player_ManualMove();
@@ -255,6 +250,8 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 	g_Player.m_position.x += g_Player.m_velocity.x;
 	g_Player.m_position.z += g_Player.m_velocity.z;
 	g_Player.m_position.y += g_Player.m_velocity.y;
+
+	hal::dout << "Player RotationY : " << g_Player.m_rotation.y << "\n";
 }
 
 void PlayerDraw() 
@@ -286,6 +283,10 @@ void PlayerDraw()
 	//モデルの描画リクエスト
 	ModelDraw(g_Player.m_model);
 
+	if (g_Player.m_currentWeapon)
+	{
+		g_Player.m_currentWeapon->Draw();
+	}
 }
 
 
@@ -311,42 +312,11 @@ float Player_GetMaxHp()
 {
 	return g_Player.m_maxHp;
 }
-void PLAYER::TakeDamage(float damage)
-{
-	if (m_isDead) return;
-
-	m_currentHp -= damage;
-	
-	// デバッグ出力でダメージ表示
-	hal::dout << "Player took " << damage << " damage. HP remaining: " << m_currentHp << std::endl;
-	
-
-}
 
 //武器を装備する
-void PLAYER::EquipWeapon(IWeapon* weapon)
+void PLAYER::EquipWeapon(std::unique_ptr<IWeapon> weapon)
 {
-	// 古い武器があれば解放する
-	if (m_currentWeapon)
-	{
-		delete m_currentWeapon;
-	}
-	m_currentWeapon = weapon;
-}
-
-//攻撃を試みる
-void PLAYER::TryAttack(const XMFLOAT3& direction)
-{
-	if (m_currentWeapon && !m_currentWeapon->IsAttacking())
-	{
-		m_currentWeapon->StartAttack(m_position, m_rotation);
-		// 攻撃が成功した場合、クールダウンはAttack内で設定される
-	}
-	else if (m_currentWeapon)
-	{
-		// デバッグ出力: クールダウン中
-		hal::dout<< "Attack on cooldown!" << std::endl; 
-	}
+	m_currentWeapon = std::move(weapon);
 }
 
 void PLAYER::OnCollision(const CollisionInfo& info)
@@ -357,12 +327,15 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 	// --- まずタグで相手を識別 ---
 	if (info.other)
 	{
-		//敵の攻撃に当たった場合
-		if (info.other->m_tag == "Player2Attack")
+		// 攻撃の時
+		if (info.other->m_tag == "Attack")
 		{
-			//ダメージを受ける
-			TakeDamage(10.0f); // 10ダメージを与える（数値は適宜調整）
-			return;
+			// 相手が武器オブジェクト持ってたら
+			if (info.other->m_weaponPtr)
+			{
+				// 武器の衝突判定を呼び出す
+				info.other->m_weaponPtr->OnWeaponCollision(this);
+			}
 		}
 
 		// 例えば壁・木だけコリジョン有効
