@@ -99,8 +99,20 @@ CollisionInfo ManagerCollider::CheckCollision(const Collider* collider1, const C
     if (!collider1 || !collider2 || collider1 == collider2) return {};
 
     if (collider1->type == ColliderType::Box && collider2->type == ColliderType::Box)
-        return CheckBoxBox(static_cast<const BoxCollider*>(collider1), static_cast<const BoxCollider*>(collider2));
+    {
+        const BoxCollider* b1 = static_cast<const BoxCollider*>(collider1);
+        const BoxCollider* b2 = static_cast<const BoxCollider*>(collider2);
 
+        // 両方の箱が回転していない（ほぼ0）なら、今までの軽い方を呼ぶ
+        if (AbsF(b1->owner->m_rotation.x) < 0.001f && AbsF(b1->owner->m_rotation.y) < 0.001f && AbsF(b1->owner->m_rotation.z) < 0.001f &&
+            AbsF(b2->owner->m_rotation.x) < 0.001f && AbsF(b2->owner->m_rotation.y) < 0.001f && AbsF(b2->owner->m_rotation.z) < 0.001f)
+        {
+            return CheckBoxBox(b1, b2); // 軽い！
+        }
+
+        // どちらかが回転している時だけ OBB を使う
+        return CheckBoxBoxOBB(b1, b2); // 槍などの時だけ発動
+    }
     if (collider1->type == ColliderType::Sphere && collider2->type == ColliderType::Sphere)
         return CheckSphereSphere(static_cast<const SphereCollider*>(collider1), static_cast<const SphereCollider*>(collider2));
 
@@ -279,6 +291,88 @@ CollisionInfo ManagerCollider::CheckBoxSphere(const BoxCollider* b, const Sphere
 
     info.penetration = r;
     info.depth = XMFLOAT3(r, r, r);
+
+    return info;
+}
+
+//================================================================
+//  Box vs Box(回転付き)
+//================================================================
+CollisionInfo ManagerCollider::CheckBoxBoxOBB(const BoxCollider* box1, const BoxCollider* box2)
+{
+    CollisionInfo info;
+
+    // 1. 各ボックスのワールド座標、サイズ、回転を取得
+    XMFLOAT3 worldPosA = box1->WorldPosition(); // 一度変数に受ける
+    XMFLOAT3 worldPosB = box2->WorldPosition(); // これで実体（左辺値）ができる
+    XMVECTOR posA = XMLoadFloat3(&worldPosA);   // その変数のアドレスを渡す
+    XMVECTOR posB = XMLoadFloat3(&worldPosB);
+    XMFLOAT3 sizeA = box1->HalfSize();
+    XMFLOAT3 sizeB = box2->HalfSize();
+
+    // 2. 回転行列を作成（GameObjectの回転から作成）
+    XMMATRIX rotA = XMMatrixRotationRollPitchYaw(box1->owner->m_rotation.x, box1->owner->m_rotation.y, box1->owner->m_rotation.z);
+    XMMATRIX rotB = XMMatrixRotationRollPitchYaw(box2->owner->m_rotation.x, box2->owner->m_rotation.y, box2->owner->m_rotation.z);
+
+    // 3. 各箱の「向いている軸」を取得 (X, Y, Z軸を回転させる)
+    XMVECTOR axesA[3] = {
+        XMVector3TransformNormal(XMVectorSet(1,0,0,0), rotA),
+        XMVector3TransformNormal(XMVectorSet(0,1,0,0), rotA),
+        XMVector3TransformNormal(XMVectorSet(0,0,1,0), rotA)
+    };
+    XMVECTOR axesB[3] = {
+        XMVector3TransformNormal(XMVectorSet(1,0,0,0), rotB),
+        XMVector3TransformNormal(XMVectorSet(0,1,0,0), rotB),
+        XMVector3TransformNormal(XMVectorSet(0,0,1,0), rotB)
+    };
+
+    // 4. 二つの箱の中心間ベクトル
+    XMVECTOR L = XMVectorSubtract(posB, posA);
+
+    // --- ここから本来は15軸の判定が必要ですが、まずは主要な「自分の各辺」の軸でチェック ---
+    // (簡易版SAT: 軸Aの3方向、軸Bの3方向の合計6軸で判定)
+    float overlapMin = 1000000.0f;
+    XMVECTOR hitNormal = XMVectorZero();
+
+    auto CheckAxis = [&](XMVECTOR axis) -> bool {
+        // 軸がほぼゼロならスキップ
+        if (XMVector3LengthSq(axis).m128_f32[0] < 0.001f) return true;
+        axis = XMVector3Normalize(axis);
+
+        float rA = fabsf(XMVectorGetX(XMVector3Dot(axesA[0], axis)) * sizeA.x) +
+            fabsf(XMVectorGetX(XMVector3Dot(axesA[1], axis)) * sizeA.y) +
+            fabsf(XMVectorGetX(XMVector3Dot(axesA[2], axis)) * sizeA.z);
+
+        // 箱Bの投影半径
+        float rB = fabsf(XMVectorGetX(XMVector3Dot(axesB[0], axis)) * sizeB.x) +
+            fabsf(XMVectorGetX(XMVector3Dot(axesB[1], axis)) * sizeB.y) +
+            fabsf(XMVectorGetX(XMVector3Dot(axesB[2], axis)) * sizeB.z);
+
+        // 中心間の投影距離
+        float distance = fabsf(XMVectorGetX(XMVector3Dot(L, axis)));
+
+        float overlap = rA + rB - distance;
+        if (overlap <= 0.0f) return false;
+
+        if (overlap < overlapMin) {
+            overlapMin = overlap;
+            hitNormal = axis;
+        }
+        return true;
+        };
+
+    // 箱Aの各軸、箱Bの各軸でチェック
+    if (!CheckAxis(axesA[0])) return info;
+    if (!CheckAxis(axesA[1])) return info;
+    if (!CheckAxis(axesA[2])) return info;
+    if (!CheckAxis(axesB[0])) return info;
+    if (!CheckAxis(axesB[1])) return info;
+    if (!CheckAxis(axesB[2])) return info;
+
+    // すべての軸で重なっていたら衝突！
+    info.isHit = true;
+    info.penetration = overlapMin;
+    XMStoreFloat3(&info.normal, hitNormal);
 
     return info;
 }

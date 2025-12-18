@@ -1,200 +1,390 @@
-// ===============================
-// spear.cpp
-// ===============================
-#include "spear.h"
-#include "direct3d.h"
-#include "shader.h"
-#include "Camera.h"
+/*
+* ファイル名	spear.cpp
+* タイトル	剣
+* 作成者		三橋拓斗
+* 作成日		12月09日
+* 更新日		12月09日
+*/
+
+//================================================================
+//	インクルード
+//================================================================
+#include"spear.h"
 #include"debug_ostream.h"
 
-//Spear::Spear()
-//    : center(0.0f, 0.0f, 0.0f),
-//    halfSize(0.2f, 0.2f, 1.0f), // 槍は細長い判定
-//    isActive(false),
-//    m_AttackFrameTimer(0),
-//    m_model(nullptr),
-//    m_scale(0.3f, 0.3f, 0.3f),
-//    m_rotation(0.0f, 0.0f, 0.0f),
-//    m_offset(0.7f, 0.0f, 0.0f),
-//    m_forward(0.0f, 0.0f, 1.0f),
-//    m_velocity(0.0f, 0.0f, 0.0f),
-//    m_isThrown(false),
-//    m_Damage(0.0f),   //追加: ダメージ初期化
-//    m_Range(0.0f),    //追加: 射程初期化
-//    m_ChargeTimer(0)  //追加: チャージタイマー初期化
-//{}
-//
-//void Spear::Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
-//{
-//    m_model = ModelLoad("asset\\model\\spear.fbx");
-//    if (!m_model)
-//    {
-//        hal::dout << "ERROR: Failed to load spear model.\n";
-//    }
-//}
-//
-//void Spear::Finalize()
-//{
-//    if (m_model)
-//    {
-//        ModelRelease(m_model);
-//        m_model = nullptr;
-//    }
-//}
-//
-//void Spear::StartAttack(const XMFLOAT3& playerPosition, const XMFLOAT3& playerRotation)
-//{
-//    isActive = true;
-//    m_AttackFrameTimer = 0;
-//    center = playerPosition;
-//    m_isThrown = false; // 突き攻撃
-//}
-//
-//void Spear::EndAttack()
-//{
-//    isActive = false;
-//    m_AttackFrameTimer = 0;
-//}
-//
-//void Spear::Draw(const XMFLOAT3& playerPosition, const XMFLOAT3& playerRotation)
-//{
-//    if (!m_model) return;
-//
-//    XMMATRIX scale = XMMatrixScaling(m_scale.x, m_scale.y, m_scale.z);
-//    XMMATRIX rotation = XMMatrixRotationRollPitchYaw(m_rotation.x, m_rotation.y, m_rotation.z);
-//    XMMATRIX translation = XMMatrixTranslation(center.x, center.y, center.z);
-//
-//    XMMATRIX world = scale * rotation * translation;
-//    XMMATRIX view = GetViewMatrix();
-//    XMMATRIX projection = GetProjectionMatrix();
-//    XMMATRIX wvp = world * view * projection;
-//
-//    Shader_SetWorldMatrix(world);
-//    Shader_SetMatrix(wvp);
-//
-//    ModelDraw(m_model);
-//}
-//
-//void Spear::Update(float deltaTime)
-//{
-//    if (isActive)
-//    {
-//        m_AttackFrameTimer++;
-//
-//        if (m_isThrown)
-//        {
-//            // 投げ槍は速度で移動
-//            center.x += m_velocity.x * deltaTime;
-//            center.y += m_velocity.y * deltaTime;
-//            center.z += m_velocity.z * deltaTime;
-//        }
-//        else
-//        {
-//            // 突き槍は前方向に突き出す
-//            center.x += m_forward.x * 0.2f;
-//            center.y += m_forward.y * 0.2f;
-//            center.z += m_forward.z * 0.2f;
-//        }
-//    }
-//}
-//
-//bool Spear::ShouldEndAttack() const
-//{
-//    return isActive && (m_AttackFrameTimer >= ATTACK_DURATION_FRAMES);
-//}
-//
-//bool Spear::IsAttacking() const
-//{
-//    return isActive;
-//}
-//
-//void Spear::Stab(const XMFLOAT3& startPos, const XMFLOAT3& forward)
-//{
-//    center = startPos;
-//    m_forward = forward;
-//    isActive = true;
-//    m_isThrown = false;
-//    m_AttackFrameTimer = 0;
-//}
-//
-//void Spear::Launch(const XMFLOAT3& startPos, const XMFLOAT3& velocity)
-//{
-//    center = startPos;
-//    m_velocity = velocity;
-//    isActive = true;
-//    m_isThrown = true;
-//    m_AttackFrameTimer = 0;
-//}
-//
-//// Aボタン入力処理 //追加
-//void Spear::HandleInput(bool isAPressed, bool isAReleased,const XMFLOAT3& playerPos, const XMFLOAT3& playerRot) //追加
-//{
-//    if (isAPressed)
-//    {
-//        // 押し続けている間チャージ
-//        m_ChargeTimer++;
-//    }
-//
-//    if (isAReleased)
-//    {
-//        if (m_ChargeTimer < 120)
-//        { // 2秒未満 → 即押し攻撃
-//            m_Range = 2.0f;   //射程2m
-//            m_Damage = 7.0f;  //ダメージ7
-//        }
-//        else
-//        { // 2秒以上チャージ
-//            m_Range = 6.0f;   //射程6m
-//            m_Damage = 20.0f; //ダメージ20
-//
-//          //// 槍をプレイヤー位置から前方に発射
-//          //  center = playerPos;
-//          //  XMMATRIX rot = XMMatrixRotationRollPitchYaw(playerRot.x, playerRot.y, playerRot.z);
-//          //  XMVECTOR forward = XMVector3TransformNormal(XMVectorSet(0, 0, 1, 0), rot);
-//          //  XMStoreFloat3(&m_velocity, forward);
-//        }  
-//
-//        // 槍をプレイヤー位置から前方に発射
-//        center = playerPos;
-//        XMMATRIX rot = XMMatrixRotationRollPitchYaw(playerRot.x, playerRot.y, playerRot.z);
-//        XMVECTOR forward = XMVector3TransformNormal(XMVectorSet(0, 0, 1, 0), rot);
-//        XMStoreFloat3(&m_velocity, forward);
-//
-//        // 射程を速度に反映
-//        m_velocity.x *= m_Range;
-//        m_velocity.y *= m_Range;
-//        m_velocity.z *= m_Range;
-//
-//        isActive = true;
-//        m_isThrown = true;
-//        m_AttackFrameTimer = 0;
-//
-//        // チャージリセット
-//        m_ChargeTimer = 0;
-//    }
-//}
-//
-//bool Spear::CheckCollision(XMFLOAT3& playerCenter, XMFLOAT3& playerHalfSize)
-//{
-//    if (!isActive) return false;
-//
-//    float spearMinX = center.x - halfSize.x;
-//    float spearMaxX = center.x + halfSize.x;
-//    float spearMinY = center.y - halfSize.y;
-//    float spearMaxY = center.y + halfSize.y;
-//    float spearMinZ = center.z - halfSize.z;
-//    float spearMaxZ = center.z + halfSize.z;
-//
-//    float playerMinX = playerCenter.x - playerHalfSize.x;
-//    float playerMaxX = playerCenter.x + playerHalfSize.x;
-//    float playerMinY = playerCenter.y - playerHalfSize.y;
-//    float playerMaxY = playerCenter.y + playerHalfSize.y;
-//    float playerMinZ = playerCenter.z - playerHalfSize.z;
-//    float playerMaxZ = playerCenter.z + playerHalfSize.z;
-//
-//    bool collisionX = (spearMinX <= playerMaxX) && (spearMaxX >= playerMinX);
-//    bool collisionY = (spearMinY <= playerMaxY) && (spearMaxY >= playerMinY);
-//    bool collisionZ = (spearMinZ <= playerMaxZ) && (spearMaxZ >= playerMinZ);
-//
-//    return collisionX && collisionY && collisionZ;
-//}
+/*********** テストコード **********/
+#include"model.h"
+#include"Camera.h"
+#include"Player.h"
+#include"Player2.h"
+#include"keyboard.h"
+/*********************************/
+
+//================================================================
+//	グローバル変数
+//================================================================
+MODEL* g_modelSpear[2] = { NULL, NULL };
+PLAYER* g_PlayerSpear1;
+PLAYER2* g_PlayerSpear2;
+XMFLOAT3 g_moveSpear[2]; // 簡易アニメーション
+
+Spear::Spear(GameObject* player, bool select) : IWeapon(player)
+{
+	g_PlayerSpear1 = GetPlayer();
+	g_PlayerSpear2 = GetPlayer2();
+
+	// 武器の当たり判定の作成
+	m_weapon = std::make_unique<GameObject>();
+	m_weapon->m_tag = "Attack";	// タグ
+	m_weapon->m_layer = 0;		// レイヤー
+
+	m_selectPlayer = select; // プレイヤー設定 1Pか2Pか
+
+	// 武器に親へのポインタを設定
+	m_weapon->m_weaponPtr = this;
+
+	XMFLOAT3 scale = { 0.3f, 0.3f, 1.0f };
+	m_collider = m_weapon->AddComponent<BoxCollider>(m_weapon.get(), scale);
+
+	m_weapon->m_scale = scale;
+	m_weapon->m_rotation = { 0.0f, 0.0f, 0.0f };
+
+	ManagerCollider::AddCollider(m_collider); // 登録
+
+	m_collider->SetEnable(false); // 最初は当たり判定を無効化
+
+	m_attackTimer = 0.0f;
+
+	g_moveSpear[m_selectPlayer] = { 0.0f, 0.0f, 0.0f };
+	m_coolTime = 0.0f;
+
+	/*********** テストコード **********/
+	g_modelSpear[0] = ModelLoad("asset\\model\\block.fbx");
+	g_modelSpear[1] = ModelLoad("asset\\model\\block2.fbx");
+	/*********************************/
+}
+
+Spear::~Spear()
+{
+	ManagerCollider::RemoveCollider(m_collider); // 削除
+}
+
+void Spear::Attack()
+{
+	if (m_isAttacking) return; // 攻撃してたら終わり
+	if (m_coolTime > 0.0f) return;
+
+	m_isAttacking = true; // 攻撃している
+	m_attackTimer = 0.0f; // 攻撃タイマー初期化
+	g_moveSpear[m_selectPlayer] = {0.0f, 0.0f, 0.0f};
+	m_coolTime = 1.5f;
+
+	m_collider->SetEnable(true); // 当たり判定の有効
+
+	// 多重ヒット帽子リストをリセット
+	m_hitTargets.clear();
+}
+
+void Spear::Update()
+{
+	if (m_coolTime > 0.0f)
+	{
+		{
+			m_coolTime -= 1.0f / 60.0f;
+		}
+	}
+
+	if (Keyboard_IsKeyDown(KK_RIGHTSHIFT))
+	{
+		// 攻撃中じゃなければチャージできる
+		if (!m_isAttacking && m_coolTime <= 0.0f)
+		{
+			m_isCharging = true;
+			m_chargePower += (1.0f / 60.0f);
+			if (m_chargePower > MAX_CHARGE) m_chargePower = MAX_CHARGE;
+		}
+	}
+	else if (m_isCharging)
+	{
+		// キーを離した瞬間に投げる
+		Throw(m_chargePower, m_selectPlayer);
+		m_isCharging = false;
+		m_chargePower = 0.0f;
+
+		// 投げた後のクールタイム
+		m_coolTime = 1.5f;
+	}
+
+	if (m_attackTimer < (ATTACK_DURATION / 2) && m_isAttacking)
+	{
+		float progress = m_attackTimer / (ATTACK_DURATION / 2.0f);
+
+		if (progress > 1.0f) progress = 1.0f;
+
+		g_moveSpear[m_selectPlayer].x = m_animePosition.x * progress;
+		g_moveSpear[m_selectPlayer].y = m_animePosition.y * progress;
+		g_moveSpear[m_selectPlayer].z = m_animePosition.z * progress;
+	}
+	else
+	{
+		g_moveSpear[m_selectPlayer].x -= (m_animePosition.x / 30.0f);
+		g_moveSpear[m_selectPlayer].y -= (m_animePosition.y / 30.0f);
+		g_moveSpear[m_selectPlayer].z -= (m_animePosition.z / 30.0f);
+
+		if (g_moveSpear[m_selectPlayer].x < 0.0f) g_moveSpear[m_selectPlayer].x = 0.0f;
+		if (g_moveSpear[m_selectPlayer].y < 0.0f) g_moveSpear[m_selectPlayer].y = 0.0f;
+		if (g_moveSpear[m_selectPlayer].z < 0.0f) g_moveSpear[m_selectPlayer].z = 0.0f;
+	}
+
+	XMMATRIX rotationMatrixY;
+	XMVECTOR offsetVector; 
+	XMVECTOR rotatedOffset;
+	XMVECTOR playerPosition;
+	XMVECTOR swordPosition;
+
+	switch (m_selectPlayer)
+	{
+	case FALSE:
+		XMFLOAT3 offset1 =
+		{
+			m_offset.x + g_moveSpear[m_selectPlayer].x,
+			m_offset.y + g_moveSpear[m_selectPlayer].y,
+			m_offset.z + g_moveSpear[m_selectPlayer].z
+		};
+
+		rotationMatrixY = XMMatrixRotationY(g_PlayerSpear1->m_rotation.y);
+		offsetVector = XMLoadFloat3(&offset1);
+		rotatedOffset = XMVector3Transform(offsetVector, rotationMatrixY);
+		playerPosition = XMLoadFloat3(&owner->m_position);
+		swordPosition = XMVectorAdd(playerPosition, rotatedOffset);
+		XMStoreFloat3(&m_weapon->m_position, swordPosition);
+
+		m_weapon->m_rotation = g_PlayerSpear1->m_rotation;
+		break;
+
+	case TRUE:
+		XMFLOAT3 offset2 =
+		{
+			m_offset.x + g_moveSpear[m_selectPlayer].x,
+			m_offset.y + g_moveSpear[m_selectPlayer].y,
+			m_offset.z + g_moveSpear[m_selectPlayer].z
+		};
+
+		rotationMatrixY = XMMatrixRotationY(g_PlayerSpear2->m_rotation.y);
+		offsetVector = XMLoadFloat3(&offset2);
+		rotatedOffset = XMVector3Transform(offsetVector, rotationMatrixY);
+		playerPosition = XMLoadFloat3(&owner->m_position);
+		swordPosition = XMVectorAdd(playerPosition, rotatedOffset);
+		XMStoreFloat3(&m_weapon->m_position, swordPosition);
+
+		m_weapon->m_rotation = g_PlayerSpear2->m_rotation;
+		break;
+
+	default:
+		break;
+	}
+
+	// 攻撃してるとき
+	if (m_isAttacking)
+	{
+		m_attackTimer += (1.0f / 60.0f);
+
+		// 攻撃の有効時間が終わったら
+		if (m_attackTimer >= ATTACK_DURATION)
+		{
+			m_isAttacking = false; // 攻撃終了
+			m_collider->SetEnable(false); // 当たり判定止める
+		}
+	}
+}
+
+void Spear::Draw()
+{
+	//ワールド行列作成
+	XMMATRIX	scale = XMMatrixScaling(
+		m_weapon->m_scale.x,
+		m_weapon->m_scale.y,
+		m_weapon->m_scale.z);
+	XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
+		m_weapon->m_rotation.x,
+		m_weapon->m_rotation.y,
+		m_weapon->m_rotation.z);
+	XMMATRIX	translation = XMMatrixTranslation(
+		m_weapon->m_position.x,
+		m_weapon->m_position.y,
+		m_weapon->m_position.z);
+	XMMATRIX	world = scale * rotation * translation;
+
+	//シェーダーへ行列をセット
+	Shader_SetWorldMatrix(world);
+
+	if (m_isAttacking)
+	{
+		ModelDraw(g_modelSpear[1]);
+	}
+	else
+	{
+		ModelDraw(g_modelSpear[0]);
+	}
+}
+
+void Spear::OnWeaponCollision(GameObject* target)
+{
+	// 自分のオーナーだったら飛ばす
+	if (target == owner)
+	{
+		return;
+	}
+
+	// 多重ヒット防止、既に一回の攻撃でダメージを与えてたら
+	if (m_hitTargets.count(target) > 0)
+	{
+		return;
+	}
+
+	if (m_isAttacking)
+	{
+		// 1Pか2Pか
+		switch (m_selectPlayer)
+		{
+		case FALSE: // 1Pだったら
+			if (target->m_tag == "Player2") // 相手がPlayer2の時のみ
+			{
+				m_hitTargets.insert(target);
+				target->TakeDamage(20.0f); // 仮に20ダメージ
+			}
+			break;
+
+		case TRUE: // 2Pだったら
+			if (target->m_tag == "Player") // 相手がPlayerの時のみ
+			{
+				m_hitTargets.insert(target);
+				target->TakeDamage(20.0f);
+			}
+			break;
+		}
+	}
+}
+
+void Spear::Throw(float power, bool select)
+{
+	SpearShot* shot = new SpearShot();
+
+	shot->m_position = m_weapon->m_position;
+	shot->m_rotation = m_weapon->m_rotation;
+	shot->m_selectPlayer = select;
+
+	// 飛ばす方向を計算
+	float baseSpeed = 0.5f;
+	float finalSpeed = baseSpeed * (1.0f + power);
+	float ry = shot->m_rotation.y;
+	shot->m_velocity.x = sinf(ry) * finalSpeed;
+	shot->m_velocity.y = 0.0f;
+	shot->m_velocity.z = cosf(ry) * finalSpeed;
+
+	extern std::vector<GameObject*> g_gameObjects;
+	g_gameObjects.push_back(shot);
+	shot->Start();
+}
+
+//================================================================
+//	SpearShotクラス
+//================================================================
+void SpearShot::Start()
+{
+	m_tag = "Attack";
+
+	XMFLOAT3 scale = { 0.3f, 0.3f, 1.0f };
+	m_scale = scale;
+	m_collider = AddComponent<BoxCollider>(this, scale);
+	ManagerCollider::AddCollider(m_collider);
+}
+
+void SpearShot::Update()
+{
+	// 槍が刺さってたら
+	if (m_isStuck)
+	{
+		m_stuckLife -= (1.0f / 60.0f);
+		// タイマーを減らす
+		if (m_stuckLife <= 0.0f)
+		{
+			m_isDead = true;
+		}
+	}
+	else // まだ飛んでたら
+	{
+		// 飛ばしてからの寿命
+		m_flyTimer -= (1.0f / 60.0f);
+		if (m_flyTimer <= 0.0f)
+		{
+			m_isDead = true;
+		}
+
+		m_velocity.y -= 0.005f; // 重力
+		// 大きいと重い、小さいとふわっとする
+
+		m_position.x += m_velocity.x;
+		m_position.y += m_velocity.y;
+		m_position.z += m_velocity.z;
+
+		// 常に先端が飛んでる方向を向く
+		m_rotation.x = atan2f(-m_velocity.y, sqrtf(m_velocity.x * m_velocity.x + m_velocity.z * m_velocity.z));
+	}
+}
+
+void SpearShot::Draw()
+{
+	//ワールド行列作成
+	XMMATRIX	scale = XMMatrixScaling(
+		m_scale.x,
+		m_scale.y,
+		m_scale.z);
+	XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
+		m_rotation.x,
+		m_rotation.y,
+		m_rotation.z);
+	XMMATRIX	translation = XMMatrixTranslation(
+		m_position.x,
+		m_position.y,
+		m_position.z);
+	XMMATRIX	world = scale * rotation * translation;
+
+	//シェーダーへ行列をセット
+	Shader_SetWorldMatrix(world);
+
+	ModelDraw(g_modelSpear[0]);
+}
+
+void SpearShot::OnCollision(const CollisionInfo& info)
+{
+	// 刺さってたら何もなし
+	if (m_isStuck) return;
+
+	if (info.other->m_tag == "Attack") return; // 武器に当たっても無視
+	if (!m_selectPlayer && info.other->m_tag == "Player") return; // 武器はなった本人は無視
+	if (m_selectPlayer && info.other->m_tag == "Player2") return; // 武器はなった本人は無視
+
+	m_velocity = { 0.0f, 0.0f, 0.0f };
+	m_isStuck = true;
+
+	// 1Pか2Pか
+	switch (m_selectPlayer)
+	{
+	case FALSE: // 1Pだったら
+		if (info.other->m_tag == "Player2") // 相手がPlayer2の時のみ
+		{
+			info.other->TakeDamage(20.0f); // 仮に20ダメージ
+			m_isDead = true;
+		}
+		break;
+
+	case TRUE: // 2Pだったら
+		if (info.other->m_tag == "Player") // 相手がPlayerの時のみ
+		{
+			info.other->TakeDamage(20.0f);
+			m_isDead = true;
+		}
+		break;
+	}
+}

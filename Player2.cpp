@@ -25,6 +25,10 @@
 #include"debug_ostream.h"
 #include"fade.h"
 #include"sword.h"
+#include"spear.h"
+#include"hammer.h"
+#include"arrow.h"
+#include"syuriken.h"
 #include<memory>
 
 //================================================================
@@ -34,9 +38,9 @@
 PLAYER2	g_Player2;
 ID3D11Device* g_pDevice2;
 ID3D11DeviceContext* g_pContext2;
-
 Controller g_Controller2(0); //ID 0のコントローラーを使用
-
+MODEL* g_modelP2;
+unsigned int g_changeP2;
 
 void Player2Die()
 {
@@ -60,12 +64,13 @@ void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_pContext2 = pContext;
 
 	g_Player2.m_model = ModelLoad("asset\\model\\char_bow.fbx");
+	g_modelP2 = ModelLoad("asset\\model\\block.fbx");
 
 	g_Player2.m_position = XMFLOAT3(2.0f, 0.5f, 2.0f);
 	g_Player2.m_rotation = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	g_Player2.m_velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
-	g_Player2.m_scale = XMFLOAT3(0.5f, 0.5f, 0.5f);
+	g_Player2.m_scale = XMFLOAT3(0.6f, 1.0f, 0.6f);
 	g_Player2.m_tag = "Player2";
 	g_Player2.m_layer = 0;
 
@@ -83,6 +88,7 @@ void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	// のちのちセレクト画面から分岐できるようにする
 	// 自分をownerとして武器を生成
 	g_Player2.m_currentWeapon = std::make_unique<Sword>(&g_Player2, TRUE); // 2Pです
+	g_changeP2 = 0;
 
 	EvolutionInitialize();
 }
@@ -98,11 +104,50 @@ void	Player2Update()
 	ApplyEvolutionEffect2();   // 進化タイプに応じたパラメータを適用
 	if (g_Player2.m_isDead)return;	//死亡している場合は更新処理をスキップ
 	
+	//================================================================
+//	武器変更処理(一旦)
+//================================================================
+	if (Keyboard_IsKeyDownTrigger(KK_D2))
+	{
+		g_changeP2++;
+
+		if (g_changeP2 >= 5)
+		{
+			g_changeP2 = 0;
+		}
+
+		switch (g_changeP2)
+		{
+		case 0:
+			g_Player2.EquipWeapon(std::make_unique<Sword>(&g_Player2, FALSE));
+			break;
+
+		case 1:
+			g_Player2.EquipWeapon(std::make_unique<Spear>(&g_Player2, FALSE));
+			break;
+
+		case 2:
+			// g_Player2.EquipWeapon(std::make_unique<Hammer>(&g_Player, FALSE));
+			break;
+
+		case 3:
+			// g_Player2.EquipWeapon(std::make_unique<Arrow>(&g_Player, FALSE));
+			break;
+
+		case 4:
+			// g_Player2.EquipWeapon(std::make_unique<Shuriken>(&g_Player, FALSE));
+			break;
+
+		default:
+			break;
+		}
+	}
+
 //================================================================
 //	攻撃処理
 //================================================================
 	// CキーかAボタンで
-	if (Keyboard_IsKeyDownTrigger(KK_X) || g_Controller2.IsButtonPushed(ControllerButton::B_BUTTON))
+	if (Keyboard_IsKeyDownTrigger(KK_P) || g_Controller2.IsButtonPushed(ControllerButton::B_BUTTON))
 	{
 		// 武器があるか
 		if (g_Player2.m_currentWeapon)
@@ -238,14 +283,8 @@ void	Player2Draw()
 		g_Player2.m_position.z);
 	XMMATRIX	world = scale * rotation * translation;
 
-	//変換行列作成
-	XMMATRIX	view = GetViewMatrix2();
-	XMMATRIX	projection = GetProjectionMatrix2();
-	XMMATRIX	wvp = world * view * projection;
-
 	//シェーダーへ行列をセット
 	Shader_SetWorldMatrix(world);
-	//Shader_SetMatrix(wvp);
 
 	//モデルの描画リクエスト
 	ModelDraw(g_Player2.m_model);
@@ -254,6 +293,26 @@ void	Player2Draw()
 	{
 		g_Player2.m_currentWeapon->Draw();
 	}
+
+	//ワールド行列作成
+	scale = XMMatrixScaling(
+		0.6f,
+		1.0f,
+		0.6f);
+	rotation = XMMatrixRotationRollPitchYaw(
+		g_Player2.m_rotation.x,
+		g_Player2.m_rotation.y,
+		g_Player2.m_rotation.z);
+	translation = XMMatrixTranslation(
+		g_Player2.m_position.x,
+		g_Player2.m_position.y,
+		g_Player2.m_position.z);
+	world = scale * rotation * translation;
+
+	//シェーダーへ行列をセット
+	Shader_SetWorldMatrix(world);
+
+	ModelDraw(g_modelP2);
 }
 
 XMFLOAT3 GetPlayer2Position()

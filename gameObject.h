@@ -56,6 +56,8 @@ public:
 
     GameObject* m_gameObject = nullptr;
 
+    bool m_isDead = false;
+
     std::vector<std::shared_ptr<Component>> components;
     bool m_isEnable = true;
 public:
@@ -108,11 +110,9 @@ public:
         m_position.z += dz;
     }
 
-    void Update()
-    {
-        for (auto& c : components)
-            c->Update();
-    }
+    virtual void Update() {};
+
+    virtual void Draw() {}
 };
 
 #endif // GAME_OBJECT_H

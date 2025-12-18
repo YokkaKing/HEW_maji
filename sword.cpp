@@ -1,9 +1,9 @@
 /*
 * ファイル名	sword.cpp
-* タイトル	    剣
+* タイトル	剣
 * 作成者		三橋拓斗
 * 作成日		12月09日
-*  更新日		12月09日
+* 更新日		12月09日
 */
 
 //================================================================
@@ -23,14 +23,15 @@
 //================================================================
 //	グローバル変数
 //================================================================
-MODEL* g_model = NULL;
-PLAYER* g_Player1;
-PLAYER2* g_Player2;
+MODEL* g_modelSword[2] = { NULL,NULL };
+PLAYER* g_PlayerSword1;
+PLAYER2* g_PlayerSword2;
+XMFLOAT3 g_moveSword[2]; // 簡易アニメーション
 
 Sword::Sword(GameObject* player, bool select) : IWeapon(player)
 {
-	g_Player1 = GetPlayer();
-	g_Player2 = GetPlayer2();
+	g_PlayerSword1 = GetPlayer();
+	g_PlayerSword2 = GetPlayer2();
 
 	// 武器の当たり判定の作成
 	m_weapon = std::make_unique<GameObject>();
@@ -54,8 +55,11 @@ Sword::Sword(GameObject* player, bool select) : IWeapon(player)
 
 	m_attackTimer = 0.0f;
 
+	g_moveSword[m_selectPlayer] = { 0.0f, 0.0f, 0.0f };
+
 	/*********** テストコード **********/
-	g_model = ModelLoad("asset\\model\\block.fbx");
+	g_modelSword[0] = ModelLoad("asset\\model\\block.fbx");
+	g_modelSword[1] = ModelLoad("asset\\model\\block2.fbx");
 	/*********************************/
 }
 
@@ -67,9 +71,12 @@ Sword::~Sword()
 void Sword::Attack()
 {
 	if (m_isAttacking) return; // 攻撃してたら終わり
+	if (m_coolTime > 0.0f) return;
 
 	m_isAttacking = true; // 攻撃している
 	m_attackTimer = 0.0f; // 攻撃タイマー初期化
+	g_moveSword[m_selectPlayer] = {0.0f, 0.0f, 0.0f}; // 簡易アニメーションの初期化
+	m_coolTime = 1.0f; // クールタイムの設定
 
 	m_collider->SetEnable(true); // 当たり判定の有効
 
@@ -79,33 +86,83 @@ void Sword::Attack()
 
 void Sword::Update()
 {
-	XMMATRIX rotationMatrixY = XMMatrixRotationY(g_Player1->m_rotation.y);
+	if (m_coolTime > 0.0f)
+	{
+		m_coolTime -= 1.0f / 60.0f; // クールタイムを減らす
+	}
 
-	XMVECTOR offsetVector = XMLoadFloat3(&m_offset);
-	XMVECTOR rotatedOffset = XMVector3Transform(offsetVector, rotationMatrixY);
+	if (m_attackTimer < (ATTACK_DURATION / 2) && m_isAttacking)
+	{
+		float progress = m_attackTimer / (ATTACK_DURATION / 2.0f);
 
-	XMVECTOR playerPosition = XMLoadFloat3(&owner->m_position);
-	XMVECTOR swordPosition = XMVectorAdd(playerPosition, rotatedOffset);
-	XMStoreFloat3(&m_weapon->m_position, swordPosition);
+		if (progress > 1.0f) progress = 1.0f;
 
-	m_weapon->m_rotation = g_Player1->m_rotation;
+		g_moveSword[m_selectPlayer].x = m_animePosition.x * progress;
+		g_moveSword[m_selectPlayer].y = m_animePosition.y * progress;
+		g_moveSword[m_selectPlayer].z = m_animePosition.z * progress;
+	}
+	else
+	{
+		g_moveSword[m_selectPlayer].x -= (m_animePosition.x / 30.0f);
+		g_moveSword[m_selectPlayer].y -= (m_animePosition.y / 30.0f);
+		g_moveSword[m_selectPlayer].z -= (m_animePosition.z / 30.0f);
+
+		if (g_moveSword[m_selectPlayer].x < 0.0f)
+		{
+			g_moveSword[m_selectPlayer].x = 0.0f;
+		}
+		if (g_moveSword[m_selectPlayer].y < 0.0f)
+		{
+			g_moveSword[m_selectPlayer].y = 0.0f;
+		}
+		if (g_moveSword[m_selectPlayer].z < 0.0f)
+		{
+			g_moveSword[m_selectPlayer].z = 0.0f;
+		}
+	}
+
+	XMMATRIX rotationMatrixY;
+	XMVECTOR offsetVector;
+	XMVECTOR rotatedOffset;
+	XMVECTOR playerPosition;
+	XMVECTOR swordPosition;
 
 	switch (m_selectPlayer)
 	{
 	case FALSE:
-		break;
+		XMFLOAT3 offset1 =
+		{
+			m_offset.x + g_moveSword[m_selectPlayer].x,
+			m_offset.y + g_moveSword[m_selectPlayer].y,
+			m_offset.z + g_moveSword[m_selectPlayer].z
+		};
 
-	case TRUE:
-		rotationMatrixY = XMMatrixRotationY(g_Player2->m_rotation.y);
-
-		offsetVector = XMLoadFloat3(&m_offset);
+		rotationMatrixY = XMMatrixRotationY(g_PlayerSword1->m_rotation.y);
+		offsetVector = XMLoadFloat3(&offset1);
 		rotatedOffset = XMVector3Transform(offsetVector, rotationMatrixY);
-
 		playerPosition = XMLoadFloat3(&owner->m_position);
 		swordPosition = XMVectorAdd(playerPosition, rotatedOffset);
 		XMStoreFloat3(&m_weapon->m_position, swordPosition);
 
-		m_weapon->m_rotation = g_Player2->m_rotation;
+		m_weapon->m_rotation = g_PlayerSword1->m_rotation;
+		break;
+
+	case TRUE:
+		XMFLOAT3 offset2 =
+		{
+			m_offset.x + g_moveSword[m_selectPlayer].x,
+			m_offset.y + g_moveSword[m_selectPlayer].y,
+			m_offset.z + g_moveSword[m_selectPlayer].z
+		};
+
+		rotationMatrixY = XMMatrixRotationY(g_PlayerSword2->m_rotation.y);
+		offsetVector = XMLoadFloat3(&offset2);
+		rotatedOffset = XMVector3Transform(offsetVector, rotationMatrixY);
+		playerPosition = XMLoadFloat3(&owner->m_position);
+		swordPosition = XMVectorAdd(playerPosition, rotatedOffset);
+		XMStoreFloat3(&m_weapon->m_position, swordPosition);
+
+		m_weapon->m_rotation = g_PlayerSword2->m_rotation;
 		break;
 
 	default:
@@ -146,8 +203,14 @@ void Sword::Draw()
 	//シェーダーへ行列をセット
 	Shader_SetWorldMatrix(world);
 
-	//モデルの描画リクエスト
-	ModelDraw(g_model);
+	if (m_isAttacking)
+	{
+		ModelDraw(g_modelSword[1]);
+	}
+	else
+	{
+		ModelDraw(g_modelSword[0]);
+	}
 }
 
 void Sword::OnWeaponCollision(GameObject* target)
@@ -173,7 +236,7 @@ void Sword::OnWeaponCollision(GameObject* target)
 			if (target->m_tag == "Player2") // 相手がPlayer2の時のみ
 			{
 				m_hitTargets.insert(target);
-				target->TakeDamage(20.0f); // 仮に20ダメージ
+				target->TakeDamage(10.0f); // 仮に20ダメージ
 			}
 			break;
 
@@ -181,7 +244,7 @@ void Sword::OnWeaponCollision(GameObject* target)
 			if (target->m_tag == "Player") // 相手がPlayerの時のみ
 			{
 				m_hitTargets.insert(target);
-				target->TakeDamage(20.0f);
+				target->TakeDamage(10.0f);
 			}
 			break;
 		}

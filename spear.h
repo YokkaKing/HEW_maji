@@ -2,65 +2,58 @@
 // ===============================
 // spear.h
 // ===============================
-#include <DirectXMath.h>
-#include "IWeapon.h"
-#include "model.h"
+#include<DirectXMath.h>
+#include"IWeapon.h"
+#include"model.h"
+#include"managerCollider.h"
 using namespace DirectX;
 
-//class Spear : public IWeapon
-//{
-//public:
-//    Spear();
-//
-//    // IWeapon の基本メソッド
-//    virtual void Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext) override;
-//    virtual void Finalize() override;
-//    virtual void StartAttack(const XMFLOAT3& playerPosition, const XMFLOAT3& playerRotation) override;
-//    virtual void EndAttack() override;
-//    virtual void Draw(const XMFLOAT3& playerPosition, const XMFLOAT3& playerRotation) override;
-//    virtual void Update(float deltaTime) override;
-//    virtual bool ShouldEndAttack() const override;
-//    virtual bool IsAttacking() const override;
-//
-//    // 槍専用メソッド
-//    void Stab(const XMFLOAT3& startPos, const XMFLOAT3& forward);   // 突き攻撃
-//    void Launch(const XMFLOAT3& startPos, const XMFLOAT3& velocity); // 投げ槍
-//
-//    XMFLOAT3 GetCenter() { return center; }
-//    XMFLOAT3 GetHalfSize() { return halfSize; }
-//
-//    bool CheckCollision(XMFLOAT3& playerCenter, XMFLOAT3& playerHalfSize);
-//
-//    // Aボタン入力処理
-//    void HandleInput(bool isAPressed, bool isAReleased,const XMFLOAT3& playerPos, const XMFLOAT3& playerRot); //追加
-//
-//    // ダメージと射程を外部から参照できるようにする
-//    float GetDamage() const { return m_Damage; } //追加
-//    float GetRange() const { return m_Range; }   //追加
-//
-//private:
-//    XMFLOAT3 center;    // BOXの中心座標
-//    XMFLOAT3 halfSize;  // BOXの半寸法（細長い）
-//    bool isActive;      // 攻撃中かどうか
-//
-//    int m_AttackFrameTimer;
-//    const int ATTACK_DURATION_FRAMES = 60; // 槍の攻撃時間
-//
-//    // モデル関連
-//    MODEL* m_model;
-//    XMFLOAT3 m_scale;
-//    XMFLOAT3 m_rotation;
-//    XMFLOAT3 m_offset;
-//
-//    // 槍の動き
-//    XMFLOAT3 m_forward;   // 突き方向
-//    XMFLOAT3 m_velocity;  // 投げ槍の速度
-//    bool m_isThrown;      // 投げ槍かどうか
-//
-//    // ダメージと射程
-//    float m_Damage; //追加
-//    float m_Range;  //追加
-//
-//    // チャージ用タイマー
-//    int m_ChargeTimer; //追加
-//};
+class Spear : public IWeapon
+{
+public:
+    std::shared_ptr<Collider> m_collider; // コライダーへの参照を保持
+
+    bool m_isAttacking = false;
+    float m_attackTimer = 0.0f;
+    const float ATTACK_DURATION = 0.5f;   // 攻撃の有効時間
+
+    // プレイヤーから見てどこに位置するか
+    XMFLOAT3 m_offset = { 0.2f, 0.25f, 0.8f };
+    // 攻撃したときにどう動くか
+    XMFLOAT3 m_animePosition = { 0.0f, 0.0f, 0.5f };
+    XMFLOAT3 m_animeRotation = { 0.0f, 0.0f, 0.0f };
+
+    FLOAT m_coolTime = 0.0f;
+
+    float m_chargePower = 0.0f; // チャージ
+    bool m_isCharging = false; // チャージしてるか
+    const float MAX_CHARGE = 2.0f; // 最大2倍の飛距離
+public:
+    Spear(GameObject* player, bool select);
+    virtual ~Spear();
+
+    void Update() override;
+    void Draw() override;
+    void Attack() override;
+
+    void Throw(float power, bool select);
+
+    void OnWeaponCollision(GameObject* target) override;
+};
+
+class SpearShot : public GameObject
+{
+public:
+    XMFLOAT3 m_velocity{};  // ベクトル
+    bool m_isStuck = false; // 刺さっているか
+    float m_stuckLife = 2.0f; // 刺さってからの寿命
+    std::shared_ptr<BoxCollider> m_collider;
+    float m_flyTimer = 3.0f; // 発射してからの寿命
+
+    bool m_selectPlayer = false;
+public:
+    void Start();
+    void Update() override;
+    void Draw() override;
+    void OnCollision(const CollisionInfo& info)override;
+};
