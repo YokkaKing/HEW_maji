@@ -1,7 +1,17 @@
-#pragma once
-// ===============================
-// spear.h
-// ===============================
+/*
+* ファイル名	spear.h
+* タイトル	剣
+* 作成者		三橋拓斗
+* 作成日		12月09日
+* 更新日		12月09日
+*/
+
+#ifndef SPEAR_H
+#define SPEAR_H
+
+//================================================================
+//	インクルード
+//================================================================
 #include<DirectXMath.h>
 #include"IWeapon.h"
 #include"model.h"
@@ -57,3 +67,5 @@ public:
     void Draw() override;
     void OnCollision(const CollisionInfo& info)override;
 };
+
+#endif // SPEAR_H

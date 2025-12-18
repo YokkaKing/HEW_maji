@@ -1,68 +1,72 @@
-﻿#pragma once
-// ===============================
-// arrow.h
-// ===============================
-#include <DirectXMath.h>
-#include "IWeapon.h"
-#include "model.h"
+﻿/*
+* ファイル名	arrow.h
+* タイトル	剣
+* 作成者		三橋拓斗
+* 作成日		12月09日
+* 更新日		12月09日
+*/
+
+#ifndef ARROW_H
+#define ARROW_H
+
+//================================================================
+//	インクルード
+//================================================================
+#include<DirectXMath.h>
+#include"IWeapon.h"
+#include"model.h"
+#include"managerCollider.h"
 using namespace DirectX;
 
-//class Arrow : public IWeapon
-//{
-//public:
-//    Arrow();
-//
-//    // IWeapon の基本メソッド
-//    virtual void Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext) override;
-//    virtual void Finalize() override;
-//    virtual void StartAttack(const XMFLOAT3& playerPosition, const XMFLOAT3& playerRotation) override;
-//    virtual void EndAttack() override;
-//    virtual void Draw(const XMFLOAT3& playerPosition, const XMFLOAT3& playerRotation) override;
-//    virtual void Update(float deltaTime) override;
-//    virtual bool ShouldEndAttack() const override;
-//    virtual bool IsAttacking() const override;
-//
-//    virtual WEAPON_TYPE GetWeaponType() const override { return WEAPON_TYPE::ARROW; }
-//      // プレイヤーの向いている方向に矢を撃つ //追加
-//    void Shoot(const XMFLOAT3& playerPosition, const XMFLOAT3& playerRotation); //追加
-//
-//    // 入力処理（Aボタン押下／長押しチャージ） //追加
-//    void HandleInput(bool isAPressed, bool isAReleased,
-//                     const XMFLOAT3& playerPos, const XMFLOAT3& playerRot); //追加
-//    // 追加メソッド
-//    XMFLOAT3 GetCenter() { return center; }
-//    XMFLOAT3 GetHalfSize() { return halfSize; }
-//    float GetDamage() const { return m_Damage; } //ダメージ//追加
-//    float GetRange() const { return m_Range; }   //射程//追加
-//
-//    bool CheckCollision(XMFLOAT3& playerCenter, XMFLOAT3& playerHalfSize);
-//
-//private:
-//    // 当たり判定
-//    XMFLOAT3 center;    // BOXの中心座標
-//    XMFLOAT3 halfSize;  // BOXの半寸法（矢は細長い）
-//    bool isActive;      // 攻撃中かどうか
-//
-//    // 攻撃管理
-//    int m_AttackFrameTimer;
-//    const int ATTACK_DURATION_FRAMES = 120; // 矢は飛び続けるので長め
-//
-//    // チャージ管理
-//    int m_ChargeTimer;   // チャージ時間（フレーム） //追加
-//    int m_ChargeLevel;   // チャージ段階（0〜3） //追加
-//
-//    // ダメージと射程
-//    float m_Damage; //追加
-//    float m_Range;  //追加
-//
-//    // モデル関連
-//    MODEL* m_model;
-//    XMFLOAT3 m_scale;
-//    XMFLOAT3 m_rotation;
-//    XMFLOAT3 m_offset;
-//
-//    // 矢の速度ベクトル
-//    XMFLOAT3 m_velocity;
-//
-//    XMFLOAT3 m_startPosition;
-//};
+class Arrow : public IWeapon
+{
+public:
+    std::shared_ptr<Collider> m_collider; // コライダーへの参照を保持
+
+    bool m_isAttacking = false;
+    float m_attackTimer = 0.0f;
+    const float ATTACK_DURATION = 0.5f;   // 攻撃の有効時間
+
+    // プレイヤーから見てどこに位置するか
+    XMFLOAT3 m_offset = { 0.2f, 0.0f, 0.8f };
+    // 攻撃したときにどう動くか
+    XMFLOAT3 m_animePosition = { 0.0f, 0.0f, 0.5f };
+    XMFLOAT3 m_animeRotation = { 0.0f, 0.0f, 0.0f };
+
+    FLOAT m_coolTime = 0.0f;
+
+    float m_chargePower = 0.0f; // チャージ
+    bool m_isCharging = false; // チャージしてるか
+    const float MAX_CHARGE = 4.0f; // 最大4倍の飛距離
+public:
+    Arrow(GameObject* player, bool select);
+    virtual ~Arrow();
+
+    void Update() override;
+    void Draw() override;
+    void Attack() override;
+
+    void Throw(float power, bool select);
+
+    void OnWeaponCollision(GameObject* target) override;
+};
+
+class ArrowShot : public GameObject
+{
+public:
+    XMFLOAT3 m_velocity{};  // ベクトル
+    bool m_isStuck = false; // 刺さっているか
+    float m_stuckLife = 2.0f; // 刺さってからの寿命
+    std::shared_ptr<BoxCollider> m_collider;
+    float m_flyTimer = 3.0f; // 発射してからの寿命
+    float m_chargePower = 0.0f; // チャージ
+
+    bool m_selectPlayer = false;
+public:
+    void Start();
+    void Update() override;
+    void Draw() override;
+    void OnCollision(const CollisionInfo& info)override;
+};
+
+#endif // ARROW_H

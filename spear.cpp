@@ -275,7 +275,7 @@ void Spear::Throw(float power, bool select)
 	shot->m_selectPlayer = select;
 
 	// 飛ばす方向を計算
-	float baseSpeed = 0.5f;
+	float baseSpeed = 0.25f;
 	float finalSpeed = baseSpeed * (1.0f + power);
 	float ry = shot->m_rotation.y;
 	shot->m_velocity.x = sinf(ry) * finalSpeed;
@@ -321,7 +321,7 @@ void SpearShot::Update()
 			m_isDead = true;
 		}
 
-		m_velocity.y -= 0.005f; // 重力
+		m_velocity.y -= 0.0025f; // 重力
 		// 大きいと重い、小さいとふわっとする
 
 		m_position.x += m_velocity.x;
