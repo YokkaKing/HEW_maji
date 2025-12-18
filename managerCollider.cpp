@@ -56,8 +56,12 @@ void ManagerCollider::UpdateAllCollisions()
 {
     for (size_t i = 0; i < colliders.size(); ++i)
     {
+        if (!colliders[i]->IsEnable()) continue; // ŒŸ’m‚µ‚È‚¢
+
         for (size_t j = i + 1; j < colliders.size(); ++j)
         {
+            if (!colliders[i]->IsEnable()) continue; // ŒŸ’m‚µ‚È‚¢
+
             auto a = colliders[i];
             auto b = colliders[j];
 

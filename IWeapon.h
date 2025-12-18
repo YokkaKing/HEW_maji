@@ -3,6 +3,15 @@
 #include <DirectXMath.h>
 using namespace DirectX;
 
+
+enum class WEAPON_TYPE
+{
+    NONE = 0,
+    ARROW,      // 弓矢 (チャージが必要)
+    SWORD,      // 剣 (瞬時攻撃)
+    SHURIKEN,   // 手裏剣 (投擲)
+    SPEAR       // 槍 (突き)
+};
 // 武器の基本機能を提供するインターフェース
 class IWeapon
 {
@@ -31,5 +40,6 @@ public:
     // 現在攻撃中かどうか
     virtual bool IsAttacking() const = 0;
 
-    // その他、当たり判定情報などを取得する関数をIWeaponに移動することを検討
+    //武器のタイプを取得する関数
+    virtual WEAPON_TYPE GetWeaponType() const = 0; 
 };

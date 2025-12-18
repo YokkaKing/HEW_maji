@@ -22,6 +22,7 @@ public:
     virtual bool ShouldEndAttack() const override;
     virtual bool IsAttacking() const override;
 
+    virtual WEAPON_TYPE GetWeaponType() const override { return WEAPON_TYPE::ARROW; }
       // プレイヤーの向いている方向に矢を撃つ //追加
     void Shoot(const XMFLOAT3& playerPosition, const XMFLOAT3& playerRotation); //追加
 
@@ -62,4 +63,6 @@ private:
 
     // 矢の速度ベクトル
     XMFLOAT3 m_velocity;
+
+    XMFLOAT3 m_startPosition;
 };
