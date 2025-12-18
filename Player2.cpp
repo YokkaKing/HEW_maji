@@ -54,7 +54,7 @@ void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 
 	g_Player2.m_model = ModelLoad("asset\\model\\char_bow.fbx");
 
-	g_Player2.m_position = XMFLOAT3(2.0f, 0.5f, 2.0f);
+	g_Player2.m_position = XMFLOAT3(2.0f, 0.5f, 1.0f);
 	g_Player2.m_rotation = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	g_Player2.m_velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
