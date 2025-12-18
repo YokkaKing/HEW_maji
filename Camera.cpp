@@ -3,7 +3,7 @@
 * タイトル	カメラ
 * 作成者		鈴木豪
 * 作成日		12月02日
-* 更新日		12月02日
+* 更新日		12月11日
 */
 
 #include"Camera.h"
@@ -13,15 +13,24 @@
 #include"Player2.h"
 #include"Viewport.h"
 #include"shader.h"
+#include "terrain.h"
 
 //================================================================
 //	グローバル変数
 //================================================================
-static	CAMERA	CameraObject;
-static	CAMERA  Camera2Object;
+static CAMERA	CameraObject;
+static CAMERA  Camera2Object;
 XMFLOAT3		g_PlayerPosOld;
 XMFLOAT3		g_Player2PosOld;
 extern Controller g_Controller;
+extern TERRAIN g_Terrain;
+extern PLAYER g_Player;
+extern PLAYER2 g_Player2;
+extern std::vector<GameObject*> g_gameObjects;
+
+// カメラが障害物から離れるためのパディング距離
+const float CAMERA_COLLISION_PADDING = 0.2f;
+const float FIXED_DELTATIME = 1.0f / 60.0f;
 
 void Camera_Initialize()
 { 
@@ -35,6 +44,9 @@ void Camera_Initialize()
 
 	CameraObject.Fov = 45.0f;
 	Camera2Object.Fov = 45.0f;
+
+	CameraObject.suzukiTime = 0.0f;
+	Camera2Object.suzukiTime = 0.0f;
 
 	float width = (float)Direct3D_GetBackBufferWidth();
 	float height = (float)Direct3D_GetBackBufferHeight();
@@ -102,10 +114,6 @@ void Camera_Update()
 	vec.x = CameraObject.Position.x - CameraObject.AtPosition.x;
 	vec.y = CameraObject.Position.z - CameraObject.AtPosition.z;
 
-	//XMFLOAT2 vec2;// 横と前後(x,z)地面に対して平行な移動
-	//vec2.x = CameraObject.Position.y - CameraObject.AtPosition.y;
-	//vec2.y = CameraObject.Position.z - CameraObject.AtPosition.z;// vec変数はXMFLOAT2のためyに値を入れているが実際の値はz
-
 	//ベクトルの回転
 	float co = cosf(XMConvertToRadians(Rotation));
 	float si = sinf(XMConvertToRadians(Rotation));
@@ -116,37 +124,55 @@ void Camera_Update()
 	CameraObject.Position.x += CameraObject.AtPosition.x;
 	CameraObject.Position.z += CameraObject.AtPosition.z;
 
-	// Rotation2(X軸回転)
-	//CameraObject.Position.y = (vec2.x * co2 - vec2.y * si2);
-	//CameraObject.Position.z = (vec2.x * si2 + vec2.y * co2);
-	//CameraObject.Position.y += CameraObject.AtPosition.y;
-	//CameraObject.Position.z += CameraObject.AtPosition.z;
+	//===========================================
+	//	レイキャスティング処理(クリッピング回避)
+	//===========================================
 
-	////vecを正規化する
-	//float len = sqrtf(vec.x * vec.x + vec.y * vec.y);
-	//vec.x /= len;
-	//vec.y /= len;
+	//理想的なカメラ位置を保存 
+	XMFLOAT3 P_ideal = CameraObject.Position;
+	XMFLOAT3 P_player = CameraObject.AtPosition;
 
-	////注視点の方向へ移動する
-	//float	speed = 0.0f;
-	//if (Keyboard_IsKeyDown(KK_W))
-	//{
-	//	speed = -0.1f;
-	//}
-	//if (Keyboard_IsKeyDown(KK_S))
-	//{
-	//	speed = 0.1f;
-	//}
+	XMVECTOR V_ideal = XMLoadFloat3(&P_ideal);
+	XMVECTOR V_player = XMLoadFloat3(&P_player);
+	XMVECTOR idealToPlayer = XMVectorSubtract(V_player, V_ideal);
+	float maxDistance = XMVectorGetX(XMVector3Length(idealToPlayer));//レイの最大距離
+	XMVECTOR dir = XMVector3Normalize(idealToPlayer);
 
-	////今回の移動量ベクトル
-	//vec.x *= speed;
-	//vec.y *= speed;
+	XMFLOAT3 dir_f3;
+	XMStoreFloat3(&dir_f3, dir);
 
-	////座標と注視点へ移動量を加算
-	//CameraObject.Position.x += vec.x;
-	//CameraObject.Position.z += vec.y;
-	//CameraObject.AtPosition.x += vec.x;
-	//CameraObject.AtPosition.z += vec.y;
+	//Raycast 構造体を初期化
+	Raycast cameraRay(P_ideal, dir_f3);
+
+	//衝突情報の初期化
+	Ray_HitInfo nearestHit;
+	nearestHit.m_distance = maxDistance;
+	nearestHit.m_hitObject = nullptr;
+
+	//全ての透過オブジェクトフラグをリセット
+	for (auto obj : g_gameObjects)
+	{
+		obj->m_isTransparent = false;
+	}
+
+	//--- 地形オブジェクトに対する衝突判定 ---
+	//PerformCameraRaycast(g_Terrain.hills, cameraRay, nearestHit);
+	PerformCameraRaycast(g_gameObjects, cameraRay, nearestHit);
+	//------------------------------------------
+
+	//衝突オブジェクトの処理
+	if (nearestHit.m_hitObject != nullptr)
+	{
+		//衝突したオブジェクトがterrain.wallだった場合透過フラグを立てる
+		//※他の障害物オブジェクトでも同様の処理を入れる必要あり
+		if (nearestHit.m_hitObject->m_tag == "HILL" || nearestHit.m_hitObject->m_tag == "WALL")
+		{
+			//プレイヤーが視認できない (レイがプレイヤーに到達する前に障害物に遮られた)
+			//衝突した障害物に透過フラグを立てる
+			nearestHit.m_hitObject->m_isTransparent = true;
+		}
+	}
+
 
 	//FOVの変更(P1)
 	if (Keyboard_IsKeyDown(KK_Z))
@@ -210,6 +236,50 @@ void Camera2_Update()
 	Camera2Object.Position.z = (vec2.x * si2 + vec2.y * co2);
 	Camera2Object.Position.x += Camera2Object.AtPosition.x;
 	Camera2Object.Position.z += Camera2Object.AtPosition.z;
+
+	//=====================================
+	//	レイキャスティング処理
+	//=====================================
+	
+	//理想的なカメラ位置を保存 
+	XMFLOAT3 P_ideal2 = Camera2Object.Position;
+	XMFLOAT3 P_player2 = Camera2Object.AtPosition;
+
+	XMVECTOR V_ideal2 = XMLoadFloat3(&P_ideal2);
+	XMVECTOR V_player2 = XMLoadFloat3(&P_player2);
+	XMVECTOR idealToPlayer2 = XMVectorSubtract(V_player2, V_ideal2);
+	float maxDistance2 = XMVectorGetX(XMVector3Length(idealToPlayer2));
+	XMVECTOR dir = XMVector3Normalize(idealToPlayer2);
+
+	XMFLOAT3 dir_f3;
+	XMStoreFloat3(&dir_f3, dir);
+
+	//Raycast 構造体を初期化
+	Raycast cameraRay2(P_ideal2, dir_f3);
+
+	//衝突情報の初期化
+	Ray_HitInfo nearestHit2;
+	nearestHit2.m_distance = maxDistance2;
+	nearestHit2.m_hitObject = nullptr;
+
+		//--- 地形オブジェクトに対する衝突判定 ---
+		PerformCameraRaycast(g_gameObjects, cameraRay2, nearestHit2);
+		//PerformCameraRaycast(g_Terrain.walls, cameraRay2, nearestHit2);
+		//------------------------------------------
+
+	//衝突オブジェクトの処理
+		if (nearestHit2.m_hitObject != nullptr)
+		{
+			//衝突したオブジェクトがterrain.wallだった場合透過フラグを立てる
+			//※他の障害物オブジェクトでも同様の処理を入れる必要あり
+			if (nearestHit2.m_hitObject->m_tag == "HILL" || nearestHit2.m_hitObject->m_tag == "WALL")
+			{
+				//プレイヤーが視認できない (レイがプレイヤーに到達する前に障害物に遮られた)
+				//衝突した障害物に透過フラグを立てる
+				nearestHit2.m_hitObject->m_isTransparent = true;
+			}
+		}
+
 	//FOVの変更(P2)
 	if (Keyboard_IsKeyDown(KK_N))
 	{
@@ -364,6 +434,16 @@ void	SetCamera2UpVector(XMFLOAT3 up)
 	Camera2Object.UpVector = up;
 }
 
+CAMERA& GetCameraObj()
+{
+	return CameraObject;
+}
+
+CAMERA& GetCamera2Obj()
+{
+	return Camera2Object;
+}
+
 XMMATRIX	GetViewMatrix()
 { 
 	return	CameraObject.View;
@@ -401,5 +481,98 @@ XMFLOAT3 GetCamera2Position()
 {
 	return Camera2Object.Position;
 }
+
+void PerformCameraRaycast(const std::vector<GameObject*>& gameObjects, Raycast& cameraRay, Ray_HitInfo& nearestHit)
+{
+	for (GameObject* gameObj : gameObjects)
+	{
+		if (gameObj && gameObj->m_isEnable)
+		{ //有効なオブジェクトのみ
+			auto colliders = gameObj->GetColliders<Collider>();
+
+			for (const auto& collider : colliders)
+			{
+				Ray_HitInfo tempHit = nearestHit;
+
+				//if (collider->type == ColliderType::Box)
+				if(auto boxCollider = std::dynamic_pointer_cast<BoxCollider>(collider))
+				{//BoxColliderの場合
+
+					//const BoxCollider* boxCollider = static_cast<const BoxCollider*>(collider.get());
+					//InterSector::InterSects(cameraRay, boxCollider, nearestHit);
+
+					//shared_ptrから生のポインタ(boxCollider.get())を取得して渡す
+					bool hit = InterSector::InterSects(cameraRay, boxCollider.get(), tempHit);
+
+					//InterSectsがtrueを返した場合(より近い衝突)を検出した場合
+					//tempHitの持つ全ての情報(m_hitObject含む)でnearesthitを完全に更新する
+					if (hit)
+					{
+						nearestHit = tempHit;
+					}
+				}
+				// SphereColliderなど、他のコライダーがある場合はここに追加
+
+
+			}
+		}
+	}
+}
+//====================================
+//	メモ書き
+//====================================
+
+	//XMFLOAT2 vec2;// 横と前後(x,z)地面に対して平行な移動
+	//vec2.x = CameraObject.Position.y - CameraObject.AtPosition.y;
+	//vec2.y = CameraObject.Position.z - CameraObject.AtPosition.z;// vec変数はXMFLOAT2のためyに値を入れているが実際の値はz
+
+	// Rotation2(X軸回転)
+	//CameraObject.Position.y = (vec2.x * co2 - vec2.y * si2);
+	//CameraObject.Position.z = (vec2.x * si2 + vec2.y * co2);
+	//CameraObject.Position.y += CameraObject.AtPosition.y;
+	//CameraObject.Position.z += CameraObject.AtPosition.z;
+
+	////vecを正規化する
+	//float len = sqrtf(vec.x * vec.x + vec.y * vec.y);
+	//vec.x /= len;
+	//vec.y /= len;
+
+	////注視点の方向へ移動する
+	//float	speed = 0.0f;
+	//if (Keyboard_IsKeyDown(KK_W))
+	//{
+	//	speed = -0.1f;
+	//}
+	//if (Keyboard_IsKeyDown(KK_S))
+	//{
+	//	speed = 0.1f;
+	//}
+
+	////今回の移動量ベクトル
+	//vec.x *= speed;
+	//vec.y *= speed;
+
+	////座標と注視点へ移動量を加算
+	//CameraObject.Position.x += vec.x;
+	//CameraObject.Position.z += vec.y;
+	//CameraObject.AtPosition.x += vec.x;
+	//CameraObject.AtPosition.z += vec.y;
+
+	//if (Keyboard_IsKeyDown(KK_Q))
+	//{
+	//	Rotation = 1.0f;
+	//}
+	//if (Keyboard_IsKeyDown(KK_E))
+	//{
+	//	Rotation = -1.0f;
+	//}
+	//if (Keyboard_IsKeyDown(KK_LEFT))
+	//{
+	//	Rotation = 1.0f;
+	//}
+	//if (Keyboard_IsKeyDown(KK_RIGHT))
+	//{
+	//	Rotation = -1.0f;
+	//}
 
 
