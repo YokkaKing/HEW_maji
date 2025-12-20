@@ -120,9 +120,33 @@ void Game_Update()
 	Number_Update();
 	Hp_Update();
 	Hp2_Update();
-
 	//=====================
+
+	//======当たり判定======
 	ManagerCollider::UpdateAllCollisions();
+
+	auto it = std::remove_if(
+		g_gameObjects.begin(), g_gameObjects.end(),
+		[](GameObject* obj) {
+			if (obj->m_isDead) 
+			{
+				// 削除される前に、持っているコライダーをすべてマネージャーから外す
+				// ※Colliderをshared_ptrで持っているなら、ここでの解除が重要です
+				for (auto& collider : obj->GetColliders()) 
+				{
+					ManagerCollider::RemoveCollider(collider);
+				}
+
+				delete obj; // メモリを解放 (newで作っている場合)
+				return true;
+			}
+			return false;
+		});
+
+	// リストから除去
+	g_gameObjects.erase(it, g_gameObjects.end());
+	//=====================
+
 	//キー入力チェック
 	//スタートボタンが押されたらシーンを切り替え
 	//フェード処理中はキーを受け付けない
@@ -161,6 +185,10 @@ void Game_Draw()
 	PlayerDraw();
 	Player2Draw();
 
+	for (auto obj : g_gameObjects)
+	{
+		obj->Draw();
+	}
 
 	//==========lightがtrueだとUIが暗く見えるので、一回解除=========
 	Light.SetEnable(FALSE);			//ライティングOFF
@@ -190,6 +218,10 @@ void Game_Draw()
 	PlayerDraw();
 	Player2Draw();
 	
+	for (auto obj : g_gameObjects)
+	{
+		obj->Draw();
+	}
 
 	//2D描画
 	Light.SetEnable(FALSE);			//ライティングOFF

@@ -38,32 +38,26 @@ enum PLAYER_STATE
 };
 
 //プレイヤー構造体
-class PLAYER: public GameObject
+class PLAYER : public GameObject
 {
 public:
 	float           FrictionRate;   // 速度減衰率
 	EVOLUTION_TYPE  EvolutionType;  // 進化タイプ (A or B or NONE)
 	PLAYER_STATE	State;		//状態
-	IWeapon* m_currentWeapon = nullptr; // 現在装備中の武器
-	float			m_maxHp = 100.0f; // 最大体力
-	float			m_currentHp;	 // 現在の体力
+	std::unique_ptr<IWeapon> m_currentWeapon = nullptr; // 現在装備中の武器
 	bool			m_isDead = false; // 死亡フラグ
 	XMFLOAT3 m_rotation; // 武器を回転させる
-	//武器操作関数
-	void EquipWeapon(IWeapon* weapon); // 武器を装備する
-	void TryAttack(const XMFLOAT3& direction); // 攻撃を試みる
 
 public:
+	//武器操作関数
+	void EquipWeapon(std::unique_ptr<IWeapon> weapon); // 武器を装備する
 	void OnCollision(const CollisionInfo& info)override;
-	void TakeDamage(float damage);
 };
 
 void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
 void PlayerFinalize();
 void PlayerUpdate();
 void PlayerDraw();
-
-void PlayerDrawHUD();
 
 XMFLOAT3 GetPlayerPosition();
 
