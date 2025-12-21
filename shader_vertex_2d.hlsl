@@ -51,6 +51,7 @@ VS_OUTPUT main(VS_INPUT vs_in)
     
     //頂点を行列で変換
     vs_out.posH = mul(vs_in.posL, mul(World, mtx));
+    //vs_out.posH = mul(vs_in.posL, mtx);
     //頂点カラーはそのまま出力
     vs_out.color = vs_in.color;
 

@@ -27,23 +27,29 @@
 // セーフリリースマクロ
 #define SAFE_RELEASE(o) if (o) { (o)->Release(); o = NULL; }
 
+//マルチディスプレイ用
+enum DX_WINDOW_ID
+{
+	DX_WINDOW_ID_1 = 0,
+	DX_WINDOW_ID_2,
+	DX_WINDOW_ID_MAX
+};
 
-bool Direct3D_Initialize(HWND hWnd); // Direct3Dの初期化
+bool Direct3D_Initialize(HWND hWnd, HWND hWnd2); // Direct3Dの初期化
 void Direct3D_Finalize(); // Direct3Dの終了処理
 
-void Direct3D_Clear(); // バックバッファのクリア
-void Direct3D_Present(); // バックバッファの表示
-
+void Direct3D_Clear(DX_WINDOW_ID id); // バックバッファのクリア
+void Direct3D_Present(DX_WINDOW_ID id); // バックバッファの表示
+void Direct3D_SetRenderTarget(DX_WINDOW_ID id); //ウィンドウのRenderTargetをセット
 ////////////////////////////////////////////////追加
 ID3D11Device* Direct3D_GetDevice(); // デバイスの取得
 ID3D11DeviceContext* Direct3D_GetDeviceContext(); // デバイスコンテキストの取得
 
 unsigned int Direct3D_GetBackBufferWidth(); // バックバッファの幅を取得
 unsigned int Direct3D_GetBackBufferHeight(); // バックバッファの高さを取得
+void	SetDepthTest(bool flg);	//深度テスト切り替え
 
 HWND Direct3D_GetWindowHandle();
-
-void	SetDepthTest(bool flg);	//深度テスト切り替え
 
 
 enum	BLENDSTATE

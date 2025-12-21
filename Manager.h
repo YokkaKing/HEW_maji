@@ -21,7 +21,8 @@ enum SCENE
 void	Manager_Initialize();
 void	Manager_Finalize();
 void	Manager_Update();
-void	Manager_Draw();
+void	Manager_Draw_Player1();
+void	Manager_Draw_Player2();
 
 void	SetScene(SCENE scene);
 
