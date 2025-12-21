@@ -16,7 +16,7 @@ using namespace DirectX;
 #include"direct3d.h"
 #include"debug_ostream.h"
 #include<fstream>
-
+#include "shader.h"
 //================================================================
 //	グローバル変数
 //================================================================
@@ -31,7 +31,7 @@ static ID3D11Buffer* g_pWorldConstantBuffer = nullptr;//定数バッファ1個
 // 注意！初期化で外部から設定されるもの。Release不要。
 static ID3D11Device* g_pDevice = nullptr;
 static ID3D11DeviceContext* g_pContext = nullptr;
-
+static ID3D11Buffer* g_pBoneBuffer = nullptr;
 
 bool Shader_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
@@ -84,6 +84,8 @@ bool Shader_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT,    0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "BONEINDEX",  0, DXGI_FORMAT_R32G32B32A32_UINT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "BONEWEIGHT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT,0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
 
 	UINT num_elements = ARRAYSIZE(layout); // 配列の要素数を取得
@@ -113,7 +115,15 @@ bool Shader_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	buffer_desc.ByteWidth = sizeof(LIGHT);//バッファサイズ
 	g_pDevice->CreateBuffer(&buffer_desc, nullptr, &g_pLightConstantBuffer);
 	g_pContext->VSSetConstantBuffers(2, 1, &g_pLightConstantBuffer);
+	{
+		D3D11_BUFFER_DESC bd{};
+		bd.Usage = D3D11_USAGE_DYNAMIC;
+		bd.ByteWidth = sizeof(XMMATRIX) * MAX_BONES;
+		bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+		bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
+		Direct3D_GetDevice()->CreateBuffer(&bd, nullptr, &g_pBoneBuffer);
+	}
 
 
 
@@ -151,12 +161,41 @@ void Shader_Finalize()
 	SAFE_RELEASE(g_pVSConstantBuffer);
 	SAFE_RELEASE(g_pInputLayout);
 	SAFE_RELEASE(g_pVertexShader);
-
 	SAFE_RELEASE(g_pWorldConstantBuffer);
 	SAFE_RELEASE(g_pLightConstantBuffer);
-
+	SAFE_RELEASE(g_pBoneBuffer);
 }
 
+void Shader_SetBones(MODEL* model)
+{
+	XMMATRIX boneMatrices[100];
+
+	for (int i = 0; i < 100; i++)
+	{
+		boneMatrices[i] = XMMatrixIdentity();
+	}
+
+	UINT count = min((UINT)model->Bones.size(), 100u);
+
+	for (UINT i = 0; i < count; i++)
+	{
+		boneMatrices[i] =
+			XMMatrixTranspose(model->Bones[i].finalTransform);
+	}
+
+	D3D11_MAPPED_SUBRESOURCE mapped{};
+	Direct3D_GetDeviceContext()->Map(
+		g_pBoneBuffer, 0,
+		D3D11_MAP_WRITE_DISCARD,
+		0, &mapped);
+
+	memcpy(mapped.pData, boneMatrices, sizeof(boneMatrices));
+
+	Direct3D_GetDeviceContext()->Unmap(g_pBoneBuffer, 0);
+
+	Direct3D_GetDeviceContext()->VSSetConstantBuffers(
+		3, 1, &g_pBoneBuffer);
+}
 void Shader_SetMatrix(const DirectX::XMMATRIX& matrix)
 {
 	// 定数バッファ格納用行列の構造体を定義

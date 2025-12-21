@@ -12,6 +12,7 @@ struct PS_INPUT
     float4 posH : SV_POSITION; //ピクセルの座標
     float4 color : COLOR0; //ピクセルの色
     float2 texcoord : TEXCOORD0;
+
 };
 
 float4 main(PS_INPUT ps_in) : SV_TARGET

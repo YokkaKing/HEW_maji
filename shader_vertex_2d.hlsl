@@ -1,86 +1,131 @@
 /*==============================================================================
 
-   2Dï`âÊópí∏ì_ÉVÉFÅ[É_Å[ [shader_vertex_2d.hlsl]
+   2DÊèèÁîªÁî®È†ÇÁÇπ„Ç∑„Çß„Éº„ÉÄ„Éº [shader_vertex_2d.hlsl]
 --------------------------------------------------------------------------------
 
 ==============================================================================*/
 
-// íËêîÉoÉbÉtÉ@
+// ÂÆöÊï∞„Éê„ÉÉ„Éï„Ç°
 cbuffer Buffer0 : register(b0)
 {
-    float4x4 mtx; //CåæåÍÇ©ÇÁìnÇ≥ÇÍÇΩÉfÅ[É^Ç™ì¸Ç¡ÇƒÇ¢ÇÈ
+    float4x4 mtx; //CË®ÄË™û„Åã„ÇâÊ∏°„Åï„Çå„Åü„Éá„Éº„Çø„ÅåÂÖ•„Å£„Å¶„ÅÑ„Çã
 }
+
 cbuffer Buffer1 : register(b1)
 {
-    float4x4 World; //CåæåÍÇ©ÇÁìnÇ≥ÇÍÇΩÉfÅ[É^Ç™ì¸Ç¡ÇƒÇ¢ÇÈ
+    float4x4 World; //CË®ÄË™û„Åã„ÇâÊ∏°„Åï„Çå„Åü„Éá„Éº„Çø„ÅåÂÖ•„Å£„Å¶„ÅÑ„Çã
 }
+
 struct LIGHT
 {
     bool Enable;
+	//bool3 dummy[3];
     bool3 dummy;
-    float4 Direction;
+    float4 Dir;
     float4 Diffuse;
     float4 Ambient;
 };
+
 cbuffer Buffer2 : register(b2)
 {
-    LIGHT   Light; //CåæåÍÇ©ÇÁìnÇ≥ÇÍÇΩÉfÅ[É^Ç™ì¸Ç¡ÇƒÇ¢ÇÈ
+    LIGHT Light; //CË®ÄË™û„Åã„ÇâÊ∏°„Åï„Çå„Åü„Éá„Éº„Çø„ÅåÂÖ•„Å£„Å¶„ÅÑ„Çã
 }
 
+cbuffer Buffer3 : register(b3)
+{
+    float4x4 Bones[100];
+}
 
-//ì¸óÕópí∏ì_ç\ë¢ëÃ
+//ÂÖ•ÂäõÁî®È†ÇÁÇπÊßãÈÄ†‰Ωì
 struct VS_INPUT
-{//              V ÉRÉçÉìÅI
-    float4  posL : POSITION0; //í∏ì_ç¿ïW ÉIÅ[Ç≈Ç»Ç≠É[ÉçÅI
-    float4 normal : NORMAL0; //ñ@ê¸Å@ÉIÅ[Ç≈Ç»Ç≠É[ÉçÅI
-    float4  color : COLOR0;   //í∏ì_ÉJÉâÅ[ÅiR,G,B,AÅj
+{ //              V „Ç≥„É≠„É≥ÔºÅ
+    float4 posL : POSITION0; //È†ÇÁÇπÂ∫ßÊ®ô „Ç™„Éº„Åß„Å™„Åè„Çº„É≠ÔºÅ
+    float4 normal : NORMAL0;
+    float4 color : COLOR0; //È†ÇÁÇπ„Ç´„É©„ÉºÔºàR,G,B,AÔºâ
     float2 texcoord : TEXCOORD0;
+    
+    uint4 boneIndex : BONEINDEX0;
+    float4 boneWeight : BONEWEIGHT0;
 };
 
-//èoóÕópí∏ì_ç\ë¢ëÃ
+//Âá∫ÂäõÁî®È†ÇÁÇπÊßãÈÄ†‰Ωì
 struct VS_OUTPUT
 {
-    float4  posH : SV_POSITION;     //ïœä∑çœí∏ì_ç¿ïW
-    float4  color : COLOR0;         //í∏ì_ÉJÉâÅ[
+    float4 posH : SV_POSITION; //Â§âÊèõÊ∏àÈ†ÇÁÇπÂ∫ßÊ®ô
+    float4 color : COLOR0; //È†ÇÁÇπ„Ç´„É©„Éº
     float2 texcoord : TEXCOORD0;
+    float3 posWorld : POSITION1; 
+    float3 normal : NORMAL0; 
 };
 
 VS_OUTPUT main(VS_INPUT vs_in)
 {
-    VS_OUTPUT vs_out;   //èoóÕópç\ë¢ëÃïœêî
-    
-    //í∏ì_ÇçsóÒÇ≈ïœä∑
-    vs_out.posH = mul(vs_in.posL, mul(World, mtx));
-    //vs_out.posH = mul(vs_in.posL, mtx);
-    //í∏ì_ÉJÉâÅ[ÇÕÇªÇÃÇ‹Ç‹èoóÕ
-    vs_out.color = vs_in.color;
 
+    VS_OUTPUT vs_out;
+    vs_out.color = vs_in.color;
     vs_out.texcoord = vs_in.texcoord;
 
-    //ÉâÉCÉeÉBÉìÉO
-    if(Light.Enable == true)
+    float totalWeight = vs_in.boneWeight.x + vs_in.boneWeight.y +
+                            vs_in.boneWeight.z + vs_in.boneWeight.w;
+    if (Light.Enable == false )
     {
-        //ñ@ê¸ÇÉèÅ[ÉãÉhïœä∑
-        float4 normal = float4(vs_in.normal.xyz, 0.0f);//ñ@ê¸ÇÉRÉsÅ[
-        normal = mul(normal, World);    //normalÇWorldçsóÒÇ≈ïœä∑
-        normal = normalize(normal);     //normalÇê≥ãKâªÇ∑ÇÈ
+        vs_out.posH = mul(vs_in.posL, mtx);
+        vs_out.posWorld = vs_in.posL.xyz;
+        vs_out.normal = vs_in.normal.xyz;
+    }
+    
+    else
+    {
+        float totalWeight = vs_in.boneWeight.x + vs_in.boneWeight.y +
+                            vs_in.boneWeight.z + vs_in.boneWeight.w;
+
+        float4 finalPos = float4(0, 0, 0, 0);
+        float3 finalNormal = float3(0, 0, 0);
+
+        if (totalWeight > 0.01f)
+        {
+            
+            finalPos += mul(vs_in.posL, Bones[vs_in.boneIndex.x]) * vs_in.boneWeight.x;
+            finalPos += mul(vs_in.posL, Bones[vs_in.boneIndex.y]) * vs_in.boneWeight.y;
+            finalPos += mul(vs_in.posL, Bones[vs_in.boneIndex.z]) * vs_in.boneWeight.z;
+            finalPos += mul(vs_in.posL, Bones[vs_in.boneIndex.w]) * vs_in.boneWeight.w;
+            finalPos.w = 1.0f;
+
+         
+            finalNormal += mul(vs_in.normal.xyz, (float3x3) Bones[vs_in.boneIndex.x]) * vs_in.boneWeight.x;
+            finalNormal += mul(vs_in.normal.xyz, (float3x3) Bones[vs_in.boneIndex.y]) * vs_in.boneWeight.y;
+            finalNormal += mul(vs_in.normal.xyz, (float3x3) Bones[vs_in.boneIndex.z]) * vs_in.boneWeight.z;
+            finalNormal += mul(vs_in.normal.xyz, (float3x3) Bones[vs_in.boneIndex.w]) * vs_in.boneWeight.w;
+        }
+        else
+        {
+            finalPos = vs_in.posL;
+            finalNormal = vs_in.normal.xyz;
+        }
+
+   
+        float4 worldPos = mul(finalPos, World);
+        float3 worldNormal = normalize(mul(finalNormal, (float3x3) World));
+
+        vs_out.posWorld = worldPos.xyz;
+        vs_out.normal = worldNormal;
+        vs_out.posH = mul(worldPos, mtx);
+
         
-        //ÉâÉCÉeÉBÉìÉO
-        float light = -dot(normal.xyz, Light.Direction.xyz);
-        light = saturate(light);
-        vs_out.color.rgb *= light;
-        vs_out.color.rgb += Light.Ambient.rgb;
-     }
-      
-    //åãâ ÇèoóÕÇ∑ÇÈ
+        float diffuse = saturate(dot(worldNormal, -Light.Dir.xyz));
+        
+    
+        vs_out.color.rgb = vs_in.color.rgb * diffuse + Light.Ambient.rgb;
+    }
+
     return vs_out;
 }
 
 
 ////=============================================================================
-//// í∏ì_ÉVÉFÅ[É_
+//// È†ÇÁÇπ„Ç∑„Çß„Éº„ÉÄ
 ////=============================================================================
 //float4 main(in float4 posL : POSITION0 ) : SV_POSITION
 //{
-//	return mul(posL, mtx);//í∏ì_ç¿ïWÅñmtxÅiïœä∑çsóÒÅj
+//	return mul(posL, mtx);//È†ÇÁÇπÂ∫ßÊ®ôÔºämtxÔºàÂ§âÊèõË°åÂàóÔºâ
 //}
