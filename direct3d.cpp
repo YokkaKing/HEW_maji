@@ -189,7 +189,12 @@ bool Direct3D_Initialize(HWND hWnd)
 
     return true;
 }
-
+void Direct3D_Reset()
+{
+	g_pDeviceContext->OMSetRenderTargets(1, &g_pRenderTargetView, g_pDepthStencilView);
+	g_pDeviceContext->RSSetViewports(1, &g_Viewport);
+	g_pDeviceContext->RSSetState(nullptr);
+}
 void	SetDepthTest(bool flg)
 {
 	if (flg == true)

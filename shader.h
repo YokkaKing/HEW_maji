@@ -14,8 +14,10 @@
 //================================================================
 #include<d3d11.h>
 #include<DirectXMath.h>
+#define MAX_BONES 100
+#include "model.h"
 #include"direct3d.h"//<<<<<<<<<<<<<<
-
+void Shader_SetBones(MODEL* model);
 bool Shader_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
 void Shader_Finalize();
 

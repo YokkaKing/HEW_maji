@@ -167,6 +167,7 @@ void Game_Draw()
 	Shader_SetLight(Light.Light);	//ライト構造体をシェーダーへセット
 	SetDepthTest(FALSE);
 	//===UI描画========
+
 	Hpbar_Draw(); //<--HpBar描画
 	Timer_Draw();
 	Number_Draw();
