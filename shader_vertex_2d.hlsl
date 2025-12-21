@@ -1,19 +1,19 @@
 /*==============================================================================
 
-   2D•`‰æ—p’¸“_ƒVƒF[ƒ_[ [shader_vertex_2d.hlsl]
+   2Dæç”»ç”¨é ‚ç‚¹ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ [shader_vertex_2d.hlsl]
 --------------------------------------------------------------------------------
 
 ==============================================================================*/
 
-// ’è”ƒoƒbƒtƒ@
+// å®šæ•°ãƒãƒƒãƒ•ã‚¡
 cbuffer Buffer0 : register(b0)
 {
-    float4x4 mtx; //CŒ¾Œê‚©‚ç“n‚³‚ê‚½ƒf[ƒ^‚ª“ü‚Á‚Ä‚¢‚é
+    float4x4 mtx; //Cè¨€èªã‹ã‚‰æ¸¡ã•ã‚ŒãŸãƒ‡ãƒ¼ã‚¿ãŒå…¥ã£ã¦ã„ã‚‹
 }
 
 cbuffer Buffer1 : register(b1)
 {
-    float4x4 World; //CŒ¾Œê‚©‚ç“n‚³‚ê‚½ƒf[ƒ^‚ª“ü‚Á‚Ä‚¢‚é
+    float4x4 World; //Cè¨€èªã‹ã‚‰æ¸¡ã•ã‚ŒãŸãƒ‡ãƒ¼ã‚¿ãŒå…¥ã£ã¦ã„ã‚‹
 }
 
 struct LIGHT
@@ -28,7 +28,7 @@ struct LIGHT
 
 cbuffer Buffer2 : register(b2)
 {
-    LIGHT Light; //CŒ¾Œê‚©‚ç“n‚³‚ê‚½ƒf[ƒ^‚ª“ü‚Á‚Ä‚¢‚é
+    LIGHT Light; //Cè¨€èªã‹ã‚‰æ¸¡ã•ã‚ŒãŸãƒ‡ãƒ¼ã‚¿ãŒå…¥ã£ã¦ã„ã‚‹
 }
 
 cbuffer Buffer3 : register(b3)
@@ -36,23 +36,23 @@ cbuffer Buffer3 : register(b3)
     float4x4 Bones[100];
 }
 
-//“ü—Í—p’¸“_\‘¢‘Ì
+//å…¥åŠ›ç”¨é ‚ç‚¹æ§‹é€ ä½“
 struct VS_INPUT
-{ //              V ƒRƒƒ“I
-    float4 posL : POSITION0; //’¸“_À•W ƒI[‚Å‚È‚­ƒ[ƒI
+{ //              V ã‚³ãƒ­ãƒ³ï¼
+    float4 posL : POSITION0; //é ‚ç‚¹åº§æ¨™ ã‚ªãƒ¼ã§ãªãã‚¼ãƒ­ï¼
     float4 normal : NORMAL0;
-    float4 color : COLOR0; //’¸“_ƒJƒ‰[iR,G,B,Aj
+    float4 color : COLOR0; //é ‚ç‚¹ã‚«ãƒ©ãƒ¼ï¼ˆR,G,B,Aï¼‰
     float2 texcoord : TEXCOORD0;
     
     uint4 boneIndex : BONEINDEX0;
     float4 boneWeight : BONEWEIGHT0;
 };
 
-//o—Í—p’¸“_\‘¢‘Ì
+//å‡ºåŠ›ç”¨é ‚ç‚¹æ§‹é€ ä½“
 struct VS_OUTPUT
 {
-    float4 posH : SV_POSITION; //•ÏŠ·Ï’¸“_À•W
-    float4 color : COLOR0; //’¸“_ƒJƒ‰[
+    float4 posH : SV_POSITION; //å¤‰æ›æ¸ˆé ‚ç‚¹åº§æ¨™
+    float4 color : COLOR0; //é ‚ç‚¹ã‚«ãƒ©ãƒ¼
     float2 texcoord : TEXCOORD0;
     float3 posWorld : POSITION1; 
     float3 normal : NORMAL0; 
@@ -60,6 +60,7 @@ struct VS_OUTPUT
 
 VS_OUTPUT main(VS_INPUT vs_in)
 {
+
     VS_OUTPUT vs_out;
     vs_out.color = vs_in.color;
     vs_out.texcoord = vs_in.texcoord;
@@ -122,9 +123,9 @@ VS_OUTPUT main(VS_INPUT vs_in)
 
 
 ////=============================================================================
-//// ’¸“_ƒVƒF[ƒ_
+//// é ‚ç‚¹ã‚·ã‚§ãƒ¼ãƒ€
 ////=============================================================================
 //float4 main(in float4 posL : POSITION0 ) : SV_POSITION
 //{
-//	return mul(posL, mtx);//’¸“_À•W–mtxi•ÏŠ·s—ñj
+//	return mul(posL, mtx);//é ‚ç‚¹åº§æ¨™ï¼Šmtxï¼ˆå¤‰æ›è¡Œåˆ—ï¼‰
 //}
