@@ -1,6 +1,6 @@
 ﻿/*
 * ファイル名	arrow.cpp
-* タイトル	剣
+* タイトル	弓
 * 作成者		三橋拓斗
 * 作成日		12月09日
 * 更新日		12月09日
@@ -83,7 +83,7 @@ void Arrow::Update()
 		}
 	}
 
-	if (Keyboard_IsKeyDown(KK_RIGHTSHIFT))
+	if (Keyboard_IsKeyDown(KK_C))
 	{
 		// 攻撃中じゃなければチャージできる
 		if (!m_isAttacking && m_coolTime <= 0.0f)
