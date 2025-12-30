@@ -1,224 +1,337 @@
-﻿// ===============================
-// arrow.cpp
-// ===============================
-#include "arrow.h"
-#include "direct3d.h"
-#include "shader.h"
-#include "Camera.h"
+﻿/*
+* ファイル名	arrow.cpp
+* タイトル	弓
+* 作成者		三橋拓斗
+* 作成日		12月09日
+* 更新日		12月09日
+*/
+
+//================================================================
+//	インクルード
+//================================================================
+#include"arrow.h"
 #include"debug_ostream.h"
 
-Arrow::Arrow()
-    : center(0.0f, 0.0f, 0.0f),
-    halfSize(0.1f, 0.1f, 0.5f), // 細長い当たり判定
-    isActive(false),
-    m_AttackFrameTimer(0),
-    m_ChargeTimer(0),   
-    m_ChargeLevel(0),   
-    m_Damage(0.0f),     
-    m_Range(0.0f),      
-    m_model(nullptr),
-    m_scale(0.2f, 0.2f, 0.2f),
-    m_rotation(0.0f, 0.0f, 0.0f),
-    m_offset(0.0f, 0.0f, 0.0f),
-    m_velocity(0.0f, 0.0f, 0.0f),
-    m_startPosition(0.0f, 0.0f, 0.0f)
-{}
+/*********** テストコード **********/
+#include"model.h"
+#include"Camera.h"
+#include"Player.h"
+#include"Player2.h"
+#include"keyboard.h"
+/*********************************/
 
+//================================================================
+//	グローバル変数
+//================================================================
+MODEL* g_modelArrow[2] = { NULL, NULL };
+PLAYER* g_PlayerArrow1;
+PLAYER2* g_PlayerArrow2;
+XMFLOAT3 g_moveArrow[2]; // 簡易アニメーション
 
-void Arrow::Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
+Arrow::Arrow(GameObject* player, bool select) : IWeapon(player)
 {
-    m_model = ModelLoad("asset\\model\\char_bow.fbx");
-    if (!m_model)
-    {
-        hal::dout << "ERROR: Failed to load arrow model.\n";
-    }
+	g_PlayerArrow1 = GetPlayer();
+	g_PlayerArrow2 = GetPlayer2();
+
+	// 武器の当たり判定の作成
+	m_weapon = std::make_unique<GameObject>();
+	m_weapon->m_tag = "Attack";	// タグ
+	m_weapon->m_layer = 0;		// レイヤー
+
+	m_selectPlayer = select; // プレイヤー設定 1Pか2Pか
+
+	// 武器に親へのポインタを設定
+	m_weapon->m_weaponPtr = this;
+
+	XMFLOAT3 scale = { 0.2f, 0.8f, 0.2f };
+	m_collider = m_weapon->AddComponent<BoxCollider>(m_weapon.get(), scale);
+
+	m_weapon->m_scale = scale;
+	m_weapon->m_rotation = { 0.0f, 0.0f, 0.0f };
+
+	ManagerCollider::AddCollider(m_collider); // 登録
+
+	m_collider->SetEnable(false); // 最初は当たり判定を無効化
+
+	m_attackTimer = 0.0f;
+
+	g_moveArrow[m_selectPlayer] = { 0.0f, 0.0f, 0.0f };
+	m_coolTime = 0.0f;
+
+	/*********** テストコード **********/
+	g_modelArrow[0] = ModelLoad("asset\\model\\block.fbx");
+	g_modelArrow[1] = ModelLoad("asset\\model\\block2.fbx");
+	/*********************************/
 }
 
-void Arrow::Finalize()
+Arrow::~Arrow()
 {
-    if (m_model)
-    {
-        ModelRelease(m_model);
-        m_model = nullptr;
-    }
+	ManagerCollider::RemoveCollider(m_collider); // 削除
 }
 
-// IWeapon::StartAttackの実装
-// プレイヤーの位置と回転を受け取り、当たり判定を生成/有効化する
-void Arrow::StartAttack(const XMFLOAT3& playerPosition, const XMFLOAT3& playerRotation)
+void Arrow::Attack()
 {
-    
+	
 }
 
-// プレイヤーの向いている方向に矢を撃つ //追加
-void Arrow::Shoot(const XMFLOAT3& playerPosition, const XMFLOAT3& playerRotation)
+void Arrow::Update()
 {
-    center = playerPosition;
-    m_startPosition = center;//発射地点
+	if (m_coolTime > 0.0f)
+	{
+		{
+			m_coolTime -= 1.0f / 60.0f;
+		}
+	}
 
-    // プレイヤーの回転から前方向ベクトルを計算
-    XMMATRIX rot = XMMatrixRotationRollPitchYaw(playerRotation.x, playerRotation.y, playerRotation.z);
-    XMVECTOR forward = XMVector3TransformNormal(XMVectorSet(0, 0, 1, 0), rot);
-    XMStoreFloat3(&m_velocity, forward);
+	if (Keyboard_IsKeyDown(KK_C))
+	{
+		// 攻撃中じゃなければチャージできる
+		if (!m_isAttacking && m_coolTime <= 0.0f)
+		{
+			m_isCharging = true;
+			m_chargePower += (1.0f / 60.0f);
+			if (m_chargePower > MAX_CHARGE) m_chargePower = MAX_CHARGE;
+		}
+	}
+	else if (m_isCharging)
+	{
+		// キーを離した瞬間に投げる
+		Throw(m_chargePower, m_selectPlayer);
+		m_isCharging = false;
+		m_chargePower = 0.0f;
 
-    // 射程距離を速度に反映
-    const float ARROW_FIXED_SPEED = 0.2f; //1フレームあたりの固定移動量
-    m_velocity.x *= ARROW_FIXED_SPEED;
-    m_velocity.y *= ARROW_FIXED_SPEED;
-    m_velocity.z *= ARROW_FIXED_SPEED;
+		// 投げた後のクールタイム
+		m_coolTime = 1.5f;
+	}
 
-    // デバッグ出力
-    hal::dout << "Arrow Shot! Damage: " << m_Damage
-        << ", Range: " << m_Range
-        << ", Initial Velocity X: " << m_velocity.x << std::endl;
+	// キャラに合わせて武器も回転
+	XMMATRIX rotationMatrixY;
+	XMVECTOR offsetVector;
+	XMVECTOR rotatedOffset;
+	XMVECTOR playerPosition;
+	XMVECTOR swordPosition;
 
-    isActive = true;
-    m_AttackFrameTimer = 0;
+	switch (m_selectPlayer)
+	{
+	case FALSE:
+		XMFLOAT3 offset1 =
+		{
+			m_offset.x + g_moveArrow[m_selectPlayer].x,
+			m_offset.y + g_moveArrow[m_selectPlayer].y,
+			m_offset.z + g_moveArrow[m_selectPlayer].z
+		};
+
+		rotationMatrixY = XMMatrixRotationY(g_PlayerArrow1->m_rotation.y);
+		offsetVector = XMLoadFloat3(&offset1);
+		rotatedOffset = XMVector3Transform(offsetVector, rotationMatrixY);
+		playerPosition = XMLoadFloat3(&owner->m_position);
+		swordPosition = XMVectorAdd(playerPosition, rotatedOffset);
+		XMStoreFloat3(&m_weapon->m_position, swordPosition);
+
+		m_weapon->m_rotation = g_PlayerArrow1->m_rotation;
+		break;
+
+	case TRUE:
+		XMFLOAT3 offset2 =
+		{
+			m_offset.x + g_moveArrow[m_selectPlayer].x,
+			m_offset.y + g_moveArrow[m_selectPlayer].y,
+			m_offset.z + g_moveArrow[m_selectPlayer].z
+		};
+
+		rotationMatrixY = XMMatrixRotationY(g_PlayerArrow2->m_rotation.y);
+		offsetVector = XMLoadFloat3(&offset2);
+		rotatedOffset = XMVector3Transform(offsetVector, rotationMatrixY);
+		playerPosition = XMLoadFloat3(&owner->m_position);
+		swordPosition = XMVectorAdd(playerPosition, rotatedOffset);
+		XMStoreFloat3(&m_weapon->m_position, swordPosition);
+
+		m_weapon->m_rotation = g_PlayerArrow2->m_rotation;
+		break;
+
+	default:
+		break;
+	}
 }
 
-// Aボタン入力処理 //追加
-void Arrow::HandleInput(bool isAPressed, bool isAReleased, const XMFLOAT3& playerPos, const XMFLOAT3& playerRot) //追加
+void Arrow::Draw()
 {
+	//ワールド行列作成
+	XMMATRIX	scale = XMMatrixScaling(
+		m_weapon->m_scale.x,
+		m_weapon->m_scale.y,
+		m_weapon->m_scale.z);
+	XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
+		m_weapon->m_rotation.x,
+		m_weapon->m_rotation.y,
+		m_weapon->m_rotation.z);
+	XMMATRIX	translation = XMMatrixTranslation(
+		m_weapon->m_position.x,
+		m_weapon->m_position.y,
+		m_weapon->m_position.z);
+	XMMATRIX	world = scale * rotation * translation;
 
-    const int MAX_CHARGE_TIME = 180; // 最大チャージ時間を3秒(180フレーム)とする
-    // 即押し(0フレーム)の基準値
-    const float BASE_RANGE = 0.5f;
-    const float BASE_DAMAGE = 3.0f;
-    // 最大チャージ(MAX_CHARGE_TIMEフレーム)での最大値
-    const float MAX_RANGE = 4.0f;
-    const float MAX_DAMAGE = 12.0f;
+	//シェーダーへ行列をセット
+	Shader_SetWorldMatrix(world);
 
-    if (isAPressed)
-    {
-        // 押し続けている間チャージ
-        m_ChargeTimer++;
+	ModelDraw(g_modelArrow[0]);
+}
 
-        // チャージタイマーを最大値でクランプ（これ以上チャージしない）
-        if (m_ChargeTimer > MAX_CHARGE_TIME)
-        {
-            m_ChargeTimer = MAX_CHARGE_TIME;
-        }
-
-        // --- フレームごとにパラメータを計算し、段々たまるようにする ---
-        float chargeRatio = (float)m_ChargeTimer / MAX_CHARGE_TIME;
-
-        // 即押し（チャージタイマーが0）の場合、chargeRatioは0になるため、BASE値が適用される
-        if (m_ChargeTimer == 0) {
-            m_Range = BASE_RANGE;
-            m_Damage = BASE_DAMAGE;
-        }
-        else {
-            // 線形補間（Lerp）: BASE値からMAX値まで、chargeRatioに応じて滑らかに増加
-            m_Range = BASE_RANGE + (MAX_RANGE - BASE_RANGE) * chargeRatio;
-            m_Damage = BASE_DAMAGE + (MAX_DAMAGE - BASE_DAMAGE) * chargeRatio;
-
-            // チャージレベルの表示用更新（任意: 1, 60, 120, 180フレームでレベル1, 2, 3, 4）
-            if (m_ChargeTimer >= 1 && m_ChargeTimer < 60) m_ChargeLevel = 1;
-            else if (m_ChargeTimer < 120) m_ChargeLevel = 2;
-            else if (m_ChargeTimer < 180) m_ChargeLevel = 3;
-            else m_ChargeLevel = 4; // 3秒以上
-        }
-
-    }
-
-    if (isAReleased)
-    {
-        // プレイヤーの向きに矢を撃つ
-        Shoot(playerPos, playerRot);
-
-        // チャージリセット
-        m_ChargeTimer = 0;
-        m_ChargeLevel = 0; // リセット
- 
-    }
+void Arrow::OnWeaponCollision(GameObject* target)
+{
 
 }
 
-void Arrow::EndAttack()
+void Arrow::Throw(float power, bool select)
 {
-    isActive = false;
-    m_AttackFrameTimer = 0;
-    m_Range = 0.0f;
-    m_Damage = 0.0f;
+	ArrowShot* shot = new ArrowShot();
+
+	shot->m_position = m_weapon->m_position;
+	shot->m_rotation = m_weapon->m_rotation;
+	shot->m_selectPlayer = select;
+	shot->m_chargePower = power;
+
+	// 飛ばす方向を計算
+	float baseSpeed = 0.3f;
+	float finalSpeed = baseSpeed * (1.0f + power);
+	float ry = shot->m_rotation.y;
+	shot->m_velocity.x = sinf(ry) * finalSpeed;
+	shot->m_velocity.y = 0.0f;
+	shot->m_velocity.z = cosf(ry) * finalSpeed;
+
+	extern std::vector<GameObject*> g_gameObjects;
+	g_gameObjects.push_back(shot);
+	shot->Start();
 }
 
-void Arrow::Draw(const XMFLOAT3& playerPosition, const XMFLOAT3& playerRotation)
+//================================================================
+//	ArrowShotクラス
+//================================================================
+void ArrowShot::Start()
 {
-    if (!m_model) return;
+	m_tag = "Attack";
 
-    XMMATRIX scale = XMMatrixScaling(m_scale.x, m_scale.y, m_scale.z);
-    XMMATRIX rotation = XMMatrixRotationRollPitchYaw(m_rotation.x, m_rotation.y, m_rotation.z);
-    XMMATRIX translation = XMMatrixTranslation(center.x, center.y, center.z);
-
-    XMMATRIX world = scale * rotation * translation;
-    XMMATRIX view = GetViewMatrix();
-    XMMATRIX projection = GetProjectionMatrix();
-    XMMATRIX wvp = world * view * projection;
-
-    Shader_SetWorldMatrix(world);
-    Shader_SetMatrix(wvp);
-
-    ModelDraw(m_model);
+	XMFLOAT3 scale = { 0.2f, 0.2f, 0.7f };
+	m_scale = scale;
+	m_collider = AddComponent<BoxCollider>(this, scale);
+	ManagerCollider::AddCollider(m_collider);
 }
 
-void Arrow::Update(float deltaTime)
+void ArrowShot::Update()
 {
-    if (isActive) 
-    {
-        m_AttackFrameTimer++;
+	// 矢が刺さってたら
+	if (m_isStuck)
+	{
+		m_stuckLife -= (1.0f / 60.0f);
+		// タイマーを減らす
+		if (m_stuckLife <= 0.0f)
+		{
+			m_isDead = true;
+		}
+	}
+	else // まだ飛んでたら
+	{
+		// 飛ばしてからの寿命
+		m_flyTimer -= (1.0f / 60.0f);
+		if (m_flyTimer <= 0.0f)
+		{
+			m_isDead = true;
+		}
 
-        // 矢を速度ベクトルで移動
-        center.x += m_velocity.x *1.0f;
-        center.y += m_velocity.y *1.0f;
-        center.z += m_velocity.z *1.0f;
+		m_velocity.y -= 0.005f; // 重力
+		// 大きいと重い、小さいとふわっとする
 
-        float dx = center.x - m_startPosition.x;
-        float dy = center.y - m_startPosition.y;
-        float dz = center.z - m_startPosition.z;
-        // 距離の2乗を計算
-        float distanceSq = dx * dx + dy * dy + dz * dz;
-        if (distanceSq > m_Range * m_Range)
-        {
-            hal::dout << "Arrow End! Reached Max Range: " << m_Range << std::endl;
-            EndAttack();
-        }
-        // デバッグ出力
-        // 矢が動いていることを確認するため、座標を出力
-        hal::dout << "Arrow Position: " << center.x << ", " << center.y << ", " << center.z << std::endl;
-    }
+		m_position.x += m_velocity.x;
+		m_position.y += m_velocity.y;
+		m_position.z += m_velocity.z;
+
+		// 常に先端が飛んでる方向を向く
+		m_rotation.x = atan2f(-m_velocity.y, sqrtf(m_velocity.x * m_velocity.x + m_velocity.z * m_velocity.z));
+	}
 }
 
-bool Arrow::ShouldEndAttack() const
+void ArrowShot::Draw()
 {
-    return isActive && (m_AttackFrameTimer >= ATTACK_DURATION_FRAMES);
+	//ワールド行列作成
+	XMMATRIX	scale = XMMatrixScaling(
+		m_scale.x,
+		m_scale.y,
+		m_scale.z);
+	XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
+		m_rotation.x,
+		m_rotation.y,
+		m_rotation.z);
+	XMMATRIX	translation = XMMatrixTranslation(
+		m_position.x,
+		m_position.y,
+		m_position.z);
+	XMMATRIX	world = scale * rotation * translation;
+
+	//シェーダーへ行列をセット
+	Shader_SetWorldMatrix(world);
+
+	ModelDraw(g_modelArrow[0]);
 }
 
-bool Arrow::IsAttacking() const
+void ArrowShot::OnCollision(const CollisionInfo& info)
 {
-    return isActive;
-}
+	// 刺さってたら何もなし
+	if (m_isStuck) return;
 
-bool Arrow::CheckCollision(XMFLOAT3& playerCenter, XMFLOAT3& playerHalfSize)
-{
-    if (!isActive) return false;
+	if (info.other->m_tag == "Attack") return; // 武器に当たっても無視
+	if (!m_selectPlayer && info.other->m_tag == "Player") return; // 武器はなった本人は無視
+	if (m_selectPlayer && info.other->m_tag == "Player2") return; // 武器はなった本人は無視
 
-    float arrowMinX = center.x - halfSize.x;
-    float arrowMaxX = center.x + halfSize.x;
-    float arrowMinY = center.y - halfSize.y;
-    float arrowMaxY = center.y + halfSize.y;
-    float arrowMinZ = center.z - halfSize.z;
-    float arrowMaxZ = center.z + halfSize.z;
+	m_velocity = { 0.0f, 0.0f, 0.0f };
+	m_isStuck = true;
 
-    float playerMinX = playerCenter.x - playerHalfSize.x;
-    float playerMaxX = playerCenter.x + playerHalfSize.x;
-    float playerMinY = playerCenter.y - playerHalfSize.y;
-    float playerMaxY = playerCenter.y + playerHalfSize.y;
-    float playerMinZ = playerCenter.z - playerHalfSize.z;
-    float playerMaxZ = playerCenter.z + playerHalfSize.z;
+	// 1Pか2Pか
+	switch (m_selectPlayer)
+	{
+	case FALSE: // 1Pだったら
+		if (info.other->m_tag == "Player2") // 相手がPlayer2の時のみ
+		{
+			if (m_chargePower < 0.5f)
+			{
+				info.other->TakeDamage(3.0f);
+			}
+			else if (m_chargePower < 1.0f)
+			{
+				info.other->TakeDamage(6.0f);
+			}
+			else if (m_chargePower < 2.0f)
+			{
+				info.other->TakeDamage(12.0f);
+			}
+			else if (m_chargePower > 2.0f)
+			{
+				info.other->TakeDamage(12.0f);
+			}
+			m_isDead = true;
+		}
+		break;
 
-    bool collisionX = (arrowMinX <= playerMaxX) && (arrowMaxX >= playerMinX);
-    bool collisionY = (arrowMinY <= playerMaxY) && (arrowMaxY >= playerMinY);
-    bool collisionZ = (arrowMinZ <= playerMaxZ) && (arrowMaxZ >= playerMinZ);
-
-    return collisionX && collisionY && collisionZ;
+	case TRUE: // 2Pだったら
+		if (info.other->m_tag == "Player") // 相手がPlayerの時のみ
+		{
+			if (m_chargePower < 0.5f)
+			{
+				info.other->TakeDamage(3.0f);
+			}
+			else if (m_chargePower < 1.0f)
+			{
+				info.other->TakeDamage(6.0f);
+			}
+			else if (m_chargePower < 2.0f)
+			{
+				info.other->TakeDamage(12.0f);
+			}
+			else if (m_chargePower > 2.0f)
+			{
+				info.other->TakeDamage(12.0f);
+			}
+			m_isDead = true;
+		}
+		break;
+	}
 }

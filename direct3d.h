@@ -52,7 +52,6 @@ enum	BLENDSTATE
 	BLENDSTATE_ALFA,		//•’Ê‚Ìƒ¿ƒuƒŒƒ“ƒh
 	BLENDSTATE_ADD,			//‰ÁŽZ‡¬ 
 	BLENDSTATE_SUB,			//Œ¸ŽZ‡¬
-	BLENDSTATE_TRANSPARENCY,//áŠQ•¨“§‰ß—p
 
 	BLENDSTATE_MAX
 };
