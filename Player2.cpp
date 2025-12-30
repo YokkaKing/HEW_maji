@@ -23,10 +23,13 @@
 #include"Evolution.h"
 #include"colliderFactory.h"
 #include"debug_ostream.h"
-#include "fade.h"
-
-#include "IWeapon.h"
-#include "arrow.h"
+#include"fade.h"
+#include"sword.h"
+#include"spear.h"
+#include"hammer.h"
+#include"arrow.h"
+#include"syuriken.h"
+#include<memory>
 
 //================================================================
 //	グローバル変数
@@ -35,9 +38,9 @@
 PLAYER2	g_Player2;
 ID3D11Device* g_pDevice2;
 ID3D11DeviceContext* g_pContext2;
-
 Controller g_Controller2(0); //ID 0のコントローラーを使用
-
+MODEL* g_modelP2;
+unsigned int g_changeP2;
 
 void Player2Die()
 {
@@ -61,42 +64,37 @@ void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_pContext2 = pContext;
 
 	g_Player2.m_model = ModelLoad("asset\\model\\char_bow.fbx");
+	g_modelP2 = ModelLoad("asset\\model\\block.fbx");
 
-	g_Player2.m_position = XMFLOAT3(2.0f, 0.5f, 1.0f);
+	g_Player2.m_position = XMFLOAT3(2.0f, 0.5f, 2.0f);
 	g_Player2.m_rotation = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	g_Player2.m_velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
-	g_Player2.m_scale = XMFLOAT3(0.5f, 0.5f, 0.5f);
+	g_Player2.m_scale = XMFLOAT3(0.6f, 1.0f, 0.6f);
 	g_Player2.m_tag = "Player2";
 	g_Player2.m_layer = 0;
 
 	g_Player2.State = PLAYER2_STATE::PLAYER2_STATE_MOVE;
 
 	g_Player2.m_acceleration = XMFLOAT3(0.0f, -9.8f / 600.0f * 0.5f, 0.0f);
-
+	g_Player2.FrictionRate = 0.98f;
 	g_Player2.m_currentHp = g_Player2.m_maxHp;
 	g_Player2.m_isDead = false;
 
+	// プレイヤーの当たり判定の追加
 	auto collider = g_Player2.AddComponent<BoxCollider>(&g_Player2, g_Player2.m_scale);
 	ManagerCollider::AddCollider(collider);
 
-	EvolutionInitialize();
+	// のちのちセレクト画面から分岐できるようにする
+	// 自分をownerとして武器を生成
+	g_Player2.m_currentWeapon = std::make_unique<Sword>(&g_Player2, TRUE); // 2Pです
+	g_changeP2 = 0;
 
-	Arrow* newArrow = new Arrow();
-	newArrow->Initialize(pDevice, pContext);
-	g_Player2.EquipWeapon(newArrow);
+	EvolutionInitialize();
 }
 void Player2Finalize()
 {
 	ModelRelease(g_Player2.m_model);
-
-	ManagerCollider::ClearCollider();
-
-	if (g_Player2.m_currentWeapon)
-	{
-		delete g_Player2.m_currentWeapon;
-		g_Player2.m_currentWeapon = nullptr;
-	}
 }
 void	Player2Update()
 {
@@ -105,72 +103,69 @@ void	Player2Update()
 	EvolvePlayer2();           // Eキーで進化タイプを選択
 	ApplyEvolutionEffect2();   // 進化タイプに応じたパラメータを適用
 	if (g_Player2.m_isDead)return;	//死亡している場合は更新処理をスキップ
-	//武器の更新と攻撃終了判定
-	if (g_Player2.m_currentWeapon)
+	
+	//================================================================
+//	武器変更処理(一旦)
+//================================================================
+	if (Keyboard_IsKeyDownTrigger(KK_D2))
 	{
-		g_Player2.m_currentWeapon->Update(1.0f / 60.0f);
-		if (g_Player2.m_currentWeapon->ShouldEndAttack())
+		g_changeP2++;
+
+		if (g_changeP2 >= 5)
 		{
-			g_Player2.m_currentWeapon->EndAttack();
+			g_changeP2 = 0;
 		}
 
-
-		////攻撃入力のチェック
-		//if (Keyboard_IsKeyDownTrigger(KK_N))
-		//{
-		//	g_Player2.m_currentHp -= 10.0f;
-		//	// プレイヤーの現在攻撃中フラグをチェック
-		//	if (g_Player2.m_currentWeapon && !g_Player2.m_currentWeapon->IsAttacking())
-		//	{
-		//		// 武器側で必要な位置と回転を渡して攻撃開始
-		//		g_Player2.m_currentWeapon->StartAttack(g_Player2.m_position, g_Player2.m_rotation);
-		//	}
-		//}
-		bool isAPressed = g_Controller2.IsButtonDown(ControllerButton::A_BUTTON); //
-		bool isAReleased = g_Controller2.IsButtonReleased(ControllerButton::A_BUTTON); //
-
-		// 武器タイプを取得し、switch文で分岐
-		WEAPON_TYPE type = g_Player2.m_currentWeapon->GetWeaponType();
-
-		switch (type)
+		switch (g_changeP2)
 		{
-		case WEAPON_TYPE::ARROW:
-		{
-			// ARROW の場合: HandleInput（チャージ）が必要
-			// ※ この場合、HandleInputを持つArrow型にキャストする必要があります。
-			// 依存を減らすためIWeaponにHandleInputを持たせるか、
-			// dynamic_castを許容するか、設計選択が必要です。
-			// => ここでは、**IWeaponを継承した特殊な入力を持つ型**とみなし、dynamic_castを再利用します。
-
-			Arrow* arrowWeapon = dynamic_cast<Arrow*>(g_Player2.m_currentWeapon);
-			if (arrowWeapon)
-			{
-				arrowWeapon->HandleInput(isAPressed, isAReleased,
-					g_Player2.m_position, g_Player2.m_rotation); //
-			}
+		case 0:
+			g_Player2.EquipWeapon(std::make_unique<Sword>(&g_Player2, FALSE));
 			break;
-		}
-		case WEAPON_TYPE::SWORD:
-		case WEAPON_TYPE::SHURIKEN:
-		case WEAPON_TYPE::SPEAR:
-		{
-			// SWORD, SHURIKEN, SPEAR などチャージ不要な武器の場合
-			// Aボタンを押した瞬間に攻撃開始
-			if (g_Controller2.IsButtonPushed(ControllerButton::A_BUTTON))
-			{
-				if (!g_Player2.m_currentWeapon->IsAttacking()) //
-				{
-					g_Player2.m_currentWeapon->StartAttack(g_Player2.m_position, g_Player2.m_rotation); //
-				}
-			}
+
+		case 1:
+			g_Player2.EquipWeapon(std::make_unique<Spear>(&g_Player2, FALSE));
 			break;
-		}
-		case WEAPON_TYPE::NONE:
+
+		case 2:
+			// g_Player2.EquipWeapon(std::make_unique<Hammer>(&g_Player, FALSE));
+			break;
+
+		case 3:
+			// g_Player2.EquipWeapon(std::make_unique<Arrow>(&g_Player, FALSE));
+			break;
+
+		case 4:
+			// g_Player2.EquipWeapon(std::make_unique<Shuriken>(&g_Player, FALSE));
+			break;
+
 		default:
-			// 装備なし、または未定義の武器
 			break;
 		}
 	}
+
+//================================================================
+//	攻撃処理
+//================================================================
+	// CキーかAボタンで
+	if (Keyboard_IsKeyDownTrigger(KK_P) || g_Controller2.IsButtonPushed(ControllerButton::B_BUTTON))
+	{
+		// 武器があるか
+		if (g_Player2.m_currentWeapon)
+		{
+			g_Player2.m_currentWeapon->Attack(); // 攻撃
+		}
+
+		hal::dout << "Playerから攻撃した！\n";
+	}
+
+//================================================================
+//	武器の更新
+//================================================================
+	if (g_Player2.m_currentWeapon)
+	{
+		g_Player2.m_currentWeapon->Update();
+	}
+
 	Player2_ManualMove();
 	//死亡判定
 	if (g_Player2.m_currentHp <= 0.0f && !g_Player2.m_isDead)
@@ -288,17 +283,36 @@ void	Player2Draw()
 		g_Player2.m_position.z);
 	XMMATRIX	world = scale * rotation * translation;
 
-	//変換行列作成
-	XMMATRIX	view = GetViewMatrix2();
-	XMMATRIX	projection = GetProjectionMatrix2();
-	XMMATRIX	wvp = world * view * projection;
-
 	//シェーダーへ行列をセット
 	Shader_SetWorldMatrix(world);
-	//Shader_SetMatrix(wvp);
 
 	//モデルの描画リクエスト
 	ModelDraw(g_Player2.m_model);
+
+	if (g_Player2.m_currentWeapon)
+	{
+		g_Player2.m_currentWeapon->Draw();
+	}
+
+	//ワールド行列作成
+	scale = XMMatrixScaling(
+		0.6f,
+		1.0f,
+		0.6f);
+	rotation = XMMatrixRotationRollPitchYaw(
+		g_Player2.m_rotation.x,
+		g_Player2.m_rotation.y,
+		g_Player2.m_rotation.z);
+	translation = XMMatrixTranslation(
+		g_Player2.m_position.x,
+		g_Player2.m_position.y,
+		g_Player2.m_position.z);
+	world = scale * rotation * translation;
+
+	//シェーダーへ行列をセット
+	Shader_SetWorldMatrix(world);
+
+	ModelDraw(g_modelP2);
 }
 
 XMFLOAT3 GetPlayer2Position()
@@ -322,24 +336,13 @@ PLAYER2* GetPlayer2()
 {
 	return &g_Player2;
 }
-void PLAYER2::TakeDamage(float damage)
-{
-	if (m_isDead) return;
-
-	m_currentHp -= damage;
-
-	hal::dout << "Player2 took " << damage << " damage. HP remaining: " << m_currentHp << std::endl;
-}
 
 // 武器を装備する
-void PLAYER2::EquipWeapon(IWeapon* weapon)
+void PLAYER2::EquipWeapon(std::unique_ptr<IWeapon> weapon)
 {
-	if (m_currentWeapon)
-	{
-		delete m_currentWeapon;
-	}
-	m_currentWeapon = weapon;
+	m_currentWeapon = std::move(weapon);
 }
+
 void PLAYER2::OnCollision(const CollisionInfo& info)
 {
 	if (!info.isHit) return;
@@ -347,16 +350,19 @@ void PLAYER2::OnCollision(const CollisionInfo& info)
 	// --- まずタグで相手を識別 ---
 	if (info.other)
 	{
-		if (info.other->m_tag == "PlayerAttack")
+		if (info.other->m_tag == "Attack")
 		{
-			TakeDamage(10.0f); // 10ダメージを与える
-			return;
+			// 相手が武器オブジェクト持ってたら
+			if (info.other->m_weaponPtr)
+			{	
+				// 武器の衝突判定を呼び出す
+				info.other->m_weaponPtr->OnWeaponCollision(this);
+			}
 		}
 
 		// 例えば壁・木だけコリジョン有効
 		if (info.other->m_tag == "Wall" ||
-			info.other->m_tag == "Tree" ||
-			info.other->m_tag == "WALL")
+			info.other->m_tag == "Tree")
 		{
 			//================================================================
 			//	押し戻し

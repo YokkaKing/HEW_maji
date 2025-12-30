@@ -1,150 +1,252 @@
 /*
 * ファイル名	sword.cpp
-* タイトル	    剣
+* タイトル	剣
 * 作成者		三橋拓斗
 * 作成日		12月09日
-*  更新日		12月09日
+* 更新日		12月09日
 */
 
 //================================================================
 //	インクルード
 //================================================================
-#include "sword.h"
-#include "debug_ostream.h"
-#include "colliderFactory.h"
-#include "collider.h"
-#include "component.h"
-#include "Player2.h"
-#include "Player.h"
+#include"sword.h"
+#include"managerCollider.h"
+#include"debug_ostream.h"
 
-Sword::Sword()
+/*********** テストコード **********/
+#include"model.h"
+#include"Camera.h"
+#include"Player.h"
+#include"Player2.h"
+/*********************************/
+
+//================================================================
+//	グローバル変数
+//================================================================
+MODEL* g_modelSword[2] = { NULL,NULL };
+PLAYER* g_PlayerSword1;
+PLAYER2* g_PlayerSword2;
+XMFLOAT3 g_moveSword[2]; // 簡易アニメーション
+
+Sword::Sword(GameObject* player, bool select) : IWeapon(player)
 {
-    m_tag = "Sword";
+	g_PlayerSword1 = GetPlayer();
+	g_PlayerSword2 = GetPlayer2();
+
+	// 武器の当たり判定の作成
+	m_weapon = std::make_unique<GameObject>();
+	m_weapon->m_tag = "Attack";	// タグ
+	m_weapon->m_layer = 0;		// レイヤー
+	
+	m_selectPlayer = select; // プレイヤー設定 1Pか2Pか
+
+	// 武器に親へのポインタを設定
+	m_weapon->m_weaponPtr = this;
+
+	XMFLOAT3 scale = { 0.3f, 1.0f, 0.3f };
+	m_collider = m_weapon->AddComponent<BoxCollider>(m_weapon.get(), scale);
+
+	m_weapon->m_scale = scale;
+	m_weapon->m_rotation = { 0.0f, 0.0f, 0.0f };
+
+	ManagerCollider::AddCollider(m_collider); // 登録
+
+	m_collider->SetEnable(false); // 最初は当たり判定を無効化
+
+	m_attackTimer = 0.0f;
+
+	g_moveSword[m_selectPlayer] = { 0.0f, 0.0f, 0.0f };
+
+	/*********** テストコード **********/
+	g_modelSword[0] = ModelLoad("asset\\model\\block.fbx");
+	g_modelSword[1] = ModelLoad("asset\\model\\block2.fbx");
+	/*********************************/
 }
 
-void Sword::SetObject(XMFLOAT3 pos, XMFLOAT3 scl, std::string tag, int lay)
+Sword::~Sword()
 {
-    std::unique_ptr<GameObject> obj_ptr(
-        ColliderFactory::CreateBoxObject(pos, scl, tag, lay)
-    );
-    GameObject* obj = obj_ptr.get();
-
-    m_position = obj->m_position;
-    m_scale = obj->m_scale;
-    m_tag = obj->m_tag;
-    m_layer = obj->m_layer;
-
-    for (auto& col : obj->GetColliders<>())
-    {
-        col->owner = this;
-
-        this->components.push_back(col);
-    }
+	ManagerCollider::RemoveCollider(m_collider); // 削除
 }
 
-void Sword::StartAttack(const XMFLOAT3& playerPosition, const XMFLOAT3& playerRotation)
+void Sword::Attack()
 {
-    if (m_isAttacking)
-        return;
+	if (m_isAttacking) return; // 攻撃してたら終わり
+	if (m_coolTime > 0.0f) return;
 
-    m_isAttacking = true;
-    m_attackTimer = 0.0f;
-    m_isEnable = true;
-    hal::dout << "Sword attack started." << std::endl;
+	m_isAttacking = true; // 攻撃している
+	m_attackTimer = 0.0f; // 攻撃タイマー初期化
+	g_moveSword[m_selectPlayer] = {0.0f, 0.0f, 0.0f}; // 簡易アニメーションの初期化
+	m_coolTime = 1.0f; // クールタイムの設定
 
-    m_position = playerPosition;
-    m_rotation = playerRotation;
-}
+	m_collider->SetEnable(true); // 当たり判定の有効
 
-void Sword::EndAttack()
-{
-    if (!m_isAttacking)
-        return;
-
-    m_isAttacking = false;
-    m_attackTimer = 0.0f;
-    m_isEnable = false;
-    hal::dout << "Sword attack ended." << std::endl;
-}
-
-void Sword::OnCollision(const CollisionInfo& info)
-{
-    // 当たり判定が有効なとき（攻撃中）にのみ、衝突処理を行う
-    if (m_isAttacking)
-    {
-        hal::dout << "Sword hit something! Tag: " << info.other->m_tag << std::endl;
-
-        // 衝突相手がPlayer2であるかをタグでチェック
-        if (info.other->m_tag == "Player2")
-        {
-            // GameObject* (info.other) を PLAYER2* 型に安全にキャスト
-            PLAYER2* targetPlayer2 = dynamic_cast<PLAYER2*>(info.other);
-
-            if (targetPlayer2)
-            {
-                // 10ダメージを与える
-                targetPlayer2->TakeDamage(10.0f);
-
-                hal::dout << "Sword hit Player2 and dealt 10 damage! HP left: "
-                    << targetPlayer2->m_currentHp << std::endl;
-            }
-        }
-        else
-        {
-            // Player2以外に当たった場合のデバッグ出力
-            hal::dout << "Sword hit detected on target. Tag: " << info.other->m_tag << std::endl;
-        }
-
-    }
+	// 多重ヒット帽子リストをリセット
+	m_hitTargets.clear();
 }
 
 void Sword::Update()
 {
-    Update(1.0f / 60.0f);
+	if (m_coolTime > 0.0f)
+	{
+		m_coolTime -= 1.0f / 60.0f; // クールタイムを減らす
+	}
 
-    GameObject::Update();
+	if (m_attackTimer < (ATTACK_DURATION / 2) && m_isAttacking)
+	{
+		float progress = m_attackTimer / (ATTACK_DURATION / 2.0f);
+
+		if (progress > 1.0f) progress = 1.0f;
+
+		g_moveSword[m_selectPlayer].x = m_animePosition.x * progress;
+		g_moveSword[m_selectPlayer].y = m_animePosition.y * progress;
+		g_moveSword[m_selectPlayer].z = m_animePosition.z * progress;
+	}
+	else
+	{
+		g_moveSword[m_selectPlayer].x -= (m_animePosition.x / 30.0f);
+		g_moveSword[m_selectPlayer].y -= (m_animePosition.y / 30.0f);
+		g_moveSword[m_selectPlayer].z -= (m_animePosition.z / 30.0f);
+
+		if (g_moveSword[m_selectPlayer].x < 0.0f)
+		{
+			g_moveSword[m_selectPlayer].x = 0.0f;
+		}
+		if (g_moveSword[m_selectPlayer].y < 0.0f)
+		{
+			g_moveSword[m_selectPlayer].y = 0.0f;
+		}
+		if (g_moveSword[m_selectPlayer].z < 0.0f)
+		{
+			g_moveSword[m_selectPlayer].z = 0.0f;
+		}
+	}
+
+	XMMATRIX rotationMatrixY;
+	XMVECTOR offsetVector;
+	XMVECTOR rotatedOffset;
+	XMVECTOR playerPosition;
+	XMVECTOR swordPosition;
+
+	switch (m_selectPlayer)
+	{
+	case FALSE:
+		XMFLOAT3 offset1 =
+		{
+			m_offset.x + g_moveSword[m_selectPlayer].x,
+			m_offset.y + g_moveSword[m_selectPlayer].y,
+			m_offset.z + g_moveSword[m_selectPlayer].z
+		};
+
+		rotationMatrixY = XMMatrixRotationY(g_PlayerSword1->m_rotation.y);
+		offsetVector = XMLoadFloat3(&offset1);
+		rotatedOffset = XMVector3Transform(offsetVector, rotationMatrixY);
+		playerPosition = XMLoadFloat3(&owner->m_position);
+		swordPosition = XMVectorAdd(playerPosition, rotatedOffset);
+		XMStoreFloat3(&m_weapon->m_position, swordPosition);
+
+		m_weapon->m_rotation = g_PlayerSword1->m_rotation;
+		break;
+
+	case TRUE:
+		XMFLOAT3 offset2 =
+		{
+			m_offset.x + g_moveSword[m_selectPlayer].x,
+			m_offset.y + g_moveSword[m_selectPlayer].y,
+			m_offset.z + g_moveSword[m_selectPlayer].z
+		};
+
+		rotationMatrixY = XMMatrixRotationY(g_PlayerSword2->m_rotation.y);
+		offsetVector = XMLoadFloat3(&offset2);
+		rotatedOffset = XMVector3Transform(offsetVector, rotationMatrixY);
+		playerPosition = XMLoadFloat3(&owner->m_position);
+		swordPosition = XMVectorAdd(playerPosition, rotatedOffset);
+		XMStoreFloat3(&m_weapon->m_position, swordPosition);
+
+		m_weapon->m_rotation = g_PlayerSword2->m_rotation;
+		break;
+
+	default:
+		break;
+	}
+	
+	// 攻撃してるとき
+	if (m_isAttacking)
+	{
+		m_attackTimer += (1.0f / 60.0f);
+
+		// 攻撃の有効時間が終わったら
+		if (m_attackTimer >= ATTACK_DURATION)
+		{
+			m_isAttacking = false; // 攻撃終了
+			m_collider->SetEnable(false); // 当たり判定止める
+		}
+	}
 }
 
-void Sword::Update(float deltaTime)
+void Sword::Draw()
 {
-    if (m_isAttacking)
-    {
-        m_attackTimer += deltaTime;
-        if (ShouldEndAttack())
-        {
-            EndAttack();
-        }
-    }
+	//ワールド行列作成
+	XMMATRIX	scale = XMMatrixScaling(
+		m_weapon->m_scale.x,
+		m_weapon->m_scale.y,
+		m_weapon->m_scale.z);
+	XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
+		m_weapon->m_rotation.x,
+		m_weapon->m_rotation.y,
+		m_weapon->m_rotation.z);
+	XMMATRIX	translation = XMMatrixTranslation(
+		m_weapon->m_position.x,
+		m_weapon->m_position.y,
+		m_weapon->m_position.z);
+	XMMATRIX	world = scale * rotation * translation;
+
+	//シェーダーへ行列をセット
+	Shader_SetWorldMatrix(world);
+
+	if (m_isAttacking)
+	{
+		ModelDraw(g_modelSword[1]);
+	}
+	else
+	{
+		ModelDraw(g_modelSword[0]);
+	}
 }
 
-
-void Sword::Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
+void Sword::OnWeaponCollision(GameObject* target)
 {
-    hal::dout << "Sword initialized." << std::endl;
-}
+	// 自分のオーナーだったら飛ばす
+	if (target == owner)
+	{
+		return;
+	}
 
-void Sword::Finalize()
-{
-    hal::dout << "Sword finalized." << std::endl;
-}
+	// 多重ヒット防止、既に一回の攻撃でダメージを与えてたら
+	if (m_hitTargets.count(target) > 0)
+	{
+		return;
+	}
 
-void Sword::Draw(const XMFLOAT3& playerPosition, const XMFLOAT3& playerRotation)
-{
-    m_position = playerPosition;
-    m_rotation = playerRotation;
+	if (m_isAttacking)
+	{
+		// 1Pか2Pか
+		switch (m_selectPlayer)
+		{
+		case FALSE: // 1Pだったら
+			if (target->m_tag == "Player2") // 相手がPlayer2の時のみ
+			{
+				m_hitTargets.insert(target);
+				target->TakeDamage(10.0f); // 仮に20ダメージ
+			}
+			break;
 
-    if (m_model && m_isEnable)
-    {
-        // 剣のモデル描画API呼び出し
-    }
-
-    if (m_isAttacking)
-    {
-        auto colliders = this->GetColliders<Collider>();
-    }
-}
-
-bool Sword::ShouldEndAttack() const
-{
-    return m_attackTimer >= m_attackDuration;
+		case TRUE: // 2Pだったら
+			if (target->m_tag == "Player") // 相手がPlayerの時のみ
+			{
+				m_hitTargets.insert(target);
+				target->TakeDamage(10.0f);
+			}
+			break;
+		}
+	}
 }
