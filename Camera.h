@@ -44,7 +44,11 @@ class CAMERA
 };
 
 void Camera_Initialize();
+void Camera2_Initialize();
+
 void Camera_Finalize();
+void Camera2_Finalize();
+
 void Camera_Update();
 void Camera2_Update();
 void Camera_Draw();
