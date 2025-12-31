@@ -29,18 +29,27 @@ void Camera_Initialize()
 	CameraObject.AtPosition = XMFLOAT3(0.0f, 1.0f, 0.0f);
 	CameraObject.UpVector = XMFLOAT3(0.0f, 1.0f, 0.0f);
 
-	Camera2Object.Position = XMFLOAT3(2.0f, 3.0f, -4.0f);
-	Camera2Object.AtPosition = XMFLOAT3(0.0f, 1.0f, 0.0f);
-	Camera2Object.UpVector = XMFLOAT3(0.0f, 1.0f, 0.0f);
-
 	CameraObject.Fov = 45.0f;
-	Camera2Object.Fov = 45.0f;
 
 	float width = (float)Direct3D_GetBackBufferWidth();
 	float height = (float)Direct3D_GetBackBufferHeight();
 	CameraObject.Aspect = (width / height) / 2;
 	CameraObject.NearClip = 0.5f;
 	CameraObject.FarClip = 1000.0f;
+	g_PlayerPosOld = GetPlayerPosition();//<<<<<<<<<<<<<<<<
+	
+}
+
+void Camera2_Initialize()
+{
+	Camera2Object.Position = XMFLOAT3(2.0f, 3.0f, -4.0f);
+	Camera2Object.AtPosition = XMFLOAT3(0.0f, 1.0f, 0.0f);
+	Camera2Object.UpVector = XMFLOAT3(0.0f, 1.0f, 0.0f);
+
+	float width = (float)Direct3D_GetBackBufferWidth();
+	float height = (float)Direct3D_GetBackBufferHeight();
+
+	Camera2Object.Fov = 45.0f;
 
 	Camera2Object.Aspect = (width / height) / 2;
 	Camera2Object.NearClip = 0.5f;
@@ -48,13 +57,21 @@ void Camera_Initialize()
 
 	g_PlayerPosOld = GetPlayerPosition();//<<<<<<<<<<<<<<<<
 	g_Player2PosOld = GetPlayer2Position();
+	Camera2Object.Projection = XMMatrixPerspectiveFovLH(
+		XMConvertToRadians(Camera2Object.Fov),
+		Camera2Object.Aspect,
+		Camera2Object.NearClip,
+		Camera2Object.FarClip);
+	g_Player2PosOld = GetPlayer2Position();
 }
-
 void Camera_Finalize()
 {
 	return;
 }
-
+void Camera2_Finalize()
+{
+	return;
+}
 void Camera_Update()
 {
 	//ƒ{[ƒ‹‚ÌÀ•WŽæ“¾<<<<<<<<<<<<<<<<<<<<<<

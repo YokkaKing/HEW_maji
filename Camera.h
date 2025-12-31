@@ -33,12 +33,18 @@ class CAMERA
 		float		FarClip;		//‰“–ÊƒNƒŠƒbƒv‹——£
 };
 
-void	Camera_Initialize();
-void	Camera_Finalize();
-void	Camera_Update();
-void    Camera2_Update();
-void	Camera_Draw();
-void    Camera2_Draw();
+
+void Camera_Initialize();
+void Camera2_Initialize();
+
+void Camera_Finalize();
+void Camera2_Finalize();
+
+void Camera_Update();
+void Camera2_Update();
+void Camera_Draw();
+void Camera2_Draw();
+
 
 void	SetCameraFov(float);
 void	SetCameraAspect(float);

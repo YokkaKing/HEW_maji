@@ -47,6 +47,8 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	PlayerInitialize(pDevice, pContext); // ボールの初期化
 	Player2Initialize(pDevice, pContext);
 	Camera_Initialize();	//カメラ初期化
+	Camera2_Initialize();	//カメラ初期化
+
 	//===========UI===========
 	Hpbar_Initialize(pDevice, pContext);
 	HpBar2_Initialize(pDevice, pContext);
@@ -57,7 +59,7 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 
 	//========================
 	//ビューポートの初期化
-	Viewport_Initialize(Direct3D_GetWindowHandle());
+	//Viewport_Initialize(Direct3D_GetWindowHandle());
 
 	//g_BgmID = LoadAudio("asset\\Audio\\bgm.wav");	//サウンドロード
 	//PlayAudio(g_BgmID, true);	//再生開始（ループあり）
@@ -88,6 +90,8 @@ void Game_Finalize()
 	PlayerFinalize();	// ボールの終了処理
 	Player2Finalize();
 	Camera_Finalize();	//カメラ終了処理
+	Camera2_Finalize();	//カメラ終了処理
+
 
 
 	//=======UI===========
@@ -160,8 +164,8 @@ void Game_Update()
 	Camera2_Update();   //カメラ2更新処理
 }
 
-void Game_Draw()
-{ 
+void Game_Draw_Player1()
+{
 	//=================================================
 	//	1つのフィールドで2人のプレイヤーを描画する場合、
 	//	シェーダーの行列関数を両画面の処理で呼ぶことで
@@ -171,12 +175,12 @@ void Game_Draw()
 	Shader_SetLight(Light.Light);	//ライト構造体をシェーダーへセット
 	SetDepthTest(TRUE);
 
-	ID3D11DeviceContext* g_pContext = Direct3D_GetDeviceContext();
-	
+	//ID3D11DeviceContext* g_pContext = Direct3D_GetDeviceContext();
+
 //================================================================
 //	画面分割用関数(左画面)
 //================================================================
-	g_pContext->RSSetViewports(1, &g_LeftViewPort);
+	//g_pContext->RSSetViewports(1, &g_LeftViewPort);
 
 	Camera_Draw();		//Drawの最初で呼ぶ！
 	Shader_SetMatrix(GetViewMatrix() * GetProjectionMatrix());
@@ -195,6 +199,7 @@ void Game_Draw()
 	Shader_SetLight(Light.Light);	//ライト構造体をシェーダーへセット
 	SetDepthTest(FALSE);
 	//===UI描画========
+
 	Hpbar_Draw(); //<--HpBar描画
 	Timer_Draw();
 	Number_Draw();
@@ -205,11 +210,10 @@ void Game_Draw()
 	Shader_SetLight(Light.Light);	//ライト構造体をシェーダーへセット
 	SetDepthTest(TRUE);
 	//============lightをまたtrueにして、camera2に影響がないように================
-
-//================================================================
-//	画面分割用関数(右画面)
-//================================================================
-	g_pContext->RSSetViewports(1, &g_RightViewPort);
+}
+void Game_Draw_Player2()
+{
+	//g_pContext->RSSetViewports(1, &g_RightViewPort);
 
 	Camera2_Draw();
 	Shader_SetMatrix(GetViewMatrix2() * GetProjectionMatrix2());

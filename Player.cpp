@@ -67,8 +67,9 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_pDevice = pDevice;
 	g_pContext = pContext;
 
-	g_Player.m_model = ModelLoad("asset\\model\\char_hammer.fbx");
+	g_Player.m_model = ModelLoad("asset\\model\\motion.fbx");
 	g_modelP1 = ModelLoad("asset\\model\\block.fbx");
+
 
 	g_Player.m_position = XMFLOAT3(0.0f, 0.5f, 1.0f);
 	g_Player.m_rotation = XMFLOAT3(0.0f, 0.0f, 0.0f);
@@ -305,16 +306,31 @@ void PlayerDraw()
 		0.05f);
 	XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
 		g_Player.m_rotation.x,
-		g_Player.m_rotation.y,
+		g_Player.m_rotation.y + XM_PI,
 		g_Player.m_rotation.z);
 	XMMATRIX	translation = XMMatrixTranslation(
 		g_Player.m_position.x,
-		g_Player.m_position.y - 0.25f,
+		g_Player.m_position.y+0.25f ,
 		g_Player.m_position.z);
 	XMMATRIX	world = scale * rotation * translation;
 
 	//シェーダーへ行列をセット
 	Shader_SetWorldMatrix(world);
+	float moveSpeed = sqrtf(g_Player.m_velocity.x * g_Player.m_velocity.x +
+		g_Player.m_velocity.z * g_Player.m_velocity.z);
+
+	if (moveSpeed > 0.001f) 
+	{
+		ModelUpdateAnimation(g_Player.m_model, 1.0f / 60.0f); // アニメーション更新
+	}
+	else
+	{
+
+		g_Player.m_model->AnimationTime = 0.0f;
+		ModelUpdateAnimation(g_Player.m_model, 0.0f); 
+	}
+	Shader_SetBones(g_Player.m_model);
+
 
 	//モデルの描画リクエスト
 	ModelDraw(g_Player.m_model);

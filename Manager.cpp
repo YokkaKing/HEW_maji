@@ -69,7 +69,7 @@ void Manager_Update()
 
 }
 
-void Manager_Draw()
+void Manager_Draw_Player1()
 { 
 	switch (g_Scene)	//現在シーンの描画関数を呼び出す
 	{
@@ -79,7 +79,7 @@ void Manager_Draw()
 			Title_Draw();	
 			break;
 		case SCENE_GAME:
-			Game_Draw();
+			Game_Draw_Player1();
 			break;
 		case SCENE_RESULT:
 			Result_Draw();
@@ -91,7 +91,28 @@ void Manager_Draw()
 	Fade_Draw();
 
 }
+void Manager_Draw_Player2()
+{
+	switch (g_Scene)	//現在シーンの描画関数を呼び出す
+	{
+	case SCENE_NONE:
+		break;
+	case SCENE_TITLE:
+		Title_Draw();
+		break;
+	case SCENE_GAME:
+		Game_Draw_Player2();
+		break;
+	case SCENE_RESULT:
+		Result_Draw();
+		break;
+	default:
+		break;
+	}
 
+	Fade_Draw();
+
+}
 void SetScene(SCENE scene) //シーンを切り替える
 {
 	//実行中のシーンを終了させる
