@@ -30,12 +30,7 @@ void Camera_Initialize()
 	CameraObject.UpVector = XMFLOAT3(0.0f, 1.0f, 0.0f);
 
 	CameraObject.Fov = 45.0f;
-<<<<<<< HEAD
-	CameraObject.suzukiTime = 0.0f;
-=======
-	Camera2Object.Fov = 45.0f;
 
->>>>>>> betatest
 	float width = (float)Direct3D_GetBackBufferWidth();
 	float height = (float)Direct3D_GetBackBufferHeight();
 	CameraObject.Aspect = (width / height) / 2;
@@ -67,7 +62,6 @@ void Camera2_Initialize()
 		Camera2Object.Aspect,
 		Camera2Object.NearClip,
 		Camera2Object.FarClip);
-	Camera2Object.suzukiTime = 0.0f;
 	g_Player2PosOld = GetPlayer2Position();
 }
 void Camera_Finalize()

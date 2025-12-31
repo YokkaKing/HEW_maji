@@ -509,25 +509,5 @@ void SetBlendState(BLENDSTATE blend)
 
 	g_pDeviceContext->OMSetBlendState(bState[blend], bFactor, 0xffffffff);
 
-<<<<<<< HEAD
-	//既に同じブレンドステートが設定されている場合はスキップ
-	if (bState[blend] == g_currentBlendState) return;
-
-	g_currentBlendState = bState[blend];
-
-	// BLENDSTATE_TRANSPARENCY の場合はブレンドファクタを渡す
-	if (blend == BLENDSTATE_TRANSPARENCY)
-	{
-		// R, G, B は 1.0f (フル) のままで、アルファのみ bFactor[3] (0.4f) を使用
-		float factor[4] = { 1.0f, 1.0f, 1.0f, bFactor[3] };
-		g_pDeviceContext->OMSetBlendState(bState[blend], factor, 0xffffffff);
-	}
-	else
-	{
-		// 他のブレンドステートは NULL (または {0,0,0,0}) を渡す
-		g_pDeviceContext->OMSetBlendState(bState[blend], bFactor, 0xffffffff);
-	}
 }
-=======
-}
->>>>>>> betatest
+

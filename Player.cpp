@@ -67,12 +67,9 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_pDevice = pDevice;
 	g_pContext = pContext;
 
-<<<<<<< HEAD
 	g_Player.m_model = ModelLoad("asset\\model\\motion.fbx");
-=======
-	g_Player.m_model = ModelLoad("asset\\model\\char_hammer.fbx");
 	g_modelP1 = ModelLoad("asset\\model\\block.fbx");
->>>>>>> betatest
+
 
 	g_Player.m_position = XMFLOAT3(0.0f, 0.5f, 1.0f);
 	g_Player.m_rotation = XMFLOAT3(0.0f, 0.0f, 0.0f);
@@ -319,7 +316,6 @@ void PlayerDraw()
 
 	//シェーダーへ行列をセット
 	Shader_SetWorldMatrix(world);
-<<<<<<< HEAD
 	float moveSpeed = sqrtf(g_Player.m_velocity.x * g_Player.m_velocity.x +
 		g_Player.m_velocity.z * g_Player.m_velocity.z);
 
@@ -334,8 +330,7 @@ void PlayerDraw()
 		ModelUpdateAnimation(g_Player.m_model, 0.0f); 
 	}
 	Shader_SetBones(g_Player.m_model);
-=======
->>>>>>> betatest
+
 
 	//モデルの描画リクエスト
 	ModelDraw(g_Player.m_model);
