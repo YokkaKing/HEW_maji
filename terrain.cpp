@@ -668,17 +668,6 @@ void TerrainDraw()
 	// 1Pが変身してないときは描画しない
 	if (g_Terrain.m_isChange[0])
 	{
-		//透過処理
-		//1Pカメラが障害物に衝突しているか確認
-		//CameraObjectは1Pのカメラと仮定
-		bool isP1Blocked = GetCameraObj().CameraIsInsideObj;
-
-		//if (isP1Blocked)
-		//{
-		//	//衝突している場合は透過ブレンドを有効にする
-		//	SetBlendState(BLENDSTATE_TRANSPARENCY);
-		//}
-
 		//ワールド行列作成
 		XMMATRIX	scale = XMMatrixScaling(
 			g_Terrain.m_terrainScale[0].x,
@@ -705,26 +694,10 @@ void TerrainDraw()
 
 		//モデルの描画リクエスト
 		ModelDraw(g_Terrain.m_moveTerrain[0]);
-
-		if (isP1Blocked)
-		{
-			//ブレンドステートを元に戻す (次の描画に影響を与えないように)
-			SetBlendState(BLENDSTATE_NONE);
-		}
 	}
 	// 2Pが変身してないときは描画しない
 	if (g_Terrain.m_isChange[1])
 	{
-		//2Pカメラが障害物に衝突しているか確認
-		//Camera2Objectは2Pのカメラと仮定
-		bool isP2Blocked = GetCamera2Obj().CameraIsInsideObj;
-
-		//if (isP2Blocked)
-		//{
-		//	//衝突している場合は透過ブレンドを有効にする
-		//	SetBlendState(BLENDSTATE_TRANSPARENCY);
-		//}
-
 		//ワールド行列作成
 		XMMATRIX	scale = XMMatrixScaling(
 			g_Terrain.m_terrainScale[1].x,
@@ -751,12 +724,6 @@ void TerrainDraw()
 
 		//モデルの描画リクエスト
 		ModelDraw(g_Terrain.m_moveTerrain[1]);
-
-		if (isP2Blocked)
-		{
-			//ブレンドステートを元に戻す (次の描画に影響を与えないように)
-			SetBlendState(BLENDSTATE_NONE);
-		}
 	}
 
 	/*
@@ -821,7 +788,6 @@ void TerrainDraw()
 	}
 	*/
 }
-
 // 簡単な四角形の当たり判定を作る場合
 void TERRAIN::SetObject(XMFLOAT3 pos, XMFLOAT3 scl, std::string tag, int lay)
 {
@@ -835,7 +801,7 @@ void TERRAIN::SetObject(XMFLOAT3 pos, XMFLOAT3 scl, std::string tag, int lay)
 	if (raw_ptr != nullptr)
 	{
 		if (raw_ptr->m_tag == "HILL") hills.push_back(raw_ptr);
-		if (raw_ptr->m_tag == "WALL") walls.push_back(raw_ptr);
+		if (raw_ptr->m_tag == "Wall") walls.push_back(raw_ptr);
 		if (raw_ptr->m_tag == "TREE") trees.push_back(raw_ptr);
 
 		terrainObjects.push_back(std::move(obj_owner));
@@ -1140,7 +1106,7 @@ void TERRAIN::CreateHit(std::vector<TERRAIN_OBJECT> terrain, XMFLOAT3 motherPosi
 			break;
 
 		case TERRAIN_TYPE::WALL:
-			SetObject(pos, terrain[i].m_size, "WALL", 0);
+			SetObject(pos, terrain[i].m_size, "Wall", 0);
 			walls[i]->m_position = pos;	// 座標を格納
 			walls[i]->m_velocity = terrain[i].m_distance;
 			walls[i]->m_scale = terrain[i].m_size;

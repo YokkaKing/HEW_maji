@@ -1,8 +1,23 @@
-#pragma once
-#include <d3d11.h>
-#include <DirectXMath.h>
-using namespace DirectX;
+/*
+* ファイル名 IWeapon.h
+* タイトル   私武器
+* 作成者     ☆†◇糸井◇†☆
+* 作成日     未定
+* 更新日     未定
+*/
 
+#ifndef IWEAPON_H
+#define IWEAPON_H
+
+//================================================================
+//	インクルード
+//================================================================
+#include<d3d11.h>
+#include<DirectXMath.h>
+#include"gameObject.h"
+#include <memory>
+#include <unordered_set>
+using namespace DirectX;
 
 enum class WEAPON_TYPE
 {
@@ -12,34 +27,35 @@ enum class WEAPON_TYPE
     SHURIKEN,   // 手裏剣 (投擲)
     SPEAR       // 槍 (突き)
 };
+
 // 武器の基本機能を提供するインターフェース
 class IWeapon
 {
 public:
-    // 純粋仮想関数 (派生クラスで必ず実装が必要)
+    // 武器を所有するGameObject(プレイヤー)
+    GameObject* owner = nullptr;
+    // 武器自身のゲームオブジェクト
+    std::unique_ptr<GameObject> m_weapon;
+
+    // 既にヒットしたGameObjectを記録するセット(多重ヒット防止)
+    std::unordered_set<GameObject*> m_hitTargets;
+
+    float m_damage = 10.0f; // 武器の基本ダメージ量
+
+    bool m_selectPlayer = false; // 1Pか2Pか false=1P true=2P
+
+public:
+    IWeapon(GameObject* o) : owner(o) {}
     virtual ~IWeapon() = default;
 
-    virtual void Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext) = 0;
-    virtual void Finalize() = 0;
+    virtual void Update() = 0;
+    virtual void Draw() = 0;
 
-    // 攻撃開始 (プレイヤーの位置と回転を受け取る)
-    virtual void StartAttack(const XMFLOAT3& playerPosition, const XMFLOAT3& playerRotation) = 0;
+    // 攻撃開始時にコライダーを有効化
+    virtual void Attack() = 0;
 
-    // 攻撃終了
-    virtual void EndAttack() = 0;
-
-    // 毎フレームの更新 (タイマーなど)
-    virtual void Update(float deltaTime) = 0;
-
-    // 描画 (プレイヤーの位置と回転を受け取る)
-    virtual void Draw(const XMFLOAT3& playerPosition, const XMFLOAT3& playerRotation) = 0;
-
-    // 攻撃が終了すべきかどうか (例: タイマー切れ)
-    virtual bool ShouldEndAttack() const = 0;
-
-    // 現在攻撃中かどうか
-    virtual bool IsAttacking() const = 0;
-
-    //武器のタイプを取得する関数
-    virtual WEAPON_TYPE GetWeaponType() const = 0; 
+    // 衝突応答関数
+    virtual void OnWeaponCollision(GameObject* target) = 0;
 };
+
+#endif // IWEAPON_H

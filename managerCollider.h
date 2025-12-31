@@ -79,6 +79,9 @@ private:
     static CollisionInfo CheckBoxBox(const BoxCollider* box1, const BoxCollider* box2);
     static CollisionInfo CheckSphereSphere(const SphereCollider* sphere1, const SphereCollider* sphere2);
     static CollisionInfo CheckBoxSphere(const BoxCollider* box, const SphereCollider* sphere);
+
+    // Õ“Ë”»’è(‰ñ“]‘Î‰)
+    static CollisionInfo CheckBoxBoxOBB(const BoxCollider* box1, const BoxCollider* box2);
 };
 
 #endif // MANAGER_COLLIDER_H

@@ -34,8 +34,7 @@ static void releaseBackBuffer(); // バックバッファの解放
 
 
 static float	bFactor[4] = { 0.0f,0.0f,0.0f,0.0f };
-static ID3D11BlendState* bState[BLENDSTATE_MAX] = { nullptr };
-static ID3D11BlendState* g_currentBlendState = nullptr;
+static ID3D11BlendState* bState[BLENDSTATE_MAX];
 static ID3D11DepthStencilState* g_DepthStateEnable;
 static ID3D11DepthStencilState* g_DepthStateDisable;
 
@@ -266,18 +265,6 @@ bool Direct3D_Initialize(HWND hWnd, HWND hWnd2)
 	blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_SUBTRACT;//<<<<表示色 = 背景 - ポリゴン
 	//	blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_REV_SUBTRACT;//<<<<表示色 = 背景 - ポリゴン
 	g_pDevice->CreateBlendState(&blendDesc, &bState[BLENDSTATE_SUB]);
-
-	//透過用ブレンド
-	blendDesc.RenderTarget[0].BlendEnable = TRUE;
-	blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_BLEND_FACTOR;
-	blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_BLEND_FACTOR;
-	blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
-	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
-	blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
-	blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
-	hr = g_pDevice->CreateBlendState(&blendDesc, &bState[BLENDSTATE_TRANSPARENCY]);
-	if (FAILED(hr)) return false;
-	bFactor[3] = 0.4f;
 
 	SetBlendState(BLENDSTATE_ALFA);//デフォルト設定
 
@@ -520,9 +507,9 @@ void releaseBackBuffer()
 void SetBlendState(BLENDSTATE blend)
 {
 
-	//範囲チェック
-	if (blend < BLENDSTATE_NONE || blend >= BLENDSTATE_MAX) return;
+	g_pDeviceContext->OMSetBlendState(bState[blend], bFactor, 0xffffffff);
 
+<<<<<<< HEAD
 	//既に同じブレンドステートが設定されている場合はスキップ
 	if (bState[blend] == g_currentBlendState) return;
 
@@ -541,3 +528,6 @@ void SetBlendState(BLENDSTATE blend)
 		g_pDeviceContext->OMSetBlendState(bState[blend], bFactor, 0xffffffff);
 	}
 }
+=======
+}
+>>>>>>> betatest
