@@ -30,6 +30,8 @@
 #include "number.h"
 #include "Hp.h"
 #include "Hp2.h"
+
+#include"Item.h"
 //================================================================
 //	グローバル変数
 //================================================================
@@ -38,14 +40,19 @@ LIGHTOBJECT		Light;//<<<<<<ライト管理オブジェクト
 std::vector<GameObject*> g_gameObjects;
 static	int		g_BgmID = NULL;	//サウンド管理ID
 
+ITEM_SPONER g_sponer;
+
 void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
 	//Controller_Initialize();
-
 	Field_Initialize(pDevice, pContext); // フィールドの初期化
 	TerrainInitialize(pDevice, pContext);
+	
+	g_sponer.Initialize();
+
 	PlayerInitialize(pDevice, pContext); // ボールの初期化
 	Player2Initialize(pDevice, pContext);
+
 	Camera_Initialize();	//カメラ初期化
 	Camera2_Initialize();	//カメラ初期化
 
@@ -87,6 +94,9 @@ void Game_Finalize()
 {
 	Field_Finalize();	// フィールドの終了処理
 	TerrainFinalize();
+
+	g_sponer.Finalize();
+
 	PlayerFinalize();	// ボールの終了処理
 	Player2Finalize();
 	Camera_Finalize();	//カメラ終了処理
@@ -117,6 +127,9 @@ void Game_Update()
 	Player2Update();
 	Field_Update();
 	TerrainUpdate();
+	
+	g_sponer.Update();
+
 	//=======UI===========
 	Hpbar_Update();
 	HpBar2_Update();
