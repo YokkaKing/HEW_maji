@@ -22,6 +22,7 @@ extern PLAYER g_Player;
 extern PLAYER2 g_Player2;
 extern Controller g_Controller;
 const char* INITIAL_MODEL_PATH;
+const int EVOLUTION_LIMIT_FRAME = 2 * 60;
 
 void EvolutionInitialize()
 {
@@ -37,79 +38,62 @@ void EvolutionFinalize()
 void EvolvePlayer()
 {
     const char* newModelPath = nullptr;
-    //共通の進化条件: 未進化 (EVOLUTION_TYPE_NONE) の場合のみ
 
     if (g_Player.EvolutionType == EVOLUTION_TYPE::EVOLUTION_TYPE_NONE)
     {
         bool evolved = false;
-        // Eキーが押されたらタイプAに変身
         if (g_Controller.IsButtonPushed(ControllerButton::L_SHOULDER))
         {
             g_Player.EvolutionType = EVOLUTION_TYPE::EVOLUTION_TYPE_A;
-            newModelPath = "asset\\model\\ball.fbx"; // A用モデルパス
+            newModelPath = "asset\\model\\ball.fbx";
             evolved = true;
         }
-        // Rキーが押されたらタイプBに変身
         else if (g_Controller.IsButtonPushed(ControllerButton::R_SHOULDER))
         {
             g_Player.EvolutionType = EVOLUTION_TYPE::EVOLUTION_TYPE_B;
-            newModelPath = "asset\\model\\tree.fbx"; // B用モデルパス
+            newModelPath = "asset\\model\\tree.fbx";
             evolved = true;
         }
 
-        // 変身が完了したら共通のスケール変更を適用
         if (evolved)
         {
-            if (g_Player.m_model != nullptr)
-            {
-                ModelRelease(g_Player.m_model);
-            }
-
-            //新しいモデルをロード
+            if (g_Player.m_model != nullptr) ModelRelease(g_Player.m_model);
             g_Player.m_model = ModelLoad(newModelPath);
-
-            // 進化後の共通処理：スケール変更
-           // g_Player.scale = XMFLOAT3(1.5f, 1.5f, 1.5f);
+            g_Player.EvolutionTimer = EVOLUTION_LIMIT_FRAME;
         }
     }
-    else if (g_Player.EvolutionType != EVOLUTION_TYPE::EVOLUTION_TYPE_NONE)
+    else // 進化中
     {
         bool unevolve = false;
 
+        // タイマーカウントダウン
+        if (g_Player.EvolutionTimer > 0)
+        {
+            g_Player.EvolutionTimer--;
+            if (g_Player.EvolutionTimer <= 0) unevolve = true;
+        }
+
+        // 手動解除判定
         if (g_Player.EvolutionType == EVOLUTION_TYPE::EVOLUTION_TYPE_A)
         {
-            // タイプA の時、LT (左トリガー) が完全に押されたら解除
-            if (g_Controller.GetLeftTrigger() >= 0.9f)
-            {
-                unevolve = true;
-            }
+            if (g_Controller.GetLeftTrigger() >= 0.9f) unevolve = true;
         }
         else if (g_Player.EvolutionType == EVOLUTION_TYPE::EVOLUTION_TYPE_B)
         {
-            // タイプB の時、RT (右トリガー) が完全に押されたら解除
-            if (g_Controller.GetRightTrigger() >= 0.9f)
-            {
-                unevolve = true;
-            }
+            if (g_Controller.GetRightTrigger() >= 0.9f) unevolve = true;
         }
-        if (unevolve) // 解除条件が満たされたらリセット処理を実行
+
+        if (unevolve)
         {
-            // 古いモデル（進化後のモデル）を解放
-            if (g_Player.m_model != nullptr)
-            {
-                ModelRelease(g_Player.m_model);
-            }
-            // 進化タイプをリセット
+            if (g_Player.m_model != nullptr) ModelRelease(g_Player.m_model);
             g_Player.EvolutionType = EVOLUTION_TYPE::EVOLUTION_TYPE_NONE;
-
-            // 初期モデルをロード
             g_Player.m_model = ModelLoad(INITIAL_MODEL_PATH);
-
-            // スケールを初期値に戻す (1.0倍)
             g_Player.m_scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
+            g_Player.EvolutionTimer = 0;
         }
     }
 }
+
 
 void ApplyEvolutionEffect()
 {
@@ -145,70 +129,49 @@ void ApplyEvolutionEffect()
 void EvolvePlayer2()
 {
     const char* newModelPath = nullptr;
-    //共通の進化条件: 未進化 (EVOLUTION_TYPE_NONE) の場合のみ
+
     if (g_Player2.EvolutionType == EVOLUTION_TYPE2::EVOLUTION_TYPE_NONE)
     {
         bool evolved = false;
-
-        //タイプAに変身
         if (Keyboard_IsKeyDownTrigger(KK_Y))
         {
             g_Player2.EvolutionType = EVOLUTION_TYPE2::EVOLUTION_TYPE_A;
-            newModelPath = "asset\\model\\ball.fbx"; // A用モデルパス
+            newModelPath = "asset\\model\\ball.fbx";
             evolved = true;
         }
-        //タイプBに変身
         else if (Keyboard_IsKeyDownTrigger(KK_I))
         {
             g_Player2.EvolutionType = EVOLUTION_TYPE2::EVOLUTION_TYPE_B;
-            newModelPath = "asset\\model\\tree.fbx"; // B用モデルパス
+            newModelPath = "asset\\model\\tree.fbx";
             evolved = true;
         }
 
-        // 変身が完了したら共通のスケール変更を適用
         if (evolved)
         {
-            if (g_Player2.m_model != nullptr)
-            {
-                ModelRelease(g_Player2.m_model);
-            }
-
-            //新しいモデルをロード
+            if (g_Player2.m_model != nullptr) ModelRelease(g_Player2.m_model);
             g_Player2.m_model = ModelLoad(newModelPath);
-
-            // 進化後の共通処理：スケール変更
-            // g_Player2.scale = XMFLOAT3(1.5f, 1.5f, 1.5f);
+            g_Player2.EvolutionTimer = EVOLUTION_LIMIT_FRAME;
         }
     }
-
-    else if (g_Player2.EvolutionType != EVOLUTION_TYPE2::EVOLUTION_TYPE_NONE)
+    else // 進化中
     {
         bool unevolve = false;
-        if (g_Player2.EvolutionType == EVOLUTION_TYPE2::EVOLUTION_TYPE_A ||
-            g_Player2.EvolutionType == EVOLUTION_TYPE2::EVOLUTION_TYPE_B)
+
+        if (g_Player2.EvolutionTimer > 0)
         {
-            //キーボード KK_F が押されたら解除 (タイプA, B共通)
-            if (Keyboard_IsKeyDownTrigger(KK_O))
-            {
-                unevolve = true;
-            }
+            g_Player2.EvolutionTimer--;
+            if (g_Player2.EvolutionTimer <= 0) unevolve = true;
         }
 
-        if (unevolve) // 解除条件が満たされたらリセット処理を実行
+        if (Keyboard_IsKeyDownTrigger(KK_O)) unevolve = true;
+
+        if (unevolve)
         {
-            // 古いモデル（進化後のモデル）を解放
-            if (g_Player2.m_model != nullptr)
-            {
-                ModelRelease(g_Player2.m_model);
-            }
-            // 進化タイプをリセット
+            if (g_Player2.m_model != nullptr) ModelRelease(g_Player2.m_model);
             g_Player2.EvolutionType = EVOLUTION_TYPE2::EVOLUTION_TYPE_NONE;
-
-            // 初期モデルをロード
             g_Player2.m_model = ModelLoad(INITIAL_MODEL_PATH);
-
-            // スケールを初期値に戻す (1.0倍)
             g_Player2.m_scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
+            g_Player2.EvolutionTimer = 0;
         }
     }
 }
@@ -244,70 +207,49 @@ void ApplyEvolutionEffect2()
 void EvolvePlayer3()
 {
     const char* newModelPath = nullptr;
-    //共通の進化条件: 未進化 (EVOLUTION_TYPE_NONE) の場合のみ
+
     if (g_Player.EvolutionType == EVOLUTION_TYPE::EVOLUTION_TYPE_NONE)
     {
         bool evolved = false;
-
-        //タイプAに変身
         if (Keyboard_IsKeyDownTrigger(KK_T))
         {
             g_Player.EvolutionType = EVOLUTION_TYPE::EVOLUTION_TYPE_A;
-            newModelPath = "asset\\model\\ball.fbx"; // A用モデルパス
+            newModelPath = "asset\\model\\ball.fbx";
             evolved = true;
         }
-        //タイプBに変身
         else if (Keyboard_IsKeyDownTrigger(KK_R))
         {
             g_Player.EvolutionType = EVOLUTION_TYPE::EVOLUTION_TYPE_B;
-            newModelPath = "asset\\model\\tree.fbx"; // B用モデルパス
+            newModelPath = "asset\\model\\tree.fbx";
             evolved = true;
         }
 
-        // 変身が完了したら共通のスケール変更を適用
         if (evolved)
         {
-            if (g_Player.m_model != nullptr)
-            {
-                ModelRelease(g_Player.m_model);
-            }
-
-            //新しいモデルをロード
+            if (g_Player.m_model != nullptr) ModelRelease(g_Player.m_model);
             g_Player.m_model = ModelLoad(newModelPath);
-
-            // 進化後の共通処理：スケール変更
-            // g_Player2.scale = XMFLOAT3(1.5f, 1.5f, 1.5f);
+            g_Player.EvolutionTimer = EVOLUTION_LIMIT_FRAME;
         }
     }
-
-    else if (g_Player.EvolutionType != EVOLUTION_TYPE::EVOLUTION_TYPE_NONE)
+    else // 進化中
     {
         bool unevolve = false;
-        if (g_Player.EvolutionType == EVOLUTION_TYPE::EVOLUTION_TYPE_A ||
-            g_Player.EvolutionType == EVOLUTION_TYPE::EVOLUTION_TYPE_B)
+
+        if (g_Player.EvolutionTimer > 0)
         {
-            //キーボード KK_F が押されたら解除 (タイプA, B共通)
-            if (Keyboard_IsKeyDownTrigger(KK_F))
-            {
-                unevolve = true;
-            }
+            g_Player.EvolutionTimer--;
+            if (g_Player.EvolutionTimer <= 0) unevolve = true;
         }
 
-        if (unevolve) // 解除条件が満たされたらリセット処理を実行
+        if (Keyboard_IsKeyDownTrigger(KK_F)) unevolve = true;
+
+        if (unevolve)
         {
-            // 古いモデル（進化後のモデル）を解放
-            if (g_Player.m_model != nullptr)
-            {
-                ModelRelease(g_Player.m_model);
-            }
-            // 進化タイプをリセット
+            if (g_Player.m_model != nullptr) ModelRelease(g_Player.m_model);
             g_Player.EvolutionType = EVOLUTION_TYPE::EVOLUTION_TYPE_NONE;
-
-            // 初期モデルをロード
             g_Player.m_model = ModelLoad(INITIAL_MODEL_PATH);
-
-            // スケールを初期値に戻す (1.0倍)
             g_Player.m_scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
+            g_Player.EvolutionTimer = 0;
         }
     }
 }
