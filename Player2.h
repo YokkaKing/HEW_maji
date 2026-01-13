@@ -42,6 +42,7 @@ class PLAYER2 : public GameObject
 public:
 	float           FrictionRate;   // 速度減衰率
 	EVOLUTION_TYPE2  EvolutionType;  // 進化タイプ (A or B or NONE)
+	int EvolutionTimer;
 	PLAYER2_STATE	State;		//状態
 	std::unique_ptr<IWeapon> m_currentWeapon = nullptr; // 現在装備中の武器
 	bool			m_isDead = false; // 死亡フラグ
