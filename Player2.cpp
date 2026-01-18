@@ -41,7 +41,9 @@ ID3D11DeviceContext* g_pContext2;
 Controller g_Controller2(0); //ID 0のコントローラーを使用
 MODEL* g_modelP2;
 unsigned int g_changeP2;
-
+static bool g_Player2AttackPlaying = false; // 攻撃ワンショット再生中フラグ
+static bool g_Player2JumpPlaying = false; // ジャンプワンショット再生中フラグ
+static int g_Player2CurrentAnim = 0; // 0: idle, 1: move, 2: attack 3:jump
 void Player2Die()
 {
 	hal::dout << "Player2 died!" << std::endl;
@@ -63,7 +65,7 @@ void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_pDevice2 = pDevice;
 	g_pContext2 = pContext;
 
-	g_Player2.m_model = ModelLoad("asset\\model\\char_bow.fbx");
+	g_Player2.m_model = ModelLoad("asset\\model\\char_sword_motion_b.fbx");
 	g_modelP2 = ModelLoad("asset\\model\\block.fbx");
 
 	g_Player2.m_position = XMFLOAT3(2.0f, 0.5f, 2.0f);
@@ -104,7 +106,7 @@ void	Player2Update()
 	ApplyEvolutionEffect2();   // 進化タイプに応じたパラメータを適用
 	if (g_Player2.m_isDead)return;	//死亡している場合は更新処理をスキップ
 	
-	//================================================================
+//================================================================
 //	武器変更処理(一旦)
 //================================================================
 	if (Keyboard_IsKeyDownTrigger(KK_D2))
@@ -115,27 +117,28 @@ void	Player2Update()
 		{
 			g_changeP2 = 0;
 		}
-
 		switch (g_changeP2)
 		{
 		case 0:
 			g_Player2.EquipWeapon(std::make_unique<Sword>(&g_Player2, FALSE));
+			g_Player2.m_model = ModelLoad("asset\\model\\char_sword_motion_b.fbx");
 			break;
-
 		case 1:
 			g_Player2.EquipWeapon(std::make_unique<Spear>(&g_Player2, FALSE));
+
 			break;
 
 		case 2:
-			// g_Player2.EquipWeapon(std::make_unique<Hammer>(&g_Player, FALSE));
+			 g_Player2.EquipWeapon(std::make_unique<Hammer>(&g_Player2, FALSE));
 			break;
 
 		case 3:
-			// g_Player2.EquipWeapon(std::make_unique<Arrow>(&g_Player, FALSE));
+			 g_Player2.EquipWeapon(std::make_unique<Arrow>(&g_Player2, FALSE));
 			break;
 
 		case 4:
-			// g_Player2.EquipWeapon(std::make_unique<Shuriken>(&g_Player, FALSE));
+			 g_Player2.EquipWeapon(std::make_unique<Shuriken>(&g_Player2, FALSE));
+			 g_Player2.m_model = ModelLoad("asset\\model\\char_shuriken_motion_b.fbx");
 			break;
 
 		default:
@@ -153,6 +156,18 @@ void	Player2Update()
 		if (g_Player2.m_currentWeapon)
 		{
 			g_Player2.m_currentWeapon->Attack(); // 攻撃
+			switch (g_changeP2)
+			{
+			case 0: // Sword
+				ModelPlayClip(g_Player2.m_model, 301, 360, 60.0f, false, 2.0f);
+				break;
+			case 4:
+				ModelPlayClip(g_Player2.m_model, 151, 210, 60.0f, false, 2.0f);
+				break;
+			}
+			
+			g_Player2AttackPlaying = true;
+			g_Player2CurrentAnim = 2; // attack 状態
 		}
 
 		hal::dout << "Playerから攻撃した！\n";
@@ -173,6 +188,107 @@ void	Player2Update()
 		g_Player2.m_isDead = true;
 		Player2Die();
 	}
+	//================================================================
+	// アニメーション処理
+	// ================================================================
+	// 移動速度判定
+	float moveSpeed = sqrtf(g_Player2.m_velocity.x * g_Player2.m_velocity.x +
+		g_Player2.m_velocity.z * g_Player2.m_velocity.z);
+	bool isMoving = (moveSpeed > 0.001f);
+
+	// アニメーション状態管理：
+	//  - 攻撃ワンショット再生中はその完了を監視し、完了したら移動/待機ループへ復帰
+	//  - 攻撃中でなければ移動/待機のループアニメを確実に再生しておく
+	if (g_Player2AttackPlaying || g_Player2JumpPlaying)
+	{
+		// ワンショットクリップが終了したか確認
+		if (ModelConsumeClipFinished(g_Player2.m_model))
+		{
+			// 攻撃アニメ完了: フラグ解除して適切なループへ戻す
+			g_Player2AttackPlaying = false;
+			g_Player2JumpPlaying = false;
+			if (isMoving)
+			{
+				// 移動ループ
+				if (g_Player2CurrentAnim != 1)
+				{
+					switch (g_changeP2)
+					{
+					case 0: // Sword
+						ModelPlayClip(g_Player2.m_model, 201, 245, 60.0f, true, 1.5f);
+						break;
+					case 4:
+						ModelPlayClip(g_Player2.m_model, 121, 150, 60.0f, true, 2.0f);
+						break;
+					}
+
+					g_Player2CurrentAnim = 1;
+				}
+			}
+			else
+			{
+				// 待機ループ（0~60）
+				if (g_Player2CurrentAnim != 0)
+				{
+					switch (g_changeP2)
+					{
+					case 0: // Sword
+						ModelPlayClip(g_Player2.m_model, 0, 60, 60.0f, true);
+						break;
+					case 4:
+						ModelPlayClip(g_Player2.m_model, 0, 60, 60.0f, true);
+						break;
+					}
+
+					g_Player2CurrentAnim = 0;
+				}
+			}
+		}
+		// 攻撃中は移動による切替を行わない（攻撃優先）
+	}
+	else
+	{
+		// 攻撃中でなければ移動/待機を維持
+		if (isMoving)
+		{
+			if (g_Player2CurrentAnim != 1)
+			{
+				switch (g_changeP2)
+				{
+				case 0: // Sword
+					ModelPlayClip(g_Player2.m_model, 201, 245, 60.0f, true, 1.5f);
+					break;
+				case 4:
+					ModelPlayClip(g_Player2.m_model, 121, 150, 60.0f, true, 2.0f);
+					break;
+				}
+				
+				g_Player2CurrentAnim = 1;
+			}
+		}
+		else
+		{
+			if (g_Player2CurrentAnim != 0)
+			{
+				switch (g_changeP2)
+				{
+				case 0: // Sword
+					ModelPlayClip(g_Player2.m_model, 0, 60, 60.0f, true);
+					break;
+				case 4:
+					ModelPlayClip(g_Player2.m_model, 0, 60, 60.0f, true);
+					break;
+				}
+				
+				g_Player2CurrentAnim = 0;
+			}
+		}
+	}
+
+	// アニメーション時間の進行は Update 側で一度だけ行う（フレーム固定レート環境を想定して 1/60 を使用）
+	// deltaTime が利用可能ならそちらを使ってください（例: ModelUpdateAnimation(g_Player.m_model, deltaTime);）
+	ModelUpdateAnimation(g_Player2.m_model, 1.0f / 60.0f);
+
 }
 
 void Player2_ManualMove()
@@ -255,6 +371,18 @@ void Player2_ManualMove()
 		g_Player2.m_velocity.y = JUMP_FORCE;
 		g_Player2.m_isGround = false;
 		g_Player2.m_koyoteTime = 0.0f;
+		switch (g_changeP2)
+		{
+		case 0: // Sword
+			ModelPlayClip(g_Player2.m_model, 521, 560, 60.0f, false, 1.5f);
+			break;
+		case 4:
+			ModelPlayClip(g_Player2.m_model, 261, 350, 60.0f, false, 1.5f);
+			break;
+		}
+		
+		g_Player2JumpPlaying = true;
+		g_Player2CurrentAnim = 3; // ジャンプ 状態
 	}
 	else
 	{
@@ -270,12 +398,12 @@ void	Player2Draw()
 {
 	//ワールド行列作成
 	XMMATRIX	scale = XMMatrixScaling(
-		0.05f,
-		0.05f,
-		0.05f);
+		0.01f*0.6f,
+		0.01f,
+		0.01f * 0.6f);
 	XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
 		g_Player2.m_rotation.x,
-		g_Player2.m_rotation.y,
+		g_Player2.m_rotation.y+ XM_PI,
 		g_Player2.m_rotation.z);
 	XMMATRIX	translation = XMMatrixTranslation(
 		g_Player2.m_position.x,
@@ -286,6 +414,7 @@ void	Player2Draw()
 	//シェーダーへ行列をセット
 	Shader_SetWorldMatrix(world);
 
+	Shader_SetBones(g_Player2.m_model);
 	//モデルの描画リクエスト
 	ModelDraw(g_Player2.m_model);
 
@@ -312,7 +441,7 @@ void	Player2Draw()
 	//シェーダーへ行列をセット
 	Shader_SetWorldMatrix(world);
 
-	ModelDraw(g_modelP2);
+	//ModelDraw(g_modelP2);
 }
 
 XMFLOAT3 GetPlayer2Position()

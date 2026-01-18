@@ -26,7 +26,7 @@ extern Controller g_Controller;
 
 void Camera_Initialize()
 { 
-	CameraObject.Position = XMFLOAT3(0.0f, 3.0f, -4.0f);
+	CameraObject.Position = XMFLOAT3(0.0f, 3.0f, -10.0f);
 	CameraObject.AtPosition = XMFLOAT3(0.0f, 1.0f, 0.0f);
 	CameraObject.UpVector = XMFLOAT3(0.0f, 1.0f, 0.0f);
 
@@ -105,7 +105,7 @@ void Camera_Update()
 	//回転角度の累積と制限
 	//現在の累積角度を保持する静的変数 (初期値 0.0f)
 	static float nowYaw = 0.0f;   // 水平回転 (左右)
-	static float nowPitch = 0.0f; // 垂直回転 (上下)
+	static float nowPitch = 20.0f; // 垂直回転 (上下)
 
 	//コントローラー・キーボードからの入力を取得
 	float inputX = g_Controller.GetRightStickX() * -2.0f;
@@ -131,7 +131,7 @@ void Camera_Update()
 
 	//座標の再計算
 	//プレイヤーからの基本距離 (初期設定 -4.0f に基づき 4.0f)
-	float distance = 4.0f;
+	float distance = 6.0f;
 
 	//回転行列の作成 (Yaw, Pitch, Roll)
 	XMMATRIX matRot = XMMatrixRotationRollPitchYaw(
@@ -241,7 +241,7 @@ void Camera2_Update()
 	//回転角度の累積と制限
 	//現在の累積角度を保持する静的変数 (初期値 0.0f)
 	static float nowYaw = 0.0f;   // 水平回転 (左右)
-	static float nowPitch = 0.0f; // 垂直回転 (上下)
+	static float nowPitch = 22.0f; // 垂直回転 (上下)
 
 	//コントローラー・キーボードからの入力を取得
 	float inputX = g_Controller.GetRightStickX() * -2.0f;
@@ -267,7 +267,7 @@ void Camera2_Update()
 
 	//座標の再計算
 	//プレイヤーからの基本距離 (初期設定 -4.0f に基づき 4.0f)
-	float distance = 4.0f;
+	float distance = 6.0f;
 
 	//回転行列の作成 (Yaw, Pitch, Roll)
 	XMMATRIX matRot = XMMatrixRotationRollPitchYaw(
