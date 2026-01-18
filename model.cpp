@@ -1,4 +1,4 @@
-
+﻿
 #define NOMINMAX
 
 
@@ -66,17 +66,17 @@ MODEL* ModelLoad(const char* FileName)
 
 	assert(model->AiScene);
 
-	model->VertexBuffer = new ID3D11Buffer * [model->AiScene->mNumMeshes];//���_�f�[�^�|�C���^�[
-	model->IndexBuffer = new ID3D11Buffer * [model->AiScene->mNumMeshes];//�C���f�b�N�X�f�[�^�|�C���^�[
+	model->VertexBuffer = new ID3D11Buffer * [model->AiScene->mNumMeshes];//頂点データポインター
+	model->IndexBuffer = new ID3D11Buffer * [model->AiScene->mNumMeshes];//インデックスデータポインター
 
 
 	for (unsigned int m = 0; m < model->AiScene->mNumMeshes; m++)
 	{
 		aiMesh* mesh = model->AiScene->mMeshes[m];
 
-		// ���_�o�b�t�@����
+		// 頂点バッファ生成
 		{
-			Vertex3D* vertex = new Vertex3D[mesh->mNumVertices];//���_�����̔z��̈�쐬
+			Vertex3D* vertex = new Vertex3D[mesh->mNumVertices];//頂点数分の配列領域作成
 
 			for (unsigned int v = 0; v < mesh->mNumVertices; v++)
 			{
@@ -192,9 +192,9 @@ MODEL* ModelLoad(const char* FileName)
 
 
 
-		// �C���f�b�N�X�o�b�t�@����
+		// インデックスバッファ生成
 		{
-			unsigned int* index = new unsigned int[mesh->mNumFaces * 3];//�|���S������*3
+			unsigned int* index = new unsigned int[mesh->mNumFaces * 3];//ポリゴン数数*3
 
 			for (unsigned int f = 0; f < mesh->mNumFaces; f++)
 			{
@@ -225,7 +225,7 @@ MODEL* ModelLoad(const char* FileName)
 
 	}
 
-	//�e�N�X�`���ǂݍ���
+	//テクスチャ読み込み
 	for (int i = 0; i < model->AiScene->mNumTextures; i++)
 	{
 		aiTexture* aitexture = model->AiScene->mTextures[i];
@@ -272,7 +272,7 @@ void ModelRelease(MODEL* model)
 
 void ModelDraw(MODEL* model)
 {
-	// �v���~�e�B�u�g�|���W�ݒ�
+	// プリミティブトポロジ設定
 	Direct3D_GetDeviceContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 
@@ -280,7 +280,7 @@ void ModelDraw(MODEL* model)
 	{
 		aiMesh* mesh = model->AiScene->mMeshes[m];
 
-		// �e�N�X�`���ݒ�
+		// テクスチャ設定
 		aiString texture;
 		aiMaterial* aimaterial = model->AiScene->mMaterials[mesh->mMaterialIndex];
 		aimaterial->GetTexture(aiTextureType_DIFFUSE, 0, &texture);
@@ -288,15 +288,15 @@ void ModelDraw(MODEL* model)
 		if (texture != aiString(""))
 			Direct3D_GetDeviceContext()->PSSetShaderResources(0, 1, &model->Texture[texture.data]);
 
-		// ���_�o�b�t�@�ݒ�
+		// 頂点バッファ設定
 		UINT stride = sizeof(Vertex3D);
 		UINT offset = 0;
 		Direct3D_GetDeviceContext()->IASetVertexBuffers(0, 1, &model->VertexBuffer[m], &stride, &offset);
 
-		// �C���f�b�N�X�o�b�t�@�ݒ�
+		// インデックスバッファ設定
 		Direct3D_GetDeviceContext()->IASetIndexBuffer(model->IndexBuffer[m], DXGI_FORMAT_R32_UINT, 0);
 
-		// �|���S���`��
+		// ポリゴン描画
 		Direct3D_GetDeviceContext()->DrawIndexed(mesh->mNumFaces * 3, 0, 0);
 	}
 }
@@ -468,26 +468,111 @@ void ReadNodeHierarchy(
 			globalTransform);
 	}
 }
-
-void ModelUpdateAnimation(MODEL* model, float deltaTime)
+// クリップ再生：フレーム番号 -> ticks に変換して保存する
+void ModelPlayClip(MODEL* model, int startFrame, int endFrame, float fps, bool loop, float speed)
 {
-	if (!model->AiScene->HasAnimations())
-		return;
+	if (!model || !model->AiScene || model->AiScene->mNumAnimations == 0) return;
 
 	const aiAnimation* anim = model->AiScene->mAnimations[0];
+	float ticksPerSecond = anim->mTicksPerSecond != 0.0f ? (float)anim->mTicksPerSecond : 25.0f;
 
-	float ticksPerSecond =
-		anim->mTicksPerSecond != 0.0f ?
-		(float)anim->mTicksPerSecond : 25.0f;
+	float startTicks = startFrame * (ticksPerSecond / fps);
+	float endTicks = endFrame * (ticksPerSecond / fps);
+	if (endTicks <= startTicks) endTicks = startTicks + 1.0f;
 
-	model->AnimationTime += deltaTime * ticksPerSecond;
-	float time =
-		fmod(model->AnimationTime, (float)anim->mDuration);
+	model->ClipStartTicks = startTicks;
+	model->ClipEndTicks = endTicks;
+	model->ClipLengthTicks = model->ClipEndTicks - model->ClipStartTicks;
+	model->UseClip = true;
+	model->ClipLoop = loop;
+	model->ClipJustFinished = false;
 
-	ReadNodeHierarchy(
-		model,
-		time,
-		model->AiScene->mRootNode,
-		XMMatrixIdentity());
+	// クリップ専用速度を設定（クリップ再生中はこれを使用）
+	model->ClipPlaySpeed = (speed > 0.0f) ? speed : 1.0f;
+
+	// クリップ開始時にアニメ時間をリセット（状態遷移の際にのみ呼ぶこと）
+	model->AnimationTimeTicks = 0.0f;
+
+	// デバッグ出力（必要に応じて有効に）
+	// hal::dout << "PlayClip: startTicks="<<startTicks<<" endTicks="<<endTicks<<" speed="<<model->ClipPlaySpeed<<std::endl;
 }
 
+
+void ModelStopClip(MODEL* model)
+{
+	if (!model) return;
+	model->UseClip = false;
+	model->ClipLoop = true;
+	model->ClipJustFinished = false;
+	model->AnimationTimeTicks = 0.0f;
+	model->ClipPlaySpeed = 1.0f;
+}
+
+bool ModelConsumeClipFinished(MODEL* model)
+{
+	if (!model) return false;
+	if (model->ClipJustFinished) {
+		model->ClipJustFinished = false;
+		return true;
+	}
+	return false;
+}
+
+void ModelSetPlaySpeed(MODEL* model, float speed)
+{
+	if (!model) return;
+	model->PlaySpeed = (speed > 0.0f) ? speed : 1.0f;
+}
+// deltaTimeSeconds は「秒」単位で渡す
+void ModelUpdateAnimation(MODEL* model, float deltaTimeSeconds)
+{
+	if (!model || !model->AiScene || !model->AiScene->HasAnimations()) return;
+
+	const aiAnimation* anim = model->AiScene->mAnimations[0];
+	float ticksPerSecond = anim->mTicksPerSecond != 0.0f ? (float)anim->mTicksPerSecond : 25.0f;
+
+	// 再生速度選択：クリップが有効なら ClipPlaySpeed を優先、そうでなければ PlaySpeed
+	float effectiveSpeed = model->UseClip ? model->ClipPlaySpeed : model->PlaySpeed;
+
+	// deltaTimeSeconds を速度でスケール
+	float scaledDeltaSeconds = deltaTimeSeconds * effectiveSpeed;
+
+	// 秒 -> ticks に変換して進める
+	float deltaTicks = scaledDeltaSeconds * ticksPerSecond;
+	model->AnimationTimeTicks += deltaTicks;
+
+	float timeTicks = 0.0f;
+
+	if (model->UseClip && model->ClipLengthTicks > 0.0f)
+	{
+		if (model->ClipLoop)
+		{
+			float t = fmod(model->AnimationTimeTicks, model->ClipLengthTicks);
+			if (t < 0.0f) t += model->ClipLengthTicks;
+			timeTicks = t + model->ClipStartTicks;
+		}
+		else
+		{
+			if (model->AnimationTimeTicks < model->ClipLengthTicks)
+			{
+				timeTicks = model->AnimationTimeTicks + model->ClipStartTicks;
+			}
+			else
+			{
+				// クリップ終了
+				timeTicks = model->ClipEndTicks - 0.0001f;
+				model->ClipJustFinished = true;
+				model->UseClip = false;
+				model->AnimationTimeTicks = 0.0f;
+			}
+		}
+	}
+	else
+	{
+		float fullDurationTicks = (float)anim->mDuration;
+		timeTicks = fmod(model->AnimationTimeTicks, fullDurationTicks);
+		if (timeTicks < 0.0f) timeTicks += fullDurationTicks;
+	}
+
+	ReadNodeHierarchy(model, timeTicks, model->AiScene->mRootNode, XMMatrixIdentity());
+}

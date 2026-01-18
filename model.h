@@ -40,9 +40,22 @@ struct MODEL
     std::unordered_map<std::string, UINT> BoneMap;
     std::vector<BoneInfo> Bones;
 
-    float AnimationTime = 0.0f;
+    float AnimationTimeTicks = 0.0f;
 
     XMMATRIX GlobalInverse;
+    //アニメーションクリップ関連
+    bool UseClip = false;
+    bool ClipLoop = true;            // true: ループ, false: 1回だけ
+    bool ClipJustFinished = false;   // 1回再生クリップが終わったら true
+    float ClipStartTicks = 0.0f;
+    float ClipEndTicks = 0.0f;
+    float ClipLengthTicks = 0.0f;
+
+    // 再生速度 (1.0 = 標準, 0.5 = 半速, 2.0 = 2倍速)
+    float PlaySpeed = 1.0f;
+
+    // クリップ再生時に使用する速度（UseClip=true のときは優先して使われる）
+    float ClipPlaySpeed = 1.0f;
 };
 
 
@@ -62,5 +75,13 @@ void ReadNodeHierarchy(
     const aiNode* node,
     const XMMATRIX& parentTransform);
 
-void ModelUpdateAnimation(MODEL* model, float deltaTime);
+void ModelUpdateAnimation(MODEL* model, float deltaTimeSeconds);
+
+// フレームをもとにクリップを設定 (0 ~ 60 Idle 61 ~ 120 Walkだと　ModelPlayClip(model, 61, 120);でwalkアニメ実装 )
+void ModelPlayClip(MODEL* model, int startFrame, int endFrame, float fps = 30.0f, bool loop = true, float speed = 1.0f);
+void ModelStopClip(MODEL* model);
+//アニメーション全体のスピードを設定
+void ModelSetPlaySpeed(MODEL* model, float speed);
+// クリップ完了フラグを取得してクリアするユーティリティ
+bool ModelConsumeClipFinished(MODEL* model);
 #endif 
