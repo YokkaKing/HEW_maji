@@ -19,6 +19,7 @@ using namespace DirectX;
 #include"model.h"
 #include"gameObject.h"
 #include"IWeapon.h"
+#include"selectWeaponTerrain.h"
 
 enum class EVOLUTION_TYPE2
 {
@@ -52,7 +53,7 @@ public:
 	void OnCollision(const CollisionInfo& info)override;
 };
 
-void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
+void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, WeaponTerrain setWTp2);
 void Player2Finalize();
 void Player2Update();
 void Player2Draw();

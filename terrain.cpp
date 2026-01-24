@@ -533,8 +533,14 @@ const std::vector<std::vector<std::vector<std::string>>> Walls =
 	},
 };
 
-void TerrainInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
+void TerrainInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, WeaponTerrain p1Set, WeaponTerrain p2Set)
 {
+	//============================================
+	//	新しい引数のp1,2Setはプレイヤーが選択した 
+	//	武器と地形に応じて条件式でモデルをロードする
+	//	ためのデータ保持用引数。
+	//============================================
+
 	g_pDevice = pDevice;
 	g_pContext = pContext;
 
@@ -561,6 +567,57 @@ void TerrainInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_Terrain.SimpleObjects(Hills, { 0.25f, 0.25f, 0.25f }, TERRAIN_TYPE::HILL, g_Terrain.m_motherPosition[0]);
 	g_Terrain.SimpleObjects(Walls, { 1.0f, 1.0f, 1.0f }, TERRAIN_TYPE::WALL, g_Terrain.m_motherPosition[1]);
 	//hal::dout << "座標 : (" << g_Terrain.slopes[0]->m_position.x << "," << g_Terrain.slopes[0]->m_position.y << "," << g_Terrain.slopes[0]->m_position.z << ")\n";
+
+	XMFLOAT3 initPosWall = g_Terrain.m_motherPosition[1];
+	XMFLOAT3 initPosHill = g_Terrain.m_motherPosition[0];
+
+	//======================================================
+	//	各プレイヤーに固定された座標で地形をセットしている現状
+	//	鈴木ができるのはここまでです。
+	//	あとは地形システムを作った久保木に任せます。
+	//	下のスイッチ文はそれっぽいので活用してもいいよ
+	//======================================================
+
+	//選択された武器・地形データに応じて地形を生成
+	switch (p1Set)
+	{
+	case WeaponTerrain::SWORD_WALL:
+		g_Terrain.PixelObjects(Walls, TERRAIN_TYPE::WALL, initPosWall);
+		break;
+	case WeaponTerrain::SPEAR_HILL:
+		g_Terrain.PixelObjects(Hills, TERRAIN_TYPE::HILL, initPosHill);
+		break;
+	case WeaponTerrain::BOW_HILL:
+		g_Terrain.PixelObjects(Hills, TERRAIN_TYPE::HILL, initPosHill);
+		break;
+	case WeaponTerrain::HAMMER_:
+
+		break;
+	case WeaponTerrain::SHURIKEN_:
+
+		break;
+	}
+	//プレイヤー2
+	switch (p2Set)
+	{
+	case WeaponTerrain::SWORD_WALL:
+		g_Terrain.PixelObjects(Walls, TERRAIN_TYPE::WALL, initPosWall);
+		break;
+	case WeaponTerrain::SPEAR_HILL:
+		g_Terrain.PixelObjects(Hills, TERRAIN_TYPE::HILL, initPosHill);
+		break;
+	case WeaponTerrain::BOW_HILL:
+		g_Terrain.PixelObjects(Hills, TERRAIN_TYPE::HILL, initPosHill);
+		break;
+	case WeaponTerrain::HAMMER_:
+
+		break;
+	case WeaponTerrain::SHURIKEN_:
+
+		break;
+	}
+
+
 }
 void TerrainFinalize()
 {
