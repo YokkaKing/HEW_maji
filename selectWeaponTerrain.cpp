@@ -166,7 +166,7 @@ void selectWT_Update()
 	}
 
 	//両方準備完了時のみ状態遷移
-	if (g_isP1Ready && g_isP2Ready)
+	if (g_isP1Ready == true && g_isP2Ready == true)
 	{
 		//Managerに選択データを渡す
 		Manager_SetWTselect(g_selectData);
@@ -174,6 +174,8 @@ void selectWT_Update()
 		//ゲームシーンへフェード
 		XMFLOAT4 fadeColor(0.0f, 0.0f, 0.0f, 1.0f);
 		SetFade(40.0f, fadeColor, FADE_STATE::FADE_OUT, SCENE_GAME);
+		g_isP1Ready = false;
+		g_isP2Ready = false;
 	}
 }
 
