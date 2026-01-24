@@ -34,7 +34,6 @@
 //================================================================
 //	グローバル変数
 //================================================================
-//ボールオブジェクト
 PLAYER	g_Player;
 ID3D11Device* g_pDevice;
 ID3D11DeviceContext* g_pContext;
@@ -66,7 +65,7 @@ void PlayerDie()
 	SetFade(40.0f, color, FADE_OUT, SCENE_RESULT);
 }
 
-void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
+void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, WeaponTerrain setWTp1)
 {
 	g_pDevice = pDevice;
 	g_pContext = pContext;
@@ -99,6 +98,17 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	// 自分をownerとして武器を生成
 	g_Player.m_currentWeapon = std::make_unique<Sword>(&g_Player, FALSE); // 1Pです
 	g_changeP1 = 0;
+
+	//届いた第3引数の中身に応じて条件式で判定、生成するクラスを変える
+	//他の武器も同様に生成し、terrainのinitializeでも同じ処理の必要あり
+	if (setWTp1 == WeaponTerrain::SWORD_WALL)
+	{
+		g_Player.EquipWeapon(std::make_unique<Sword>(&g_Player, FALSE));
+	}
+	else if (setWTp1 == WeaponTerrain::SPEAR_HILL)
+	{
+		g_Player.EquipWeapon(std::make_unique<Spear>(&g_Player, FALSE));
+	}
 
 	EvolutionInitialize();
 }
