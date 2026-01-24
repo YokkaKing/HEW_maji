@@ -145,12 +145,12 @@ void	PlayerUpdate()
 
 		case 3: //arrow
 			g_Player.EquipWeapon(std::make_unique<Arrow>(&g_Player, FALSE));
-			//g_Player.m_model = ModelLoad("asset\\model\\char_arrow_motion_b.fbx");
+			g_Player.m_model = ModelLoad("asset\\model\\char_bow_motion_b.fbx");
 			break;
 
 		case 4: //shuriken
 			g_Player.EquipWeapon(std::make_unique<Shuriken>(&g_Player, FALSE));
-			g_Player.m_model = ModelLoad("asset\\model\\char_shuriken_motion_b.fbx");
+			g_Player.m_model = ModelLoad("asset\\model\\char_shuriken.fbx");
 			break;
 
 		default:
