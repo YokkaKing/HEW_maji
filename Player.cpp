@@ -109,7 +109,19 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 	{
 		g_Player.EquipWeapon(std::make_unique<Spear>(&g_Player, FALSE));
 	}
-
+	else if (setWTp1 == WeaponTerrain::BOW_HILL)
+	{
+		g_Player.EquipWeapon(std::make_unique<Arrow>(&g_Player, FALSE));
+	}
+	else if (setWTp1 == WeaponTerrain::HAMMER_)
+	{
+		g_Player.EquipWeapon(std::make_unique<Hammer>(&g_Player, FALSE));
+		//g_Player.m_model = ModelLoad("asset\\model\\char_hammer_motion_b.fbx");
+	}
+	else if (setWTp1 == WeaponTerrain::SHURIKEN_)
+	{
+		g_Player.EquipWeapon(std::make_unique<Shuriken>(&g_Player, FALSE));
+	}
 	EvolutionInitialize();
 }
 void PlayerFinalize()
@@ -150,7 +162,7 @@ void	PlayerUpdate()
 
 		case 2: //hammer
 			g_Player.EquipWeapon(std::make_unique<Hammer>(&g_Player, FALSE));
-			g_Player.m_model = ModelLoad("asset\\model\\char_hammer_motion_b.fbx");
+		//	g_Player.m_model = ModelLoad("asset\\model\\char_hammer_motion_b.fbx");
 			break;
 
 		case 3: //arrow
