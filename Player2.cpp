@@ -60,7 +60,7 @@ void Player2Die()
 	SetFade(40.0f, color, FADE_OUT, SCENE_RESULT);
 }
 
-void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
+void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, WeaponTerrain setWTp2)
 {
 	g_pDevice2 = pDevice;
 	g_pContext2 = pContext;

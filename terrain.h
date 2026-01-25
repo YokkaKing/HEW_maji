@@ -25,6 +25,7 @@
 using namespace DirectX;
 #include"gameObject.h"
 #include<string>
+#include"selectWeaponTerrain.h"
 
 // êVÇµÇ¢å^ ç¿ïWÇ∆ëÂÇ´Ç≥Çäiî[Ç∑ÇÈ
 struct XMFLOAT6
@@ -43,7 +44,7 @@ enum class TERRAIN_TYPE
 	MAX
 };
 
-void TerrainInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
+void TerrainInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, WeaponTerrain p1Set, WeaponTerrain p2Set);
 void TerrainFinalize();
 void TerrainUpdate();
 void TerrainDraw();
