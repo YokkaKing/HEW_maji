@@ -22,12 +22,33 @@ extern PLAYER g_Player;
 extern PLAYER2 g_Player2;
 extern Controller g_Controller;
 const char* INITIAL_MODEL_PATH;
+
+const char* INITIAL_MODEL_PATH_P1 = nullptr;
+const char* INITIAL_MODEL_PATH_P2 = nullptr;
+
 const int EVOLUTION_LIMIT_FRAME = 20 * 60;
 
-void EvolutionInitialize()
+void EvolutionInitialize(WeaponTerrain selectP1, WeaponTerrain selectP2)
 {
-    // 初期化処理
-    INITIAL_MODEL_PATH = "asset\\model\\char_hammer.fbx";
+    // P1の初期モデル設定
+    switch (selectP1) {
+    case WeaponTerrain::SWORD_WALL: INITIAL_MODEL_PATH_P1 = "asset\\model\\char_shuriken.fbx"; break;
+    case WeaponTerrain::SPEAR_HILL: INITIAL_MODEL_PATH_P1 = "asset\\model\\char_shuriken.fbx"; break;
+    case WeaponTerrain::BOW_HILL:   INITIAL_MODEL_PATH_P1 = "asset\\model\\char_shuriken.fbx"; break;
+    case WeaponTerrain::HAMMER_:    INITIAL_MODEL_PATH_P1 = "asset\\model\\char_shuriken.fbx"; break;
+    case WeaponTerrain::SHURIKEN_:  INITIAL_MODEL_PATH_P1 = "asset\\model\\char_shuriken.fbx"; break;
+    default:                        INITIAL_MODEL_PATH_P1 = "asset\\model\\default.fbx"; break;
+    }
+
+    // P2の初期モデル設定
+    switch (selectP2) {
+    case WeaponTerrain::SWORD_WALL: INITIAL_MODEL_PATH_P2 = "asset\\model\\char_default_sword_motion.fbx"; break;
+    case WeaponTerrain::SPEAR_HILL: INITIAL_MODEL_PATH_P2 = "asset\\model\\char_shuriken.fbx"; break;
+    case WeaponTerrain::BOW_HILL:   INITIAL_MODEL_PATH_P2 = "asset\\model\\char_shuriken.fbx"; break;
+    case WeaponTerrain::HAMMER_:    INITIAL_MODEL_PATH_P2 = "asset\\model\\char_shuriken.fbx"; break;
+    case WeaponTerrain::SHURIKEN_:  INITIAL_MODEL_PATH_P2 = "asset\\model\\char_shuriken.fbx"; break;
+    default:                        INITIAL_MODEL_PATH_P2 = "asset\\model\\default.fbx"; break;
+    }
 }
 
 void EvolutionFinalize()
@@ -87,7 +108,7 @@ void EvolvePlayer()
         {
             if (g_Player.m_model != nullptr) ModelRelease(g_Player.m_model);
             g_Player.EvolutionType = EVOLUTION_TYPE::EVOLUTION_TYPE_NONE;
-            g_Player.m_model = ModelLoad(INITIAL_MODEL_PATH);
+            g_Player.m_model = ModelLoad(INITIAL_MODEL_PATH_P1);
             g_Player.m_scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
             g_Player.EvolutionTimer = 0;
         }
@@ -123,53 +144,38 @@ void ApplyEvolutionEffect()
 
 
 
-
-//ここから下はプレイヤー２をコントローラーにしたら削除
-
 void EvolvePlayer2()
 {
     const char* newModelPath = nullptr;
-
-    if (g_Player2.EvolutionType == EVOLUTION_TYPE2::EVOLUTION_TYPE_NONE)
-    {
+    if (g_Player2.EvolutionType == EVOLUTION_TYPE2::EVOLUTION_TYPE_NONE) {
         bool evolved = false;
-        if (Keyboard_IsKeyDownTrigger(KK_Y))
-        {
+        if (Keyboard_IsKeyDownTrigger(KK_Y)) {
             g_Player2.EvolutionType = EVOLUTION_TYPE2::EVOLUTION_TYPE_A;
             newModelPath = "asset\\model\\ball.fbx";
             evolved = true;
         }
-        else if (Keyboard_IsKeyDownTrigger(KK_I))
-        {
+        else if (Keyboard_IsKeyDownTrigger(KK_I)) {
             g_Player2.EvolutionType = EVOLUTION_TYPE2::EVOLUTION_TYPE_B;
             newModelPath = "asset\\model\\tree.fbx";
             evolved = true;
         }
-
-        if (evolved)
-        {
+        if (evolved) {
             if (g_Player2.m_model != nullptr) ModelRelease(g_Player2.m_model);
             g_Player2.m_model = ModelLoad(newModelPath);
             g_Player2.EvolutionTimer = EVOLUTION_LIMIT_FRAME;
         }
     }
-    else // 進化中
-    {
+    else {
         bool unevolve = false;
-
-        if (g_Player2.EvolutionTimer > 0)
-        {
+        if (g_Player2.EvolutionTimer > 0) {
             g_Player2.EvolutionTimer--;
             if (g_Player2.EvolutionTimer <= 0) unevolve = true;
         }
-
         if (Keyboard_IsKeyDownTrigger(KK_O)) unevolve = true;
-
-        if (unevolve)
-        {
+        if (unevolve) {
             if (g_Player2.m_model != nullptr) ModelRelease(g_Player2.m_model);
             g_Player2.EvolutionType = EVOLUTION_TYPE2::EVOLUTION_TYPE_NONE;
-            g_Player2.m_model = ModelLoad(INITIAL_MODEL_PATH);
+            g_Player2.m_model = ModelLoad(INITIAL_MODEL_PATH_P2); // P2用を参照
             g_Player2.m_scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
             g_Player2.EvolutionTimer = 0;
         }
@@ -207,47 +213,35 @@ void ApplyEvolutionEffect2()
 void EvolvePlayer3()
 {
     const char* newModelPath = nullptr;
-
-    if (g_Player.EvolutionType == EVOLUTION_TYPE::EVOLUTION_TYPE_NONE)
-    {
+    if (g_Player.EvolutionType == EVOLUTION_TYPE::EVOLUTION_TYPE_NONE) {
         bool evolved = false;
-        if (Keyboard_IsKeyDownTrigger(KK_T))
-        {
+        if (Keyboard_IsKeyDownTrigger(KK_T)) {
             g_Player.EvolutionType = EVOLUTION_TYPE::EVOLUTION_TYPE_A;
             newModelPath = "asset\\model\\ball.fbx";
             evolved = true;
         }
-        else if (Keyboard_IsKeyDownTrigger(KK_R))
-        {
+        else if (Keyboard_IsKeyDownTrigger(KK_R)) {
             g_Player.EvolutionType = EVOLUTION_TYPE::EVOLUTION_TYPE_B;
             newModelPath = "asset\\model\\tree.fbx";
             evolved = true;
         }
-
-        if (evolved)
-        {
+        if (evolved) {
             if (g_Player.m_model != nullptr) ModelRelease(g_Player.m_model);
             g_Player.m_model = ModelLoad(newModelPath);
             g_Player.EvolutionTimer = EVOLUTION_LIMIT_FRAME;
         }
     }
-    else // 進化中
-    {
+    else {
         bool unevolve = false;
-
-        if (g_Player.EvolutionTimer > 0)
-        {
+        if (g_Player.EvolutionTimer > 0) {
             g_Player.EvolutionTimer--;
             if (g_Player.EvolutionTimer <= 0) unevolve = true;
         }
-
         if (Keyboard_IsKeyDownTrigger(KK_F)) unevolve = true;
-
-        if (unevolve)
-        {
+        if (unevolve) {
             if (g_Player.m_model != nullptr) ModelRelease(g_Player.m_model);
             g_Player.EvolutionType = EVOLUTION_TYPE::EVOLUTION_TYPE_NONE;
-            g_Player.m_model = ModelLoad(INITIAL_MODEL_PATH);
+            g_Player.m_model = ModelLoad(INITIAL_MODEL_PATH_P1); // P1用を参照
             g_Player.m_scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
             g_Player.EvolutionTimer = 0;
         }

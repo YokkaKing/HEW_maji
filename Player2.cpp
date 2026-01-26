@@ -92,7 +92,6 @@ void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 	g_Player2.m_currentWeapon = std::make_unique<Sword>(&g_Player2, TRUE); // 2P‚Å‚·
 	g_changeP2 = 0;
 
-	EvolutionInitialize();
 }
 void Player2Finalize()
 {

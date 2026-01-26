@@ -22,6 +22,7 @@
 #include"managerCollider.h"
 #include"terrain.h"
 #include"Player2.h"
+#include"Evolution.h"
 #include"Viewport.h"
 #include"direct3d.h"
 #include "HpBar.h"
@@ -50,6 +51,8 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, const
 	TerrainInitialize(pDevice, pContext, select.player1, select.player2);//地形にP1,P2のそれぞれ選択した武器・地形情報を渡す
 	
 	g_sponer.Initialize();
+
+	EvolutionInitialize(select.player1, select.player2);
 
 	PlayerInitialize(pDevice, pContext, select.player1); //
 	Player2Initialize(pDevice, pContext, select.player2);
