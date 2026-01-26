@@ -1,99 +1,72 @@
 #pragma once
-#include <Windows.h>
-#include <Xinput.h>
+#include <windows.gaming.input.h>
+#include <wrl.h>
+#include <wrl/wrappers/corewrappers.h> // HStringReferenceのために必須
+#include <Xinput.h> // DWORD定義などのため
 
-#pragma comment(lib, "Xinput.lib")
+// 必要な名前空間を使いやすく定義
+using namespace Microsoft::WRL;
+using namespace Microsoft::WRL::Wrappers;
+using namespace ABI::Windows::Gaming::Input;
+using namespace ABI::Windows::Foundation;
 
-//コントローラーボタンの定数定義
 namespace ControllerButton
 {
+    // WGI(Windows.Gaming.Input)用のボタン定数
+    // プレステコンでもXboxコンでも同じ位置のボタンが反応します
     enum Button
     {
-        // ダーティなポインタを避けるために0番目を使用しない慣習があります
-        NONE = 0x0000,
-
-        // 十字キー (XINPUT_GAMEPAD_DPAD_...)
-        DPAD_UP = XINPUT_GAMEPAD_DPAD_UP,
-        DPAD_DOWN = XINPUT_GAMEPAD_DPAD_DOWN,
-        DPAD_LEFT = XINPUT_GAMEPAD_DPAD_LEFT,
-        DPAD_RIGHT = XINPUT_GAMEPAD_DPAD_RIGHT,
-
-        // スタート/バックボタン
-        START = XINPUT_GAMEPAD_START,
-        BACK = XINPUT_GAMEPAD_BACK,
-
-        // L/R スティック押し込み
-        L_THUMB = XINPUT_GAMEPAD_LEFT_THUMB,
-        R_THUMB = XINPUT_GAMEPAD_RIGHT_THUMB,
-
-        // L/R ショルダーボタン
-        L_SHOULDER = XINPUT_GAMEPAD_LEFT_SHOULDER,
-        R_SHOULDER = XINPUT_GAMEPAD_RIGHT_SHOULDER,
-
-        // アクションボタン (A, B, X, Y)
-        A_BUTTON = XINPUT_GAMEPAD_A,
-        B_BUTTON = XINPUT_GAMEPAD_B,
-        X_BUTTON = XINPUT_GAMEPAD_X,
-        Y_BUTTON = XINPUT_GAMEPAD_Y
+        NONE = 0,
+        A_BUTTON = 1,  // PS: ×
+        B_BUTTON = 2,  // PS: ○
+        X_BUTTON = 4,  // PS: □
+        Y_BUTTON = 8,  // PS: △
+        DPAD_UP = 16,
+        DPAD_DOWN = 32,
+        DPAD_LEFT = 64,
+        DPAD_RIGHT = 128,
+        L_SHOULDER = 256,
+        R_SHOULDER = 512,
+        L_THUMB = 1024,
+        R_THUMB = 2048,
+        START = 4096, // PS: Options
+        BACK = 8192, // PS: Share / Create
     };
-
-    // --- スティック/トリガーの閾値 (必要な場合は調整してください) ---
-    const float THUMB_THRESHOLD = 0.5f; // スティックの傾きを判定する閾値 (0.0～1.0)
-    const int TRIGGER_THRESHOLD = 30;   // トリガーの押し込みを判定する閾値 (0～255)
 }
 
-// 
-
-// --- コントローラー管理クラス ---
 class Controller
 {
 private:
-    DWORD m_controllerId; // プレイヤーID (0～3)
-    XINPUT_STATE m_currentState;
-    XINPUT_STATE m_prevState;
+    ComPtr<IGamepad> m_gamepad;
+    GamepadReading m_currentState;
+    GamepadReading m_prevState;
+    bool m_isConnected;
 
 public:
-    Controller(DWORD controllerId = 0);
+    // Player.cppからの呼び出し(g_Controller(0))に合わせるため引数を残す
+    Controller(DWORD id = 0);
 
     // 毎フレーム呼び出す更新関数
     void Update();
 
-    //ボタンの状態取得関数
-
-    // 現在押されているか
+    // ボタンの状態取得
     bool IsButtonDown(ControllerButton::Button button) const;
-
-    // 押された瞬間か
     bool IsButtonPushed(ControllerButton::Button button) const;
-
-    // 離された瞬間か
     bool IsButtonReleased(ControllerButton::Button button) const;
 
-    //スティックの状態取得関数
-
-    // 左スティックのX軸の傾き (-1.0f～1.0f)
+    // スティックの状態取得 (-1.0f ～ 1.0f)
     float GetLeftStickX() const;
-
-    // 左スティックのY軸の傾き (-1.0f～1.0f)
     float GetLeftStickY() const;
-
-    // 右スティックのX軸の傾き (-1.0f～1.0f)
     float GetRightStickX() const;
-
-    // 右スティックのY軸の傾き (-1.0f～1.0f)
     float GetRightStickY() const;
 
-    // --- トリガーの状態取得関数 ---
-
-    // 左トリガーの押し込み量 (0.0f～1.0f)
+    // トリガーの状態取得 (0.0f ～ 1.0f)
     float GetLeftTrigger() const;
-
-    // 右トリガーの押し込み量 (0.0f～1.0f)
     float GetRightTrigger() const;
 
-    // --- 接続状態チェック ---
-    bool IsConnected() const;
+    // 接続状態
+    bool IsConnected() const { return m_isConnected; }
 
-    // --- バイブレーション機能 ---
+    // バイブレーション (0.0f ～ 1.0f)
     void SetVibration(float leftMotor, float rightMotor);
 };
