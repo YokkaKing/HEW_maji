@@ -22,7 +22,7 @@ extern PLAYER g_Player;
 extern PLAYER2 g_Player2;
 extern Controller g_Controller;
 const char* INITIAL_MODEL_PATH;
-const int EVOLUTION_LIMIT_FRAME = 2 * 60;
+const int EVOLUTION_LIMIT_FRAME = 20 * 60;
 
 void EvolutionInitialize()
 {
