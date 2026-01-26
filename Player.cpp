@@ -122,7 +122,7 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 	{
 		g_Player.EquipWeapon(std::make_unique<Shuriken>(&g_Player, FALSE));
 	}
-	EvolutionInitialize();
+	
 }
 void PlayerFinalize()
 {
