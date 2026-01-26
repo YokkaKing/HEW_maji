@@ -87,11 +87,11 @@ void Camera_Update()
 	//カメラを移動
 	//P1
 	CameraObject.Position.x += diff.x;
-	CameraObject.Position.y += diff.y;
+	CameraObject.Position.y += diff.y+0.8f;
 	CameraObject.Position.z += diff.z;
 
 	CameraObject.AtPosition.x = playerPos.x;
-	CameraObject.AtPosition.y = playerPos.y;
+	CameraObject.AtPosition.y = playerPos.y+0.8f;
 	CameraObject.AtPosition.z = playerPos.z;
 
 	g_PlayerPosOld.x = playerPos.x;
@@ -105,7 +105,7 @@ void Camera_Update()
 	//回転角度の累積と制限
 	//現在の累積角度を保持する静的変数 (初期値 0.0f)
 	static float nowYaw = 0.0f;   // 水平回転 (左右)
-	static float nowPitch = 20.0f; // 垂直回転 (上下)
+	static float nowPitch = 22.0f; // 垂直回転 (上下)
 
 	//コントローラー・キーボードからの入力を取得
 	float inputX = g_Controller.GetRightStickX() * -2.0f;

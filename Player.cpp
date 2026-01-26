@@ -104,23 +104,29 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 	if (setWTp1 == WeaponTerrain::SWORD_WALL)
 	{
 		g_Player.EquipWeapon(std::make_unique<Sword>(&g_Player, FALSE));
+		g_Player.m_model = ModelLoad("asset\\model\\char_default_sword_motion_b.fbx");
 	}
 	else if (setWTp1 == WeaponTerrain::SPEAR_HILL)
 	{
 		g_Player.EquipWeapon(std::make_unique<Spear>(&g_Player, FALSE));
+		//g_Player.m_model = ModelLoad("asset\\model\\char_default_motion_spear_b.fbx");
 	}
 	else if (setWTp1 == WeaponTerrain::BOW_HILL)
 	{
 		g_Player.EquipWeapon(std::make_unique<Arrow>(&g_Player, FALSE));
+		//g_Player.m_model = ModelLoad("asset\\model\\char_default_motion_bow_b.fbx");
+
 	}
 	else if (setWTp1 == WeaponTerrain::HAMMER_)
 	{
 		g_Player.EquipWeapon(std::make_unique<Hammer>(&g_Player, FALSE));
-		//g_Player.m_model = ModelLoad("asset\\model\\char_hammer_motion_b.fbx");
+		//g_Player.m_model = ModelLoad("asset\\model\\char_default_motion_hammer_b.fbx");
 	}
 	else if (setWTp1 == WeaponTerrain::SHURIKEN_)
 	{
 		g_Player.EquipWeapon(std::make_unique<Shuriken>(&g_Player, FALSE));
+		g_Player.m_model = ModelLoad("asset\\model\\char_default_shuriken_motion_b.fbx");
+
 	}
 	EvolutionInitialize();
 }
