@@ -118,7 +118,6 @@ void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 		g_Player2.EquipWeapon(std::make_unique<Shuriken>(&g_Player2, TRUE));
 	}
 
-	EvolutionInitialize();
 }
 void Player2Finalize()
 {
