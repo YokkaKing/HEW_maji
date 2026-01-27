@@ -29,6 +29,7 @@
 #include"hammer.h"
 #include"arrow.h"
 #include"syuriken.h"
+#include"terrain.h"
 #include<memory>
 
 //================================================================
@@ -39,6 +40,7 @@ ID3D11Device* g_pDevice;
 ID3D11DeviceContext* g_pContext;
 Controller g_Controller(0); //ID 0のコントローラーを使用
 MODEL* g_modelP1;
+WeaponTerrain g_setWTP1; // プレイヤーの武器と地形情報
 unsigned int g_changeP1;
 static bool g_Player1AttackPlaying = false; // 攻撃ワンショット再生中フラグ
 static bool g_Player1JumpPlaying = false; // ジャンプワンショット再生中フラグ
@@ -73,7 +75,6 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 	g_Player.m_model = ModelLoad("asset\\model\\char_sword_motion_b.fbx");
 	g_modelP1 = ModelLoad("asset\\model\\block.fbx");
 
-
 	g_Player.m_position = XMFLOAT3(0.0f, 0.5f, 1.0f);
 	g_Player.m_rotation = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	g_Player.m_velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
@@ -96,29 +97,30 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 
 	// のちのちセレクト画面から分岐できるようにする
 	// 自分をownerとして武器を生成
-	g_Player.m_currentWeapon = std::make_unique<Sword>(&g_Player, FALSE); // 1Pです
 	g_changeP1 = 0;
+
+	g_setWTP1 = setWTp1;
 
 	//届いた第3引数の中身に応じて条件式で判定、生成するクラスを変える
 	//他の武器も同様に生成し、terrainのinitializeでも同じ処理の必要あり
-	if (setWTp1 == WeaponTerrain::SWORD_WALL)
+	if (g_setWTP1 == WeaponTerrain::SWORD_WALL)
 	{
 		g_Player.EquipWeapon(std::make_unique<Sword>(&g_Player, FALSE));
 	}
-	else if (setWTp1 == WeaponTerrain::SPEAR_HILL)
+	else if (g_setWTP1 == WeaponTerrain::SPEAR_HILL)
 	{
 		g_Player.EquipWeapon(std::make_unique<Spear>(&g_Player, FALSE));
 	}
-	else if (setWTp1 == WeaponTerrain::BOW_HILL)
+	else if (g_setWTP1 == WeaponTerrain::BOW_HILL)
 	{
 		g_Player.EquipWeapon(std::make_unique<Arrow>(&g_Player, FALSE));
 	}
-	else if (setWTp1 == WeaponTerrain::HAMMER_)
+	else if (g_setWTP1 == WeaponTerrain::HAMMER_)
 	{
 		g_Player.EquipWeapon(std::make_unique<Hammer>(&g_Player, FALSE));
 		//g_Player.m_model = ModelLoad("asset\\model\\char_hammer_motion_b.fbx");
 	}
-	else if (setWTp1 == WeaponTerrain::SHURIKEN_)
+	else if (g_setWTP1 == WeaponTerrain::SHURIKEN_)
 	{
 		g_Player.EquipWeapon(std::make_unique<Shuriken>(&g_Player, FALSE));
 	}
@@ -152,26 +154,36 @@ void	PlayerUpdate()
 		{
 		case 0: //sword
 			g_Player.EquipWeapon(std::make_unique<Sword>(&g_Player, FALSE));
+			g_setWTP1 = WeaponTerrain::SWORD_WALL;
+			TerrainSet(WeaponTerrain::SWORD_WALL, FALSE);
 			g_Player.m_model = ModelLoad("asset\\model\\char_sword_motion_b.fbx");
 			break;
 
 		case 1: //spear
 			g_Player.EquipWeapon(std::make_unique<Spear>(&g_Player, FALSE));
+			g_setWTP1 = WeaponTerrain::SPEAR_HILL;
+			TerrainSet(WeaponTerrain::SPEAR_HILL, FALSE);
 			//g_Player.m_model = ModelLoad("asset\\model\\char_spear_motion_b.fbx");
 			break;
 
 		case 2: //hammer
 			g_Player.EquipWeapon(std::make_unique<Hammer>(&g_Player, FALSE));
+			g_setWTP1 = WeaponTerrain::HAMMER_;
+			TerrainSet(WeaponTerrain::HAMMER_, FALSE);
 		//	g_Player.m_model = ModelLoad("asset\\model\\char_hammer_motion_b.fbx");
 			break;
 
 		case 3: //arrow
 			g_Player.EquipWeapon(std::make_unique<Arrow>(&g_Player, FALSE));
+			g_setWTP1 = WeaponTerrain::BOW_HILL;
+			TerrainSet(WeaponTerrain::BOW_HILL, FALSE);
 			//g_Player.m_model = ModelLoad("asset\\model\\char_arrow_motion_b.fbx");
 			break;
 
 		case 4: //shuriken
 			g_Player.EquipWeapon(std::make_unique<Shuriken>(&g_Player, FALSE));
+			g_setWTP1 = WeaponTerrain::SHURIKEN_;
+			TerrainSet(WeaponTerrain::SHURIKEN_, FALSE);
 			g_Player.m_model = ModelLoad("asset\\model\\char_shuriken_motion_b.fbx");
 			break;
 
@@ -629,6 +641,43 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 			}
 		}
 
+		// 例えば壁・木だけコリジョン有効
+		if (info.other->m_tag == "WALL" ||
+			info.other->m_tag == "TREE")
+		{
+			auto INFO = info;
+
+			INFO.normal.x *= -1;
+			INFO.normal.y *= -1;
+			INFO.normal.z *= -1;
+
+			//================================================================
+			//	押し戻し
+			//================================================================
+			m_position.x += INFO.normal.x * INFO.penetration;
+			m_position.y += INFO.normal.y * INFO.penetration;
+			m_position.z += INFO.normal.z * INFO.penetration;
+
+			//================================================================
+			//	地面判定
+			//================================================================
+			if (INFO.normal.y > 0.7f)
+			{
+				m_isGround = true;
+				m_velocity.y = 0;
+			}
+
+			//================================================================
+			//	壁判定
+			//================================================================
+			float horiz = fabs(INFO.normal.x) + fabs(INFO.normal.z);
+			if (horiz > 0.7f)
+			{
+				m_velocity.x = 0;
+				m_velocity.z = 0;
+			}
+		}
+
 		if (info.other->m_tag == "Player2")
 		{
 			auto INFO = info;
@@ -667,17 +716,23 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 		if (info.other->m_tag == "Lift" ||
 			info.other->m_tag == "HILL")
 		{
+			auto INFO = info;
+
+			INFO.normal.x *= -1;
+			INFO.normal.y *= -1;
+			INFO.normal.z *= -1;
+
 			//================================================================
 			//	押し戻し
 			//================================================================
-			m_position.x += info.normal.x * info.penetration;
-			m_position.y += info.normal.y * info.penetration;
-			m_position.z += info.normal.z * info.penetration;
+			m_position.x += INFO.normal.x * INFO.penetration;
+			m_position.y += INFO.normal.y * INFO.penetration;
+			m_position.z += INFO.normal.z * INFO.penetration;
 
 			//================================================================
 			//	地面判定
 			//================================================================
-			if (info.normal.y > 0.7f)
+			if (INFO.normal.y > 0.7f)
 			{
 				m_isGround = true;
 				m_velocity.y = 0;
@@ -686,7 +741,7 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 			//================================================================
 			//	壁判定
 			//================================================================
-			float horiz = fabs(info.normal.x) + fabs(info.normal.z);
+			float horiz = fabs(INFO.normal.x) + fabs(INFO.normal.z);
 			if (horiz > 0.7f)
 			{
 				m_velocity.x = 0;
@@ -699,4 +754,9 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 			return; // 他は無視
 		}
 	}
+}
+
+WeaponTerrain GetSetWTP1()
+{
+	return g_setWTP1;
 }

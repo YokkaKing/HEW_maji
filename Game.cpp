@@ -47,12 +47,13 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, const
 {
 	//Controller_Initialize();
 	Field_Initialize(pDevice, pContext); // フィールドの初期化
-	TerrainInitialize(pDevice, pContext, select.player1, select.player2);//地形にP1,P2のそれぞれ選択した武器・地形情報を渡す
 	
 	g_sponer.Initialize();
 
 	PlayerInitialize(pDevice, pContext, select.player1); //
 	Player2Initialize(pDevice, pContext, select.player2);
+
+	TerrainInitialize(pDevice, pContext, select.player1, select.player2);//地形にP1,P2のそれぞれ選択した武器・地形情報を渡す
 
 	PLAYER* pP1 = GetPlayer();
 	PLAYER2* pP2 = GetPlayer2();
