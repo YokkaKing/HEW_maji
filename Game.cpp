@@ -22,6 +22,7 @@
 #include"managerCollider.h"
 #include"terrain.h"
 #include"Player2.h"
+#include"Evolution.h"
 #include"Viewport.h"
 #include"direct3d.h"
 #include "HpBar.h"
@@ -49,6 +50,8 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, const
 	Field_Initialize(pDevice, pContext); // フィールドの初期化
 	
 	g_sponer.Initialize();
+
+	EvolutionInitialize(select.player1, select.player2);
 
 	PlayerInitialize(pDevice, pContext, select.player1); //
 	Player2Initialize(pDevice, pContext, select.player2);
