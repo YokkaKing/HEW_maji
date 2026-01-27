@@ -1,142 +1,110 @@
 #include "Controller.h"
-#include <cstdlib>
 #include <algorithm>
 
-// コントローラーIDを渡して初期化
-Controller::Controller(DWORD controllerId)
-    : m_controllerId(controllerId)
+// コンストラクタ
+Controller::Controller(DWORD id) : m_isConnected(false)
 {
-    // 初期状態をクリア
-    ZeroMemory(&m_currentState, sizeof(XINPUT_STATE));
-    ZeroMemory(&m_prevState, sizeof(XINPUT_STATE));
+    m_currentState = {};
+    m_prevState = {};
 }
 
-// 毎フレーム呼び出すことで状態を更新
 void Controller::Update()
 {
-    // 現在の状態を前の状態として保存
+    // 前の状態を保存
     m_prevState = m_currentState;
 
-    // XInputGetStateで現在の状態を取得
-    DWORD result = XInputGetState(m_controllerId, &m_currentState);
+    // WGIのスタティックス（管理クラス）を取得
+    ComPtr<IGamepadStatics> gamepadStatics;
 
-    // 接続が切れている場合は状態をクリア（デバッグ目的）
-    if (result != ERROR_SUCCESS)
+    // エラーが出ていた箇所：ABI::Windows::Foundation:: を明示的に指定
+    HRESULT hr = ABI::Windows::Foundation::GetActivationFactory(
+        HStringReference(RuntimeClass_Windows_Gaming_Input_Gamepad).Get(),
+        &gamepadStatics);
+
+    if (FAILED(hr)) return;
+
+    // 接続されているゲームパッドのリストを取得
+    ComPtr<ABI::Windows::Foundation::Collections::IVectorView<Gamepad*>> gamepads;
+    if (FAILED(gamepadStatics->get_Gamepads(&gamepads))) return;
+
+    unsigned int count = 0;
+    gamepads->get_Size(&count);
+
+    if (count > 0)
     {
-        ZeroMemory(&m_currentState, sizeof(XINPUT_STATE));
-    }
-}
-
-// --- ボタンの状態取得関数 ---
-
-// 現在押されているか (Keyboard_IsKeyDownに相当)
-bool Controller::IsButtonDown(ControllerButton::Button button) const
-{
-    // 接続されていて、現在の状態のボタンフラグが立っているか
-    return IsConnected() && (m_currentState.Gamepad.wButtons & button);
-}
-
-// 押された瞬間か (Keyboard_IsKeyPushedに相当)
-bool Controller::IsButtonPushed(ControllerButton::Button button) const
-{
-    // 接続されていて
-    // 現在は押されていて、かつ、前フレームでは押されていなかった
-    return IsConnected() &&
-        (m_currentState.Gamepad.wButtons & button) &&
-        !(m_prevState.Gamepad.wButtons & button);
-}
-
-// 離された瞬間か (Keyboard_IsKeyReleasedに相当)
-bool Controller::IsButtonReleased(ControllerButton::Button button) const
-{
-    // 接続されていて
-    // 現在は押されていなくて、かつ、前フレームでは押されていた
-    return IsConnected() &&
-        !(m_currentState.Gamepad.wButtons & button) &&
-        (m_prevState.Gamepad.wButtons & button);
-}
-
-// --- スティックの状態取得関数 (正規化とデッドゾーン処理) ---
-
-// スティックの生の値 (-32768～32767) を -1.0f～1.0f に正規化し、デッドゾーンを処理
-static float NormalizeAndDeadZone(SHORT value, SHORT deadZone)
-{
-    if (std::abs(value) < deadZone)
-    {
-        return 0.0f;
-    }
-
-    // デッドゾーンを超えた部分を正規化
-    if (value > 0)
-    {
-        return (float)(value - deadZone) / (32767.0f - deadZone);
+        // 最初のコントローラーを使用
+        gamepads->GetAt(0, &m_gamepad);
+        m_gamepad->GetCurrentReading(&m_currentState);
+        m_isConnected = true;
     }
     else
     {
-        return (float)(value + deadZone) / (32768.0f - deadZone);
+        m_isConnected = false;
+        m_gamepad = nullptr;
     }
 }
 
-float Controller::GetLeftStickX() const
+// ボタン押下判定（ビット演算）
+bool Controller::IsButtonDown(ControllerButton::Button button) const
 {
-    return NormalizeAndDeadZone(m_currentState.Gamepad.sThumbLX, XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE);
+    if (!m_isConnected) return false;
+    return (static_cast<unsigned int>(m_currentState.Buttons) & button);
 }
 
-float Controller::GetLeftStickY() const
+// 押した瞬間
+bool Controller::IsButtonPushed(ControllerButton::Button button) const
 {
-    return NormalizeAndDeadZone(m_currentState.Gamepad.sThumbLY, XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE);
+    if (!m_isConnected) return false;
+    return (static_cast<unsigned int>(m_currentState.Buttons) & button) &&
+        !(static_cast<unsigned int>(m_prevState.Buttons) & button);
 }
 
-float Controller::GetRightStickX() const
+// 離した瞬間
+bool Controller::IsButtonReleased(ControllerButton::Button button) const
 {
-    return NormalizeAndDeadZone(m_currentState.Gamepad.sThumbRX, XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE);
+    if (!m_isConnected) return false;
+    return !(static_cast<unsigned int>(m_currentState.Buttons) & button) &&
+        (static_cast<unsigned int>(m_prevState.Buttons) & button);
 }
 
-float Controller::GetRightStickY() const
-{
-    return NormalizeAndDeadZone(m_currentState.Gamepad.sThumbRY, XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE);
+// スティックの値取得（デッドゾーン処理を追加）
+float Controller::GetLeftStickX() const {
+    if (!m_isConnected) return 0.0f;
+    float val = (float)m_currentState.LeftThumbstickX;
+    return (fabs(val) < 0.1f) ? 0.0f : val; // 0.1(10%)未満の傾きは0にする
 }
 
-
-// --- トリガーの状態取得関数 (正規化) ---
-
-// トリガーの生の値 (0～255) を 0.0f～1.0f に正規化
-static float NormalizeTrigger(BYTE value, BYTE deadZone)
-{
-    if (value < deadZone)
-    {
-        return 0.0f;
-    }
-    // デッドゾーンを超えた部分を正規化
-    return (float)(value - deadZone) / (255.0f - deadZone);
+float Controller::GetLeftStickY() const {
+    if (!m_isConnected) return 0.0f;
+    float val = (float)m_currentState.LeftThumbstickY;
+    return (fabs(val) < 0.1f) ? 0.0f : val;
 }
 
-float Controller::GetLeftTrigger() const
-{
-    return NormalizeTrigger(m_currentState.Gamepad.bLeftTrigger, XINPUT_GAMEPAD_TRIGGER_THRESHOLD);
+float Controller::GetRightStickX() const {
+    if (!m_isConnected) return 0.0f;
+    float val = (float)m_currentState.RightThumbstickX;
+    return (fabs(val) < 0.1f) ? 0.0f : val;
 }
 
-float Controller::GetRightTrigger() const
-{
-    return NormalizeTrigger(m_currentState.Gamepad.bRightTrigger, XINPUT_GAMEPAD_TRIGGER_THRESHOLD);
+float Controller::GetRightStickY() const {
+    if (!m_isConnected) return 0.0f;
+    float val = (float)m_currentState.RightThumbstickY;
+    return (fabs(val) < 0.1f) ? 0.0f : val;
 }
+// トリガーの値取得（WGIは 0.0～1.0）
+float Controller::GetLeftTrigger() const { return m_isConnected ? (float)m_currentState.LeftTrigger : 0.0f; }
+float Controller::GetRightTrigger() const { return m_isConnected ? (float)m_currentState.RightTrigger : 0.0f; }
 
-
-// --- 接続状態チェック ---
-bool Controller::IsConnected() const
-{
-    // XInputGetStateを試行し、ERROR_SUCCESSが返るかチェック
-    XINPUT_STATE state;
-    return XInputGetState(m_controllerId, &state) == ERROR_SUCCESS;
-}
-
-
-// --- バイブレーション機能 ---
-// leftMotor: 低周波モーター (0.0f～1.0f), rightMotor: 高周波モーター (0.0f～1.0f)
+// 振動の設定
 void Controller::SetVibration(float leftMotor, float rightMotor)
 {
-    XINPUT_VIBRATION vibration;
-    vibration.wLeftMotorSpeed = (WORD)((std::min)(1.0f, (std::max)(0.0f, leftMotor)) * 65535.0f);
-    vibration.wRightMotorSpeed = (WORD)((std::min)(1.0f, (std::max)(0.0f, rightMotor)) * 65535.0f);
-    XInputSetState(m_controllerId, &vibration);
+    if (!m_isConnected || !m_gamepad) return;
+
+    GamepadVibration vibration;
+    vibration.LeftMotor = (double)leftMotor;
+    vibration.RightMotor = (double)rightMotor;
+    vibration.LeftTrigger = 0.0;
+    vibration.RightTrigger = 0.0;
+
+    m_gamepad->put_Vibration(vibration);
 }

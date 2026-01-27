@@ -72,12 +72,16 @@ void ManagerCollider::UpdateAllCollisions()
                 // a ‚ÉÕ“Ëî•ñ‚ð“n‚·
                 info.other = b->owner;
                 if (a->owner)
+                {
                     a->owner->OnCollision(info);
+                }
 
                 // b ‚É‚à‹tŒü‚«‚Ìî•ñ‚ð“n‚·
                 info.other = a->owner;
                 if (b->owner)
+                {
                     b->owner->OnCollision(info);
+                }
             }
         }
     }

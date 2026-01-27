@@ -66,5 +66,6 @@ void Player2_ManualMove();
 float Player2_GetHp();
 float Player2_GetMaxHp();
 PLAYER2* GetPlayer2();
+WeaponTerrain GetSetWTP2();
 
 #endif // PLAYER2_H
