@@ -5,7 +5,6 @@
 * 作成日		12月02日
 * 更新日		12月02日
 */
-
 //================================================================
 //	マクロ定義
 //================================================================
@@ -39,7 +38,8 @@
 PLAYER2	g_Player2;
 ID3D11Device* g_pDevice2;
 ID3D11DeviceContext* g_pContext2;
-Controller g_Controller2(0); //ID 0のコントローラーを使用
+extern Controller g_Controller[2]; //ID 0のコントローラーを使用
+extern const char* INITIAL_MODEL_PATH_P2;
 MODEL* g_modelP2;
 WeaponTerrain g_setWTP2; // プレイヤーの武器と地形情報
 unsigned int g_changeP2;
@@ -67,7 +67,7 @@ void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 	g_pDevice2 = pDevice;
 	g_pContext2 = pContext;
 
-	g_Player2.m_model = ModelLoad("asset\\model\\char_sword_motion_b.fbx");
+	g_Player2.m_model = ModelLoad(INITIAL_MODEL_PATH_P2);
 	g_modelP2 = ModelLoad("asset\\model\\block.fbx");
 
 	g_Player2.m_position = XMFLOAT3(2.0f, 0.5f, 2.0f);
@@ -118,7 +118,6 @@ void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 		g_Player2.EquipWeapon(std::make_unique<Shuriken>(&g_Player2, TRUE));
 	}
 
-	EvolutionInitialize();
 }
 void Player2Finalize()
 {
@@ -126,7 +125,7 @@ void Player2Finalize()
 }
 void	Player2Update()
 {
-	g_Controller2.Update();
+
 
 	EvolvePlayer2();           // Eキーで進化タイプを選択
 	ApplyEvolutionEffect2();   // 進化タイプに応じたパラメータを適用
@@ -186,7 +185,7 @@ void	Player2Update()
 //	攻撃処理
 //================================================================
 	// CキーかAボタンで
-	if (Keyboard_IsKeyDownTrigger(KK_P) || g_Controller2.IsButtonPushed(ControllerButton::B_BUTTON))
+	if (Keyboard_IsKeyDownTrigger(KK_P) || g_Controller[1].IsButtonPushed(ControllerButton::B_BUTTON))
 	{
 		// 武器があるか
 		if (g_Player2.m_currentWeapon)
@@ -363,6 +362,13 @@ void Player2_ManualMove()
 	float moveZ = 0.0f;
 
 	float speed = 0.0f;
+	float stickY = g_Controller[1].GetLeftStickY();
+	if (fabs(stickY) > 0.05f) // デッドゾーンを設定 (必要に応じて調整)
+	{
+		// ベクトルが逆だから移動が逆になる
+		// 左スティック上方向 (+1.0f) で前進 (speed = -0.1f) に対応
+		speed = stickY * 0.1f;
+	}
 	if (Keyboard_IsKeyDown(KK_U))
 	{
 		speed = -0.1f;
@@ -377,6 +383,12 @@ void Player2_ManualMove()
 
 	// 横移動
 	float strafe = 0.0f;
+	float stickX = g_Controller[1].GetLeftStickX();
+	if (fabs(stickX) > 0.05f) // デッドゾーンを設定 (必要に応じて調整)
+	{
+		// 左スティック左方向 (-1.0f) で左移動 (strafe = +0.1f) に対応
+		strafe = stickX * 0.1f;
+	}
 	if (Keyboard_IsKeyDown(KK_H))
 	{
 		strafe = +0.1f;  // 左

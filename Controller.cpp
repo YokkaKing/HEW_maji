@@ -1,8 +1,11 @@
+#pragma comment(lib, "runtimeobject.lib")
+
 #include "Controller.h"
 #include <algorithm>
 
-// コンストラクタ
-Controller::Controller(DWORD id) : m_isConnected(false)
+Controller g_Controller[2] = { Controller(0), Controller(1) };
+
+Controller::Controller(DWORD id) : m_id(id), m_isConnected(false)
 {
     m_currentState = {};
     m_prevState = {};
@@ -23,17 +26,18 @@ void Controller::Update()
 
     if (FAILED(hr)) return;
 
-    // 接続されているゲームパッドのリストを取得
     ComPtr<ABI::Windows::Foundation::Collections::IVectorView<Gamepad*>> gamepads;
     if (FAILED(gamepadStatics->get_Gamepads(&gamepads))) return;
 
     unsigned int count = 0;
     gamepads->get_Size(&count);
 
-    if (count > 0)
+    // 修正ポイント: 自分のID（0または1）が接続台数以内かチェック
+    // m_id はヘッダーで保存しておく必要があります
+    if (count > m_id)
     {
-        // 最初のコントローラーを使用
-        gamepads->GetAt(0, &m_gamepad);
+        // IDに対応したコントローラーを取得
+        gamepads->GetAt(m_id, &m_gamepad);
         m_gamepad->GetCurrentReading(&m_currentState);
         m_isConnected = true;
     }
@@ -43,7 +47,6 @@ void Controller::Update()
         m_gamepad = nullptr;
     }
 }
-
 // ボタン押下判定（ビット演算）
 bool Controller::IsButtonDown(ControllerButton::Button button) const
 {
