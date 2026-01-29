@@ -32,7 +32,7 @@
 #include "Hp.h"
 #include "Hp2.h"
 #include "generateWT.h"
-
+#include "transformManager.h"
 #include"Item.h"
 //================================================================
 //	グローバル変数
@@ -42,6 +42,7 @@ LIGHTOBJECT		Light;//<<<<<<ライト管理オブジェクト
 std::vector<GameObject*> g_gameObjects;
 static	int		g_BgmID = NULL;	//サウンド管理ID
 
+static TransformManager g_transformMngr;
 ITEM_SPONER g_sponer;
 
 void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, const inGameWTselect& select)
@@ -64,6 +65,9 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, const
 
 	Camera_Initialize();	//カメラ初期化
 	Camera2_Initialize();	//カメラ初期化
+
+	g_transformMngr.Initialize(pDevice, pContext); //変身先選択の初期化
+	g_transformMngr.StartSelection();
 
 	//===========UI===========
 	Hpbar_Initialize(pDevice, pContext);
@@ -111,7 +115,7 @@ void Game_Finalize()
 	Camera_Finalize();	//カメラ終了処理
 	Camera2_Finalize();	//カメラ終了処理
 
-
+	g_transformMngr.Finalize();
 
 	//=======UI===========
 	Hpbar_Finalize();
@@ -127,60 +131,78 @@ void Game_Finalize()
 
 void Game_Update()
 {
-	//更新処理
-	for (auto obj : g_gameObjects)
+	//あとで関数化してもいいけど
+	//暫定での変身先選択
+	if (g_transformMngr.IsActive())
 	{
-		obj->Update();
+		g_transformMngr.Update(1.0f / 60.0f);
+
+		if (!g_transformMngr.IsActive())
+		{
+			inGameWTselect selectionData = g_transformMngr.GetPlayerSelectionWT();
+
+			g_Player.SetReservedWT(selectionData.player1);
+			g_Player2.SetReservedWT(selectionData.player2);
+		}
+		
 	}
-	PlayerUpdate();
-	Player2Update();
-	Field_Update();
-	TerrainUpdate();
-	
-	g_sponer.Update();
-
-	//=======UI===========
-	Hpbar_Update();
-	HpBar2_Update();
-	Timer_Update();
-	Number_Update();
-	Hp_Update();
-	Hp2_Update();
-	//=====================
-
-	//======当たり判定======
-	ManagerCollider::UpdateAllCollisions();
-
-	auto it = std::remove_if(
-		g_gameObjects.begin(), g_gameObjects.end(),
-		[](GameObject* obj) {
-			if (obj->m_isDead) 
-			{
-				// 削除される前に、持っているコライダーをすべてマネージャーから外す
-				// ※Colliderをshared_ptrで持っているなら、ここでの解除が重要です
-				for (auto& collider : obj->GetColliders()) 
-				{
-					ManagerCollider::RemoveCollider(collider);
-				}
-
-				delete obj; // メモリを解放 (newで作っている場合)
-				return true;
-			}
-			return false;
-		});
-
-	// リストから除去
-	g_gameObjects.erase(it, g_gameObjects.end());
-	//=====================
-
-	//キー入力チェック
-	//スタートボタンが押されたらシーンを切り替え
-	//フェード処理中はキーを受け付けない
-	if (Keyboard_IsKeyDownTrigger(KK_ENTER) && (GetFadeState() == FADE_NONE))
+	else
 	{
-		//フェードアウトさせてシーンを切り替える
-		XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
-		SetFade(40.0f, color, FADE_OUT, SCENE_RESULT);
+		//更新処理
+		for (auto obj : g_gameObjects)
+		{
+			obj->Update();
+		}
+		PlayerUpdate();
+		Player2Update();
+		Field_Update();
+		TerrainUpdate();
+
+		g_sponer.Update();
+
+		//=======UI===========
+		Hpbar_Update();
+		HpBar2_Update();
+		Timer_Update();
+		Number_Update();
+		Hp_Update();
+		Hp2_Update();
+		//=====================
+
+		//======当たり判定======
+		ManagerCollider::UpdateAllCollisions();
+
+		auto it = std::remove_if(
+			g_gameObjects.begin(), g_gameObjects.end(),
+			[](GameObject* obj) {
+				if (obj->m_isDead)
+				{
+					// 削除される前に、持っているコライダーをすべてマネージャーから外す
+					// ※Colliderをshared_ptrで持っているなら、ここでの解除が重要です
+					for (auto& collider : obj->GetColliders())
+					{
+						ManagerCollider::RemoveCollider(collider);
+					}
+
+					delete obj; // メモリを解放 (newで作っている場合)
+					return true;
+				}
+				return false;
+			});
+
+		// リストから除去
+		g_gameObjects.erase(it, g_gameObjects.end());
+		//=====================
+
+		//キー入力チェック
+		//スタートボタンが押されたらシーンを切り替え
+		//フェード処理中はキーを受け付けない
+		if (Keyboard_IsKeyDownTrigger(KK_ENTER) && (GetFadeState() == FADE_NONE))
+		{
+			//フェードアウトさせてシーンを切り替える
+			XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
+			SetFade(40.0f, color, FADE_OUT, SCENE_RESULT);
+		}
 	}
 	Camera_Update();	//カメラ更新処理
 	Camera2_Update();   //カメラ2更新処理
@@ -216,17 +238,23 @@ void Game_Draw_Player1()
 		obj->Draw();
 	}
 
+
 	//==========lightがtrueだとUIが暗く見えるので、一回解除=========
 	Light.SetEnable(FALSE);			//ライティングOFF
 	Shader_SetLight(Light.Light);	//ライト構造体をシェーダーへセット
 	SetDepthTest(FALSE);
 	//===UI描画========
 
+	if (g_transformMngr.IsActive())
+	{
+		g_transformMngr.Draw(0);
+	}
+
 	//Hpbar_Draw(); //<--HpBar描画
 	//Timer_Draw();
 	//Number_Draw();
 	//Hp_Draw();
-	//
+
 	//================
 	Light.SetEnable(TRUE);			//ライティングON
 	Shader_SetLight(Light.Light);	//ライト構造体をシェーダーへセット
@@ -253,6 +281,12 @@ void Game_Draw_Player2()
 	Light.SetEnable(FALSE);			//ライティングOFF
 	Shader_SetLight(Light.Light);	//ライト構造体をシェーダーへセット
 	SetDepthTest(FALSE);
+
+	if (g_transformMngr.IsActive())
+	{
+		g_transformMngr.Draw(1);
+	}
+
 	//HpBar2_Draw();
 	//Timer_Draw();
 	//Number_Draw();

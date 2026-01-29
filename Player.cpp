@@ -31,7 +31,8 @@
 #include"syuriken.h"
 #include"terrain.h"
 #include<memory>
-
+#include"generateWT.h"
+#include"selectWeaponTerrain.h"
 //================================================================
 //	グローバル変数
 //================================================================
@@ -143,13 +144,40 @@ void	PlayerUpdate()
 //================================================================
 	if (Keyboard_IsKeyDownTrigger(KK_D1))
 	{
-		g_changeP1++;
+		WeaponTerrain reserved = g_Player.GetReservedWT();
 
+		// 予約がある場合のみ実行
+		if (reserved != WeaponTerrain::NONE)
+		{
+			inGameWTselect data;
+			data.player1 = reserved;         // 自分は予約していた武器へ
+			data.player2 = g_Player2.GetCurrentWT(); // 相手は「今のまま」の状態を指定
+
+			// generateWT_Applyを呼んで、モデルや地形を物理的に生成・置換
+			generateWT_Apply(data, &g_Player, &g_Player2, g_pDevice, g_pContext);
+			TerrainSet(reserved, FALSE);
+
+			//下にある攻撃処理のアニメーションの順と合わせる
+			switch (reserved) {
+			case WeaponTerrain::SWORD_WALL: g_changeP1 = 0; break;
+			case WeaponTerrain::SPEAR_HILL: g_changeP1 = 1; break;
+			case WeaponTerrain::HAMMER_:    g_changeP1 = 2; break;
+			case WeaponTerrain::BOW_HILL:   g_changeP1 = 3; break;
+			case WeaponTerrain::SHURIKEN_:  g_changeP1 = 4; break;
+			}
+
+			// 状態を更新
+			g_Player.SetCurrentWT(reserved);
+			g_Player.SetReservedWT(WeaponTerrain::NONE); // 予約を消費
+		}
+
+		//デバッグコード
+		/*
+		g_changeP1++;
 		if (g_changeP1 >= 5)
 		{
 			g_changeP1 = 0;
 		}
-
 		switch (g_changeP1)
 		{
 		case 0: //sword
@@ -190,6 +218,7 @@ void	PlayerUpdate()
 		default:
 			break;
 		}
+		*/
 	}
 
 //================================================================

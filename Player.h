@@ -50,11 +50,20 @@ public:
 	bool			m_isDead = false; // €–Sƒtƒ‰ƒO
 	XMFLOAT3 m_rotation; // •Ší‚ğ‰ñ“]‚³‚¹‚é
 
+	WeaponTerrain m_reservedWT = WeaponTerrain::NONE; // —\–ñ‚³‚ê‚½•Ïgæ
+	WeaponTerrain m_currentWT = WeaponTerrain::NONE; // Œ»İ‚Ìp
 public:
 	//•Ší‘€ìŠÖ”
 	void EquipWeapon(std::unique_ptr<IWeapon> weapon); // •Ší‚ğ‘•”õ‚·‚é
 	void OnCollision(const CollisionInfo& info)override;
+
+	void SetReservedWT(WeaponTerrain wt) { m_reservedWT = wt; }
+	WeaponTerrain GetCurrentWT() const { return m_currentWT; }
+	void SetCurrentWT(WeaponTerrain wt) { m_currentWT = wt; }
+	WeaponTerrain GetReservedWT() const { return m_reservedWT; }
 };
+
+extern PLAYER g_Player;
 
 void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, WeaponTerrain setWTp1);
 void PlayerFinalize();

@@ -31,7 +31,7 @@
 #include"syuriken.h"
 #include<memory>
 #include"terrain.h"
-
+#include"generateWT.h"
 //================================================================
 //	グローバル変数
 //================================================================
@@ -136,8 +136,38 @@ void	Player2Update()
 //================================================================
 	if (Keyboard_IsKeyDownTrigger(KK_D2))
 	{
-		g_changeP2++;
+		// 予約されている変身先を取得
+		WeaponTerrain reserved = g_Player2.GetReservedWT();
 
+		// 選択（予約）済みであり、かつ現在変身中でない（または NONE でない）場合
+		if (reserved != WeaponTerrain::NONE)
+		{
+			inGameWTselect data;
+			data.player1 = WeaponTerrain::NONE; // P1は変更しない
+			data.player2 = reserved;            // P2に予約分を適用
+
+			// 武器の適用
+			generateWT_Apply(data, &g_Player, &g_Player2, g_pDevice2, g_pContext2);
+
+			// 地形の生成（P2用なので第二引数はTRUE）
+			TerrainSet(reserved, TRUE);
+
+			//下にある攻撃処理のアニメーションの順と合わせる
+			switch (reserved) {
+			case WeaponTerrain::SWORD_WALL: g_changeP2 = 0; break;
+			case WeaponTerrain::SPEAR_HILL: g_changeP2 = 1; break;
+			case WeaponTerrain::BOW_HILL:   g_changeP2 = 2; break;
+			case WeaponTerrain::HAMMER_:    g_changeP2 = 3; break;
+			case WeaponTerrain::SHURIKEN_:  g_changeP2 = 4; break;
+			}
+
+			g_Player2.SetCurrentWT(reserved);
+			g_Player2.SetReservedWT(WeaponTerrain::NONE); // 予約をクリア
+
+		}
+		//デバッグコード
+		/*
+		g_changeP2++;
 		if (g_changeP2 >= 5)
 		{
 			g_changeP2 = 0;
@@ -179,6 +209,7 @@ void	Player2Update()
 		default:
 			break;
 		}
+		*/
 	}
 
 //================================================================
