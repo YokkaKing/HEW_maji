@@ -1,4 +1,4 @@
-/*
+
 * ファイル名	Player.cpp
 * タイトル	プレイヤー
 * 作成者		久保木幹太
@@ -98,6 +98,7 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 
 	// のちのちセレクト画面から分岐できるようにする
 	// 自分をownerとして武器を生成
+
 	g_changeP1 = 0;
 	g_setWTP1 = setWTp1;
 	if (g_setWTP1 == WeaponTerrain::SWORD_WALL)
@@ -135,7 +136,6 @@ void PlayerFinalize()
 }
 void	PlayerUpdate()
 {
-	
 	EvolvePlayer();
 	// こいつの中でscaleが1.0fに固定されている
 	ApplyEvolutionEffect();   // 進化タイプに応じたパラメータを適用
@@ -552,8 +552,6 @@ void PlayerDraw()
 	{
 		g_Player.m_currentWeapon->Draw();
 	}
-
-
 	//ModelDraw(g_modelP1);
 }
 
