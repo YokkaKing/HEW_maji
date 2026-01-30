@@ -1,5 +1,5 @@
 
-* ファイル名	Player.cpp
+/* ファイル名	Player.cpp
 * タイトル	プレイヤー
 * 作成者		久保木幹太
 * 作成日		12月02日
@@ -127,6 +127,7 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 	{
 		g_Player.EquipWeapon(std::make_unique<Shuriken>(&g_Player, FALSE));
 		g_Player.m_model = ModelLoad("asset\\model\\default_shuriken.fbx");
+	
 	}
 	
 }

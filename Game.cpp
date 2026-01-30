@@ -60,7 +60,7 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, const
 
 	PLAYER* pP1 = GetPlayer();
 	PLAYER2* pP2 = GetPlayer2();
-	generateWT_Apply(Manager_GetWTselect(), pP1, pP2, pDevice, pContext);
+	//generateWT_Apply(Manager_GetWTselect(), pP1, pP2, pDevice, pContext);
 
 	Camera_Initialize();	//ƒJƒƒ‰‰Šú‰»
 	Camera2_Initialize();	//ƒJƒƒ‰‰Šú‰»
