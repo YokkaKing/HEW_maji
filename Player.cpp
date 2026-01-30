@@ -98,9 +98,7 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 	// のちのちセレクト画面から分岐できるようにする
 	// 自分をownerとして武器を生成
 	g_changeP1 = 0;
-
 	g_setWTP1 = setWTp1;
-
 	if (g_setWTP1 == WeaponTerrain::SWORD_WALL)
 	{
 		g_Player.EquipWeapon(std::make_unique<Sword>(&g_Player, FALSE));
@@ -127,7 +125,6 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 	{
 		g_Player.EquipWeapon(std::make_unique<Shuriken>(&g_Player, FALSE));
 		g_Player.m_model = ModelLoad("asset\\model\\default_shuriken.fbx");
-
 	}
 	
 }
@@ -198,7 +195,7 @@ void	PlayerUpdate()
 	}
 
 //================================================================
-//	攻撃処理
+//	攻撃処理(変身前)
 //================================================================
 	if (Keyboard_IsKeyDownTrigger(KK_C) || g_Controller.IsButtonPushed(ControllerButton::A_BUTTON))
 	{
@@ -206,21 +203,21 @@ void	PlayerUpdate()
 		if (g_Player.m_currentWeapon && !g_Player1AttackPlaying)
 		{
 			g_Player.m_currentWeapon->Attack();
-			switch (g_changeP1)
+			switch (g_setWTP1)
 			{
-			case 0: // Sword
-				ModelPlayClip(g_Player.m_model, 301, 360, 60.0f, false, 2.0f);
+			case WeaponTerrain::SWORD_WALL: // Sword
+				ModelPlayClip(g_Player.m_model, 167, 227, 60.0f, false, 2.0f);
 				break;
-			//case 1: // spear
-			//	ModelPlayClip(g_Player.m_model, 301, 360, 60.0f, false, 2.0f);
-			//	break;
-			case 2: // hammer
-			//	ModelPlayClip(g_Player.m_model, 301, 360, 60.0f, false, 2.0f);
-			//	break;
-			case 3: // arrow
+			case WeaponTerrain::SPEAR_HILL: // spear
+				ModelPlayClip(g_Player.m_model, 500, 600, 60.0f, false, 4.0f);
+				break;
+			case WeaponTerrain::BOW_HILL: // arrow
 				ModelPlayClip(g_Player.m_model, 240, 360, 60.0f, false, 4.0f);
 				break;
-			case 4: //shuriken
+			case WeaponTerrain::HAMMER_: // hammer
+				ModelPlayClip(g_Player.m_model, 360, 539, 60.0f, false, 2.0f);
+				break;
+			case WeaponTerrain::SHURIKEN_: //shuriken
 				ModelPlayClip(g_Player.m_model, 151, 210, 60.0f, false, 4.0f);
 				break;
 			}
@@ -271,21 +268,21 @@ void	PlayerUpdate()
 				if (g_Player1CurrentAnim != 1)
 				{
 					
-					switch (g_changeP1)
+					switch (g_setWTP1) //移動
 					{
-					case 0: // Sword
-						ModelPlayClip(g_Player.m_model, 201, 245, 60.0f, true, 1.5f);
+					case WeaponTerrain::SWORD_WALL: 
+						ModelPlayClip(g_Player.m_model, 120, 165, 60.0f, true, 1.5f);
 						break;
-				    //case 1: // spear
-			        //	ModelPlayClip(g_Player.m_model, 301, 360, 60.0f, false, 2.0f);
-			        //	break;
-			        case 2: // hammer
+				    case WeaponTerrain::SPEAR_HILL: 
+			        	ModelPlayClip(g_Player.m_model, 240, 360, 60.0f, true, 2.0f);
+			        	break;
+			        case WeaponTerrain::BOW_HILL: 
 			        	ModelPlayClip(g_Player.m_model, 181, 240, 60.0f, true, 2.0f);
 			        	break;
-			        case 3: // arrow
-			        	ModelPlayClip(g_Player.m_model, 180, 240, 60.0f, true, 2.0f);
+			        case WeaponTerrain::HAMMER_:
+			        	ModelPlayClip(g_Player.m_model, 180, 240, 60.0f, true, 1.0f);
 			        	break;
-					case 4:
+					case WeaponTerrain::SHURIKEN_:
 						ModelPlayClip(g_Player.m_model, 121, 150, 60.0f, true, 2.0f);
 						break;
 					}
@@ -297,21 +294,21 @@ void	PlayerUpdate()
 				// 待機ループ（0~60）
 				if (g_Player1CurrentAnim != 0)
 				{
-					switch (g_changeP1)
+					switch (g_setWTP1) //移動
 					{
-					case 0: // Sword
+					case WeaponTerrain::SWORD_WALL:
 						ModelPlayClip(g_Player.m_model, 0, 60, 60.0f, true);
 						break;
-					//case 1: // spear
-			        //	ModelPlayClip(g_Player.m_model, 301, 360, 60.0f, false, 2.0f);
-			        //	break;
-			        case 2: // hammer
+					case WeaponTerrain::SPEAR_HILL: 
 			        	ModelPlayClip(g_Player.m_model, 0, 120, 60.0f, true);
 			        	break;
-			        case 3: // arrow
+			        case WeaponTerrain::BOW_HILL:
 			        	ModelPlayClip(g_Player.m_model, 0, 120, 60.0f, true);
 			        	break;
-					case 4:
+			        case WeaponTerrain::HAMMER_:
+			        	ModelPlayClip(g_Player.m_model, 0, 120, 60.0f, true);
+			        	break;
+					case WeaponTerrain::SHURIKEN_:
 						ModelPlayClip(g_Player.m_model, 0, 60, 60.0f, true);
 						break;
 					}
@@ -328,21 +325,21 @@ void	PlayerUpdate()
 		{
 			if (g_Player1CurrentAnim != 1)
 			{
-				switch (g_changeP1)
+				switch (g_setWTP1) //移動
 				{
-				case 0: // Sword
-					ModelPlayClip(g_Player.m_model, 201, 245, 60.0f, true, 1.5f);
+				case WeaponTerrain::SWORD_WALL:
+					ModelPlayClip(g_Player.m_model, 120, 165, 60.0f, true, 1.5f);
 					break;
-				//case 1: // spear
-			    //	ModelPlayClip(g_Player.m_model, 301, 360, 60.0f, false, 2.0f);
-			    //	break;
-				case 2: // hammer
+				case WeaponTerrain::SPEAR_HILL: // spear
+			    	ModelPlayClip(g_Player.m_model, 240, 360, 60.0f, true, 2.0f);
+			    	break;
+				case WeaponTerrain::BOW_HILL: // hammer
 					ModelPlayClip(g_Player.m_model, 181, 240, 60.0f, true, 2.0f);
 					break;
-			    case 3: // arrow
-			    	ModelPlayClip(g_Player.m_model, 120, 180, 60.0f, true, 2.0f);
+			    case WeaponTerrain::HAMMER_: // arrow
+			    	ModelPlayClip(g_Player.m_model, 180, 240, 60.0f, true, 1.0f);
 			    	break;
-				case 4:
+				case WeaponTerrain::SHURIKEN_:
 					ModelPlayClip(g_Player.m_model, 121, 150, 60.0f, true, 2.0f);
 					break;
 				}
@@ -353,21 +350,21 @@ void	PlayerUpdate()
 		{
 			if (g_Player1CurrentAnim != 0)
 			{
-				switch (g_changeP1)
+				switch (g_setWTP1) //待機
 				{
-				case 0: // Sword
+				case WeaponTerrain::SWORD_WALL:
 					ModelPlayClip(g_Player.m_model, 0, 60, 60.0f, true);
 					break;
-				//case 1: // spear
-			    //	ModelPlayClip(g_Player.m_model, 301, 360, 60.0f, false, 2.0f);
-			    //	break;
-				case 2: // hammer
-					ModelPlayClip(g_Player.m_model, 0, 120, 60.0f, true);
-					break;
-			    case 3: // arrow
+				case WeaponTerrain::SPEAR_HILL: // spear
 			    	ModelPlayClip(g_Player.m_model, 0, 120, 60.0f, true);
 			    	break;
-				case 4:
+				case WeaponTerrain::BOW_HILL: // hammer
+					ModelPlayClip(g_Player.m_model, 0, 120, 60.0f, true);
+					break;
+			    case WeaponTerrain::HAMMER_: // arrow
+			    	ModelPlayClip(g_Player.m_model, 0, 120, 60.0f, true);
+			    	break;
+				case WeaponTerrain::SHURIKEN_:
 					ModelPlayClip(g_Player.m_model, 0, 60, 60.0f, true);
 					break;
 				}
@@ -494,13 +491,23 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 		g_Player.m_velocity.y = JUMP_FORCE;
 		g_Player.m_isGround = false;
 		g_Player.m_koyoteTime = 0.0f;
-		switch (g_changeP1)
+		switch (g_setWTP1)
 		{
-		case 0: // Sword
-			ModelPlayClip(g_Player.m_model, 521, 560, 60.0f, false, 1.0f);
+		case WeaponTerrain::SWORD_WALL: // Sword
+			ModelPlayClip(g_Player.m_model, 300, 335, 60.0f, false, 1.0f);
 			break;
-		case 4:
-			ModelPlayClip(g_Player.m_model, 290, 350, 60.0f, false, 1.0f);
+		case WeaponTerrain::SPEAR_HILL: // spear
+			ModelPlayClip(g_Player.m_model, 361, 420, 60.0f, false, 1.0f);
+			break;
+		case WeaponTerrain::BOW_HILL: // arrow
+			ModelPlayClip(g_Player.m_model, 400, 450, 60.0f, false, 1.0f);
+			break;
+		case WeaponTerrain::HAMMER_: // hammer
+			ModelPlayClip(g_Player.m_model, 240, 300, 60.0f, false, 0.0f);
+			break;
+
+		case WeaponTerrain::SHURIKEN_: //shuriken
+			ModelPlayClip(g_Player.m_model, 280, 320, 60.0f, false, 4.0f);
 			break;
 		}
 		g_Player1JumpPlaying = true;
@@ -529,7 +536,7 @@ void PlayerDraw()
 		g_Player.m_rotation.z);
 	XMMATRIX	translation = XMMatrixTranslation(
 		g_Player.m_position.x,
-		g_Player.m_position.y ,
+		g_Player.m_position.y - 0.3f,
 		g_Player.m_position.z);
 	XMMATRIX	world = scale * rotation * translation;
 
@@ -545,23 +552,6 @@ void PlayerDraw()
 		g_Player.m_currentWeapon->Draw();
 	}
 
-	//ワールド行列作成
-	scale = XMMatrixScaling(
-		0.6f,
-		1.0f,
-		0.6f);
-	rotation = XMMatrixRotationRollPitchYaw(
-		g_Player.m_rotation.x,
-		g_Player.m_rotation.y,
-		g_Player.m_rotation.z);
-	translation = XMMatrixTranslation(
-		g_Player.m_position.x,
-		g_Player.m_position.y,
-		g_Player.m_position.z);
-	world = scale * rotation * translation;
-
-	//シェーダーへ行列をセット
-	Shader_SetWorldMatrix(world);
 
 	//ModelDraw(g_modelP1);
 }
