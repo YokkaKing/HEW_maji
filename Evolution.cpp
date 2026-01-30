@@ -134,7 +134,7 @@ void ApplyEvolutionEffect()
         case WeaponTerrain::SWORD_WALL:
             g_Player.m_moveSpeed = 0.2f; g_Player.m_jumpForce = 0.1f; break;
         case WeaponTerrain::SPEAR_HILL:
-            g_Player.m_moveSpeed = 0.18f; g_Player.m_jumpForce = 0.08f; break;
+            g_Player.m_moveSpeed = 0.18f;g_Player.m_jumpForce = 0.08f; break;
         case WeaponTerrain::BOW_HILL:    
             g_Player.m_moveSpeed = 0.18f; g_Player.m_jumpForce = 0.11f; break;
         case WeaponTerrain::SHURIKEN_:   
@@ -199,30 +199,37 @@ void EvolvePlayer2()
 }
 void ApplyEvolutionEffect2()
 {
-    // Player 2用の進化効果
-    if (g_Player2.EvolutionType == EVOLUTION_TYPE2::EVOLUTION_TYPE_NONE)
+    // 現在の武器情報を取得
+    WeaponTerrain weapon = GetSetWTP2();
+
+    // 進化していないとき
+    if (g_Player.EvolutionType == EVOLUTION_TYPE::EVOLUTION_TYPE_NONE)
     {
-        // 初期状態の基本パラメータ
-        g_Player2.m_acceleration.x = 0.0f;
-        g_Player2.m_acceleration.z = 0.0f;
-        g_Player2.FrictionRate = 0.98f;
-        g_Player2.m_scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
+        switch (weapon) {
+        case WeaponTerrain::SWORD_WALL:
+            g_Player2.m_moveSpeed = 0.2f; g_Player2.m_jumpForce = 0.1f; break;
+        case WeaponTerrain::SPEAR_HILL:
+            g_Player2.m_moveSpeed = 0.18f; g_Player2.m_jumpForce = 0.08f; break;
+        case WeaponTerrain::BOW_HILL:
+            g_Player2.m_moveSpeed = 0.18f; g_Player2.m_jumpForce = 0.11f; break;
+        case WeaponTerrain::SHURIKEN_:
+            g_Player2.m_moveSpeed = 0.24f; g_Player2.m_jumpForce = 0.12f; break;
+        case WeaponTerrain::HAMMER_:
+            g_Player2.m_moveSpeed = 0.18f; g_Player2.m_jumpForce = 0.08f; break;
+        default:
+            g_Player2.m_moveSpeed = 0.2f; g_Player2.m_jumpForce = 0.1f; break;
+        }
     }
-    else if (g_Player2.EvolutionType == EVOLUTION_TYPE2::EVOLUTION_TYPE_A)
+    else
     {
-        // 進化先 A (機動力特化)
-        g_Player2.m_acceleration.x = 0.005f;
-        g_Player2.m_acceleration.z = 0.005f;
-        g_Player2.FrictionRate = 0.99f; // 減速しにくくする (滑りやすい)
-        // g_Player2.m_scale = XMFLOAT3(1.5f, 1.5f, 1.5f); // 必要に応じてスケール変更を適用
-    }
-    else if (g_Player2.EvolutionType == EVOLUTION_TYPE2::EVOLUTION_TYPE_B)
-    {
-        // 進化先 B (制動・防御特化)
-        g_Player2.m_acceleration.x = 0.0f;
-        g_Player2.m_acceleration.z = 0.0f;
-        g_Player2.FrictionRate = 0.95f; // 減速しやすくする (止まりやすい)
-        // g_Player2.m_scale = XMFLOAT3(1.2f, 1.2f, 1.2f); // 必要に応じてスケール変更を適用
+        switch (weapon) {
+        case WeaponTerrain::SWORD_WALL:
+            g_Player.m_moveSpeed = 0.12f; g_Player.m_jumpForce = 0.20f; break;
+        case WeaponTerrain::HAMMER_:
+            g_Player.m_moveSpeed = 0.10f; g_Player.m_jumpForce = 0.18f; break;
+        default:
+            g_Player.m_moveSpeed = 0.12f; g_Player.m_jumpForce = 0.20f; break;
+        }
     }
 }
 

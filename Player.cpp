@@ -9,8 +9,8 @@
 //================================================================
 //	マクロ定義
 //================================================================
-#define JUMP_FORCE (0.15f)
-#define CLIMB_SPEED (JUMP_FORCE / 2.0f)
+//#define JUMP_FORCE (0.15f)
+#define CLIMB_SPEED (m_jumpForce / 2.0f)
 
 //================================================================
 //	インクルード
@@ -489,7 +489,7 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 	if (Keyboard_IsKeyDownTrigger(KK_SPACE) && g_Player.m_koyoteTime > 0.0f)
 	//if (g_Controller.IsButtonPushed(ControllerButton::A_BUTTON) && g_Player.m_koyoteTime > 0.0f) //Aボタン**
 	{
-		g_Player.m_velocity.y = JUMP_FORCE;
+		g_Player.m_velocity.y = g_Player.m_jumpForce;
 		g_Player.m_isGround = false;
 		g_Player.m_koyoteTime = 0.0f;
 		switch (g_setWTP1)
