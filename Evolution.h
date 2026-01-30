@@ -18,7 +18,7 @@
 using namespace DirectX;
 
 // 進化システム初期化 
-void EvolutionInitialize();
+void EvolutionInitialize(WeaponTerrain selectP1, WeaponTerrain selectP2);
 
 // プレイヤーを進化させるメイン関数 
 void EvolvePlayer();

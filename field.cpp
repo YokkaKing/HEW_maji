@@ -327,6 +327,7 @@ void Field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 				"Wall",
 				0
 			);
+			object->m_isStatic = true;
 			break;
 
 		case FIELD::FIELD_OBT:
@@ -342,6 +343,7 @@ void Field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 				"Tree",
 				0
 			);
+			object->m_isStatic = true;
 			break;
 
 		case FIELD::FIELD_LIFT:
@@ -351,6 +353,7 @@ void Field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 				"Lift",
 				0
 			);
+			object->m_isStatic = true;
 			break;
 
 		case FIELD::FIELD_MAX:
@@ -474,8 +477,6 @@ void Field_Draw(void)
 
 		i++;
 	}
-
-
 }
 
 void Field_Update(void) 

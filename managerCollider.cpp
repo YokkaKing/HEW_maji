@@ -54,6 +54,7 @@ void ManagerCollider::ClearCollider()
 //================================================================
 void ManagerCollider::UpdateAllCollisions()
 {
+    /*
     for (size_t i = 0; i < colliders.size(); ++i)
     {
         if (!colliders[i]->IsEnable()) continue; // 検知しない
@@ -65,6 +66,11 @@ void ManagerCollider::UpdateAllCollisions()
             auto a = colliders[i];
             auto b = colliders[j];
 
+            if (a->owner->m_isStatic && b->owner->m_isStatic)
+            {
+                continue; // 止まってる同士はスキップ
+            }
+
             CollisionInfo info = CheckCollision(a.get(), b.get());
 
             if (info.isHit)
@@ -72,12 +78,71 @@ void ManagerCollider::UpdateAllCollisions()
                 // a に衝突情報を渡す
                 info.other = b->owner;
                 if (a->owner)
+                {
                     a->owner->OnCollision(info);
+                }
 
                 // b にも逆向きの情報を渡す
                 info.other = a->owner;
                 if (b->owner)
+                {
                     b->owner->OnCollision(info);
+                }
+            }
+        }
+    }*/
+
+    // 判定を行う周囲の距離
+    const float checkRadius = 5.0f;
+    const float checkRadiusSq = checkRadius * checkRadius;
+
+    for (size_t i = 0; i < colliders.size(); ++i)
+    {
+        auto a = colliders[i];
+        if (!a->IsEnable() || !a->owner) continue;
+
+        for (size_t j = i + 1; j < colliders.size(); ++j)
+        {
+            auto b = colliders[j];
+            if (!b->IsEnable() || !b->owner) continue;
+
+            // 静止物同士はスキップ
+            if (a->owner->m_isStatic && b->owner->m_isStatic)
+            {
+                continue;
+            }
+
+            // 距離による早期フィルタリング
+            // どちらかが動く物であれば、二点間の距離をチェックする
+            XMVECTOR posA = XMLoadFloat3(&a->owner->m_position);
+            XMVECTOR posB = XMLoadFloat3(&b->owner->m_position);
+            XMVECTOR diff = XMVectorSubtract(posB, posA);
+            float distSq = XMVector3LengthSq(diff).m128_f32[0];
+
+            // 指定半径より遠ければスキップ
+            if (distSq > checkRadiusSq)
+            {
+                continue;
+            }
+
+            // 範囲内の場合のみ詳細な判定を実行
+            CollisionInfo info = CheckCollision(a.get(), b.get());
+
+            if (info.isHit)
+            {
+                // a に衝突情報を渡す
+                info.other = b->owner;
+                if (a->owner)
+                {
+                    a->owner->OnCollision(info);
+                }
+
+                // b にも逆向きの情報を渡す
+                info.other = a->owner;
+                if (b->owner)
+                {
+                    b->owner->OnCollision(info);
+                }
             }
         }
     }

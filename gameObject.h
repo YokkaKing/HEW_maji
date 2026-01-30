@@ -57,6 +57,7 @@ public:
     GameObject* m_gameObject = nullptr;
 
     bool m_isDead = false;
+    bool m_isStatic = false;
 
     std::vector<std::shared_ptr<Component>> components;
     bool m_isEnable = true;
