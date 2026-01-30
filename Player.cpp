@@ -38,7 +38,8 @@
 PLAYER	g_Player;
 ID3D11Device* g_pDevice;
 ID3D11DeviceContext* g_pContext;
-Controller g_Controller(0); //ID 0のコントローラーを使用
+extern Controller g_Controller[2]; //ID 0のコントローラーを使用
+extern const char* INITIAL_MODEL_PATH_P1;
 MODEL* g_modelP1;
 WeaponTerrain g_setWTP1; // プレイヤーの武器と地形情報
 unsigned int g_changeP1;
@@ -72,7 +73,7 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 	g_pDevice = pDevice;
 	g_pContext = pContext;
 
-	g_Player.m_model = ModelLoad("asset\\model\\char_sword_motion_b.fbx");
+	g_Player.m_model = ModelLoad(INITIAL_MODEL_PATH_P1);
 	g_modelP1 = ModelLoad("asset\\model\\block.fbx");
 
 	g_Player.m_position = XMFLOAT3(0.0f, 0.5f, 1.0f);
@@ -132,10 +133,10 @@ void PlayerFinalize()
 }
 void	PlayerUpdate()
 {
-	g_Controller.Update();//毎フレームコントローラーの状態を更新
-	EvolvePlayer3();
+	
+	EvolvePlayer();
 	// こいつの中でscaleが1.0fに固定されている
-	ApplyEvolutionEffect3();   // 進化タイプに応じたパラメータを適用
+	ApplyEvolutionEffect();   // 進化タイプに応じたパラメータを適用
 	if (g_Player.m_isDead)return;	//死亡している場合は更新処理をスキップ
 
 //================================================================
@@ -195,7 +196,7 @@ void	PlayerUpdate()
 //================================================================
 //	攻撃処理
 //================================================================
-	if (Keyboard_IsKeyDownTrigger(KK_C) || g_Controller.IsButtonPushed(ControllerButton::A_BUTTON))
+	if (Keyboard_IsKeyDownTrigger(KK_C) || g_Controller[0].IsButtonPushed(ControllerButton::A_BUTTON))
 	{
 		// 武器が存在し攻撃中でなければ攻撃開始
 		if (g_Player.m_currentWeapon && !g_Player1AttackPlaying)
@@ -428,7 +429,7 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 	float moveZ = 0.0f;
 
 	float speed = 0.0f;
-	float stickY = g_Controller.GetLeftStickY();
+	float stickY = g_Controller[0].GetLeftStickY();
 	if (fabs(stickY) > 0.05f) // デッドゾーンを設定 (必要に応じて調整)
 	{
 		// ベクトルが逆だから移動が逆になる
@@ -451,7 +452,7 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 
 	// 横移動
 	float strafe = 0.0f;
-	float stickX = g_Controller.GetLeftStickX();
+	float stickX = g_Controller[0].GetLeftStickX();
 	if (fabs(stickX) > 0.05f) // デッドゾーンを設定 (必要に応じて調整)
 	{
 		// 左スティック左方向 (-1.0f) で左移動 (strafe = +0.1f) に対応
