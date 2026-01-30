@@ -41,12 +41,14 @@ LIGHTOBJECT		Light;//<<<<<<ライト管理オブジェクト
 // 全オブジェクト
 std::vector<GameObject*> g_gameObjects;
 static	int		g_BgmID = NULL;	//サウンド管理ID
-
+static int frame;
 static TransformManager g_transformMngr;
 ITEM_SPONER g_sponer;
 
 void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, const inGameWTselect& select)
 {
+	
+	frame = 10;
 	//Controller_Initialize();
 	Field_Initialize(pDevice, pContext); // フィールドの初期化
 	
@@ -115,7 +117,7 @@ void Game_Finalize()
 	Camera_Finalize();	//カメラ終了処理
 	Camera2_Finalize();	//カメラ終了処理
 
-	g_transformMngr.Finalize();
+
 
 	//=======UI===========
 	Hpbar_Finalize();
@@ -124,6 +126,7 @@ void Game_Finalize()
 	Number_Finalize();
 	Hp_Finalize();
 	Hp2_Finalize();
+	g_transformMngr.Finalize();
 	//=====================
 	ManagerCollider::ClearCollider();
 	//UnloadAudio(g_BgmID);//サウンドの解放
@@ -131,9 +134,12 @@ void Game_Finalize()
 
 void Game_Update()
 {
-	//あとで関数化してもいいけど
-	//暫定での変身先選択
-	if (g_transformMngr.IsActive())
+	//少しの秒がアップデート時間を上げる
+	if (frame > 0) 
+	{
+		frame -= 1;
+	}
+	if (g_transformMngr.IsActive()&&frame <= 0)
 	{
 		g_transformMngr.Update(1.0f / 60.0f);
 
@@ -244,7 +250,6 @@ void Game_Draw_Player1()
 	Shader_SetLight(Light.Light);	//ライト構造体をシェーダーへセット
 	SetDepthTest(FALSE);
 	//===UI描画========
-
 	if (g_transformMngr.IsActive())
 	{
 		g_transformMngr.Draw(0);
