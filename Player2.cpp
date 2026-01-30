@@ -468,16 +468,25 @@ void Player2_ManualMove()
 		g_Player2.m_velocity.y = JUMP_FORCE;
 		g_Player2.m_isGround = false;
 		g_Player2.m_koyoteTime = 0.0f;
-		switch (g_changeP2)
+		switch (g_setWTP2)
 		{
-		case 0: // Sword
-			ModelPlayClip(g_Player2.m_model, 521, 560, 60.0f, false, 1.5f);
+		case WeaponTerrain::SWORD_WALL: // Sword
+			ModelPlayClip(g_Player2.m_model, 300, 335, 60.0f, false, 1.0f);
 			break;
-		case 4:
-			ModelPlayClip(g_Player2.m_model, 261, 350, 60.0f, false, 1.5f);
+		case WeaponTerrain::SPEAR_HILL: // spear
+			ModelPlayClip(g_Player2.m_model, 361, 420, 60.0f, false, 1.0f);
+			break;
+		case WeaponTerrain::BOW_HILL: // arrow
+			ModelPlayClip(g_Player2.m_model, 400, 450, 60.0f, false, 1.0f);
+			break;
+		case WeaponTerrain::HAMMER_: // hammer
+			ModelPlayClip(g_Player2.m_model, 240, 300, 60.0f, false, 0.0f);
+			break;
+
+		case WeaponTerrain::SHURIKEN_: //shuriken
+			ModelPlayClip(g_Player2.m_model, 280, 320, 60.0f, false, 4.0f);
 			break;
 		}
-		
 		g_Player2JumpPlaying = true;
 		g_Player2CurrentAnim = 3; // ジャンプ 状態
 	}

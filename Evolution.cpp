@@ -34,7 +34,8 @@ void EvolutionInitialize(WeaponTerrain selectP1, WeaponTerrain selectP2)
     g_Player.EvolutionTimer = 0;
     g_Player2.EvolutionType = EVOLUTION_TYPE2::EVOLUTION_TYPE_NONE;
     g_Player2.EvolutionTimer = 0;
-
+    g_Player.m_moveSpeed = 0;
+    g_Player.m_jumpForce = 0;
     // P1ÇÃèâä˙ÉÇÉfÉãê›íË
     switch (selectP1) {
     case WeaponTerrain::SWORD_WALL: INITIAL_MODEL_PATH_P1 = "asset\\model\\char_shuriken.fbx"; break;
