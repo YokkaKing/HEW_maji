@@ -48,6 +48,8 @@ public:
 	std::unique_ptr<IWeapon> m_currentWeapon = nullptr; // 現在装備中の武器
 	bool			m_isDead = false; // 死亡フラグ
 	XMFLOAT3 m_rotation; // 武器を回転させる
+	float m_moveSpeed; // 移動速度
+	float m_jumpForce; // 移動速度
 	//武器操作関数
 public:
 	void EquipWeapon(std::unique_ptr<IWeapon> weapon); // 武器を装備する

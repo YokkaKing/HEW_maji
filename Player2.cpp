@@ -8,8 +8,8 @@
 //================================================================
 //	マクロ定義
 //================================================================
-#define JUMP_FORCE (0.15f)
-#define CLIMB_SPEED (JUMP_FORCE / 2.0f)
+//#define JUMP_FORCE (0.15f)
+#define CLIMB_SPEED (m_moveSpeed / 2.0f)
 
 //================================================================
 //	インクルード
@@ -465,7 +465,7 @@ void Player2_ManualMove()
 	// スペース押した && コヨーテタイムが0.0fより大きい
 	if (Keyboard_IsKeyDownTrigger(KK_SPACE) && g_Player2.m_koyoteTime > 0.0f)
 	{
-		g_Player2.m_velocity.y = JUMP_FORCE;
+		g_Player2.m_velocity.y = g_Player2.m_jumpForce;
 		g_Player2.m_isGround = false;
 		g_Player2.m_koyoteTime = 0.0f;
 		switch (g_setWTP2)
