@@ -72,7 +72,7 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 	g_pDevice = pDevice;
 	g_pContext = pContext;
 
-	g_Player.m_model = ModelLoad("asset\\model\\char_sword_motion_b.fbx");
+	g_Player.m_model = ModelLoad("asset\\model\\default_sword.fbx");
 	g_modelP1 = ModelLoad("asset\\model\\block.fbx");
 
 	g_Player.m_position = XMFLOAT3(0.0f, 0.5f, 1.0f);
@@ -101,28 +101,33 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 
 	g_setWTP1 = setWTp1;
 
-	//届いた第3引数の中身に応じて条件式で判定、生成するクラスを変える
-	//他の武器も同様に生成し、terrainのinitializeでも同じ処理の必要あり
 	if (g_setWTP1 == WeaponTerrain::SWORD_WALL)
 	{
 		g_Player.EquipWeapon(std::make_unique<Sword>(&g_Player, FALSE));
+		g_Player.m_model = ModelLoad("asset\\model\\default_sword.fbx");
 	}
 	else if (g_setWTP1 == WeaponTerrain::SPEAR_HILL)
 	{
 		g_Player.EquipWeapon(std::make_unique<Spear>(&g_Player, FALSE));
+		g_Player.m_model = ModelLoad("asset\\model\\default_spear.fbx");
 	}
+	
 	else if (g_setWTP1 == WeaponTerrain::BOW_HILL)
-	{
+	{		
 		g_Player.EquipWeapon(std::make_unique<Arrow>(&g_Player, FALSE));
+		g_Player.m_model = ModelLoad("asset\\model\\default_bow.fbx");
+		g_changeP1 = 3;
 	}
 	else if (g_setWTP1 == WeaponTerrain::HAMMER_)
 	{
 		g_Player.EquipWeapon(std::make_unique<Hammer>(&g_Player, FALSE));
-		//g_Player.m_model = ModelLoad("asset\\model\\char_hammer_motion_b.fbx");
+		g_Player.m_model = ModelLoad("asset\\model\\default_hammer.fbx");
 	}
 	else if (g_setWTP1 == WeaponTerrain::SHURIKEN_)
 	{
 		g_Player.EquipWeapon(std::make_unique<Shuriken>(&g_Player, FALSE));
+		g_Player.m_model = ModelLoad("asset\\model\\default_shuriken.fbx");
+
 	}
 	
 }
@@ -212,9 +217,9 @@ void	PlayerUpdate()
 			case 2: // hammer
 			//	ModelPlayClip(g_Player.m_model, 301, 360, 60.0f, false, 2.0f);
 			//	break;
-			//case 3: // arrow
-			//	ModelPlayClip(g_Player.m_model, 301, 360, 60.0f, false, 2.0f);
-			//	break;
+			case 3: // arrow
+				ModelPlayClip(g_Player.m_model, 240, 360, 60.0f, false, 4.0f);
+				break;
 			case 4: //shuriken
 				ModelPlayClip(g_Player.m_model, 151, 210, 60.0f, false, 4.0f);
 				break;
@@ -277,9 +282,9 @@ void	PlayerUpdate()
 			        case 2: // hammer
 			        	ModelPlayClip(g_Player.m_model, 181, 240, 60.0f, true, 2.0f);
 			        	break;
-			        //case 3: // arrow
-			        //	ModelPlayClip(g_Player.m_model, 301, 360, 60.0f, false, 2.0f);
-			        //	break;
+			        case 3: // arrow
+			        	ModelPlayClip(g_Player.m_model, 180, 240, 60.0f, true, 2.0f);
+			        	break;
 					case 4:
 						ModelPlayClip(g_Player.m_model, 121, 150, 60.0f, true, 2.0f);
 						break;
@@ -303,9 +308,9 @@ void	PlayerUpdate()
 			        case 2: // hammer
 			        	ModelPlayClip(g_Player.m_model, 0, 120, 60.0f, true);
 			        	break;
-			        //case 3: // arrow
-			        //	ModelPlayClip(g_Player.m_model, 301, 360, 60.0f, false, 2.0f);
-			        //	break;
+			        case 3: // arrow
+			        	ModelPlayClip(g_Player.m_model, 0, 120, 60.0f, true);
+			        	break;
 					case 4:
 						ModelPlayClip(g_Player.m_model, 0, 60, 60.0f, true);
 						break;
@@ -334,9 +339,9 @@ void	PlayerUpdate()
 				case 2: // hammer
 					ModelPlayClip(g_Player.m_model, 181, 240, 60.0f, true, 2.0f);
 					break;
-			    //case 3: // arrow
-			    //	ModelPlayClip(g_Player.m_model, 301, 360, 60.0f, false, 2.0f);
-			    //	break;
+			    case 3: // arrow
+			    	ModelPlayClip(g_Player.m_model, 120, 180, 60.0f, true, 2.0f);
+			    	break;
 				case 4:
 					ModelPlayClip(g_Player.m_model, 121, 150, 60.0f, true, 2.0f);
 					break;
@@ -359,9 +364,9 @@ void	PlayerUpdate()
 				case 2: // hammer
 					ModelPlayClip(g_Player.m_model, 0, 120, 60.0f, true);
 					break;
-			    //case 3: // arrow
-			    //	ModelPlayClip(g_Player.m_model, 301, 360, 60.0f, false, 2.0f);
-			    //	break;
+			    case 3: // arrow
+			    	ModelPlayClip(g_Player.m_model, 0, 120, 60.0f, true);
+			    	break;
 				case 4:
 					ModelPlayClip(g_Player.m_model, 0, 60, 60.0f, true);
 					break;
