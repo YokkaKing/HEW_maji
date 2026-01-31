@@ -20,13 +20,41 @@
 //================================================================
 extern PLAYER g_Player;
 extern PLAYER2 g_Player2;
-extern Controller g_Controller;
+extern Controller g_Controller[2];
 const char* INITIAL_MODEL_PATH;
 
-void EvolutionInitialize()
+const char* INITIAL_MODEL_PATH_P1 = nullptr;
+const char* INITIAL_MODEL_PATH_P2 = nullptr;
+
+const int EVOLUTION_LIMIT_FRAME = 20 * 60;
+
+void EvolutionInitialize(WeaponTerrain selectP1, WeaponTerrain selectP2)
 {
-    // 初期化処理
-    INITIAL_MODEL_PATH = "asset\\model\\char_hammer.fbx";
+    g_Player.EvolutionType = EVOLUTION_TYPE::EVOLUTION_TYPE_NONE;
+    g_Player.EvolutionTimer = 0;
+    g_Player2.EvolutionType = EVOLUTION_TYPE2::EVOLUTION_TYPE_NONE;
+    g_Player2.EvolutionTimer = 0;
+    g_Player.m_moveSpeed = 0;
+    g_Player.m_jumpForce = 0;
+    // P1の初期モデル設定
+    switch (selectP1) {
+    case WeaponTerrain::SWORD_WALL: INITIAL_MODEL_PATH_P1 = "asset\\model\\char_shuriken.fbx"; break;
+    case WeaponTerrain::SPEAR_HILL: INITIAL_MODEL_PATH_P1 = "asset\\model\\char_shuriken.fbx"; break;
+    case WeaponTerrain::BOW_HILL:   INITIAL_MODEL_PATH_P1 = "asset\\model\\char_shuriken.fbx"; break;
+    case WeaponTerrain::HAMMER_:    INITIAL_MODEL_PATH_P1 = "asset\\model\\char_shuriken.fbx"; break;
+    case WeaponTerrain::SHURIKEN_:  INITIAL_MODEL_PATH_P1 = "asset\\model\\char_shuriken.fbx"; break;
+    default:                        INITIAL_MODEL_PATH_P1 = "asset\\model\\default.fbx"; break;
+    }
+
+    // P2の初期モデル設定
+    switch (selectP2) {
+    case WeaponTerrain::SWORD_WALL: INITIAL_MODEL_PATH_P2 = "asset\\model\\char_default_sword_motion.fbx"; break;
+    case WeaponTerrain::SPEAR_HILL: INITIAL_MODEL_PATH_P2 = "asset\\model\\char_shuriken.fbx"; break;
+    case WeaponTerrain::BOW_HILL:   INITIAL_MODEL_PATH_P2 = "asset\\model\\char_shuriken.fbx"; break;
+    case WeaponTerrain::HAMMER_:    INITIAL_MODEL_PATH_P2 = "asset\\model\\char_shuriken.fbx"; break;
+    case WeaponTerrain::SHURIKEN_:  INITIAL_MODEL_PATH_P2 = "asset\\model\\char_shuriken.fbx"; break;
+    default:                        INITIAL_MODEL_PATH_P2 = "asset\\model\\default.fbx"; break;
+    }
 }
 
 void EvolutionFinalize()
@@ -37,305 +65,172 @@ void EvolutionFinalize()
 void EvolvePlayer()
 {
     const char* newModelPath = nullptr;
-    //共通の進化条件: 未進化 (EVOLUTION_TYPE_NONE) の場合のみ
 
     if (g_Player.EvolutionType == EVOLUTION_TYPE::EVOLUTION_TYPE_NONE)
     {
         bool evolved = false;
-        // Eキーが押されたらタイプAに変身
-        if (g_Controller.IsButtonPushed(ControllerButton::L_SHOULDER))
+        if (Keyboard_IsKeyDownTrigger(KK_D1)||g_Controller[0].IsButtonPushed(ControllerButton::L_THUMB))
         {
             g_Player.EvolutionType = EVOLUTION_TYPE::EVOLUTION_TYPE_A;
-            newModelPath = "asset\\model\\ball.fbx"; // A用モデルパス
+            newModelPath = "asset\\model\\ball.fbx";
             evolved = true;
         }
-        // Rキーが押されたらタイプBに変身
-        else if (g_Controller.IsButtonPushed(ControllerButton::R_SHOULDER))
+        else if (Keyboard_IsKeyDownTrigger(KK_D2)||g_Controller[0].IsButtonPushed(ControllerButton::R_THUMB))
         {
             g_Player.EvolutionType = EVOLUTION_TYPE::EVOLUTION_TYPE_B;
-            newModelPath = "asset\\model\\tree.fbx"; // B用モデルパス
+            newModelPath = "asset\\model\\tree.fbx";
             evolved = true;
         }
 
-        // 変身が完了したら共通のスケール変更を適用
         if (evolved)
         {
-            if (g_Player.m_model != nullptr)
-            {
-                ModelRelease(g_Player.m_model);
-            }
-
-            //新しいモデルをロード
+            if (g_Player.m_model != nullptr) ModelRelease(g_Player.m_model);
             g_Player.m_model = ModelLoad(newModelPath);
-
-            // 進化後の共通処理：スケール変更
-           // g_Player.scale = XMFLOAT3(1.5f, 1.5f, 1.5f);
+            g_Player.EvolutionTimer = EVOLUTION_LIMIT_FRAME;
         }
     }
-    else if (g_Player.EvolutionType != EVOLUTION_TYPE::EVOLUTION_TYPE_NONE)
+    else // 進化中
     {
         bool unevolve = false;
 
+        // タイマーカウントダウン
+        if (g_Player.EvolutionTimer > 0)
+        {
+            g_Player.EvolutionTimer--;
+            if (g_Player.EvolutionTimer <= 0) unevolve = true;
+        }
+
+        // 手動解除判定
         if (g_Player.EvolutionType == EVOLUTION_TYPE::EVOLUTION_TYPE_A)
         {
-            // タイプA の時、LT (左トリガー) が完全に押されたら解除
-            if (g_Controller.GetLeftTrigger() >= 0.9f)
-            {
-                unevolve = true;
-            }
+            if (g_Controller[0].GetLeftTrigger() >= 0.9f) unevolve = true;
         }
         else if (g_Player.EvolutionType == EVOLUTION_TYPE::EVOLUTION_TYPE_B)
         {
-            // タイプB の時、RT (右トリガー) が完全に押されたら解除
-            if (g_Controller.GetRightTrigger() >= 0.9f)
-            {
-                unevolve = true;
-            }
+            if (g_Controller[0].GetRightTrigger() >= 0.9f) unevolve = true;
         }
-        if (unevolve) // 解除条件が満たされたらリセット処理を実行
+
+        if (unevolve)
         {
-            // 古いモデル（進化後のモデル）を解放
-            if (g_Player.m_model != nullptr)
-            {
-                ModelRelease(g_Player.m_model);
-            }
-            // 進化タイプをリセット
+            if (g_Player.m_model != nullptr) ModelRelease(g_Player.m_model);
             g_Player.EvolutionType = EVOLUTION_TYPE::EVOLUTION_TYPE_NONE;
-
-            // 初期モデルをロード
-            g_Player.m_model = ModelLoad(INITIAL_MODEL_PATH);
-
-            // スケールを初期値に戻す (1.0倍)
+            g_Player.m_model = ModelLoad(INITIAL_MODEL_PATH_P1);
             g_Player.m_scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
+            g_Player.EvolutionTimer = 0;
         }
     }
 }
+
 
 void ApplyEvolutionEffect()
 {
+    // 現在の武器情報を取得
+    WeaponTerrain weapon = GetSetWTP1();
+
+    // 進化していないとき
     if (g_Player.EvolutionType == EVOLUTION_TYPE::EVOLUTION_TYPE_NONE)
     {
-        // 初期状態の基本パラメータ
-        g_Player.m_acceleration.x = 0.0f;
-        g_Player.m_acceleration.z = 0.0f;
-        g_Player.FrictionRate = 0.98f;
-        g_Player.m_scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
+        switch (weapon) {
+        case WeaponTerrain::SWORD_WALL:
+            g_Player.m_moveSpeed = 0.2f; g_Player.m_jumpForce = 0.1f; break;
+        case WeaponTerrain::SPEAR_HILL:
+            g_Player.m_moveSpeed = 0.18f;g_Player.m_jumpForce = 0.08f; break;
+        case WeaponTerrain::BOW_HILL:    
+            g_Player.m_moveSpeed = 0.18f; g_Player.m_jumpForce = 0.11f; break;
+        case WeaponTerrain::SHURIKEN_:   
+            g_Player.m_moveSpeed = 0.24f; g_Player.m_jumpForce = 0.12f; break;
+        case WeaponTerrain::HAMMER_:
+            g_Player.m_moveSpeed = 0.18f; g_Player.m_jumpForce = 0.08f; break;
+        default:
+            g_Player.m_moveSpeed =0.2f; g_Player.m_jumpForce = 0.1f; break;
+        }
     }
-    else if (g_Player.EvolutionType == EVOLUTION_TYPE::EVOLUTION_TYPE_A)
+    else
     {
-        // 進化先 A 
-        g_Player.m_acceleration.x = 0.005f;
-        g_Player.m_acceleration.z = 0.005f;
-        g_Player.FrictionRate = 0.99f; // 減速しにくくする (滑りやすい)
-    }
-    else if (g_Player.EvolutionType == EVOLUTION_TYPE::EVOLUTION_TYPE_B)
-    {
-        // 進化先 B
-        g_Player.m_acceleration.x = 0.0f;
-        g_Player.m_acceleration.z = 0.0f;
-        g_Player.FrictionRate = 0.95f; // 減速しやすくする (止まりやすい)
+        switch (weapon) {
+        case WeaponTerrain::SWORD_WALL:
+            g_Player.m_moveSpeed = 0.12f; g_Player.m_jumpForce = 0.20f; break;
+        case WeaponTerrain::HAMMER_:
+            g_Player.m_moveSpeed = 0.10f; g_Player.m_jumpForce = 0.18f; break;
+        default:
+            g_Player.m_moveSpeed = 0.12f; g_Player.m_jumpForce = 0.20f; break;
+        }
     }
 }
 
 
-
-
-//ここから下はプレイヤー２をコントローラーにしたら削除
 
 void EvolvePlayer2()
 {
     const char* newModelPath = nullptr;
-    //共通の進化条件: 未進化 (EVOLUTION_TYPE_NONE) の場合のみ
-    if (g_Player2.EvolutionType == EVOLUTION_TYPE2::EVOLUTION_TYPE_NONE)
-    {
+    if (g_Player2.EvolutionType == EVOLUTION_TYPE2::EVOLUTION_TYPE_NONE) {
         bool evolved = false;
-
-        //タイプAに変身
-        if (Keyboard_IsKeyDownTrigger(KK_Y))
-        {
+        if (Keyboard_IsKeyDownTrigger(KK_D8)|| g_Controller[1].IsButtonPushed(ControllerButton::L_THUMB)) {
             g_Player2.EvolutionType = EVOLUTION_TYPE2::EVOLUTION_TYPE_A;
-            newModelPath = "asset\\model\\ball.fbx"; // A用モデルパス
+            newModelPath = "asset\\model\\ball.fbx";
             evolved = true;
         }
-        //タイプBに変身
-        else if (Keyboard_IsKeyDownTrigger(KK_I))
-        {
+        else if (Keyboard_IsKeyDownTrigger(KK_D9)|| g_Controller[1].IsButtonPushed(ControllerButton::R_THUMB)) {
             g_Player2.EvolutionType = EVOLUTION_TYPE2::EVOLUTION_TYPE_B;
-            newModelPath = "asset\\model\\tree.fbx"; // B用モデルパス
+            newModelPath = "asset\\model\\tree.fbx";
             evolved = true;
         }
-
-        // 変身が完了したら共通のスケール変更を適用
-        if (evolved)
-        {
-            if (g_Player2.m_model != nullptr)
-            {
-                ModelRelease(g_Player2.m_model);
-            }
-
-            //新しいモデルをロード
+        if (evolved) {
+            if (g_Player2.m_model != nullptr) ModelRelease(g_Player2.m_model);
             g_Player2.m_model = ModelLoad(newModelPath);
-
-            // 進化後の共通処理：スケール変更
-            // g_Player2.scale = XMFLOAT3(1.5f, 1.5f, 1.5f);
+            g_Player2.EvolutionTimer = EVOLUTION_LIMIT_FRAME;
         }
     }
-
-    else if (g_Player2.EvolutionType != EVOLUTION_TYPE2::EVOLUTION_TYPE_NONE)
-    {
+    else {
         bool unevolve = false;
-        if (g_Player2.EvolutionType == EVOLUTION_TYPE2::EVOLUTION_TYPE_A ||
-            g_Player2.EvolutionType == EVOLUTION_TYPE2::EVOLUTION_TYPE_B)
-        {
-            //キーボード KK_F が押されたら解除 (タイプA, B共通)
-            if (Keyboard_IsKeyDownTrigger(KK_O))
-            {
-                unevolve = true;
-            }
+        if (g_Player2.EvolutionTimer > 0) {
+            g_Player2.EvolutionTimer--;
+            if (g_Player2.EvolutionTimer <= 0) unevolve = true;
         }
-
-        if (unevolve) // 解除条件が満たされたらリセット処理を実行
-        {
-            // 古いモデル（進化後のモデル）を解放
-            if (g_Player2.m_model != nullptr)
-            {
-                ModelRelease(g_Player2.m_model);
-            }
-            // 進化タイプをリセット
+        if (Keyboard_IsKeyDownTrigger(KK_D0)) unevolve = true;
+        if (unevolve) {
+            if (g_Player2.m_model != nullptr) ModelRelease(g_Player2.m_model);
             g_Player2.EvolutionType = EVOLUTION_TYPE2::EVOLUTION_TYPE_NONE;
-
-            // 初期モデルをロード
-            g_Player2.m_model = ModelLoad(INITIAL_MODEL_PATH);
-
-            // スケールを初期値に戻す (1.0倍)
+            g_Player2.m_model = ModelLoad(INITIAL_MODEL_PATH_P2); // P2用を参照
             g_Player2.m_scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
+            g_Player2.EvolutionTimer = 0;
         }
     }
 }
 void ApplyEvolutionEffect2()
 {
-    // Player 2用の進化効果
-    if (g_Player2.EvolutionType == EVOLUTION_TYPE2::EVOLUTION_TYPE_NONE)
-    {
-        // 初期状態の基本パラメータ
-        g_Player2.m_acceleration.x = 0.0f;
-        g_Player2.m_acceleration.z = 0.0f;
-        g_Player2.FrictionRate = 0.98f;
-        g_Player2.m_scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
-    }
-    else if (g_Player2.EvolutionType == EVOLUTION_TYPE2::EVOLUTION_TYPE_A)
-    {
-        // 進化先 A (機動力特化)
-        g_Player2.m_acceleration.x = 0.005f;
-        g_Player2.m_acceleration.z = 0.005f;
-        g_Player2.FrictionRate = 0.99f; // 減速しにくくする (滑りやすい)
-        // g_Player2.m_scale = XMFLOAT3(1.5f, 1.5f, 1.5f); // 必要に応じてスケール変更を適用
-    }
-    else if (g_Player2.EvolutionType == EVOLUTION_TYPE2::EVOLUTION_TYPE_B)
-    {
-        // 進化先 B (制動・防御特化)
-        g_Player2.m_acceleration.x = 0.0f;
-        g_Player2.m_acceleration.z = 0.0f;
-        g_Player2.FrictionRate = 0.95f; // 減速しやすくする (止まりやすい)
-        // g_Player2.m_scale = XMFLOAT3(1.2f, 1.2f, 1.2f); // 必要に応じてスケール変更を適用
-    }
-}
+    // 現在の武器情報を取得
+    WeaponTerrain weapon = GetSetWTP2();
 
-void EvolvePlayer3()
-{
-    const char* newModelPath = nullptr;
-    //共通の進化条件: 未進化 (EVOLUTION_TYPE_NONE) の場合のみ
+    // 進化していないとき
     if (g_Player.EvolutionType == EVOLUTION_TYPE::EVOLUTION_TYPE_NONE)
     {
-        bool evolved = false;
-
-        //タイプAに変身
-        if (Keyboard_IsKeyDownTrigger(KK_T))
-        {
-            g_Player.EvolutionType = EVOLUTION_TYPE::EVOLUTION_TYPE_A;
-            newModelPath = "asset\\model\\ball.fbx"; // A用モデルパス
-            evolved = true;
-        }
-        //タイプBに変身
-        else if (Keyboard_IsKeyDownTrigger(KK_R))
-        {
-            g_Player.EvolutionType = EVOLUTION_TYPE::EVOLUTION_TYPE_B;
-            newModelPath = "asset\\model\\tree.fbx"; // B用モデルパス
-            evolved = true;
-        }
-
-        // 変身が完了したら共通のスケール変更を適用
-        if (evolved)
-        {
-            if (g_Player.m_model != nullptr)
-            {
-                ModelRelease(g_Player.m_model);
-            }
-
-            //新しいモデルをロード
-            g_Player.m_model = ModelLoad(newModelPath);
-
-            // 進化後の共通処理：スケール変更
-            // g_Player2.scale = XMFLOAT3(1.5f, 1.5f, 1.5f);
+        switch (weapon) {
+        case WeaponTerrain::SWORD_WALL:
+            g_Player2.m_moveSpeed = 0.2f; g_Player2.m_jumpForce = 0.1f; break;
+        case WeaponTerrain::SPEAR_HILL:
+            g_Player2.m_moveSpeed = 0.18f; g_Player2.m_jumpForce = 0.08f; break;
+        case WeaponTerrain::BOW_HILL:
+            g_Player2.m_moveSpeed = 0.18f; g_Player2.m_jumpForce = 0.11f; break;
+        case WeaponTerrain::SHURIKEN_:
+            g_Player2.m_moveSpeed = 0.24f; g_Player2.m_jumpForce = 0.12f; break;
+        case WeaponTerrain::HAMMER_:
+            g_Player2.m_moveSpeed = 0.18f; g_Player2.m_jumpForce = 0.08f; break;
+        default:
+            g_Player2.m_moveSpeed = 0.2f; g_Player2.m_jumpForce = 0.1f; break;
         }
     }
-
-    else if (g_Player.EvolutionType != EVOLUTION_TYPE::EVOLUTION_TYPE_NONE)
+    else
     {
-        bool unevolve = false;
-        if (g_Player.EvolutionType == EVOLUTION_TYPE::EVOLUTION_TYPE_A ||
-            g_Player.EvolutionType == EVOLUTION_TYPE::EVOLUTION_TYPE_B)
-        {
-            //キーボード KK_F が押されたら解除 (タイプA, B共通)
-            if (Keyboard_IsKeyDownTrigger(KK_F))
-            {
-                unevolve = true;
-            }
-        }
-
-        if (unevolve) // 解除条件が満たされたらリセット処理を実行
-        {
-            // 古いモデル（進化後のモデル）を解放
-            if (g_Player.m_model != nullptr)
-            {
-                ModelRelease(g_Player.m_model);
-            }
-            // 進化タイプをリセット
-            g_Player.EvolutionType = EVOLUTION_TYPE::EVOLUTION_TYPE_NONE;
-
-            // 初期モデルをロード
-            g_Player.m_model = ModelLoad(INITIAL_MODEL_PATH);
-
-            // スケールを初期値に戻す (1.0倍)
-            g_Player.m_scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
+        switch (weapon) {
+        case WeaponTerrain::SWORD_WALL:
+            g_Player.m_moveSpeed = 0.12f; g_Player.m_jumpForce = 0.20f; break;
+        case WeaponTerrain::HAMMER_:
+            g_Player.m_moveSpeed = 0.10f; g_Player.m_jumpForce = 0.18f; break;
+        default:
+            g_Player.m_moveSpeed = 0.12f; g_Player.m_jumpForce = 0.20f; break;
         }
     }
 }
-void ApplyEvolutionEffect3()
-{
-    // Player 2用の進化効果
-    if (g_Player.EvolutionType == EVOLUTION_TYPE::EVOLUTION_TYPE_NONE)
-    {
-        // 初期状態の基本パラメータ
-        g_Player.m_acceleration.x = 0.0f;
-        g_Player.m_acceleration.z = 0.0f;
-        g_Player.FrictionRate = 0.98f;
-        g_Player.m_scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
-    }
-    else if (g_Player.EvolutionType == EVOLUTION_TYPE::EVOLUTION_TYPE_A)
-    {
-        // 進化先 A (機動力特化)
-        g_Player.m_acceleration.x = 0.005f;
-        g_Player.m_acceleration.z = 0.005f;
-        g_Player.FrictionRate = 0.99f; // 減速しにくくする (滑りやすい)
-        // g_Player2.m_scale = XMFLOAT3(1.5f, 1.5f, 1.5f); // 必要に応じてスケール変更を適用
-    }
-    else if (g_Player.EvolutionType == EVOLUTION_TYPE::EVOLUTION_TYPE_B)
-    {
-        // 進化先 B (制動・防御特化)
-        g_Player.m_acceleration.x = 0.0f;
-        g_Player.m_acceleration.z = 0.0f;
-        g_Player.FrictionRate = 0.95f; // 減速しやすくする (止まりやすい)
-        // g_Player2.m_scale = XMFLOAT3(1.2f, 1.2f, 1.2f); // 必要に応じてスケール変更を適用
-    }
-}
+
+

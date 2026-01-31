@@ -12,15 +12,17 @@
 #include"direct3d.h"
 #include"Manager.h"
 #include"keyboard.h"
+#include "Controller.h"
 #include"Game.h"
 #include"Title.h"
 #include"Result.h"
 #include"fade.h"
-
+#include"selectWeaponTerrain.h"
 //================================================================
 //	グローバル変数
 //================================================================
 static	SCENE	g_Scene = SCENE_NONE;	//現在のシーン番号
+static  inGameWTselect g_currentWTselect; //シーン間で保持する選択した武器・地形データ
 
 void Manager_Initialize()
 { 
@@ -48,12 +50,19 @@ void Manager_Finalize()
 
 void Manager_Update()
 {
+	extern Controller g_Controller[2];
+	for (int i = 0; i < 2; i++) {
+		g_Controller[i].Update();
+	}
 	switch (g_Scene)	//現在シーンのアップデート関数を呼び出す
 	{
 		case SCENE_NONE:
 			break;
 		case SCENE_TITLE:
 			Title_Update();	
+			break;
+		case SCENE_SELECT_WT:
+			selectWT_Update();
 			break;
 		case SCENE_GAME:
 			Game_Update();
@@ -64,6 +73,7 @@ void Manager_Update()
 		default:
 			break;
 	}
+
 
 	Fade_Update();
 
@@ -77,6 +87,9 @@ void Manager_Draw_Player1()
 			break;
 		case SCENE_TITLE:
 			Title_Draw();	
+			break;
+		case SCENE_SELECT_WT:
+			selectWT_Draw(0);
 			break;
 		case SCENE_GAME:
 			Game_Draw_Player1();
@@ -100,6 +113,9 @@ void Manager_Draw_Player2()
 	case SCENE_TITLE:
 		Title_Draw();
 		break;
+	case SCENE_SELECT_WT:
+		selectWT_Draw(1);
+		break;
 	case SCENE_GAME:
 		Game_Draw_Player2();
 		break;
@@ -113,6 +129,17 @@ void Manager_Draw_Player2()
 	Fade_Draw();
 
 }
+
+inGameWTselect Manager_GetWTselect()
+{
+	return g_currentWTselect;
+}
+
+void Manager_SetWTselect(const inGameWTselect& select)
+{
+	g_currentWTselect = select;
+}
+
 void SetScene(SCENE scene) //シーンを切り替える
 {
 	//実行中のシーンを終了させる
@@ -122,6 +149,9 @@ void SetScene(SCENE scene) //シーンを切り替える
 			break;
 		case SCENE_TITLE:
 			Title_Finalize();	
+			break;
+		case SCENE_SELECT_WT:
+			selectWT_Finalize();
 			break;
 		case SCENE_GAME:
 			Game_Finalize();
@@ -144,7 +174,10 @@ void SetScene(SCENE scene) //シーンを切り替える
 			Title_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
 			break;
 		case SCENE_GAME:
-			Game_Initialize( Direct3D_GetDevice(), Direct3D_GetDeviceContext());
+			Game_Initialize( Direct3D_GetDevice(), Direct3D_GetDeviceContext(), g_currentWTselect);
+			break;
+		case SCENE_SELECT_WT:
+			selectWT_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
 			break;
 		case SCENE_RESULT:
 			Result_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());

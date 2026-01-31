@@ -19,6 +19,7 @@ using namespace DirectX;
 #include"model.h"
 #include"gameObject.h"
 #include "IWeapon.h"
+#include"selectWeaponTerrain.h"
 
 enum class EVOLUTION_TYPE
 {
@@ -43,10 +44,13 @@ class PLAYER : public GameObject
 public:
 	float           FrictionRate;   // 速度減衰率
 	EVOLUTION_TYPE  EvolutionType;  // 進化タイプ (A or B or NONE)
+	int EvolutionTimer;
 	PLAYER_STATE	State;		//状態
 	std::unique_ptr<IWeapon> m_currentWeapon = nullptr; // 現在装備中の武器
 	bool			m_isDead = false; // 死亡フラグ
 	XMFLOAT3 m_rotation; // 武器を回転させる
+	float m_moveSpeed; // 移動速度
+	float m_jumpForce; // 移動速度
 
 public:
 	//武器操作関数
@@ -54,7 +58,7 @@ public:
 	void OnCollision(const CollisionInfo& info)override;
 };
 
-void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
+void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, WeaponTerrain setWTp1);
 void PlayerFinalize();
 void PlayerUpdate();
 void PlayerDraw();
@@ -66,5 +70,6 @@ void Player_ManualMove();
 float Player_GetHP();
 float Player_GetMaxHp();
 PLAYER* GetPlayer();
+WeaponTerrain GetSetWTP1();
 
 #endif // PLAYER_H

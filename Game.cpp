@@ -22,6 +22,7 @@
 #include"managerCollider.h"
 #include"terrain.h"
 #include"Player2.h"
+#include"Evolution.h"
 #include"Viewport.h"
 #include"direct3d.h"
 #include "HpBar.h"
@@ -30,6 +31,7 @@
 #include "number.h"
 #include "Hp.h"
 #include "Hp2.h"
+#include "generateWT.h"
 
 #include"Item.h"
 //================================================================
@@ -42,16 +44,23 @@ static	int		g_BgmID = NULL;	//サウンド管理ID
 
 ITEM_SPONER g_sponer;
 
-void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
+void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, const inGameWTselect& select)
 {
 	//Controller_Initialize();
 	Field_Initialize(pDevice, pContext); // フィールドの初期化
-	TerrainInitialize(pDevice, pContext);
 	
 	g_sponer.Initialize();
 
-	PlayerInitialize(pDevice, pContext); // ボールの初期化
-	Player2Initialize(pDevice, pContext);
+	EvolutionInitialize(select.player1, select.player2);
+
+	PlayerInitialize(pDevice, pContext, select.player1); //
+	Player2Initialize(pDevice, pContext, select.player2);
+
+	TerrainInitialize(pDevice, pContext, select.player1, select.player2);//地形にP1,P2のそれぞれ選択した武器・地形情報を渡す
+
+	PLAYER* pP1 = GetPlayer();
+	PLAYER2* pP2 = GetPlayer2();
+	generateWT_Apply(Manager_GetWTselect(), pP1, pP2, pDevice, pContext);
 
 	Camera_Initialize();	//カメラ初期化
 	Camera2_Initialize();	//カメラ初期化
