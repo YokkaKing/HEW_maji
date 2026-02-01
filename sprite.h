@@ -25,6 +25,7 @@ void FinalizeSprite();	//スプライト終了
 void DrawSpriteScroll(XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 col, XMFLOAT2 texcoord);
 void DrawSpriteExRotation(XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 col, int bno, int wc, int hc, float radian);
 void DrawSprite(XMFLOAT2 size, XMFLOAT4 col, int bno, int wc, int hc);//行列使用版
+void DrawSpriteEx(XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 col, float hp, bool isPlayer1);
 
 // 頂点構造体
 struct Vertex

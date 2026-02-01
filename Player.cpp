@@ -1,5 +1,5 @@
-/*
-* ファイル名	Player.cpp
+
+/* ファイル名	Player.cpp
 * タイトル	プレイヤー
 * 作成者		久保木幹太
 * 作成日		12月02日
@@ -91,13 +91,14 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 	g_Player.EvolutionType = EVOLUTION_TYPE::EVOLUTION_TYPE_NONE;
 	g_Player.m_currentHp = g_Player.m_maxHp;
 	g_Player.m_isDead = false;
-
+	g_Player.m_isAttacked = false;
 	// プレイヤーの当たり判定の追加
 	auto collider = g_Player.AddComponent<BoxCollider>(&g_Player, g_Player.m_scale);
 	ManagerCollider::AddCollider(collider);
 
 	// のちのちセレクト画面から分岐できるようにする
 	// 自分をownerとして武器を生成
+
 	g_changeP1 = 0;
 	g_setWTP1 = setWTp1;
 	if (g_setWTP1 == WeaponTerrain::SWORD_WALL)
@@ -125,7 +126,8 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 	else if (g_setWTP1 == WeaponTerrain::SHURIKEN_)
 	{
 		g_Player.EquipWeapon(std::make_unique<Shuriken>(&g_Player, FALSE));
-		g_Player.m_model = ModelLoad("asset\\model\\default_shuriken.fbx");
+		g_Player.m_model = ModelLoad("asset\\model\\default_motion.fbx");
+	
 	}
 	
 }
@@ -135,7 +137,6 @@ void PlayerFinalize()
 }
 void	PlayerUpdate()
 {
-	
 	EvolvePlayer();
 	// こいつの中でscaleが1.0fに固定されている
 	ApplyEvolutionEffect();   // 進化タイプに応じたパラメータを適用
@@ -552,8 +553,6 @@ void PlayerDraw()
 	{
 		g_Player.m_currentWeapon->Draw();
 	}
-
-
 	//ModelDraw(g_modelP1);
 }
 
@@ -572,7 +571,7 @@ PLAYER* GetPlayer()
 {
 	return &g_Player;
 }
-float Player_GetHP() 
+float Player_GetHp() 
 {
 	return g_Player.m_currentHp; 
 }
@@ -580,7 +579,14 @@ float Player_GetMaxHp()
 {
 	return g_Player.m_maxHp;
 }
-
+bool GetPlayer_IsAttacked()
+{
+	return g_Player.m_isAttacked;
+}
+void SetPlayer_IsAttacked(bool isAttacked)
+{
+    g_Player.m_isAttacked = isAttacked;
+}
 //武器を装備する
 void PLAYER::EquipWeapon(std::unique_ptr<IWeapon> weapon)
 {
@@ -602,6 +608,7 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 			if (info.other->m_weaponPtr)
 			{
 				// 武器の衝突判定を呼び出す
+				g_Player.m_isAttacked = true;
 				info.other->m_weaponPtr->OnWeaponCollision(this);
 			}
 		}

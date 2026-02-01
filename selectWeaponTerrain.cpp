@@ -1,26 +1,27 @@
-//============================================
+ï»¿//============================================
 // selectWeaponTerrain.cpp
 // 
-// •Ší/’nŒ`ƒZƒŒƒNƒg‰æ–Ê
-// ì¬:2026/1/10
-// XV:2026/1/21
-// XV:2026/01/24 - ƒJ[ƒ\ƒ‹ˆÚ“®/ƒXƒP[ƒ‹ƒAƒjƒ’Ç‰Á
+// æ­¦å™¨/åœ°å½¢ã‚»ãƒ¬ã‚¯ãƒˆç”»é¢
+// ä½œæˆ:2026/1/10
+// æ›´æ–°:2026/1/21
+// æ›´æ–°:2026/01/24 - ã‚«ãƒ¼ã‚½ãƒ«ç§»å‹•/ã‚¹ã‚±ãƒ¼ãƒ«ã‚¢ãƒ‹ãƒ¡è¿½åŠ 
 //============================================
 #include "selectWeaponTerrain.h"
 #include "Manager.h"
 #include "keyboard.h"
 #include "fade.h"
 #include "shader.h"
+#include "Camera.h"
+#include "model.h"
 #include <cmath>
 
-// ‘I‘ğƒXƒƒbƒg”
+// é¸æŠã‚¹ãƒ­ãƒƒãƒˆæ•°
 static const int selectCount = 5;
-
-static ID3D11ShaderResourceView* g_TextureBG[2] = { NULL };	// ”wŒiƒeƒNƒXƒ`ƒƒ
+#pragma region UIé–¢é€£å®šæ•°
+static ID3D11ShaderResourceView* g_TextureBG[2] = { NULL };	// èƒŒæ™¯ãƒ†ã‚¯ã‚¹ãƒãƒ£
 static ID3D11ShaderResourceView* g_TextureUi_Card[3] = { NULL };
 static ID3D11ShaderResourceView* g_TextureUi_Cursor[2] = { NULL };
 static ID3D11ShaderResourceView* g_TextureUi_Button[2] = { NULL };
-
 static ID3D11ShaderResourceView* g_TextureUI[selectCount] = { NULL };
 static ID3D11Device* g_pDevice = nullptr;
 static ID3D11DeviceContext* g_pContext = nullptr;
@@ -32,117 +33,262 @@ static int g_cursorP2 = 0;
 static bool g_isP1Ready = false;
 static bool g_isP2Ready = false;
 
-// selectBG_3 —p‚Ì SRVi¶‰ñ“] / ‰E‰ñ“]j
+// selectBG_3 ç”¨ã® SRVï¼ˆå·¦å›è»¢ / å³å›è»¢ï¼‰
 static ID3D11ShaderResourceView* g_TextureBG3_Left = nullptr;
 static ID3D11ShaderResourceView* g_TextureBG3_Right = nullptr;
-// ‰ñ“]Œã‚ÌƒeƒNƒXƒ`ƒƒ‚Ì•E‚‚³iƒsƒNƒZƒ‹j‚ğ•Û
+// å›è»¢å¾Œã®ãƒ†ã‚¯ã‚¹ãƒãƒ£ã®å¹…ãƒ»é«˜ã•ï¼ˆãƒ”ã‚¯ã‚»ãƒ«ï¼‰ã‚’ä¿æŒ
 static size_t g_BG3_LeftWidth = 0, g_BG3_LeftHeight = 0;
 static size_t g_BG3_RightWidth = 0, g_BG3_RightHeight = 0;
-// ƒXƒNƒ[ƒ‹ƒIƒtƒZƒbƒgiƒsƒNƒZƒ‹’PˆÊA¶‚Íã•ûŒü‚É‘‰ÁA‰E‚Í‰º•ûŒü‚É‘‰Áj
+// ã‚¹ã‚¯ãƒ­ãƒ¼ãƒ«ã‚ªãƒ•ã‚»ãƒƒãƒˆï¼ˆãƒ”ã‚¯ã‚»ãƒ«å˜ä½ã€å·¦ã¯ä¸Šæ–¹å‘ã«å¢—åŠ ã€å³ã¯ä¸‹æ–¹å‘ã«å¢—åŠ ï¼‰
 static float g_bg3OffsetLeft = 0.0f;
 static float g_bg3OffsetRight = 0.0f;
-// ƒXƒNƒ[ƒ‹‘¬“xiƒsƒNƒZƒ‹/•bj
-static float g_bg3SpeedLeft = 80.0f;  // ®‰Â
-static float g_bg3SpeedRight = 80.0f; // ’²®‰Â
+// ã‚¹ã‚¯ãƒ­ãƒ¼ãƒ«é€Ÿåº¦ï¼ˆãƒ”ã‚¯ã‚»ãƒ«/ç§’ï¼‰
+static float g_bg3SpeedLeft = 80.0f;  // æ•´å¯
+static float g_bg3SpeedRight = 80.0f; // èª¿æ•´å¯
 
-// ------------------ ƒJ[ƒ\ƒ‹ / ƒXƒP[ƒ‹ƒAƒjƒ—pƒf[ƒ^ ------------------
-// ŠeƒvƒŒƒCƒ„[—pƒJ[ƒ\ƒ‹ó‘Ô
+
+static MODEL* g_CenterSwordModel = nullptr;
+// ------------------ ã‚«ãƒ¼ã‚½ãƒ« / ã‚¹ã‚±ãƒ¼ãƒ«ã‚¢ãƒ‹ãƒ¡ç”¨ãƒ‡ãƒ¼ã‚¿ ------------------
+// å„ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ç”¨ã‚«ãƒ¼ã‚½ãƒ«çŠ¶æ…‹
 struct CursorState
 {
-    // Œ»İ‚ÌXˆÊ’uiƒsƒNƒZƒ‹j‚Æ–Ú•WƒCƒ“ƒfƒbƒNƒX
+    // ç¾åœ¨ã®Xä½ç½®ï¼ˆãƒ”ã‚¯ã‚»ãƒ«ï¼‰ã¨ç›®æ¨™ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
     float posX = 0.0f;
     int index = 0;
 
-    // ˆÚ“®ƒAƒjƒ[ƒVƒ‡ƒ“
+    // ç§»å‹•ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³
     bool moving = false;
     float moveTime = 0.0f;
-    float moveDuration = 0.28f; // ƒJ[ƒ\ƒ‹ˆÚ“®‚É‚©‚¯‚é•b”i’²®‰Âj
+    float moveDuration = 0.28f; // ã‚«ãƒ¼ã‚½ãƒ«ç§»å‹•ã«ã‹ã‘ã‚‹ç§’æ•°ï¼ˆèª¿æ•´å¯ï¼‰
     float startX = 0.0f;
     float targetX = 0.0f;
 
-    // ƒXƒƒbƒg‚²‚Æ‚ÌƒXƒP[ƒ‹ƒAƒjƒi0..1 ‚ği‚ß‚éj
-    // ‘I‘ğ‚³‚ê‚½ƒXƒƒbƒg‚Ì‚İƒAƒjƒ‚ğŠJn‚·‚é•û®
-    // À‘•‚Í slotScale ‚Ì’l‚ğ’¼Ú•Û
+    // ã‚¹ãƒ­ãƒƒãƒˆã”ã¨ã®ã‚¹ã‚±ãƒ¼ãƒ«ã‚¢ãƒ‹ãƒ¡ï¼ˆ0..1 ã‚’é€²ã‚ã‚‹ï¼‰
+    // é¸æŠã•ã‚ŒãŸã‚¹ãƒ­ãƒƒãƒˆã®ã¿ã‚¢ãƒ‹ãƒ¡ã‚’é–‹å§‹ã™ã‚‹æ–¹å¼
+    // å®Ÿè£…ã¯ slotScale ã®å€¤ã‚’ç›´æ¥ä¿æŒ
 };
 static CursorState g_cursorState[2];
 
-// ŠeƒXƒƒbƒg‚ÌƒXƒP[ƒ‹’l (1.0 = base, >1 = Šg‘å)AƒAƒjƒ‚Í slotAnimProgress/dir‚Å§Œä
+static float g_cursorScale[2] = { 1.0f, 1.0f };
+static bool  g_cursorScaleAnim[2] = { false, false };
+static float g_cursorScaleTime[2] = { 0.0f, 0.0f };
+static const float g_cursorScaleDuration = 0.1f; 
+static const float g_cursorScaleMin = 0.70f; 
+// å„ã‚¹ãƒ­ãƒƒãƒˆã®ã‚¹ã‚±ãƒ¼ãƒ«å€¤ (1.0 = base, >1 = æ‹¡å¤§)ã€ã‚¢ãƒ‹ãƒ¡ã¯ slotAnimProgress/dirã§åˆ¶å¾¡
 static float g_slotScale[selectCount] = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f };
 static bool  g_slotAnimating[selectCount] = { false };
 static float g_slotAnimTime[selectCount] = { 0.0f };
-static float g_slotAnimDuration = 0.20f; // ƒXƒP[ƒ‹ƒAƒjƒ[ƒVƒ‡ƒ“ŠÔ (•b)
+static float g_slotAnimDuration = 0.20f; // ã‚¹ã‚±ãƒ¼ãƒ«ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³æ™‚é–“ (ç§’)
 static const float g_slotBaseScale = 1.0f;
-static const float g_slotSelectedScale = 1.10f; // ‘I‘ğ‚ÌÅIƒXƒP[ƒ‹
-
-// ŒÅ’è: ƒXƒƒbƒg”z’uŠÖ˜A
+static const float g_slotSelectedScale = 1.10f; // é¸æŠæ™‚ã®æœ€çµ‚ã‚¹ã‚±ãƒ¼ãƒ«
+MODEL* model;
+// å›ºå®š: ã‚¹ãƒ­ãƒƒãƒˆé…ç½®é–¢é€£
 static float g_slotStartX = 600.0f;
 static float g_slotSpacing = 170.0f;
 static float g_slotPosY = 0.0f;
 
-// ƒtƒŒ[ƒ€ŠÔiŒ»İ‚ÍŒÅ’è 1/60fBÀ‰^—p‚Å‚Í deltaTime ‚ğ“n‚·‚±‚Æ‚ğ„§j
+// ãƒ•ãƒ¬ãƒ¼ãƒ æ™‚é–“ï¼ˆç¾åœ¨ã¯å›ºå®š 1/60fã€‚å®Ÿé‹ç”¨ã§ã¯ deltaTime ã‚’æ¸¡ã™ã“ã¨ã‚’æ¨å¥¨ï¼‰
 static const float FRAME_DT = 1.0f / 60.0f;
 
-// ƒRƒTƒCƒ“i‚Ü‚½‚Í sin ‚ğ—p‚¢‚½jƒC[ƒWƒ“ƒO: n‚ß‚Í‘¬‚­AI‚í‚è‚Å’x‚­‚È‚é ease-out (t: 0..1)
+// ã‚³ã‚µã‚¤ãƒ³ï¼ˆã¾ãŸã¯ sin ã‚’ç”¨ã„ãŸï¼‰ã‚¤ãƒ¼ã‚¸ãƒ³ã‚°: å§‹ã‚ã¯é€Ÿãã€çµ‚ã‚ã‚Šã§é…ããªã‚‹ ease-out (t: 0..1)
 static inline float EaseOutCos(float t)
 {
     if (t <= 0.0f) return 0.0f;
     if (t >= 1.0f) return 1.0f;
-    // sin(t * PI/2) ‚ÍŠJn‚ª‹}‚ÅI‚í‚è‚Å‚ä‚Á‚­‚è
+    // sin(t * PI/2) ã¯é–‹å§‹ãŒæ€¥ã§çµ‚ã‚ã‚Šã§ã‚†ã£ãã‚Š
     return sinf(t * (XM_PI / 2.0f));
 }
 
-// ƒXƒƒbƒgƒCƒ“ƒfƒbƒNƒX -> X À•WŒvZ
+// ã‚¹ãƒ­ãƒƒãƒˆã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ -> X åº§æ¨™è¨ˆç®—
 static inline float SlotIndexToX(int index)
 {
     return g_slotStartX + (index * g_slotSpacing);
 }
 
-// ƒXƒƒbƒg‚ÌƒXƒP[ƒ‹ƒAƒjƒ‚ğŠJn‚·‚é (grow==true ‚ÅŠg‘å, false ‚Åk¬)
+// ã‚¹ãƒ­ãƒƒãƒˆã®ã‚¹ã‚±ãƒ¼ãƒ«ã‚¢ãƒ‹ãƒ¡ã‚’é–‹å§‹ã™ã‚‹ (grow==true ã§æ‹¡å¤§, false ã§ç¸®å°)
 static void StartSlotScaleAnim(int slotIndex, bool grow)
 {
     if (slotIndex < 0 || slotIndex >= selectCount) return;
     g_slotAnimating[slotIndex] = true;
     g_slotAnimTime[slotIndex] = 0.0f;
-    // ÀÛ‚Ì•âŠÔ‚Í update ‘¤‚Ås‚¤
+    // å®Ÿéš›ã®è£œé–“ã¯ update å´ã§è¡Œã†
 }
+// ------------------ ã‚¹ãƒ—ãƒ©ã‚¤ãƒˆã‚¢ãƒ‹ãƒ¡ç”¨ãƒ‡ãƒ¼ã‚¿ ------------------
+// ã‚¹ãƒ—ãƒ©ã‚¤ãƒˆã‚·ãƒ¼ãƒˆ (sword idle / attack) ç”¨ SRV
+static ID3D11ShaderResourceView* g_TextureSwordIdle = nullptr;
+static ID3D11ShaderResourceView* g_TextureSwordAttack = nullptr;
+const int SWORD_SLOT_INDEX = 0;
+// å˜ç´”ãªã‚¹ãƒ—ãƒ©ã‚¤ãƒˆã‚¢ãƒ‹ãƒ¡å†ç”Ÿæ©Ÿæ§‹
+struct SpriteAnim
+{
+    ID3D11ShaderResourceView* srv = nullptr; // SRV
+    int cols = 1;     // æ¨ªãƒ•ãƒ¬ãƒ¼ãƒ æ•° (wc)
+    int rows = 1;     // ç¸¦ãƒ•ãƒ¬ãƒ¼ãƒ æ•° (hc)
+    int frameCount = 1; // ç·ãƒ•ãƒ¬ãƒ¼ãƒ æ•°
+    float frameTime = 0.1f; // 1ãƒ•ãƒ¬ãƒ¼ãƒ ã®ç§’æ•°
+    float acc = 0.0f;  // çµŒéæ™‚é–“è“„ç©
+    int curFrame = 0;  // ç¾åœ¨ã®ãƒ•ãƒ¬ãƒ¼ãƒ ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
+    bool loop = true;  // ãƒ«ãƒ¼ãƒ—å†ç”Ÿã™ã‚‹ã‹
+    bool playing = false; // å†ç”Ÿä¸­ãƒ•ãƒ©ã‚°
 
-// ------------------ ‰Šú‰» ------------------
+    // ãƒ«ãƒ¼ãƒ—å†ç”Ÿé–‹å§‹
+    void PlayLoop(int startFrame = 0)
+    {
+        loop = true;
+        curFrame = startFrame;
+        acc = 0.0f;
+        playing = true;
+    }
+    // 1å›å†ç”Ÿï¼ˆçµ‚äº†å¾Œ playing=false ã«ãªã‚‹ï¼‰
+    void PlayOnce(int startFrame = 0)
+    {
+        loop = false;
+        curFrame = startFrame;
+        acc = 0.0f;
+        playing = true;
+    }
+    // åœæ­¢
+    void Stop()
+    {
+        playing = false;
+        acc = 0.0f;
+    }
+    // æ›´æ–°
+    void Update(float dt)
+    {
+        if (!playing) return;
+        acc += dt;
+        while (acc >= frameTime)
+        {
+            acc -= frameTime;
+            curFrame++;
+            if (curFrame >= frameCount)
+            {
+                if (loop)
+                {
+                    curFrame = 0;
+                }
+                else
+                {
+                    curFrame = frameCount - 1;
+                    playing = false;
+                    break;
+                }
+            }
+        }
+    }
+    // ç¾åœ¨ã®ãƒ–ãƒ­ãƒƒã‚¯ç•ªå·ï¼ˆbnoï¼‰å–å¾—
+    int GetBno() const { return curFrame; }
+};
+
+// ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã”ã¨ã«ã‚¢ãƒ‹ãƒ¡ã‚’ä¿æŒï¼ˆ0 = P1, 1 = P2ï¼‰
+static SpriteAnim g_swordIdleAnim[2];
+static SpriteAnim g_swordAttackAnim[2];
+// æ”»æ’ƒå†ç”Ÿä¸­ãƒ•ãƒ©ã‚°ï¼ˆã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ãŒçµ‚ã‚ã‚‹ã¾ã§ Ready ã«ã—ãªã„ï¼‰
+static bool g_p1AttackPlaying = false;
+static bool g_p2AttackPlaying = false;
+
+// ã‚¹ãƒ—ãƒ©ã‚¤ãƒˆã‚·ãƒ¼ãƒˆã®ãƒ¬ã‚¤ã‚¢ã‚¦ãƒˆï¼ˆå¿…è¦ã«å¿œã˜ã¦å¤‰æ›´ã—ã¦ãã ã•ã„ï¼‰
+static const int SWORD_IDLE_WC = 5;   // idle ã‚·ãƒ¼ãƒˆã®åˆ—æ•°
+static const int SWORD_IDLE_HC = 6;   // idle ã‚·ãƒ¼ãƒˆã®è¡Œæ•°
+static const int SWORD_IDLE_FRAMES = 26; // idle ç·ãƒ•ãƒ¬ãƒ¼ãƒ æ•°
+static const float SWORD_IDLE_FRAME_TIME = 1.0f / 30.0f; // 12 fps
+
+static const int SWORD_ATTACK_WC = 5;
+static const int SWORD_ATTACK_HC = 5;
+static const int SWORD_ATTACK_FRAMES = 22;
+static const float SWORD_ATTACK_FRAME_TIME = 1.0f / 30.0f; // 24 fps (ä¾‹)
+
+
+
+static ID3D11ShaderResourceView* g_TextureGoBg = nullptr;
+static ID3D11ShaderResourceView* g_TextureGoBtn = nullptr;
+enum GO_STATE
+{
+    GO_NONE = 0,
+    GO_ANIMATING,
+    GO_WAIT_FOR_A
+};
+static int g_goState = GO_NONE;
+static float g_goBtnX = 0.0f;
+static float g_goBtnY = 0.0f;
+static float g_goBtnStartX = 0.0f;
+static float g_goBtnTargetX = 0.0f;
+static float g_goAnimDuration = 0.12f; 
+static float g_goAnimTime = 0.0f;
+static XMFLOAT2 g_goBtnSize = XMFLOAT2(500.0f*2, 231.0f * 2);
+#pragma endregion
+// ------------------ åˆæœŸåŒ– ------------------
 void selectWT_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
     g_pDevice = pDevice;
     g_pContext = pContext;
+    g_isP1Ready = false;
+    g_isP2Ready = false;
+    g_p1AttackPlaying = false;
+    g_p2AttackPlaying = false;
 
-    // Šî–{ƒZƒbƒgƒAƒbƒv
+#pragma region ã‚¹ãƒ—ãƒ©ã‚¤ãƒˆã‚¢ãƒ‹ãƒ¡åˆæœŸåŒ–
+    for (int p = 0; p < 2; ++p)
+    {
+        g_cursorScale[p] = 1.0f;
+        g_cursorScaleAnim[p] = false;
+        g_cursorScaleTime[p] = 0.0f;
+    }
+    g_cursorP1 = 0;
+    g_cursorP2 = 0;
+    g_cursorState[0].posX = SlotIndexToX(g_cursorP1);
+    g_cursorState[0].index = g_cursorP1;
+    g_cursorState[1].posX = SlotIndexToX(g_cursorP2);
+    g_cursorState[1].index = g_cursorP2;
+    g_goState = GO_NONE;
+    g_goAnimTime = 0.0f;
+    g_goBtnX = 0.0f;
+    g_goBtnY = 0.0f;
+    g_goBtnStartX = 0.0f;
+    g_goBtnTargetX = 0.0f;
+    for (int p = 0; p < 2; ++p)
+    {
+        g_swordIdleAnim[p].playing = false;
+        g_swordIdleAnim[p].acc = 0.0f;
+        g_swordIdleAnim[p].curFrame = 0;
+
+        g_swordAttackAnim[p].playing = false;
+        g_swordAttackAnim[p].acc = 0.0f;
+        g_swordAttackAnim[p].curFrame = 0;
+    }
+#pragma endregion
+#pragma region ã‚¹ãƒ­ãƒƒãƒˆã‚¹ã‚±ãƒ¼ãƒ«åˆæœŸåŒ–
+    // åŸºæœ¬ã‚»ãƒƒãƒˆã‚¢ãƒƒãƒ—
     g_cursorP1 = 0;
     g_cursorP2 = 0;
     g_isP1Ready = false;
     g_isP2Ready = false;
     g_selectData.player1 = WeaponTerrain::SWORD_WALL;
     g_selectData.player2 = WeaponTerrain::SWORD_WALL;
-
-    // ƒXƒƒbƒg”z’u‚Ì Y ‚ğŒvZiƒoƒbƒNƒoƒbƒtƒ@‚‚³‚ğQÆj
+    // ã‚¹ãƒ­ãƒƒãƒˆé…ç½®ã® Y ã‚’è¨ˆç®—ï¼ˆãƒãƒƒã‚¯ãƒãƒƒãƒ•ã‚¡é«˜ã•ã‚’å‚ç…§ï¼‰
     float screenHeight = (float)Direct3D_GetBackBufferHeight();
     g_slotPosY = screenHeight * 0.85f;
 
-    // ‰ŠúƒJ[ƒ\ƒ‹ˆÊ’u‚ğƒXƒƒbƒgˆÊ’u‚Éİ’è
+    // åˆæœŸã‚«ãƒ¼ã‚½ãƒ«ä½ç½®ã‚’ã‚¹ãƒ­ãƒƒãƒˆä½ç½®ã«è¨­å®š
     g_cursorState[0].posX = SlotIndexToX(g_cursorP1);
     g_cursorState[0].index = g_cursorP1;
     g_cursorState[1].posX = SlotIndexToX(g_cursorP2);
     g_cursorState[1].index = g_cursorP2;
 
-    // ƒXƒƒbƒgƒXƒP[ƒ‹‰Šú‰»
+    // ã‚¹ãƒ­ãƒƒãƒˆã‚¹ã‚±ãƒ¼ãƒ«åˆæœŸåŒ–
     for (int i = 0; i < selectCount; ++i)
     {
         g_slotScale[i] = g_slotBaseScale;
         g_slotAnimating[i] = false;
         g_slotAnimTime[i] = 0.0f;
     }
-    // ‰‰ñ‘I‘ğ‚ÍƒJ[ƒ\ƒ‹ƒCƒ“ƒfƒbƒNƒX‚É‘Î‚µ‘I‘ğƒXƒP[ƒ‹‚ğƒZƒbƒg
+    // åˆå›é¸æŠã¯ã‚«ãƒ¼ã‚½ãƒ«ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ã«å¯¾ã—é¸æŠã‚¹ã‚±ãƒ¼ãƒ«ã‚’ã‚»ãƒƒãƒˆ
     g_slotScale[g_cursorP1] = g_slotSelectedScale;
     g_slotScale[g_cursorP2] = g_slotSelectedScale;
-
-    // UI ƒeƒNƒXƒ`ƒƒ“Ç‚İ‚İiŠù‘¶ƒR[ƒh‚ğ‚»‚Ì‚Ü‚Üj
-#pragma region UI
+#pragma endregion
+    // UI ãƒ†ã‚¯ã‚¹ãƒãƒ£èª­ã¿è¾¼ã¿ï¼ˆæ—¢å­˜ã‚³ãƒ¼ãƒ‰ã‚’ãã®ã¾ã¾ï¼‰
+#pragma region UIãƒ†ã‚¯ã‚¹ãƒãƒ£èª­ã¿è¾¼ã¿
     {
         TexMetadata		metadata;
         ScratchImage	image;
@@ -210,17 +356,17 @@ void selectWT_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
     TexMetadata metadata;
     ScratchImage srcImage;
     HRESULT hr = LoadFromWICFile(L"asset\\texture\\selectBG_3.png", WIC_FLAGS_FORCE_SRGB, &metadata, srcImage);
-    // ¶—p: -90“x -> 270“x‰ñ“]iTEX_FR_ROTATE270j
+    // å·¦ç”¨: -90åº¦ -> 270åº¦å›è»¢ï¼ˆTEX_FR_ROTATE270ï¼‰
     ScratchImage leftImg;
-    // FlipRotate ‚ÌƒVƒOƒlƒ`ƒƒ‚Í DirectXTex ‚Ìƒo[ƒWƒ‡ƒ“‚É‚æ‚Á‚ÄˆÙ‚È‚é‰Â”\«‚ ‚è
-    // ‚±‚±‚Å‚Í“TŒ^“I‚È FlipRotate( images, count, metadata, flag, dest ) ‚ğ‘z’è
+    // FlipRotate ã®ã‚·ã‚°ãƒãƒãƒ£ã¯ DirectXTex ã®ãƒãƒ¼ã‚¸ãƒ§ãƒ³ã«ã‚ˆã£ã¦ç•°ãªã‚‹å¯èƒ½æ€§ã‚ã‚Š
+    // ã“ã“ã§ã¯å…¸å‹çš„ãª FlipRotate( images, count, metadata, flag, dest ) ã‚’æƒ³å®š
     FlipRotate(srcImage.GetImages(), srcImage.GetImageCount(), metadata, TEX_FR_ROTATE270, leftImg);
     TexMetadata leftMeta = leftImg.GetMetadata();
     g_BG3_LeftWidth = leftMeta.width;
     g_BG3_LeftHeight = leftMeta.height;
     CreateShaderResourceView(pDevice, leftImg.GetImages(), leftImg.GetImageCount(), leftMeta, &g_TextureBG3_Left);
 
-    // ‰E—p: +90“x‰ñ“]
+    // å³ç”¨: +90åº¦å›è»¢
     ScratchImage rightImg;
     FlipRotate(srcImage.GetImages(), srcImage.GetImageCount(), metadata, TEX_FR_ROTATE90, rightImg);
     TexMetadata rightMeta = rightImg.GetMetadata();
@@ -229,9 +375,9 @@ void selectWT_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
     CreateShaderResourceView(pDevice, rightImg.GetImages(), rightImg.GetImageCount(), rightMeta, &g_TextureBG3_Right);
     g_bg3OffsetLeft = 0.0f;
     g_bg3OffsetRight = 0.0f;
-#pragma endregion
 
-    // •ŠíƒAƒCƒRƒ““Ç‚İ‚İ
+
+    // æ­¦å™¨ã‚¢ã‚¤ã‚³ãƒ³èª­ã¿è¾¼ã¿
     {
         TexMetadata		metadata;
         ScratchImage	image;
@@ -267,21 +413,88 @@ void selectWT_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
         CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUI[4]);
         assert(g_TextureUI[4]);
     }
+#pragma endregion
+	#pragma region ã‚¹ãƒ—ãƒ©ã‚¤ãƒˆã‚·ãƒ¼ãƒˆèª­ã¿è¾¼ã¿
+    // ====== ã‚¹ãƒ—ãƒ©ã‚¤ãƒˆã‚·ãƒ¼ãƒˆèª­ã¿è¾¼ã¿ï¼ˆsword idle / attackï¼‰ ======
+    {
+        TexMetadata metaIdle;
+        ScratchImage imgIdle;
+        // ãƒ•ã‚¡ã‚¤ãƒ«åã¯å®Ÿéš›ã®ã‚‚ã®ã«åˆã‚ã›ã¦ãã ã•ã„
+        HRESULT r = LoadFromWICFile(L"asset\\texture\\sword_idle.png", WIC_FLAGS_FORCE_SRGB, &metaIdle, imgIdle);
+        if (SUCCEEDED(r))
+        {
+            CreateShaderResourceView(pDevice, imgIdle.GetImages(), imgIdle.GetImageCount(), metaIdle, &g_TextureSwordIdle);
+        }
+    }
+    {
+        TexMetadata metaAtk;
+        ScratchImage imgAtk;
+        HRESULT r = LoadFromWICFile(L"asset\\texture\\sword_attack.png", WIC_FLAGS_FORCE_SRGB, &metaAtk, imgAtk);
+        if (SUCCEEDED(r))
+        {
+            CreateShaderResourceView(pDevice, imgAtk.GetImages(), imgAtk.GetImageCount(), metaAtk, &g_TextureSwordAttack);
+        }
+    }
+	// ====== GO ãƒœã‚¿ãƒ³é–¢é€£ãƒ†ã‚¯ã‚¹ãƒãƒ£èª­ã¿è¾¼ã¿ ======
+    {
+       
+        TexMetadata metaGo;
+        ScratchImage imgGo;
+        HRESULT rgo = LoadFromWICFile(L"asset\\texture\\go_bg.png", WIC_FLAGS_FORCE_SRGB, &metaGo, imgGo);
+        if (SUCCEEDED(rgo))
+        {
+            CreateShaderResourceView(pDevice, imgGo.GetImages(), imgGo.GetImageCount(), metaGo, &g_TextureGoBg);
+        }
+       
+        TexMetadata metaBtn;
+        ScratchImage imgBtn;
+        HRESULT rbtn = LoadFromWICFile(L"asset\\texture\\GO_BUTTON.PNG", WIC_FLAGS_FORCE_SRGB, &metaBtn, imgBtn);
+        if (SUCCEEDED(rbtn))
+        {
+            CreateShaderResourceView(pDevice, imgBtn.GetImages(), imgBtn.GetImageCount(), metaBtn, &g_TextureGoBtn);
+          
+        }
+    }
 
-    // ƒtƒF[ƒhƒCƒ“
+#pragma endregion
+    // ã‚¹ãƒ—ãƒ©ã‚¤ãƒˆã‚¢ãƒ‹ãƒ¡ã®åˆæœŸè¨­å®š
+    for (int p = 0; p < 2; ++p)
+    {
+        // idle
+        g_swordIdleAnim[p].srv = g_TextureSwordIdle;
+        g_swordIdleAnim[p].cols = SWORD_IDLE_WC;
+        g_swordIdleAnim[p].rows = SWORD_IDLE_HC;
+        g_swordIdleAnim[p].frameCount = SWORD_IDLE_FRAMES;
+        g_swordIdleAnim[p].frameTime = SWORD_IDLE_FRAME_TIME;
+        g_swordIdleAnim[p].PlayLoop(0);
+
+        // attack
+        g_swordAttackAnim[p].srv = g_TextureSwordAttack;
+        g_swordAttackAnim[p].cols = SWORD_ATTACK_WC;
+        g_swordAttackAnim[p].rows = SWORD_ATTACK_HC;
+        g_swordAttackAnim[p].frameCount = SWORD_ATTACK_FRAMES;
+        g_swordAttackAnim[p].frameTime = SWORD_ATTACK_FRAME_TIME;
+        g_swordAttackAnim[p].Stop();
+    }
+
+    // 3Dãƒ—ãƒ¬ãƒ“ãƒ¥ãƒ¼ãƒ¢ãƒ‡ãƒ«ã¯ä¸è¦ãªã‚‰èª­ã¿è¾¼ã¾ãªã„ãŒå¿µã®ãŸã‚ NULL ã«
+    g_CenterSwordModel = nullptr;
+    // ãƒ•ã‚§ãƒ¼ãƒ‰ã‚¤ãƒ³
     XMFLOAT4 color = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
     SetFade(60.0f, color, FADE_IN, SCENE_GAME);
 }
 
-// ------------------ I—¹ˆ— ------------------
+// ------------------ çµ‚äº†å‡¦ç† ------------------
 void selectWT_Finalize()
 {
+  
+    ID3D11ShaderResourceView* nullSRV[16] = { nullptr };
+    if (g_pContext) g_pContext->PSSetShaderResources(0, 16, nullSRV);
     for (int i = 0; i < 2; i++)
     {
         SAFE_RELEASE(g_TextureBG[i]);
         SAFE_RELEASE(g_TextureUi_Cursor[i]);
         SAFE_RELEASE(g_TextureUi_Button[i]);
-
     }
     for (int i = 0; i < 3; i++)
     {
@@ -290,28 +503,253 @@ void selectWT_Finalize()
 
     SAFE_RELEASE(g_TextureBG3_Left);
     SAFE_RELEASE(g_TextureBG3_Right);
+
     for (int i = 0; i < selectCount; i++)
     {
         SAFE_RELEASE(g_TextureUI[i]);
     }
 
+    SAFE_RELEASE(g_TextureSwordIdle);
+    SAFE_RELEASE(g_TextureSwordAttack);
+
+    SAFE_RELEASE(g_TextureGoBg);
+    SAFE_RELEASE(g_TextureGoBtn);
+
+    if (g_CenterSwordModel)
+    {
+        ModelRelease(g_CenterSwordModel);
+        g_CenterSwordModel = nullptr;
+    }
+    g_isP1Ready = false;
+    g_isP2Ready = false;
+    g_goState = GO_NONE;
+    g_goAnimTime = 0.0f;
 }
 
-// ------------------ XVˆ— ------------------
+// ------------------ æ›´æ–°å‡¦ç† ------------------
 void selectWT_Update()
 {
+#pragma region ã‚«ãƒ¼ã‚½ãƒ«ç§»å‹•ã‚¢ãƒ‹ãƒ¡æ›´æ–°(1P)
     float dt = FRAME_DT;
-    // ¶‚Í‰º•ûŒü‚ÖƒXƒNƒ[ƒ‹iƒIƒtƒZƒbƒg‚ğŒ¸‚ç‚·‚±‚Æ‚Å•`‰æ®‘¤‚Å‰º•ûŒü‚ÖˆÚ“®j
+
+    if (!g_p1AttackPlaying)
+    {
+        // If selected slot is sword and sword idle exists -> keep original sword idle/attack behavior
+        if (g_cursorP1 == SWORD_SLOT_INDEX && g_swordIdleAnim[0].srv)
+        {
+            if (!g_swordIdleAnim[0].playing) g_swordIdleAnim[0].PlayLoop(0);
+
+            if (Keyboard_IsKeyDownTrigger(KK_LEFTCONTROL) && !g_isP1Ready)
+            {
+                // sword-specific attack playback
+                if (!g_p1AttackPlaying)
+                {
+                    g_swordAttackAnim[0].PlayOnce(0);
+                    g_p1AttackPlaying = true;
+                    g_swordIdleAnim[0].Stop();
+
+                    // cursor scale anim
+                    g_cursorScaleAnim[0] = true;
+                    g_cursorScaleTime[0] = 0.0f;
+                }
+            }
+            if (Keyboard_IsKeyDownTrigger(KK_Z))
+            {
+                g_p1AttackPlaying = false;
+                g_isP1Ready = false;
+                g_swordAttackAnim[0].Stop();
+                g_swordIdleAnim[0].Stop();
+                g_swordIdleAnim[0].PlayLoop(0);
+
+                g_cursorScaleAnim[0] = false;
+                g_cursorScale[0] = 1.0f;
+                g_cursorScaleTime[0] = 0.0f;
+            }
+        }
+        else
+        {
+            // Non-sword slot: stop any sword idle to avoid conflicts
+            if (g_swordIdleAnim[0].playing) g_swordIdleAnim[0].Stop();
+
+            // Selection for any weapon: start cursor scale anim and mark ready
+            if (Keyboard_IsKeyDownTrigger(KK_LEFTCONTROL)&& !g_isP1Ready)
+            {
+                // start cursor animation
+                g_cursorScaleAnim[0] = true;
+                g_cursorScaleTime[0] = 0.0f;
+
+                // mark ready and save choice
+                g_isP1Ready = true;
+                g_selectData.player1 = static_cast<WeaponTerrain>(g_cursorP1);
+            }
+
+    
+            if (Keyboard_IsKeyDownTrigger(KK_Z))
+            {
+                if (g_isP1Ready)
+                {
+                    g_isP1Ready = false;
+                    // optional: reset choice -> uncomment if you want to clear selection
+                    // g_selectData.player1 = WeaponTerrain::SWORD_WALL;
+
+                    g_cursorScaleAnim[0] = false;
+                    g_cursorScale[0] = 1.0f;
+                    g_cursorScaleTime[0] = 0.0f;
+                }
+            }
+        }
+    }
+#pragma endregion
+#pragma region ã‚«ãƒ¼ã‚½ãƒ«ç§»å‹•ã‚¢ãƒ‹ãƒ¡æ›´æ–°(2P)
+    // --- Player2 selection / cancel (generalized for any slot) ---
+    if (!g_p2AttackPlaying)
+    {
+        if (g_cursorP2 == SWORD_SLOT_INDEX && g_swordIdleAnim[1].srv)
+        {
+            if (!g_swordIdleAnim[1].playing) g_swordIdleAnim[1].PlayLoop(0);
+
+            if (Keyboard_IsKeyDownTrigger(KK_D5) && !g_isP2Ready)
+            {
+                if (!g_p2AttackPlaying)
+                {
+                    g_swordAttackAnim[1].PlayOnce(0);
+                    g_p2AttackPlaying = true;
+                    g_swordIdleAnim[1].Stop();
+
+                    g_cursorScaleAnim[1] = true;
+                    g_cursorScaleTime[1] = 0.0f;
+                }
+            }
+
+            if (Keyboard_IsKeyDownTrigger(KK_D6))
+            {
+                g_p2AttackPlaying = false;
+                g_isP2Ready = false;
+                g_swordAttackAnim[1].Stop();
+                g_swordIdleAnim[1].Stop();
+                g_swordIdleAnim[1].PlayLoop(0);
+
+                g_cursorScaleAnim[1] = false;
+                g_cursorScale[1] = 1.0f;
+                g_cursorScaleTime[1] = 0.0f;
+            }
+        }
+        else
+        {
+            // Non-sword slot for player2
+            if (g_swordIdleAnim[1].playing) g_swordIdleAnim[1].Stop();
+
+            if (Keyboard_IsKeyDownTrigger(KK_D5) && !g_isP2Ready)
+            {
+                // start cursor anim and mark ready for any weapon
+                g_cursorScaleAnim[1] = true;
+                g_cursorScaleTime[1] = 0.0f;
+
+                g_isP2Ready = true;
+                g_selectData.player2 = static_cast<WeaponTerrain>(g_cursorP2);
+            }
+
+            // cancel for any weapon (D6 or DELETE)
+            if (Keyboard_IsKeyDownTrigger(KK_D6) || Keyboard_IsKeyDownTrigger(KK_DELETE))
+            {
+                if (g_isP2Ready)
+                {
+                    g_isP2Ready = false;
+                    // optional reset:
+                    // g_selectData.player2 = WeaponTerrain::SWORD_WALL;
+
+                    g_cursorScaleAnim[1] = false;
+                    g_cursorScale[1] = 1.0f;
+                    g_cursorScaleTime[1] = 0.0f;
+                }
+            }
+        }
+    }
+#pragma endregion
+#pragma region ã‚¢ãƒ‹ãƒ¡æ›´æ–°(1P)
+    // ã‚¢ãƒ‹ãƒ¡æ›´æ–°ï¼ˆæ”»æ’ƒã‚¢ãƒ‹ãƒ¡å„ªå…ˆï¼‰
+    // P1
+    if (g_p1AttackPlaying)
+    {
+        g_swordAttackAnim[0].Update(dt);
+        if (!g_swordAttackAnim[0].playing)
+        {
+            // æ”»æ’ƒã‚¢ãƒ‹ãƒ¡çµ‚äº† -> Ready ã«ã—ã¦ idle ã«æˆ»ã™
+            g_p1AttackPlaying = false;
+            g_isP1Ready = true;
+            g_selectData.player1 = static_cast<WeaponTerrain>(g_cursorP1);
+            g_swordIdleAnim[0].PlayLoop(0);
+        }
+    }
+    else
+    {
+        g_swordIdleAnim[0].Update(dt);
+    }
+#pragma endregion
+#pragma region ã‚¢ãƒ‹ãƒ¡æ›´æ–°(2P)
+    // P2
+    if (g_p2AttackPlaying)
+    {
+        g_swordAttackAnim[1].Update(dt);
+        if (!g_swordAttackAnim[1].playing)
+        {
+            g_p2AttackPlaying = false;
+            g_isP2Ready = true;
+            g_selectData.player2 = static_cast<WeaponTerrain>(g_cursorP2);
+            g_swordIdleAnim[1].PlayLoop(0);
+        }
+    }
+    else
+    {
+        g_swordIdleAnim[1].Update(dt);
+    }
+#pragma endregion
+#pragma region ã‚¹ãƒ­ãƒƒãƒˆã‚¹ã‚±ãƒ¼ãƒ«ã‚¢ãƒ‹ãƒ¡æ›´æ–°
+    // --- ã‚«ãƒ¼ã‚½ãƒ«ã‚¹ã‚±ãƒ¼ãƒ«ã‚¢ãƒ‹ãƒ¡ ---
+    for (int p = 0; p < 2; ++p)
+    {
+        if (g_cursorScaleAnim[p])
+        {
+            g_cursorScaleTime[p] += dt;
+            float t = g_cursorScaleTime[p] / g_cursorScaleDuration;
+            if (t >= 1.0f)
+            {
+                g_cursorScaleAnim[p] = false;
+                g_cursorScale[p] = 1.0f;
+                g_cursorScaleTime[p] = 0.0f;
+            }
+            else
+            {
+                // ì• 50%: ì¶•ì†Œ(1.0 -> min), ë’¤ 50%: ë³µêµ¬(min -> 1.0)
+                if (t < 0.5f)
+                {
+                    float tt = t / 0.5f; // 0..1
+                    float e = EaseOutCos(tt); // ease
+                    g_cursorScale[p] = 1.0f + (g_cursorScaleMin - 1.0f) * e;
+                }
+                else
+                {
+                    float tt = (t - 0.5f) / 0.5f; // 0..1
+                    float e = EaseOutCos(tt);
+                    g_cursorScale[p] = g_cursorScaleMin + (1.0f - g_cursorScaleMin) * e;
+                }
+            }
+        }
+    }
+#pragma endregion
+
+#pragma region èƒŒæ™¯ã‚¹ã‚¯ãƒ­ãƒ¼ãƒ«
+    // å·¦ã¯ä¸‹æ–¹å‘ã¸ã‚¹ã‚¯ãƒ­ãƒ¼ãƒ«ï¼ˆã‚ªãƒ•ã‚»ãƒƒãƒˆã‚’æ¸›ã‚‰ã™ã“ã¨ã§æç”»å¼å´ã§ä¸‹æ–¹å‘ã¸ç§»å‹•ï¼‰
     g_bg3OffsetLeft -= g_bg3SpeedLeft * dt;
     if (g_BG3_LeftHeight > 0)
     {
         float h = (float)g_BG3_LeftHeight;
-        // ”ÍˆÍ‚ğ [0, h) ‚Éû‚ß‚é
+        // ç¯„å›²ã‚’ [0, h) ã«åã‚ã‚‹
         while (g_bg3OffsetLeft >= h) g_bg3OffsetLeft -= h;
         while (g_bg3OffsetLeft < 0.0f) g_bg3OffsetLeft += h;
     }
 
-    // ‰E‚Íã•ûŒü‚ÖƒXƒNƒ[ƒ‹iƒIƒtƒZƒbƒg‚ğŒ¸‚ç‚·‚±‚Æ‚Å•`‰æ®‘¤‚Åã•ûŒü‚ÖˆÚ“®j
+    // å³ã¯ä¸Šæ–¹å‘ã¸ã‚¹ã‚¯ãƒ­ãƒ¼ãƒ«ï¼ˆã‚ªãƒ•ã‚»ãƒƒãƒˆã‚’æ¸›ã‚‰ã™ã“ã¨ã§æç”»å¼å´ã§ä¸Šæ–¹å‘ã¸ç§»å‹•ï¼‰
     g_bg3OffsetRight -= g_bg3SpeedRight * dt;
     if (g_BG3_RightHeight > 0)
     {
@@ -319,7 +757,9 @@ void selectWT_Update()
         while (g_bg3OffsetRight >= h) g_bg3OffsetRight -= h;
         while (g_bg3OffsetRight < 0.0f) g_bg3OffsetRight += h;
     }
-    // P1 ‘€ì
+#pragma endregion
+#pragma region é¸æŠå‡¦ç†
+    // P1 æ“ä½œ
     if (!g_isP1Ready)
     {
 
@@ -328,14 +768,14 @@ void selectWT_Update()
             int oldIndex = g_cursorP1;
             g_cursorP1 = (g_cursorP1 + selectCount - 1) % selectCount;
 
-            // ƒJ[ƒ\ƒ‹ˆÚ“®ƒAƒjƒ‚ğŠJniŒ»İˆÊ’u -> VˆÊ’uj
+            // ã‚«ãƒ¼ã‚½ãƒ«ç§»å‹•ã‚¢ãƒ‹ãƒ¡ã‚’é–‹å§‹ï¼ˆç¾åœ¨ä½ç½® -> æ–°ä½ç½®ï¼‰
             g_cursorState[0].startX = g_cursorState[0].posX;
             g_cursorState[0].targetX = SlotIndexToX(g_cursorP1);
             g_cursorState[0].moveTime = 0.0f;
             g_cursorState[0].moving = true;
             g_cursorState[0].index = g_cursorP1;
 
-            // ƒXƒP[ƒ‹: ŒÃ‚¢ƒXƒƒbƒg‚Ík¬AV‚µ‚¢ƒXƒƒbƒg‚ÍŠg‘åƒAƒjƒŠJn
+            // ã‚¹ã‚±ãƒ¼ãƒ«: å¤ã„ã‚¹ãƒ­ãƒƒãƒˆã¯ç¸®å°ã€æ–°ã—ã„ã‚¹ãƒ­ãƒƒãƒˆã¯æ‹¡å¤§ã‚¢ãƒ‹ãƒ¡é–‹å§‹
             StartSlotScaleAnim(oldIndex, false);
             StartSlotScaleAnim(g_cursorP1, true);
         }
@@ -365,7 +805,7 @@ void selectWT_Update()
         }
     }
 
-    // P2 ‘€ì
+    // P2 æ“ä½œ
     if (!g_isP2Ready)
     {
         if (Keyboard_IsKeyDownTrigger(KK_D3))
@@ -408,19 +848,64 @@ void selectWT_Update()
         }
     }
 
-    // —¼ƒvƒŒƒCƒ„[‚ª Ready ‚É‚È‚Á‚½‚ç‘JˆÚ
+	// ä¸¡è€… Ready ãªã‚‰ GO ã‚¢ãƒ‹ãƒ¡é–‹å§‹
     if (g_isP1Ready && g_isP2Ready)
     {
-        Manager_SetWTselect(g_selectData);
-        XMFLOAT4 fadeColor(0.0f, 0.0f, 0.0f, 1.0f);
-        SetFade(40.0f, fadeColor, FADE_STATE::FADE_OUT, SCENE_GAME);
-        g_isP1Ready = false;
-        g_isP2Ready = false;
+        if (g_goState == GO_NONE)
+        {
+          
+            Manager_SetWTselect(g_selectData);
+
+           
+            g_goState = GO_ANIMATING;
+            g_goAnimTime = 0.0f;
+
+            float screenW = (float)Direct3D_GetBackBufferWidth();
+            float screenH = (float)Direct3D_GetBackBufferHeight();
+
+            
+            g_goBtnTargetX = screenW * 0.5f;
+            g_goBtnY = screenH * 0.5f;
+
+        
+            g_goBtnStartX = -(g_goBtnSize.x * 0.5f) - 50.0f;
+            g_goBtnX = g_goBtnStartX;
+        }
+
     }
 
+    if (g_goState == GO_ANIMATING)
+    {
+        g_goAnimTime += FRAME_DT; 
+        float t = g_goAnimTime / g_goAnimDuration;
+        if (t >= 1.0f) t = 1.0f;
+
+        g_goBtnX = g_goBtnStartX + (g_goBtnTargetX - g_goBtnStartX) * t;
+
+        if (t >= 1.0f)
+        {
+      
+            g_goState = GO_WAIT_FOR_A;
+        }
+    }
+    else if (g_goState == GO_WAIT_FOR_A)
+    {
+   
+        if (Keyboard_IsKeyDownTrigger(KK_A))
+        {
+           
+            XMFLOAT4 fadeColor(0.0f, 0.0f, 0.0f, 1.0f);
+            SetFade(40.0f, fadeColor, FADE_STATE::FADE_OUT, SCENE_GAME);
+
+            g_goState = GO_NONE;
+            g_goAnimTime = 0.0f;
+            g_goBtnX = g_goBtnStartX;
+        }
+    }
+#pragma endregion
 
 
-    // ƒJ[ƒ\ƒ‹ˆÚ“®is
+    // ã‚«ãƒ¼ã‚½ãƒ«ç§»å‹•é€²è¡Œ
     for (int p = 0; p < 2; ++p)
     {
         CursorState& cs = g_cursorState[p];
@@ -442,7 +927,7 @@ void selectWT_Update()
         }
     }
 
-    // ƒXƒƒbƒgƒXƒP[ƒ‹ƒAƒjƒ[ƒVƒ‡ƒ“XV
+    // ã‚¹ãƒ­ãƒƒãƒˆã‚¹ã‚±ãƒ¼ãƒ«ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³æ›´æ–°
     for (int i = 0; i < selectCount; ++i)
     {
         if (g_slotAnimating[i])
@@ -456,20 +941,20 @@ void selectWT_Update()
             }
             float e = EaseOutCos(t);
 
-            // –Ú•WƒXƒP[ƒ‹‚ğŒˆ’è: Œ»İ‚ÌƒCƒ“ƒfƒbƒNƒX‚ª P1 ‚Ü‚½‚Í P2 ‚Ìê‡‚Í selectedScaleA‚»‚¤‚Å‚È‚¢ê‡‚Í baseScale
+            // ç›®æ¨™ã‚¹ã‚±ãƒ¼ãƒ«ã‚’æ±ºå®š: ç¾åœ¨ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ãŒ P1 ã¾ãŸã¯ P2 ã®å ´åˆã¯ selectedScaleã€ãã†ã§ãªã„å ´åˆã¯ baseScale
             bool shouldBeSelected = (i == g_cursorP1) || (i == g_cursorP2);
 
             if (shouldBeSelected)
             {
-                // Šg‘å (base -> selected)
+                // æ‹¡å¤§ (base -> selected)
                 g_slotScale[i] = g_slotBaseScale + (g_slotSelectedScale - g_slotBaseScale) * e;
             }
             else
             {
-                // k¬ (selected -> base)
+                // ç¸®å° (selected -> base)
                 g_slotScale[i] = g_slotSelectedScale + (g_slotBaseScale - g_slotSelectedScale) * e;
             }
-            // ƒAƒjƒI—¹‚ÉŠm’è’l‚ğƒZƒbƒg
+            // ã‚¢ãƒ‹ãƒ¡çµ‚äº†æ™‚ã«ç¢ºå®šå€¤ã‚’ã‚»ãƒƒãƒˆ
             if (!g_slotAnimating[i])
             {
                 g_slotScale[i] = shouldBeSelected ? g_slotSelectedScale : g_slotBaseScale;
@@ -478,22 +963,22 @@ void selectWT_Update()
         }
         else
         {
-            // ƒAƒjƒ‚µ‚Ä‚¢‚È‚¢‚Æ‚«‚Í–Ú•W’l‚ğ•ÛØ
+            // ã‚¢ãƒ‹ãƒ¡ã—ã¦ã„ãªã„ã¨ãã¯ç›®æ¨™å€¤ã‚’ä¿è¨¼
             bool shouldBeSelected = (i == g_cursorP1) || (i == g_cursorP2);
             g_slotScale[i] = shouldBeSelected ? g_slotSelectedScale : g_slotBaseScale;
         }
     }
 }
 
-// ------------------ •`‰æˆ— ------------------
+// ------------------ æç”»å‡¦ç† ------------------
 void selectWT_Draw(int playerID)
 {
-    // •`‰æ—p‚Ì‰æ–ÊƒTƒCƒY
+    // æç”»ç”¨ã®ç”»é¢ã‚µã‚¤ã‚º
     float screenWidth = (float)Direct3D_GetBackBufferWidth();
     float screenHeight = (float)Direct3D_GetBackBufferHeight();
     g_pContext->PSSetShaderResources(0, 1, &g_TextureBG[0]);
     DrawSprite(XMFLOAT2(screenWidth * 0.5f, screenHeight * 0.5f), XMFLOAT2(screenWidth, screenHeight), XMFLOAT4(1, 1, 1, 1));
-    // ‰E‘¤•`‰æ: ƒeƒNƒXƒ`ƒƒ‚Í‰ñ“]Ï‚İic’·j‚È‚Ì‚ÅA‚‚³ = g_BG3_LeftHeight ‚ğ—p‚¢‚é
+    // å³å´æç”»: ãƒ†ã‚¯ã‚¹ãƒãƒ£ã¯å›è»¢æ¸ˆã¿ï¼ˆç¸¦é•·ï¼‰ãªã®ã§ã€é«˜ã• = g_BG3_LeftHeight ã‚’ç”¨ã„ã‚‹
     if (g_TextureBG3_Left && g_BG3_LeftHeight > 0)
     {
         g_pContext->PSSetShaderResources(0, 1, &g_TextureBG3_Left);
@@ -501,26 +986,26 @@ void selectWT_Draw(int playerID)
         float texH = (float)g_BG3_LeftHeight;
         float texW = (float)g_BG3_LeftWidth;
 
-        // ‰æ–Ê¶‚Ì X À•Wi­‚µ“à‘¤‚Éj
-        float drawX = texW * 0.5f; // DrawSprite ‚Í’†SÀ•W‚È‚Ì‚Å•‚Ì”¼•ª‚¾‚¯‰E‚Ö
-        // •K—v‚É‰‚¶‚Ä drawX ‚ğ’²®i—á: 50px ‚Ì—]”’j
+        // ç”»é¢å·¦ã® X åº§æ¨™ï¼ˆå°‘ã—å†…å´ã«ï¼‰
+        float drawX = texW * 0.5f; // DrawSprite ã¯ä¸­å¿ƒåº§æ¨™ãªã®ã§å¹…ã®åŠåˆ†ã ã‘å³ã¸
+        // å¿…è¦ã«å¿œã˜ã¦ drawX ã‚’èª¿æ•´ï¼ˆä¾‹: 50px ã®ä½™ç™½ï¼‰
         drawX = screenWidth - 50;
 
-        // ‰½–‡•À‚×‚ê‚Î‰æ–Ê‘S‘Ì‚ğƒJƒo[‚Å‚«‚é‚©
+        // ä½•æšä¸¦ã¹ã‚Œã°ç”»é¢å…¨ä½“ã‚’ã‚«ãƒãƒ¼ã§ãã‚‹ã‹
         int count = (int)ceilf(screenHeight / texH) + 2;
 
-        // ƒIƒtƒZƒbƒgˆÊ’ui0..texHj
+        // ã‚ªãƒ•ã‚»ãƒƒãƒˆä½ç½®ï¼ˆ0..texHï¼‰
         float baseOff = g_bg3OffsetLeft;
 
-        // ã•ûŒü‚Ö—¬‚·A‚Â‚Ü‚è•`‰æ‚Ì Y ‚Í (i * texH) - baseOff
+        // ä¸Šæ–¹å‘ã¸æµã™ã€ã¤ã¾ã‚Šæç”»ã® Y ã¯ (i * texH) - baseOff
         for (int i = -1; i < count; ++i)
         {
-            float y = (i * texH) - baseOff + (texH * 0.5f); // DrawSprite ‚Í’†SŠî€
+            float y = (i * texH) - baseOff + (texH * 0.5f); // DrawSprite ã¯ä¸­å¿ƒåŸºæº–
             DrawSprite(XMFLOAT2(drawX, y), XMFLOAT2(texW, texH), XMFLOAT4(1, 1, 1, 1));
         }
     }
 
-    // ¶‘¤•`‰æ: ‰æ–Ê‰E’[‚ÉŠñ‚¹‚é
+    // å·¦å´æç”»: ç”»é¢å³ç«¯ã«å¯„ã›ã‚‹
     if (g_TextureBG3_Right && g_BG3_RightHeight > 0)
     {
         g_pContext->PSSetShaderResources(0, 1, &g_TextureBG3_Right);
@@ -528,27 +1013,27 @@ void selectWT_Draw(int playerID)
         float texH = (float)g_BG3_RightHeight;
         float texW = (float)g_BG3_RightWidth;
 
-        // ‰æ–Ê‰E‚Ì X À•W
+        // ç”»é¢å³ã® X åº§æ¨™
         float drawX = 50.0f;
-        // ­‚µ“à‘¤‚ÉŠñ‚¹‚½‚¢‚È‚ç drawX = screenWidth - 50.0f;
+        // å°‘ã—å†…å´ã«å¯„ã›ãŸã„ãªã‚‰ drawX = screenWidth - 50.0f;
 
         int count = (int)ceilf(screenHeight / texH) + 2;
         float baseOff = g_bg3OffsetRight;
 
-        // ‰E‚Í‰º•ûŒü‚Ö—¬‚·i•`‰æ‚Ì Y ‚Í baseOff - i*texH ‚Ì‚æ‚¤‚É‚µ‚Ä‰º•ûŒü‚Öi‚Şj
-        // ‚±‚±‚Å‚Í“¯—l‚É (i * texH) + baseOff ‚ğg‚Á‚Ä‰º‚Ö“®‚­•\Œ»‚É‚·‚é
+        // å³ã¯ä¸‹æ–¹å‘ã¸æµã™ï¼ˆæç”»ã® Y ã¯ baseOff - i*texH ã®ã‚ˆã†ã«ã—ã¦ä¸‹æ–¹å‘ã¸é€²ã‚€ï¼‰
+        // ã“ã“ã§ã¯åŒæ§˜ã« (i * texH) + baseOff ã‚’ä½¿ã£ã¦ä¸‹ã¸å‹•ãè¡¨ç¾ã«ã™ã‚‹
         for (int i = -1; i < count; ++i)
         {
             float y = (i * texH) + baseOff + (texH * 0.5f);
             DrawSprite(XMFLOAT2(drawX, y), XMFLOAT2(texW, texH), XMFLOAT4(1, 1, 1, 1));
         }
     }
-    // ”wŒi
+    // èƒŒæ™¯
 
     g_pContext->PSSetShaderResources(0, 1, &g_TextureBG[1]);
     DrawSprite(XMFLOAT2(screenWidth * 0.5f, screenHeight * 0.5f), XMFLOAT2(screenWidth, screenHeight), XMFLOAT4(1, 1, 1, 1));
 
-    // ƒJ[ƒh
+    // ã‚«ãƒ¼ãƒ‰
     int CardposX = (int)(screenWidth / 2 - (screenWidth / 4));
     for (int i = 0; i < 2; i++)
     {
@@ -558,19 +1043,23 @@ void selectWT_Draw(int playerID)
     }
     g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Card[2]);
     DrawSprite(XMFLOAT2(screenWidth * 0.5f, screenHeight * 0.85f), XMFLOAT2(3357 * 0.3f, 750 * 0.3f), XMFLOAT4(1, 1, 1, 1));
-
-
-    // ƒJ[ƒ\ƒ‹•`‰æ: ŠeƒvƒŒƒCƒ„[—pƒJ[ƒ\ƒ‹ƒeƒNƒXƒ`ƒƒ‚ğŒ»İ‚Ì posX ‚Å•`‰æ
-// P1 ƒJ[ƒ\ƒ‹
+   
+    // ã‚«ãƒ¼ã‚½ãƒ«æç”»: å„ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ç”¨ã‚«ãƒ¼ã‚½ãƒ«ãƒ†ã‚¯ã‚¹ãƒãƒ£ã‚’ç¾åœ¨ã® posX ã§æç”»
+    // P1 ã‚«ãƒ¼ã‚½ãƒ«
+    float baseCursorW = 202.0f * 0.75f;
+    float baseCursorH = 271.0f * 0.75f;
+    float p1W = baseCursorW * g_cursorScale[0];
+    float p1H = baseCursorH * g_cursorScale[0];
     g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Cursor[0]);
-    DrawSprite(XMFLOAT2(g_cursorState[0].posX, g_slotPosY + 25.0f), XMFLOAT2(202.0f * 0.75f, 271.0f * 0.75f), XMFLOAT4(1, 1, 1, 1));
+    DrawSprite(XMFLOAT2(g_cursorState[0].posX, g_slotPosY + 25.0f), XMFLOAT2(p1W, p1H), XMFLOAT4(1, 1, 1, 1));
 
-    // P2 ƒJ[ƒ\ƒ‹
+    // P2 ã‚«ãƒ¼ã‚½ãƒ«
+    float p2W = baseCursorW * g_cursorScale[1];
+    float p2H = baseCursorH * g_cursorScale[1];
     g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Cursor[1]);
-    DrawSprite(XMFLOAT2(g_cursorState[1].posX, g_slotPosY - 20.0f), XMFLOAT2(202.0f * 0.75f, 271.0f * 0.75f), XMFLOAT4(1, 1, 1, 1));
+    DrawSprite(XMFLOAT2(g_cursorState[1].posX, g_slotPosY - 20.0f), XMFLOAT2(p2W, p2H), XMFLOAT4(1, 1, 1, 1));
 
-
-    // ƒXƒƒbƒgƒAƒCƒRƒ“•`‰æ (ƒXƒP[ƒ‹”½‰f)
+    // ã‚¹ãƒ­ãƒƒãƒˆã‚¢ã‚¤ã‚³ãƒ³æç”» (ã‚¹ã‚±ãƒ¼ãƒ«åæ˜ )
     float startX = g_slotStartX;
     float spacing = g_slotSpacing;
     float posY = g_slotPosY;
@@ -580,13 +1069,13 @@ void selectWT_Draw(int playerID)
         if (g_TextureUI[i] == NULL) continue;
 
         XMFLOAT2 pos = { startX + (i * spacing), posY };
-        // base ƒTƒCƒY‚ğ‰¡c 100 ‚Æ‚µ‚ÄAƒXƒP[ƒ‹‚ğŠ|‚¯‚é
+        // base ã‚µã‚¤ã‚ºã‚’æ¨ªç¸¦ 100 ã¨ã—ã¦ã€ã‚¹ã‚±ãƒ¼ãƒ«ã‚’æ›ã‘ã‚‹
         float baseW = 100.0f;
         float baseH = 100.0f;
         float scale = g_slotScale[i];
         XMFLOAT2 size = { baseW * scale, baseH * scale };
 
-        // F (‘I‘ğ‚ÅƒnƒCƒ‰ƒCƒg)
+        // è‰² (é¸æŠã§ãƒã‚¤ãƒ©ã‚¤ãƒˆ)
         XMFLOAT4 color = { 0.5f, 0.5f, 0.5f, 1.0f };
         if (i == g_cursorP1)
         {
@@ -601,7 +1090,77 @@ void selectWT_Draw(int playerID)
         DrawSprite(pos, size, color);
     }
 
+    
+    // ---------- ã‚¹ãƒ—ãƒ©ã‚¤ãƒˆã‚¢ãƒ‹ãƒ¡æç”»ï¼ˆå‰£ã®ãƒ—ãƒ¬ãƒ“ãƒ¥ãƒ¼ï¼‰ ----------
+    // æç”»ä½ç½®ã¯ã‚«ãƒ¼ãƒ‰ã®ä¸­å¿ƒã‚ãŸã‚Šã«è¨­å®šï¼ˆå¿…è¦ã«å¿œã˜ã¦å¾®èª¿æ•´ï¼‰
+    XMFLOAT2 p1Pos = XMFLOAT2(screenWidth * 0.25f, screenHeight * 0.5f - 50.0f);
+    XMFLOAT2 p2Pos = XMFLOAT2(screenWidth * 0.75f, screenHeight * 0.5f - 50.0f);
+    XMFLOAT2 drawSize = XMFLOAT2(600.0f, 600.0f); // æç”»ã‚µã‚¤ã‚ºï¼ˆãƒ”ã‚¯ã‚»ãƒ«ï¼‰: èª¿æ•´å¯
+    XMFLOAT4 white = XMFLOAT4(1, 1, 1, 1);
 
+    // P1: æ”»æ’ƒå†ç”Ÿä¸­ãªã‚‰ attack ã‚’ã€ãã†ã§ãªã‘ã‚Œã° cursor ãŒå‰£ä¸Šãªã‚‰ idle ã‚’æç”»
+    if (g_p1AttackPlaying)
+    {
+        if (g_swordAttackAnim[0].srv)
+        {
+            g_pContext->PSSetShaderResources(0, 1, &g_swordAttackAnim[0].srv);
+            int bno = g_swordAttackAnim[0].GetBno();
+            DrawSpriteEx(p1Pos, XMFLOAT2(drawSize.x+50,drawSize.y), white, bno, g_swordAttackAnim[0].cols, g_swordAttackAnim[0].rows);
+        }
+    }
+    else
+    {
+        if (g_cursorP1 == SWORD_SLOT_INDEX && g_swordIdleAnim[0].srv)
+        {
+            g_pContext->PSSetShaderResources(0, 1, &g_swordIdleAnim[0].srv);
+            int bno = g_swordIdleAnim[0].GetBno();
+            DrawSpriteEx(p1Pos, drawSize, white, bno, g_swordIdleAnim[0].cols, g_swordIdleAnim[0].rows);
+        }
+    }
+
+    // P2: å³å´ã«å·¦å³åè»¢ã—ã¦æç”»ï¼ˆflip ã¯å¹…ã«è² å€¤ã‚’æ¸¡ã™ã“ã¨ã§å®Ÿç¾ï¼‰
+    if (g_p2AttackPlaying)
+    {
+        if (g_swordAttackAnim[1].srv)
+        {
+            g_pContext->PSSetShaderResources(0, 1, &g_swordAttackAnim[1].srv);
+            int bno = g_swordAttackAnim[1].GetBno();
+            XMFLOAT2 flipSize = XMFLOAT2(-drawSize.x, drawSize.y); // å·¦å³åè»¢
+            DrawSpriteEx(p2Pos, flipSize, white, bno, g_swordAttackAnim[1].cols, g_swordAttackAnim[1].rows);
+        }
+    }
+    else
+    {
+        if (g_cursorP2 == SWORD_SLOT_INDEX && g_swordIdleAnim[1].srv)
+        {
+            g_pContext->PSSetShaderResources(0, 1, &g_swordIdleAnim[1].srv);
+            int bno = g_swordIdleAnim[1].GetBno();
+            XMFLOAT2 flipSize = XMFLOAT2(-drawSize.x, drawSize.y); // å·¦å³åè»¢
+            DrawSpriteEx(p2Pos, flipSize, white, bno, g_swordIdleAnim[1].cols, g_swordIdleAnim[1].rows);
+        }
+    }
+
+    if (g_goState != GO_NONE)
+    {
+        float screenW = (float)Direct3D_GetBackBufferWidth();
+        float screenH = (float)Direct3D_GetBackBufferHeight();
+
+        
+        if (g_TextureGoBg)
+        {
+            g_pContext->PSSetShaderResources(0, 1, &g_TextureGoBg);
+            DrawSprite(XMFLOAT2(screenW * 0.5f, screenH * 0.5f), XMFLOAT2(screenW, screenH), XMFLOAT4(1, 1, 1, 1));
+        }
+
+     
+        if (g_TextureGoBtn)
+        {
+            g_pContext->PSSetShaderResources(0, 1, &g_TextureGoBtn);
+            DrawSprite(XMFLOAT2(g_goBtnX, g_goBtnY), g_goBtnSize, XMFLOAT4(1, 1, 1, 1));
+        }
+
+     
+    }
 }
 
 // ------------------ Getter ------------------
