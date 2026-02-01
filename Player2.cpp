@@ -73,7 +73,7 @@ void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 	g_Player2.m_rotation = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	g_Player2.m_velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
-	g_Player2.m_scale = XMFLOAT3(0.6f, 1.0f, 0.6f);
+	g_Player2.m_scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
 	g_Player2.m_tag = "Player2";
 	g_Player2.m_layer = 0;
 
@@ -504,9 +504,9 @@ void	Player2Draw()
 {
 	//ワールド行列作成
 	XMMATRIX	scale = XMMatrixScaling(
-		0.01f*0.6f,
 		0.01f,
-		0.01f * 0.6f);
+		0.01f,
+		0.01f);
 	XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
 		g_Player2.m_rotation.x,
 		g_Player2.m_rotation.y+ XM_PI,

@@ -80,7 +80,7 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 	g_Player.m_rotation = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	g_Player.m_velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	
-	g_Player.m_scale = XMFLOAT3(0.6f, 1.0f, 0.6f);
+	g_Player.m_scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
 	g_Player.m_tag = "Player";
 	g_Player.m_layer = 0;
 
@@ -126,7 +126,7 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 	else if (g_setWTP1 == WeaponTerrain::SHURIKEN_)
 	{
 		g_Player.EquipWeapon(std::make_unique<Shuriken>(&g_Player, FALSE));
-		g_Player.m_model = ModelLoad("asset\\model\\default_motion.fbx");
+		g_Player.m_model = ModelLoad("asset\\model\\char_shuriken_motion.fbx");
 	
 	}
 	
@@ -529,9 +529,9 @@ void PlayerDraw()
 {
 	//ワールド行列作成
 	XMMATRIX	scale = XMMatrixScaling(
-		0.01f*0.6f,
 		0.01f,
-		0.01f * 0.6f);
+		0.01f,
+		0.01f );
 	XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
 		g_Player.m_rotation.x,
 		g_Player.m_rotation.y + XM_PI,

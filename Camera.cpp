@@ -34,7 +34,7 @@ void Camera_Initialize()
 
 	float width = (float)Direct3D_GetBackBufferWidth();
 	float height = (float)Direct3D_GetBackBufferHeight();
-	CameraObject.Aspect = (width / height) / 2;
+	CameraObject.Aspect = (width / height);
 	CameraObject.NearClip = 0.5f;
 	CameraObject.FarClip = 1000.0f;
 	g_PlayerPosOld = GetPlayerPosition();//<<<<<<<<<<<<<<<<
@@ -52,7 +52,7 @@ void Camera2_Initialize()
 
 	Camera2Object.Fov = 45.0f;
 
-	Camera2Object.Aspect = (width / height) / 2;
+	Camera2Object.Aspect = (width / height);
 	Camera2Object.NearClip = 0.5f;
 	Camera2Object.FarClip = 1000.0f;
 
@@ -87,11 +87,11 @@ void Camera_Update()
 	//ƒJƒƒ‰‚ðˆÚ“®
 	//P1
 	CameraObject.Position.x += diff.x;
-	CameraObject.Position.y += diff.y+0.8f;
+	CameraObject.Position.y += diff.y;
 	CameraObject.Position.z += diff.z;
 
 	CameraObject.AtPosition.x = playerPos.x;
-	CameraObject.AtPosition.y = playerPos.y+0.8f;
+	CameraObject.AtPosition.y = playerPos.y;
 	CameraObject.AtPosition.z = playerPos.z;
 
 	g_PlayerPosOld.x = playerPos.x;
