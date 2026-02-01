@@ -273,19 +273,19 @@ void	PlayerUpdate()
 					switch (g_setWTP1) //移動
 					{
 					case WeaponTerrain::SWORD_WALL: 
-						ModelPlayClip(g_Player.m_model, 120, 165, 60.0f, true, 1.5f);
+						ModelPlayClip(g_Player.m_model, 120, 165, 60.0f, true, 1.0f);
 						break;
 				    case WeaponTerrain::SPEAR_HILL: 
-			        	ModelPlayClip(g_Player.m_model, 240, 360, 60.0f, true, 2.0f);
+			        	ModelPlayClip(g_Player.m_model, 240, 360, 60.0f, true, 1.0f);
 			        	break;
 			        case WeaponTerrain::BOW_HILL: 
-			        	ModelPlayClip(g_Player.m_model, 181, 240, 60.0f, true, 2.0f);
+			        	ModelPlayClip(g_Player.m_model, 181, 240, 60.0f, true, 1.0f);
 			        	break;
 			        case WeaponTerrain::HAMMER_:
 			        	ModelPlayClip(g_Player.m_model, 180, 240, 60.0f, true, 1.0f);
 			        	break;
 					case WeaponTerrain::SHURIKEN_:
-						ModelPlayClip(g_Player.m_model, 121, 150, 60.0f, true, 2.0f);
+						ModelPlayClip(g_Player.m_model, 121, 150, 60.0f, true, 1.0f);
 						break;
 					}
 					g_Player1CurrentAnim = 1;
@@ -333,16 +333,16 @@ void	PlayerUpdate()
 					ModelPlayClip(g_Player.m_model, 120, 165, 60.0f, true, 1.5f);
 					break;
 				case WeaponTerrain::SPEAR_HILL: // spear
-			    	ModelPlayClip(g_Player.m_model, 240, 360, 60.0f, true, 2.0f);
+			    	ModelPlayClip(g_Player.m_model, 240, 360, 60.0f, true, 1.5f);
 			    	break;
 				case WeaponTerrain::BOW_HILL: // hammer
-					ModelPlayClip(g_Player.m_model, 181, 240, 60.0f, true, 2.0f);
+					ModelPlayClip(g_Player.m_model, 181, 240, 60.0f, true, 1.0f);
 					break;
 			    case WeaponTerrain::HAMMER_: // arrow
 			    	ModelPlayClip(g_Player.m_model, 180, 240, 60.0f, true, 1.0f);
 			    	break;
 				case WeaponTerrain::SHURIKEN_:
-					ModelPlayClip(g_Player.m_model, 121, 150, 60.0f, true, 2.0f);
+					ModelPlayClip(g_Player.m_model, 121, 150, 60.0f, true, 1.0f);
 					break;
 				}
 				g_Player1CurrentAnim = 1;
@@ -474,8 +474,8 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 	moveZ += rightZ * strafe;
 
 	// 最終速度
-	g_Player.m_velocity.x = moveX;
-	g_Player.m_velocity.z = moveZ;
+	g_Player.m_velocity.x = moveX * g_Player.m_moveMul;
+	g_Player.m_velocity.z = moveZ * g_Player.m_moveMul;
 
 	// モデルの向きを移動方向に合わせる
 	XMFLOAT3 moveDir = { g_Player.m_velocity.x, 0.0f, g_Player.m_velocity.z };
@@ -499,7 +499,7 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 			ModelPlayClip(g_Player.m_model, 300, 335, 60.0f, false, 1.0f);
 			break;
 		case WeaponTerrain::SPEAR_HILL: // spear
-			ModelPlayClip(g_Player.m_model, 361, 420, 60.0f, false, 1.0f);
+			ModelPlayClip(g_Player.m_model, 361, 420, 60.0f, false, 2.0f);
 			break;
 		case WeaponTerrain::BOW_HILL: // arrow
 			ModelPlayClip(g_Player.m_model, 400, 450, 60.0f, false, 1.0f);

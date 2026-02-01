@@ -450,8 +450,8 @@ void Player2_ManualMove()
 	moveZ += rightZ * strafe;
 
 	// 最終速度
-	g_Player2.m_velocity.x = moveX;
-	g_Player2.m_velocity.z = moveZ;
+	g_Player2.m_velocity.x = moveX*g_Player2.m_moveMul;
+	g_Player2.m_velocity.z = moveZ*g_Player2.m_moveMul;
 
 	// モデルの向きを移動方向に合わせる
 	XMFLOAT3 moveDir = { g_Player2.m_velocity.x, 0.0f, g_Player2.m_velocity.z };
@@ -474,13 +474,13 @@ void Player2_ManualMove()
 			ModelPlayClip(g_Player2.m_model, 300, 335, 60.0f, false, 1.0f);
 			break;
 		case WeaponTerrain::SPEAR_HILL: // spear
-			ModelPlayClip(g_Player2.m_model, 361, 420, 60.0f, false, 1.0f);
+			ModelPlayClip(g_Player2.m_model, 361, 420, 60.0f, false, 2.0f);
 			break;
 		case WeaponTerrain::BOW_HILL: // arrow
 			ModelPlayClip(g_Player2.m_model, 400, 450, 60.0f, false, 1.0f);
 			break;
 		case WeaponTerrain::HAMMER_: // hammer
-			ModelPlayClip(g_Player2.m_model, 240, 300, 60.0f, false, 0.0f);
+			ModelPlayClip(g_Player2.m_model, 240, 300, 60.0f, false, 1.0f);
 			break;
 
 		case WeaponTerrain::SHURIKEN_: //shuriken

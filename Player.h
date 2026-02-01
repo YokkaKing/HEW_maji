@@ -52,6 +52,7 @@ public:
 	float m_moveSpeed; // 移動速度
 	float m_jumpForce; // 移動速度
 	bool m_isAttacked = false; // 攻撃中フラグ
+	float m_moveMul = 1.0f;
 public:
 	//武器操作関数
 	void EquipWeapon(std::unique_ptr<IWeapon> weapon); // 武器を装備する

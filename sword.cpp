@@ -78,7 +78,7 @@ void Sword::Attack()
 	m_attackTimer = 0.0f; // 攻撃タイマー初期化
 	g_moveSword[m_selectPlayer] = {0.0f, 0.0f, 0.0f}; // 簡易アニメーションの初期化
 	m_coolTime = 1.0f; // クールタイムの設定
-	m_fxAnim.PlayFrames(1, 30, 30.0f, false, 1.0f);
+	m_fxAnim.PlayFrames(1, 20, 30.0f, false, 1.0f);
 	m_collider->SetEnable(true); // 当たり判定の有効
 
 	// 多重ヒット帽子リストをリセット
@@ -182,6 +182,9 @@ void Sword::Update()
 			m_collider->SetEnable(false); // 当たり判定止める
 		}
 	}
+
+	
+
 }
 
 void Sword::Draw()
@@ -189,7 +192,7 @@ void Sword::Draw()
 	if (m_isAttacking)
 	{
 		XMMATRIX	scale = XMMatrixScaling(
-			m_weapon->m_scale.x * 0.02f,
+			m_weapon->m_scale.x * 0.04f,
 			m_weapon->m_scale.y * 0.02f,
 			m_weapon->m_scale.z * 0.02f);
 		XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
@@ -208,7 +211,7 @@ void Sword::Draw()
 		Shader_SetWorldMatrix(fxWorld);
 
 
-		Shader_SetBones(g_modelSword[0]);
+		//Shader_SetBones(g_modelSword[0]);
 		ModelDraw(g_modelSword[0]);
 		
 	}

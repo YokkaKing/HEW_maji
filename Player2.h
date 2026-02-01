@@ -51,6 +51,7 @@ public:
 	XMFLOAT3 m_rotation; // •Ší‚ğ‰ñ“]‚³‚¹‚é
 	float m_moveSpeed; // ˆÚ“®‘¬“x
 	float m_jumpForce; // ˆÚ“®‘¬“x
+	float m_moveMul = 1.0f;
 	//•Ší‘€ìŠÖ”
 public:
 	void EquipWeapon(std::unique_ptr<IWeapon> weapon); // •Ší‚ğ‘•”õ‚·‚é
