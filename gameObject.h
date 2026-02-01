@@ -56,7 +56,8 @@ public:
 
     bool m_isDead = false;
     bool m_isStatic = false;
-
+    float m_delay = 0.0f;
+	float m_frame = 1.0f / 60.0f;
     std::vector<std::shared_ptr<Component>> components;
     bool m_isEnable = true;
 public:
