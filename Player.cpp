@@ -91,7 +91,7 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 	g_Player.EvolutionType = EVOLUTION_TYPE::EVOLUTION_TYPE_NONE;
 	g_Player.m_currentHp = g_Player.m_maxHp;
 	g_Player.m_isDead = false;
-
+	g_Player.m_isAttacked = false;
 	// プレイヤーの当たり判定の追加
 	auto collider = g_Player.AddComponent<BoxCollider>(&g_Player, g_Player.m_scale);
 	ManagerCollider::AddCollider(collider);
@@ -126,7 +126,7 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 	else if (g_setWTP1 == WeaponTerrain::SHURIKEN_)
 	{
 		g_Player.EquipWeapon(std::make_unique<Shuriken>(&g_Player, FALSE));
-		g_Player.m_model = ModelLoad("asset\\model\\default_shuriken.fbx");
+		g_Player.m_model = ModelLoad("asset\\model\\default_motion.fbx");
 	
 	}
 	
@@ -571,7 +571,7 @@ PLAYER* GetPlayer()
 {
 	return &g_Player;
 }
-float Player_GetHP() 
+float Player_GetHp() 
 {
 	return g_Player.m_currentHp; 
 }
@@ -579,7 +579,14 @@ float Player_GetMaxHp()
 {
 	return g_Player.m_maxHp;
 }
-
+bool GetPlayer_IsAttacked()
+{
+	return g_Player.m_isAttacked;
+}
+void SetPlayer_IsAttacked(bool isAttacked)
+{
+    g_Player.m_isAttacked = isAttacked;
+}
 //武器を装備する
 void PLAYER::EquipWeapon(std::unique_ptr<IWeapon> weapon)
 {
@@ -601,6 +608,7 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 			if (info.other->m_weaponPtr)
 			{
 				// 武器の衝突判定を呼び出す
+				g_Player.m_isAttacked = true;
 				info.other->m_weaponPtr->OnWeaponCollision(this);
 			}
 		}

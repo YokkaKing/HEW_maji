@@ -47,6 +47,7 @@ public:
 	PLAYER2_STATE	State;		//ó‘Ô
 	std::unique_ptr<IWeapon> m_currentWeapon = nullptr; // Œ»İ‘•”õ’†‚Ì•Ší
 	bool			m_isDead = false; // €–Sƒtƒ‰ƒO
+	bool 		  m_isAttacked = false; // UŒ‚‚ğó‚¯‚½‚©‚Ç‚¤‚©
 	XMFLOAT3 m_rotation; // •Ší‚ğ‰ñ“]‚³‚¹‚é
 	//•Ší‘€ìŠÖ”
 public:
@@ -65,6 +66,8 @@ void Player2_Jump();
 void Player2_ManualMove();
 float Player2_GetHp();
 float Player2_GetMaxHp();
+bool GetPlayer2_IsAttacked();
+void SetPlayer2_IsAttacked(bool isAttacked);
 PLAYER2* GetPlayer2();
 WeaponTerrain GetSetWTP2();
 

@@ -225,7 +225,7 @@ void Game_Draw_Player1()
 	//Hpbar_Draw(); //<--HpBar描画
 	//Timer_Draw();
 	//Number_Draw();
-	//Hp_Draw();
+	Hp_Draw();
 	//
 	//================
 	Light.SetEnable(TRUE);			//ライティングON
@@ -253,7 +253,7 @@ void Game_Draw_Player2()
 	Light.SetEnable(FALSE);			//ライティングOFF
 	Shader_SetLight(Light.Light);	//ライト構造体をシェーダーへセット
 	SetDepthTest(FALSE);
-	//HpBar2_Draw();
+	Hp2_Draw();
 	//Timer_Draw();
 	//Number_Draw();
 	//Hp2_Draw();

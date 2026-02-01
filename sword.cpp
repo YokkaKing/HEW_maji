@@ -58,7 +58,7 @@ Sword::Sword(GameObject* player, bool select) : IWeapon(player)
 	g_moveSword[m_selectPlayer] = { 0.0f, 0.0f, 0.0f };
 
 	/*********** テストコード **********/
-	g_modelSword[0] = ModelLoad("asset\\model\\block.fbx");
+	g_modelSword[0] = ModelLoad("asset\\model\\block2.fbx");
 	g_modelSword[1] = ModelLoad("asset\\model\\block2.fbx");
 	/*********************************/
 }
@@ -187,9 +187,9 @@ void Sword::Draw()
 {
 	//ワールド行列作成
 	XMMATRIX	scale = XMMatrixScaling(
-		m_weapon->m_scale.x,
-		m_weapon->m_scale.y,
-		m_weapon->m_scale.z);
+		m_weapon->m_scale.x*0.01f,
+		m_weapon->m_scale.y * 0.01f,
+		m_weapon->m_scale.z * 0.01f);
 	XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
 		m_weapon->m_rotation.x,
 		m_weapon->m_rotation.y,

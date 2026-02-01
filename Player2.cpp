@@ -83,7 +83,7 @@ void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 	g_Player2.FrictionRate = 0.98f;
 	g_Player2.m_currentHp = g_Player2.m_maxHp;
 	g_Player2.m_isDead = false;
-
+	g_Player2.m_isAttacked = false;
 	// プレイヤーの当たり判定の追加
 	auto collider = g_Player2.AddComponent<BoxCollider>(&g_Player2, g_Player2.m_scale);
 	ManagerCollider::AddCollider(collider);
@@ -576,6 +576,7 @@ void PLAYER2::OnCollision(const CollisionInfo& info)
 			{	
 				// 武器の衝突判定を呼び出す
 				info.other->m_weaponPtr->OnWeaponCollision(this);
+				g_Player2.m_isAttacked = true;
 			}
 		}
 
@@ -722,4 +723,12 @@ void PLAYER2::OnCollision(const CollisionInfo& info)
 WeaponTerrain GetSetWTP2()
 {
 	return g_setWTP2;
+}
+bool GetPlayer2_IsAttacked()
+{
+	return g_Player2.m_isAttacked;
+}
+void SetPlayer2_IsAttacked(bool isAttacked)
+{
+	g_Player2.m_isAttacked = isAttacked;
 }

@@ -158,6 +158,84 @@ void DrawSpriteEx(XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 col, int bno, int wc, in
 	g_pContext->Draw(4, 0);
 }
 
+void DrawSpriteEx(XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 col, float hp,bool isPlayer1)
+{
+	g_pDevice = Direct3D_GetDevice();
+	g_pContext = Direct3D_GetDeviceContext();
+
+	float percent = hp * 0.01;
+	float w = percent;
+	float h = 1.0f;
+	float texX = 0;
+	float texY = 0;
+	if (isPlayer1)
+	{
+		float texX = 1;
+		float texY = 1;
+	}
+	//float sizeX = size.x * percent;
+	bool flipX = (size.x < 0.0f);
+	bool flipY = (size.y < 0.0f);
+
+	float halfW = fabsf(size.x) * 0.5f;
+	float halfH = fabsf(size.y) * 0.5f;
+	float u0 = texX;
+	float u1 = texX + w;
+	float v0 = texY;
+	float v1 = texY + h;
+	if (isPlayer1)
+	{
+		halfW = halfW * percent;
+		pos.x = pos.x + (fabsf(size.x) * 0.5f) - halfW;
+		u0 = texX - w;
+		u1 = texX;
+		v0 = texY - h;
+		v1 = texY;
+	}
+	else
+	{
+		halfW = halfW * percent;
+		pos.x = pos.x - (fabsf(size.x) * 0.5f) + halfW;
+	}
+	if (flipX) std::swap(u0, u1);
+	if (flipY) std::swap(v0, v1);
+
+	// vertex buffer lock
+	D3D11_MAPPED_SUBRESOURCE msr;
+	g_pContext->Map(g_pVertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &msr);
+	Vertex3D* v = (Vertex3D*)msr.pData;
+
+
+	v[0].position = { pos.x - halfW, pos.y - halfH, 0.0f };
+	v[0].color = col;
+	v[0].texCoord = { u0, v0 };
+
+	v[1].position = { pos.x + halfW, pos.y - halfH, 0.0f };
+	v[1].color = col;
+	v[1].texCoord = { u1, v0 };
+
+	v[2].position = { pos.x - halfW, pos.y + halfH, 0.0f };
+	v[2].color = col;
+	v[2].texCoord = { u0, v1 };
+
+	v[3].position = { pos.x + halfW, pos.y + halfH, 0.0f };
+	v[3].color = col;
+	v[3].texCoord = { u1, v1 };
+
+	// unlock
+	g_pContext->Unmap(g_pVertexBuffer, 0);
+
+	// set vertex buffer
+	UINT stride = sizeof(Vertex3D);
+	UINT offset = 0;
+	g_pContext->IASetVertexBuffers(0, 1, &g_pVertexBuffer, &stride, &offset);
+	g_pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+
+	// draw
+	g_pContext->Draw(4, 0);
+}
+
+
 void DrawSpriteScroll(XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 col,
 	XMFLOAT2 texcoord)
 {
