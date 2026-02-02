@@ -208,27 +208,43 @@ std::vector<MAPDATA> Map;
 const std::vector<std::vector<std::string>> Stage =
 {
 	{ // Y=0				// Z->+
-		{"nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"},
-		{"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
-		{"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
-		{"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
-		{"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}, // X=0
-		{"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
-		{"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
-		{"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
-		{"nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"},
+		{"aaaaaaaaaaaaaaaaa"},
+		{"aaaaaaaaaaaaaaaaa"},
+		{"aaaaaaaaaaaaaaaaa"},
+		{"aaaaaaaaaaaaaaaaa"},
+		{"aaaaaaaaaaaaaaaaa"},
+		{"aaaaaaaaaaaaaaaaa"},
+		{"aaaaaaaaaaaaaaaaa"},
+		{"aaaaaaaaaaaaaaaaa"},
+		{"aaaaaaaaaaaaaaaaa"},
+		{"aaaaaaaaaaaaaaaaa"},
+		{"aaaaaaaaaaaaaaaaa"},
+		{"aaaaaaaaaaaaaaaaa"},
+		{"aaaaaaaaaaaaaaaaa"},
+		{"aaaaaaaaaaaaaaaaa"},
+		{"aaaaaaaaaaaaaaaaa"},
+		{"aaaaaaaaaaaaaaaaa"},
+		{"aaaaaaaaaaaaaaaaa"},
 	},
-	{ // Y=0				// Z->+
-		{"nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnonnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"}, // X=0
-		{"nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"},
-	},
+	{ // Y=1				// Z->+
+		{"nnnfnfnnfnnfnfnnn"},
+		{"nnntnnnnnnnnnjnnn"},
+		{"nnbnnnnnnnnnnncnn"},
+		{"isnnnnnnnnnnnnnkg"},
+		{"nnnnnnnnnnnnnnnnn"},
+		{"innnnnnnnnnnnnnng"},
+		{"nnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnn"},
+		{"innnnnnnnnnnnnnng"},
+		{"nnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnn"},
+		{"innnnnnnnnnnnnnng"},
+		{"nnnnnnnnnnnnnnnnn"},
+		{"irnnnnnnnnnnnnnmg"},
+		{"nndnnnnnnnnnnnenn"},
+		{"nnnqnnnnnnnnnpnnn"},
+		{"nnnhnhnnhnnhnhnnn"}
+	}
 };
 
 //================================================================
@@ -275,15 +291,145 @@ void Field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 
 				if (c == 'n') continue;
 
-				posX = x * 1.0f - (MapChip[y].size() / 2);
-				posY = y * 1.0f;
-				posZ = z * 1.0f;
+				posX = x * 2.0f - (MapChip[y].size() - 1.0f);
+				posY = y * 2.5f;
+				posZ = z * 2.0f - (MapChip[y][x].size() - 1.0f);
 
 				switch (c)
 				{
+				case 'a':
+					Map[loop].pos = { posX, posY, posZ };
+					Map[loop].no = FIELD_BOX;
+					Map[loop].rotation = 0.0f;
+					Map[loop].scale = { 2.0f, 1.0f, 2.0f };
+					loop++;
+					break;
+
 				case 'b':
 					Map[loop].pos = { posX, posY, posZ };
 					Map[loop].no = FIELD_BOX;
+					Map[loop].rotation = XMConvertToRadians(315.0f);
+					Map[loop].scale = { 3.0f, 4.0f, 10.0f };
+					loop++;
+					break;
+
+				case 'c':
+					Map[loop].pos = { posX, posY, posZ };
+					Map[loop].no = FIELD_BOX;
+					Map[loop].rotation = XMConvertToRadians(45.0f);
+					Map[loop].scale = { 3.0f, 4.0f, 10.0f };
+					loop++;
+					break;
+
+				case 'd':
+					Map[loop].pos = { posX, posY, posZ };
+					Map[loop].no = FIELD_BOX;
+					Map[loop].rotation = XMConvertToRadians(225.0f);
+					Map[loop].scale = { 3.0f, 4.0f, 10.0f };
+					loop++;
+					break;
+
+				case 'e':
+					Map[loop].pos = { posX, posY, posZ };
+					Map[loop].no = FIELD_BOX;
+					Map[loop].rotation = XMConvertToRadians(135.0f);
+					Map[loop].scale = { 3.0f, 4.0f, 10.0f };
+					loop++;
+					break;
+
+				case 'f':
+					Map[loop].pos = { posX, posY, posZ };
+					Map[loop].no = FIELD_BOX;
+					Map[loop].rotation = XMConvertToRadians(0.0f);
+					Map[loop].scale = { 2.5f, 4.0f, 7.0f };
+					loop++;
+					break;
+
+				case 'g':
+					Map[loop].pos = { posX, posY, posZ };
+					Map[loop].no = FIELD_BOX;
+					Map[loop].rotation = XMConvertToRadians(90.0f);
+					Map[loop].scale = { 2.5f, 4.0f, 7.0f };
+					loop++;
+					break;
+
+				case 'h':
+					Map[loop].pos = { posX, posY, posZ };
+					Map[loop].no = FIELD_BOX;
+					Map[loop].rotation = XMConvertToRadians(180.0f);
+					Map[loop].scale = { 2.5f, 4.0f, 7.0f };
+					loop++;
+					break;
+
+				case 'i':
+					Map[loop].pos = { posX, posY, posZ };
+					Map[loop].no = FIELD_BOX;
+					Map[loop].rotation = XMConvertToRadians(270.0f);
+					Map[loop].scale = { 2.5f, 4.0f, 7.0f };
+					loop++;
+					break;
+
+				case 'j':
+					Map[loop].pos = { posX, posY, posZ };
+					Map[loop].no = FIELD_BOX;
+					Map[loop].rotation = XMConvertToRadians(30.0f);
+					Map[loop].scale = { 3.0f, 4.0f, 9.0f };
+					loop++;
+					break;
+
+				case 'k':
+					Map[loop].pos = { posX, posY, posZ };
+					Map[loop].no = FIELD_BOX;
+					Map[loop].rotation = XMConvertToRadians(60.0f);
+					Map[loop].scale = { 3.0f, 4.0f, 9.0f };
+					loop++;
+					break;
+
+				case 'm':
+					Map[loop].pos = { posX, posY, posZ };
+					Map[loop].no = FIELD_BOX;
+					Map[loop].rotation = XMConvertToRadians(120.0f);
+					Map[loop].scale = { 3.0f, 4.0f, 9.0f };
+					loop++;
+					break;
+
+				case 'p':
+					Map[loop].pos = { posX, posY, posZ };
+					Map[loop].no = FIELD_BOX;
+					Map[loop].rotation = XMConvertToRadians(150.0f);
+					Map[loop].scale = { 3.0f, 4.0f, 9.0f };
+					loop++;
+					break;
+
+				case 'q':
+					Map[loop].pos = { posX, posY, posZ };
+					Map[loop].no = FIELD_BOX;
+					Map[loop].rotation = XMConvertToRadians(210.0f);
+					Map[loop].scale = { 3.0f, 4.0f, 9.0f };
+					loop++;
+					break;
+
+				case 'r':
+					Map[loop].pos = { posX, posY, posZ };
+					Map[loop].no = FIELD_BOX;
+					Map[loop].rotation = XMConvertToRadians(240.0f);
+					Map[loop].scale = { 3.0f, 4.0f, 9.0f };
+					loop++;
+					break;
+
+				case 's':
+					Map[loop].pos = { posX, posY, posZ };
+					Map[loop].no = FIELD_BOX;
+					Map[loop].rotation = XMConvertToRadians(300.0f);
+					Map[loop].scale = { 3.0f, 4.0f, 9.0f };
+					loop++;
+					break;
+
+				case 't':
+					Map[loop].pos = { posX, posY, posZ };
+					Map[loop].no = FIELD_BOX;
+					Map[loop].rotation = XMConvertToRadians(330.0f);
+					Map[loop].scale = { 3.0f, 4.0f, 9.0f };
 					loop++;
 					break;
 
@@ -323,10 +469,11 @@ void Field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 		case FIELD::FIELD_BOX:
 			object = ColliderFactory::CreateBoxObject(
 				Map[i].pos,
-				{ 1.0f, 1.0f, 1.0f },
+				Map[i].scale,
 				"Wall",
 				0
 			);
+			object->m_rotation = { 0.0f, Map[i].rotation, 0.0f };
 			object->m_isStatic = true;
 			break;
 
@@ -419,7 +566,9 @@ void Field_Draw(void)
 		//スケーリング行列の作成
 		XMMATRIX	ScalingMatrix = XMMatrixScaling
 		(
-			1.0f, 1.0f, 1.0f
+			Map[i].scale.x,
+			Map[i].scale.y,
+			Map[i].scale.z
 		);
 
 		if (Map[i].no == FIELD::FIELD_LIFT)
@@ -436,8 +585,7 @@ void Field_Draw(void)
 		XMMATRIX	RotationMatrix = XMMatrixRotationRollPitchYaw
 		(
 			XMConvertToRadians(0.0f),
-			//XMConvertToRadians(rot),
-			XMConvertToRadians(0.0f),
+			Map[i].rotation,
 			XMConvertToRadians(0.0f)
 		);
 		//ワールド行列の作成

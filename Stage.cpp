@@ -18,18 +18,11 @@ void STAGE::Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_pContext = pContext;
 
 	m_model[0] = ModelLoad("asset\\model\\stadium.fbx");
+	m_model[1] = ModelLoad("asset\\model\\block.fbx");
 
-	m_position = XMFLOAT3(0.0f, -1.0f, 0.0f);
+	m_position = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	m_rotation = XMFLOAT3(0.0f, 0.0f, 0.0f);
-	m_velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
-
-	m_scale = XMFLOAT3(40.0f, 1.0f, 40.0f);
-	m_tag = "Wall";
-	m_layer = 0;
-
-	// プレイヤーの当たり判定の追加
-	auto collider = AddComponent<BoxCollider>(this, m_scale);
-	ManagerCollider::AddCollider(collider);
+	m_scale = XMFLOAT3(0.0221f, 0.0221f, 0.0221f);
 }
 void STAGE::Finalize()
 {
@@ -43,9 +36,9 @@ void STAGE::Draw()
 {
 	//ワールド行列作成
 	XMMATRIX	scale = XMMatrixScaling(
-		0.017f,
-		0.017f,
-		0.017f);
+		m_scale.x,
+		m_scale.y,
+		m_scale.z);
 	XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
 		m_rotation.x,
 		m_rotation.y,
@@ -61,8 +54,4 @@ void STAGE::Draw()
 
 	//モデルの描画リクエスト
 	ModelDraw(m_model[0]);
-}
-void STAGE::OnCollision(const CollisionInfo& info)
-{
-
 }

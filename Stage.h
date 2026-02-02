@@ -20,19 +20,22 @@ using namespace DirectX;
 #include"gameObject.h"
 #include"Camera.h"
 
-class STAGE : public GameObject
+class STAGE
 {
 public:
 	MODEL* m_model[2];
 	ID3D11Device* g_pDevice;
 	ID3D11DeviceContext* g_pContext;
 
+	XMFLOAT3 m_position;
+	XMFLOAT3 m_rotation;
+	XMFLOAT3 m_scale;
+
 public:
 	void Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
 	void Finalize();
 	void Update();
 	void Draw();
-	void OnCollision(const CollisionInfo& info) override;
 };
 
 #endif // STAGE_H
