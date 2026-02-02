@@ -215,7 +215,9 @@ void	PlayerUpdate()
 //	攻撃処理(変身前)
 //================================================================
 
-	if (Keyboard_IsKeyDownTrigger(KK_C) || g_Controller[0].IsButtonPushed(ControllerButton::A_BUTTON))
+	if (Keyboard_IsKeyDownTrigger(KK_C) || g_Controller[0].IsButtonPushed(ControllerButton::X_BUTTON))
+
+
 	{
 		// 武器が存在し攻撃中でなければ攻撃開始
 		if (g_Player.m_currentWeapon && !g_Player1AttackPlaying)
@@ -628,8 +630,8 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 	}
 
 	// Aボタンを押した && コヨーテタイムが0.0fより大きい
-	if (Keyboard_IsKeyDownTrigger(KK_SPACE) && g_Player.m_koyoteTime > 0.0f)
-	//if (g_Controller.IsButtonPushed(ControllerButton::A_BUTTON) && g_Player.m_koyoteTime > 0.0f) //Aボタン**
+	//if (Keyboard_IsKeyDownTrigger(KK_SPACE) && g_Player.m_koyoteTime > 0.0f)
+	if (g_Controller[0].IsButtonPushed(ControllerButton::A_BUTTON) && g_Player.m_koyoteTime > 0.0f) //Aボタン**
 	{
 		g_Player.m_velocity.y = g_Player.m_jumpForce;
 		g_Player.m_isGround = false;
