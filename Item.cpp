@@ -9,6 +9,7 @@
 //================================================================
 //	インクルード
 //================================================================
+#include"Audio.h"
 #include"Item.h"
 #include"model.h"
 #include"Player.h"
@@ -239,6 +240,8 @@ void ITEM::OnCollision(const CollisionInfo& info)
 		{
 			if (m_itemType == ITEM_TYPE::HEALTH_RECOVERY)
 			{
+				PlayAudio(g_item, false);
+
 				float health = 100.0f - Player_GetHp();
 
 				// Player1が体力マックス-30.0f以下だったら30.0f回復
@@ -260,6 +263,8 @@ void ITEM::OnCollision(const CollisionInfo& info)
 		{
 			if (m_itemType == ITEM_TYPE::HEALTH_RECOVERY)
 			{
+				PlayAudio(g_item, false);
+
 				float health = 100.0f - Player2_GetHp();
 
 				// Player1が体力マックス-30.0f以下だったら30.0f回復
