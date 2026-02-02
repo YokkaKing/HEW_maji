@@ -18,7 +18,8 @@ enum class WeaponTerrain
 {
 	//ここに武器 + 地形を設定していく
 	//ここの番号順を.cppの画像ロード順と合わせていく
-	SWORD_WALL = 0,
+	NONE = 0,
+	SWORD_WALL,
 	SPEAR_HILL, //本来は丘は弓対応
 	BOW_HILL,
 	HAMMER_,

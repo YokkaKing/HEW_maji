@@ -235,7 +235,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	Manager_Finalize();
 
 
-	//UninitAudio();		//サウンドの終了
+	UninitAudio();		//サウンドの終了
 
 	Shader_Finalize(); // シェーダの終了処理
 	FinalizeSprite();	//スプライトの終了処理

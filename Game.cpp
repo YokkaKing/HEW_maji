@@ -1,13 +1,13 @@
 /*
-* ƒtƒ@ƒCƒ‹–¼	Game.cpp
-* ƒ^ƒCƒgƒ‹	ƒQ[ƒ€
-* ì¬Ò		‹v•Û–ØŠ²‘¾
-* ì¬“ú		12Œ02“ú
-* XV“ú		12Œ02“ú
+* ãƒ•ã‚¡ã‚¤ãƒ«å	Game.cpp
+* ã‚¿ã‚¤ãƒˆãƒ«	ã‚²ãƒ¼ãƒ 
+* ä½œæˆè€…		ä¹…ä¿æœ¨å¹¹å¤ª
+* ä½œæˆæ—¥		12æœˆ02æ—¥
+* æ›´æ–°æ—¥		12æœˆ02æ—¥
 */
 
 //================================================================
-//	ƒCƒ“ƒNƒ‹[ƒh
+//	ã‚¤ãƒ³ã‚¯ãƒ«ãƒ¼ãƒ‰
 //================================================================
 #include"Manager.h"
 #include"sprite.h"
@@ -32,23 +32,31 @@
 #include "Hp.h"
 #include "Hp2.h"
 #include "generateWT.h"
-
+#include "transformManager.h"
+#include"Stage.h"
 #include"Item.h"
 //================================================================
-//	ƒOƒ[ƒoƒ‹•Ï”
+//	ã‚°ãƒ­ãƒ¼ãƒãƒ«å¤‰æ•°
 //================================================================
-LIGHTOBJECT		Light;//<<<<<<ƒ‰ƒCƒgŠÇ—ƒIƒuƒWƒFƒNƒg
-// ‘SƒIƒuƒWƒFƒNƒg
+LIGHTOBJECT		Light;//<<<<<<ãƒ©ã‚¤ãƒˆç®¡ç†ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆ
+// å…¨ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆ
 std::vector<GameObject*> g_gameObjects;
-static	int		g_BgmID = NULL;	//ƒTƒEƒ“ƒhŠÇ—ID
-
+static	int		g_BgmID = NULL;	//ã‚µã‚¦ãƒ³ãƒ‰ç®¡ç†ID
+static int frame;
+static TransformManager g_transformMngr;
+static int g_selectionPhase = 0;
 ITEM_SPONER g_sponer;
+
+STAGE g_stage;
 
 void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, const inGameWTselect& select)
 {
-	//Controller_Initialize();
-	Field_Initialize(pDevice, pContext); // ƒtƒB[ƒ‹ƒh‚Ì‰Šú‰»
 	
+	frame = 10;
+	//Controller_Initialize();
+	Field_Initialize(pDevice, pContext); // ãƒ•ã‚£ãƒ¼ãƒ«ãƒ‰ã®åˆæœŸåŒ–
+	g_stage.Initialize(pDevice, pContext);
+
 	g_sponer.Initialize();
 
 	EvolutionInitialize(select.player1, select.player2);
@@ -56,14 +64,18 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, const
 	PlayerInitialize(pDevice, pContext, select.player1); //
 	Player2Initialize(pDevice, pContext, select.player2);
 
-	TerrainInitialize(pDevice, pContext, select.player1, select.player2);//’nŒ`‚ÉP1,P2‚Ì‚»‚ê‚¼‚ê‘I‘ğ‚µ‚½•ŠíE’nŒ`î•ñ‚ğ“n‚·
+	TerrainInitialize(pDevice, pContext, select.player1, select.player2);//åœ°å½¢ã«P1,P2ã®ãã‚Œãã‚Œé¸æŠã—ãŸæ­¦å™¨ãƒ»åœ°å½¢æƒ…å ±ã‚’æ¸¡ã™
 
 	PLAYER* pP1 = GetPlayer();
 	PLAYER2* pP2 = GetPlayer2();
 	//generateWT_Apply(Manager_GetWTselect(), pP1, pP2, pDevice, pContext);
 
-	Camera_Initialize();	//ƒJƒƒ‰‰Šú‰»
-	Camera2_Initialize();	//ƒJƒƒ‰‰Šú‰»
+	Camera_Initialize();	//ã‚«ãƒ¡ãƒ©åˆæœŸåŒ–
+	Camera2_Initialize();	//ã‚«ãƒ¡ãƒ©åˆæœŸåŒ–
+
+	g_transformMngr.Initialize(pDevice, pContext); //å¤‰èº«å…ˆé¸æŠã®åˆæœŸåŒ–
+	g_selectionPhase = 0;
+	g_transformMngr.StartSelection(WeaponTerrain::NONE, WeaponTerrain::NONE);
 
 	//===========UI===========
 	Hpbar_Initialize(pDevice, pContext);
@@ -74,42 +86,42 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, const
 	Hp2_Initialize(pDevice, pContext);
 
 	//========================
-	//ƒrƒ…[ƒ|[ƒg‚Ì‰Šú‰»
+	//ãƒ“ãƒ¥ãƒ¼ãƒãƒ¼ãƒˆã®åˆæœŸåŒ–
 	//Viewport_Initialize(Direct3D_GetWindowHandle());
 
-	//g_BgmID = LoadAudio("asset\\Audio\\bgm.wav");	//ƒTƒEƒ“ƒhƒ[ƒh
-	//PlayAudio(g_BgmID, true);	//Ä¶ŠJniƒ‹[ƒv‚ ‚èj
-	//PlayAudio(g_BgmID);			//Ä¶ŠJniƒ‹[ƒv‚È‚µj
-	//PlayAudio(g_BgmID, false);	//Ä¶ŠJniƒ‹[ƒv‚È‚µj
+	//g_BgmID = LoadAudio("asset\\Audio\\bgm.wav");	//ã‚µã‚¦ãƒ³ãƒ‰ãƒ­ãƒ¼ãƒ‰
+	//PlayAudio(g_BgmID, true);	//å†ç”Ÿé–‹å§‹ï¼ˆãƒ«ãƒ¼ãƒ—ã‚ã‚Šï¼‰
+	//PlayAudio(g_BgmID);			//å†ç”Ÿé–‹å§‹ï¼ˆãƒ«ãƒ¼ãƒ—ãªã—ï¼‰
+	//PlayAudio(g_BgmID, false);	//å†ç”Ÿé–‹å§‹ï¼ˆãƒ«ãƒ¼ãƒ—ãªã—ï¼‰
 
-	//ƒ‰ƒCƒg‰Šú‰»
+	//ãƒ©ã‚¤ãƒˆåˆæœŸåŒ–
 	XMFLOAT4	para;
 
-	para = XMFLOAT4(0.4f, 0.4f, 0.4f, 1.0f);//ŠÂ‹«Œõ‚ÌF
+	para = XMFLOAT4(0.4f, 0.4f, 0.4f, 1.0f);//ç’°å¢ƒå…‰ã®è‰²
 	Light.SetAmbient(para);
 
-	para = XMFLOAT4(0.6f, 0.6f, 0.6f, 1.0f);//Œõ‚ÌF
+	para = XMFLOAT4(0.6f, 0.6f, 0.6f, 1.0f);//å…‰ã®è‰²
 	Light.SetDiffuse(para);
 
-	para = XMFLOAT4(0.5f, -1.0f, 0.0f, 1.0f);//Œõ•ûŒü
+	para = XMFLOAT4(0.5f, -1.0f, 0.0f, 1.0f);//å…‰æ–¹å‘
 	float	len = sqrtf(para.x * para.x + para.y * para.y + para.z * para.z);
 	para.x /= len;
 	para.y /= len;
 	para.z /= len;
-	Light.SetDirection(para);//Œõ‚Ì•ûŒüi³‹K‰»Ïj
+	Light.SetDirection(para);//å…‰ã®æ–¹å‘ï¼ˆæ­£è¦åŒ–æ¸ˆï¼‰
 }
 
 void Game_Finalize()
 {
-	Field_Finalize();	// ƒtƒB[ƒ‹ƒh‚ÌI—¹ˆ—
+	Field_Finalize();	// ãƒ•ã‚£ãƒ¼ãƒ«ãƒ‰ã®çµ‚äº†å‡¦ç†
 	TerrainFinalize();
 
 	g_sponer.Finalize();
 
-	PlayerFinalize();	// ƒ{[ƒ‹‚ÌI—¹ˆ—
+	PlayerFinalize();	// ãƒœãƒ¼ãƒ«ã®çµ‚äº†å‡¦ç†
 	Player2Finalize();
-	Camera_Finalize();	//ƒJƒƒ‰I—¹ˆ—
-	Camera2_Finalize();	//ƒJƒƒ‰I—¹ˆ—
+	Camera_Finalize();	//ã‚«ãƒ¡ãƒ©çµ‚äº†å‡¦ç†
+	Camera2_Finalize();	//ã‚«ãƒ¡ãƒ©çµ‚äº†å‡¦ç†
 
 
 
@@ -120,93 +132,135 @@ void Game_Finalize()
 	Number_Finalize();
 	Hp_Finalize();
 	Hp2_Finalize();
+	g_transformMngr.Finalize();
 	//=====================
 	ManagerCollider::ClearCollider();
-	//UnloadAudio(g_BgmID);//ƒTƒEƒ“ƒh‚Ì‰ğ•ú
+	//UnloadAudio(g_BgmID);//ã‚µã‚¦ãƒ³ãƒ‰ã®è§£æ”¾
 }
 
 void Game_Update()
 {
-	//XVˆ—
-	for (auto obj : g_gameObjects)
+	//å°‘ã—ã®ç§’ãŒã‚¢ãƒƒãƒ—ãƒ‡ãƒ¼ãƒˆæ™‚é–“ã‚’ä¸Šã’ã‚‹
+	if (frame > 0) 
 	{
-		obj->Update();
+		frame -= 1;
 	}
-	PlayerUpdate();
-	Player2Update();
-	Field_Update();
-	TerrainUpdate();
-	
-	g_sponer.Update();
+	if (g_transformMngr.IsActive()&&frame <= 0)
+	{
+		g_transformMngr.Update(1.0f / 60.0f);
 
-	//=======UI===========
-	Hpbar_Update();
-	HpBar2_Update();
-	Timer_Update();
-	Number_Update();
-	Hp_Update();
-	Hp2_Update();
-	//=====================
+		if (!g_transformMngr.IsActive())
+		{
+			inGameWTselect selectionData = g_transformMngr.GetPlayerSelectionWT();
 
-	//======“–‚½‚è”»’è======
-	ManagerCollider::UpdateAllCollisions();
+			if (g_selectionPhase == 0)
+			{//ï¼‘å›ç›®ã®å¤‰èº«å…ˆé¸æŠå®Œäº†æ™‚
+				//P1,P2ã®ã‚¹ãƒ­ãƒƒãƒˆ0ã«ä¿å­˜
+				g_Player.SetReservedWT(0, selectionData.player1);
+				g_Player2.SetReservedWT(0, selectionData.player2);
 
-	auto it = std::remove_if(
-		g_gameObjects.begin(), g_gameObjects.end(),
-		[](GameObject* obj) {
-			if (obj->m_isDead) 
-			{
-				// íœ‚³‚ê‚é‘O‚ÉA‚Á‚Ä‚¢‚éƒRƒ‰ƒCƒ_[‚ğ‚·‚×‚Äƒ}ƒl[ƒWƒƒ[‚©‚çŠO‚·
-				// ¦Collider‚ğshared_ptr‚Å‚Á‚Ä‚¢‚é‚È‚çA‚±‚±‚Å‚Ì‰ğœ‚ªd—v‚Å‚·
-				for (auto& collider : obj->GetColliders()) 
-				{
-					ManagerCollider::RemoveCollider(collider);
-				}
+				//å¤‰èº«å…ˆé¸æŠ(2å›ç›®)ã«ç§»ã‚‹
+				g_selectionPhase = 1;
 
-				delete obj; // ƒƒ‚ƒŠ‚ğ‰ğ•ú (new‚Åì‚Á‚Ä‚¢‚éê‡)
-				return true;
+				g_transformMngr.StartSelection(selectionData.player1, selectionData.player2);
 			}
-			return false;
-		});
+			else if (g_selectionPhase == 1)
+			{//ï¼’å›ç›®ã®å¤‰èº«å…ˆé¸æŠå®Œäº†æ™‚
+				//P1,P2ã®ã‚¹ãƒ­ãƒƒãƒˆ1ã«ä¿å­˜
+				g_Player.SetReservedWT(1, selectionData.player1);
+				g_Player2.SetReservedWT(1, selectionData.player2);
 
-	// ƒŠƒXƒg‚©‚çœ‹
-	g_gameObjects.erase(it, g_gameObjects.end());
-	//=====================
-
-	//ƒL[“ü—Íƒ`ƒFƒbƒN
-	//ƒXƒ^[ƒgƒ{ƒ^ƒ“‚ª‰Ÿ‚³‚ê‚½‚çƒV[ƒ“‚ğØ‚è‘Ö‚¦
-	//ƒtƒF[ƒhˆ—’†‚ÍƒL[‚ğó‚¯•t‚¯‚È‚¢
-	if (Keyboard_IsKeyDownTrigger(KK_ENTER) && (GetFadeState() == FADE_NONE))
-	{
-		//ƒtƒF[ƒhƒAƒEƒg‚³‚¹‚ÄƒV[ƒ“‚ğØ‚è‘Ö‚¦‚é
-		XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
-		SetFade(40.0f, color, FADE_OUT, SCENE_RESULT);
+				//å¤‰èº«å…ˆé¸æŠã‚’çµ‚äº†ã—ã¦ã‚²ãƒ¼ãƒ ã¸ç§»è¡Œ
+				g_selectionPhase = 2;
+			}
+		}
+		
+		return;
 	}
-	Camera_Update();	//ƒJƒƒ‰XVˆ—
-	Camera2_Update();   //ƒJƒƒ‰2XVˆ—
+	else
+	{
+		//æ›´æ–°å‡¦ç†
+		for (auto obj : g_gameObjects)
+		{
+			obj->Update();
+		}
+		PlayerUpdate();
+		Player2Update();
+		Field_Update();
+		TerrainUpdate();
+
+		g_sponer.Update();
+
+		//=======UI===========
+		Hpbar_Update();
+		HpBar2_Update();
+		Timer_Update();
+		Number_Update();
+		Hp_Update();
+		Hp2_Update();
+		//=====================
+
+		//======å½“ãŸã‚Šåˆ¤å®š======
+		ManagerCollider::UpdateAllCollisions();
+
+		auto it = std::remove_if(
+			g_gameObjects.begin(), g_gameObjects.end(),
+			[](GameObject* obj) {
+				if (obj->m_isDead)
+				{
+					// å‰Šé™¤ã•ã‚Œã‚‹å‰ã«ã€æŒã£ã¦ã„ã‚‹ã‚³ãƒ©ã‚¤ãƒ€ãƒ¼ã‚’ã™ã¹ã¦ãƒãƒãƒ¼ã‚¸ãƒ£ãƒ¼ã‹ã‚‰å¤–ã™
+					// â€»Colliderã‚’shared_ptrã§æŒã£ã¦ã„ã‚‹ãªã‚‰ã€ã“ã“ã§ã®è§£é™¤ãŒé‡è¦ã§ã™
+					for (auto& collider : obj->GetColliders())
+					{
+						ManagerCollider::RemoveCollider(collider);
+					}
+
+					delete obj; // ãƒ¡ãƒ¢ãƒªã‚’è§£æ”¾ (newã§ä½œã£ã¦ã„ã‚‹å ´åˆ)
+					return true;
+				}
+				return false;
+			});
+
+		// ãƒªã‚¹ãƒˆã‹ã‚‰é™¤å»
+		g_gameObjects.erase(it, g_gameObjects.end());
+		//=====================
+
+		//ã‚­ãƒ¼å…¥åŠ›ãƒã‚§ãƒƒã‚¯
+		//ã‚¹ã‚¿ãƒ¼ãƒˆãƒœã‚¿ãƒ³ãŒæŠ¼ã•ã‚ŒãŸã‚‰ã‚·ãƒ¼ãƒ³ã‚’åˆ‡ã‚Šæ›¿ãˆ
+		//ãƒ•ã‚§ãƒ¼ãƒ‰å‡¦ç†ä¸­ã¯ã‚­ãƒ¼ã‚’å—ã‘ä»˜ã‘ãªã„
+		if (Keyboard_IsKeyDownTrigger(KK_ENTER) && (GetFadeState() == FADE_NONE))
+		{
+			//ãƒ•ã‚§ãƒ¼ãƒ‰ã‚¢ã‚¦ãƒˆã•ã›ã¦ã‚·ãƒ¼ãƒ³ã‚’åˆ‡ã‚Šæ›¿ãˆã‚‹
+			XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
+			SetFade(40.0f, color, FADE_OUT, SCENE_RESULT);
+		}
+	}
+	Camera_Update();	//ã‚«ãƒ¡ãƒ©æ›´æ–°å‡¦ç†
+	Camera2_Update();   //ã‚«ãƒ¡ãƒ©2æ›´æ–°å‡¦ç†
 }
 
 void Game_Draw_Player1()
 {
 	//=================================================
-	//	1‚Â‚ÌƒtƒB[ƒ‹ƒh‚Å2l‚ÌƒvƒŒƒCƒ„[‚ğ•`‰æ‚·‚éê‡A
-	//	ƒVƒF[ƒ_[‚Ìs—ñŠÖ”‚ğ—¼‰æ–Ê‚Ìˆ—‚ÅŒÄ‚Ô‚±‚Æ‚Å
-	//	•ÊX‚ÌƒJƒƒ‰‚ğ•`‰æ‚·‚é‚±‚Æ‚ª‚Å‚«‚é
+	//	1ã¤ã®ãƒ•ã‚£ãƒ¼ãƒ«ãƒ‰ã§2äººã®ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã‚’æç”»ã™ã‚‹å ´åˆã€
+	//	ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã®è¡Œåˆ—é–¢æ•°ã‚’ä¸¡ç”»é¢ã®å‡¦ç†ã§å‘¼ã¶ã“ã¨ã§
+	//	åˆ¥ã€…ã®ã‚«ãƒ¡ãƒ©ã‚’æç”»ã™ã‚‹ã“ã¨ãŒã§ãã‚‹
 	//=================================================
-	Light.SetEnable(TRUE);			//ƒ‰ƒCƒeƒBƒ“ƒOON
-	Shader_SetLight(Light.Light);	//ƒ‰ƒCƒg\‘¢‘Ì‚ğƒVƒF[ƒ_[‚ÖƒZƒbƒg
+	Light.SetEnable(TRUE);			//ãƒ©ã‚¤ãƒ†ã‚£ãƒ³ã‚°ON
+	Shader_SetLight(Light.Light);	//ãƒ©ã‚¤ãƒˆæ§‹é€ ä½“ã‚’ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã¸ã‚»ãƒƒãƒˆ
 	SetDepthTest(TRUE);
 
 	//ID3D11DeviceContext* g_pContext = Direct3D_GetDeviceContext();
 
 //================================================================
-//	‰æ–Ê•ªŠ„—pŠÖ”(¶‰æ–Ê)
+//	ç”»é¢åˆ†å‰²ç”¨é–¢æ•°(å·¦ç”»é¢)
 //================================================================
 	//g_pContext->RSSetViewports(1, &g_LeftViewPort);
 
-	Camera_Draw();		//Draw‚ÌÅ‰‚ÅŒÄ‚ÔI
+	Camera_Draw();		//Drawã®æœ€åˆã§å‘¼ã¶ï¼
 	Shader_SetMatrix(GetViewMatrix() * GetProjectionMatrix());
-	Field_Draw();
+	//Field_Draw();
+	g_stage.Draw();
 	TerrainDraw();
 	PlayerDraw();
 	Player2Draw();
@@ -216,22 +270,28 @@ void Game_Draw_Player1()
 		obj->Draw();
 	}
 
-	//==========light‚ªtrue‚¾‚ÆUI‚ªˆÃ‚­Œ©‚¦‚é‚Ì‚ÅAˆê‰ñ‰ğœ=========
-	Light.SetEnable(FALSE);			//ƒ‰ƒCƒeƒBƒ“ƒOOFF
-	Shader_SetLight(Light.Light);	//ƒ‰ƒCƒg\‘¢‘Ì‚ğƒVƒF[ƒ_[‚ÖƒZƒbƒg
-	SetDepthTest(FALSE);
-	//===UI•`‰æ========
 
-	//Hpbar_Draw(); //<--HpBar•`‰æ
+	//==========lightãŒtrueã ã¨UIãŒæš—ãè¦‹ãˆã‚‹ã®ã§ã€ä¸€å›è§£é™¤=========
+	Light.SetEnable(FALSE);			//ãƒ©ã‚¤ãƒ†ã‚£ãƒ³ã‚°OFF
+	Shader_SetLight(Light.Light);	//ãƒ©ã‚¤ãƒˆæ§‹é€ ä½“ã‚’ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã¸ã‚»ãƒƒãƒˆ
+	SetDepthTest(FALSE);
+	//===UIæç”»========
+	if (g_transformMngr.IsActive())
+	{
+		g_transformMngr.Draw(0);
+	}
+
+	//Hpbar_Draw(); //<--HpBaræç”»
 	//Timer_Draw();
 	//Number_Draw();
+
 	Hp_Draw();
-	//
+
 	//================
-	Light.SetEnable(TRUE);			//ƒ‰ƒCƒeƒBƒ“ƒOON
-	Shader_SetLight(Light.Light);	//ƒ‰ƒCƒg\‘¢‘Ì‚ğƒVƒF[ƒ_[‚ÖƒZƒbƒg
+	Light.SetEnable(TRUE);			//ãƒ©ã‚¤ãƒ†ã‚£ãƒ³ã‚°ON
+	Shader_SetLight(Light.Light);	//ãƒ©ã‚¤ãƒˆæ§‹é€ ä½“ã‚’ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã¸ã‚»ãƒƒãƒˆ
 	SetDepthTest(TRUE);
-	//============light‚ğ‚Ü‚½true‚É‚µ‚ÄAcamera2‚É‰e‹¿‚ª‚È‚¢‚æ‚¤‚É================
+	//============lightã‚’ã¾ãŸtrueã«ã—ã¦ã€camera2ã«å½±éŸ¿ãŒãªã„ã‚ˆã†ã«================
 }
 void Game_Draw_Player2()
 {
@@ -239,7 +299,8 @@ void Game_Draw_Player2()
 
 	Camera2_Draw();
 	Shader_SetMatrix(GetViewMatrix2() * GetProjectionMatrix2());
-	Field_Draw();
+	//Field_Draw();
+	g_stage.Draw();
 	TerrainDraw();
 	PlayerDraw();
 	Player2Draw();
@@ -249,12 +310,43 @@ void Game_Draw_Player2()
 		obj->Draw();
 	}
 
-	//2D•`‰æ
-	Light.SetEnable(FALSE);			//ƒ‰ƒCƒeƒBƒ“ƒOOFF
-	Shader_SetLight(Light.Light);	//ƒ‰ƒCƒg\‘¢‘Ì‚ğƒVƒF[ƒ_[‚ÖƒZƒbƒg
+	//2Dæç”»
+	Light.SetEnable(FALSE);			//ãƒ©ã‚¤ãƒ†ã‚£ãƒ³ã‚°OFF
+	Shader_SetLight(Light.Light);	//ãƒ©ã‚¤ãƒˆæ§‹é€ ä½“ã‚’ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã¸ã‚»ãƒƒãƒˆ
 	SetDepthTest(FALSE);
+
+	if (g_transformMngr.IsActive())
+	{
+		g_transformMngr.Draw(1);
+	}
+
 	Hp2_Draw();
+
 	//Timer_Draw();
 	//Number_Draw();
 	//Hp2_Draw();
+}
+
+int Game_GetRoundResult()
+{
+	// ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®æ­»äº¡åˆ¤å®šé–¢æ•°ã‚’ã“ã“ã§ä½¿ç”¨
+	bool p1Dead = g_Player.isDead();
+	bool p2Dead = g_Player2.isDead();
+
+	if (p1Dead && p2Dead) return 3; // å¼•ãåˆ†ã‘ï¼ˆåŒæ™‚æ­»äº¡ï¼‰
+	if (p2Dead) return 1;           // P1ã®å‹ã¡
+	if (p1Dead) return 2;           // P2ã®å‹ã¡
+
+	return 0; // æˆ¦é—˜ç¶™ç¶šä¸­
+}
+
+void Game_ResetRound()
+{
+	// ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã‚’åˆæœŸä½ç½®ã«æˆ»ã—ã¦è˜‡ç”Ÿ
+	g_Player.RoundReset(XMFLOAT3(0.0f, 0.5f, 1.0f));
+	g_Player2.RoundReset(XMFLOAT3(2.0f, 0.5f, 2.0f));
+
+	g_selectionPhase = 0;
+	// å¤‰èº«é¸æŠãƒãƒãƒ¼ã‚¸ãƒ£ã ã‘å†é–‹ï¼ˆInitializeã¯ã—ãªã„ï¼‰
+	g_transformMngr.StartSelection(WeaponTerrain::NONE, WeaponTerrain::NONE);
 }
