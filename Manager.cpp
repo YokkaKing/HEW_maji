@@ -94,7 +94,7 @@ void Manager_Update()
 				{
 					// 全試合終了 -> リザルトへ
 					// ここで初めてGameシーンを破棄する
-					Game_Finalize();
+					//Game_Finalize();
 					SetScene(SCENE_TITLE);
 				}
 				else

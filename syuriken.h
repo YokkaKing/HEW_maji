@@ -16,6 +16,8 @@
 #include"IWeapon.h"
 #include"model.h"
 #include"managerCollider.h"
+#include "keyboard.h"
+#include "controller.h"
 using namespace DirectX;
 
 class Shuriken : public IWeapon
@@ -45,6 +47,10 @@ public:
     void Throw(bool select);
 
     void OnWeaponCollision(GameObject* target) override;
+private:
+    int m_playerIndex = 0;      // 0 = 1P, 1 = 2P
+    Keyboard_Keys m_reloadKey;  // リロードキー
+    ControllerButton::Button m_reloadButton; // リロードボタン
 };
 
 class ShurikenShot : public GameObject

@@ -239,7 +239,7 @@ void Sword::OnWeaponCollision(GameObject* target)
 			{
 				PlayAudio(g_damageSharp, false);
 				m_hitTargets.insert(target);
-				target->TakeDamage(10.0f); // 仮に20ダメージ
+				target->TakeDamage(100.0f); // 仮に20ダメージ
 			}
 			break;
 

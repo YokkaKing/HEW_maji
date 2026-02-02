@@ -18,6 +18,9 @@
 #include"Player2.h"
 #include"keyboard.h"
 
+#include"Controller.h"
+
+
 //================================================================
 //	グローバル変数
 //================================================================
@@ -25,6 +28,7 @@ MODEL* g_modelArrow[2] = { NULL, NULL };
 PLAYER* g_PlayerArrow1;
 PLAYER2* g_PlayerArrow2;
 XMFLOAT3 g_moveArrow[2]; // 簡易アニメーション
+extern Controller g_Controller[2];
 
 Arrow::Arrow(GameObject* player, bool select) : IWeapon(player)
 {
@@ -81,7 +85,9 @@ void Arrow::Update()
 		}
 	}
 
-	if (!m_selectPlayer)
+
+	if (Keyboard_IsKeyDown(KK_C)|| g_Controller[0].IsButtonPushed(ControllerButton::X_BUTTON))
+
 	{
 		if (Keyboard_IsKeyDown(KK_C))
 		{

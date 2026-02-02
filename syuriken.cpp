@@ -18,13 +18,21 @@
 #include"Player2.h"
 #include"keyboard.h"
 
+#include"controller.h"
+/*********************************/
+
+
 //================================================================
 //	グローバル変数
 //================================================================
 MODEL* g_modelShuriken[2] = { NULL, NULL };
 PLAYER* g_PlayerShuriken1;
 PLAYER2* g_PlayerShuriken2;
-XMFLOAT3 g_moveShuriken[2]; // 簡易アニメーション
+
+XMFLOAT3 g_moveShuriken[2]; // �ȈՃA�j���[�V����
+extern Controller g_Controller[2];
+
+
 
 Shuriken::Shuriken(GameObject* player, bool select) : IWeapon(player)
 {
@@ -36,9 +44,14 @@ Shuriken::Shuriken(GameObject* player, bool select) : IWeapon(player)
 	m_weapon->m_tag = "Attack";	// タグ
 	m_weapon->m_layer = 0;		// レイヤー
 
-	m_selectPlayer = select; // プレイヤー設定 1Pか2Pか
 
-	// 武器に親へのポインタを設定
+	m_selectPlayer = select; // �v���C���[�ݒ� 1P��2P��
+	m_playerIndex = (m_selectPlayer == FALSE) ? 0 : 1;
+
+	m_reloadKey = (m_playerIndex == 0) ? KK_LEFTSHIFT : KK_RIGHTSHIFT;
+	m_reloadButton = ControllerButton::Y_BUTTON;
+	// ����ɐe�ւ̃|�C���^��ݒ�
+
 	m_weapon->m_weaponPtr = this;
 
 	XMFLOAT3 scale = { 0.25f, 0.125f, 0.25f };
@@ -84,7 +97,21 @@ void Shuriken::Update()
 		}
 	}
 
-	// キャラに合わせて武器も回転
+
+	bool shouldReload = false;
+	if (Keyboard_IsKeyDown(m_reloadKey)) {
+		shouldReload = true;
+	}
+	if (g_Controller[m_playerIndex].IsConnected()) {
+		if (g_Controller[m_playerIndex].IsButtonPushed(m_reloadButton)) {
+			shouldReload = true;
+		}
+	}
+
+	// �����[�h���s
+	if (shouldReload) {
+		Reload();
+	}
 	XMMATRIX rotationMatrixY;
 	XMVECTOR offsetVector;
 	XMVECTOR rotatedOffset;

@@ -18,13 +18,20 @@
 #include"Player2.h"
 #include"keyboard.h"
 
+#include"controller.h"
+/*********************************/
+
+
 //================================================================
 //	グローバル変数
 //================================================================
 MODEL* g_modelSpear[2] = { NULL, NULL };
 PLAYER* g_PlayerSpear1;
 PLAYER2* g_PlayerSpear2;
-XMFLOAT3 g_moveSpear[2]; // 簡易アニメーション
+
+XMFLOAT3 g_moveSpear[2]; // �ȈՃA�j���[�V����
+extern Controller g_Controller[2];
+
 
 Spear::Spear(GameObject* player, bool select) : IWeapon(player)
 {
@@ -36,7 +43,12 @@ Spear::Spear(GameObject* player, bool select) : IWeapon(player)
 	m_weapon->m_tag = "Attack";	// タグ
 	m_weapon->m_layer = 0;		// レイヤー
 
-	m_selectPlayer = select; // プレイヤー設定 1Pか2Pか
+
+	m_selectPlayer = select; // �v���C���[�ݒ� 1P��2P��
+	m_playerIndex = (m_selectPlayer == FALSE) ? 0 : 1;
+	m_chargeKey = (m_playerIndex == 0) ? KK_C : KK_P;
+	m_chargeButton = ControllerButton::X_BUTTON;
+
 
 	// 武器に親へのポインタを設定
 	m_weapon->m_weaponPtr = this;
@@ -98,9 +110,24 @@ void Spear::Update()
 	}
 
 
-	if (!m_selectPlayer)
+	bool inputCharge = false;
+
+	// �L�[�{�[�h�`�F�b�N
+	if (Keyboard_IsKeyDown(m_chargeKey)) {
+		inputCharge = true;
+	}
+	// �R���g���[���[�`�F�b�N
+	if (g_Controller[m_playerIndex].IsConnected()) {
+		if (g_Controller[m_playerIndex].IsButtonDown(m_chargeButton)) {
+			inputCharge = true;
+		}
+	}
+
+	// ����p�t���O���g���ă`���[�W����
+	if (inputCharge)
 	{
-		if (Keyboard_IsKeyDown(KK_C))
+		if (!m_isAttacking && m_coolTime <= 0.0f)
+
 		{
 			// 攻撃中じゃなければチャージできる
 			if (!m_isAttacking && m_coolTime <= 0.0f)
@@ -124,6 +151,7 @@ void Spear::Update()
 
 	if (m_selectPlayer)
 	{
+
 		if (Keyboard_IsKeyDown(KK_P))
 		{
 			// 攻撃中じゃなければチャージできる
