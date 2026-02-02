@@ -63,9 +63,6 @@ void PlayerDie()
 	// 例: 入力を受け付けないようにする（状態をIDLEにするなど）
 	g_Player.State = PLAYER_STATE::PLAYER_STATE_IDLE;
 
-
-
-	
 	XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
 	SetFade(40.0f, color, FADE_OUT, SCENE_GAME);
 
@@ -145,7 +142,6 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 void PlayerFinalize()
 {
 	ModelRelease(g_Player.m_model);
-
 }
 void	PlayerUpdate()
 {
