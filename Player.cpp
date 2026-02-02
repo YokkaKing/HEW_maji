@@ -109,11 +109,13 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 	{
 		g_Player.EquipWeapon(std::make_unique<Sword>(&g_Player, FALSE));
 		g_Player.m_model = ModelLoad("asset\\model\\default_sword.fbx");
+		g_changeP1 = 1;
 	}
 	else if (g_setWTP1 == WeaponTerrain::SPEAR_HILL)
 	{
 		g_Player.EquipWeapon(std::make_unique<Spear>(&g_Player, FALSE));
 		g_Player.m_model = ModelLoad("asset\\model\\default_spear.fbx");
+		g_changeP1 = 2;
 	}
 	
 	else if (g_setWTP1 == WeaponTerrain::BOW_HILL)
@@ -126,11 +128,13 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 	{
 		g_Player.EquipWeapon(std::make_unique<Hammer>(&g_Player, FALSE));
 		g_Player.m_model = ModelLoad("asset\\model\\default_hammer.fbx");
+		g_changeP1 = 4;
 	}
 	else if (g_setWTP1 == WeaponTerrain::SHURIKEN_)
 	{
 		g_Player.EquipWeapon(std::make_unique<Shuriken>(&g_Player, FALSE));
 		g_Player.m_model = ModelLoad("asset\\model\\char_shuriken_motion.fbx");
+		g_changeP1 = 5;
 	
 	}
 
@@ -151,7 +155,7 @@ void	PlayerUpdate()
 //================================================================
 //	武器変更処理(一旦)
 //================================================================
-	int slotToUse = -1; //�ϐg����X���b�g�ԍ�
+	int slotToUse = -1; 
 	if (Keyboard_IsKeyDownTrigger(KK_D1))
 	{
 		slotToUse = 0;
@@ -161,29 +165,41 @@ void	PlayerUpdate()
 		slotToUse = 1;
 	}
 
-	//�ϐg�L�[�������ꂽ�ꍇ
+
 	if (slotToUse != -1)
 	{
 		WeaponTerrain reserved = g_Player.GetReservedWT(slotToUse);
 
-		// �\�񂪂���ꍇ�̂ݎ��s
+
 		if (reserved != WeaponTerrain::NONE)
 		{
 			inGameWTselect data;
-			data.player1 = reserved;         // �����͗\�񂵂Ă��������
-			data.player2 = g_Player2.GetCurrentWT(); // ����́u���̂܂܁v�̏�Ԃ��w��
+			data.player1 = reserved;       
+			data.player2 = g_Player2.GetCurrentWT();
 
-			// generateWT_Apply���Ă�ŁA���f����n�`�𕨗��I�ɐ����E�u��
+			// generateWT_Apply
 			generateWT_Apply(data, &g_Player, &g_Player2, g_pDevice, g_pContext);
 			TerrainSet(reserved, FALSE);
-
-			//���ɂ���U�������̃A�j���[�V�����̏��ƍ��킹��
 			switch (reserved) {
-			case WeaponTerrain::SWORD_WALL: g_changeP1 = 0; break;
-			case WeaponTerrain::SPEAR_HILL: g_changeP1 = 1; break;
-			case WeaponTerrain::BOW_HILL:    g_changeP1 = 2; break;
-			case WeaponTerrain::HAMMER_:   g_changeP1 = 3; break;
-			case WeaponTerrain::SHURIKEN_:  g_changeP1 = 4; break;
+			case WeaponTerrain::SWORD_WALL: 
+				g_changeP1 = 1;
+				g_Player.m_model = ModelLoad("asset\\model\\sword.fbx"); break;
+			case WeaponTerrain::SPEAR_HILL:
+				g_changeP1 = 2;
+				g_Player.m_model = ModelLoad("asset\\model\\spear.fbx"); break;
+			case WeaponTerrain::BOW_HILL:   
+				g_changeP1 = 3;
+				g_Player.m_model = ModelLoad("asset\\model\\bow.fbx"); break;
+			case WeaponTerrain::HAMMER_:   
+				g_changeP1 = 4;
+				g_Player.m_model = ModelLoad("asset\\model\\hammer.fbx");
+				g_Player.EquipWeapon(std::make_unique<Hammer>(&g_Player, FALSE)); 
+				break;
+			case WeaponTerrain::SHURIKEN_: 
+				g_changeP1 = 5; 
+				g_Player.m_model = ModelLoad("asset\\model\\shuriken.fbx");
+				g_Player.EquipWeapon(std::make_unique<Shuriken>(&g_Player, FALSE));
+				break;
 			}
 
 			// ��Ԃ��X�V
@@ -493,7 +509,7 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 		switch (g_setWTP1)
 		{
 		case WeaponTerrain::SWORD_WALL: // Sword
-			ModelPlayClip(g_Player.m_model, 300, 335, 60.0f, false, 1.0f);
+			ModelPlayClip(g_Player.m_model, 300, 334, 60.0f, false, 1.0f);
 			break;
 		case WeaponTerrain::SPEAR_HILL: // spear
 			ModelPlayClip(g_Player.m_model, 361, 420, 60.0f, false, 2.0f);
