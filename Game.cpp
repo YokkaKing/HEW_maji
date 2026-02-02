@@ -32,6 +32,7 @@
 #include "Hp.h"
 #include "Hp2.h"
 #include "generateWT.h"
+#include"Stage.h"
 
 #include"Item.h"
 //================================================================
@@ -44,11 +45,14 @@ static	int		g_BgmID = NULL;	//サウンド管理ID
 
 ITEM_SPONER g_sponer;
 
+STAGE g_stage;
+
 void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, const inGameWTselect& select)
 {
 	//Controller_Initialize();
 	Field_Initialize(pDevice, pContext); // フィールドの初期化
-	
+	g_stage.Initialize(pDevice, pContext);
+
 	g_sponer.Initialize();
 
 	EvolutionInitialize(select.player1, select.player2);
@@ -206,7 +210,8 @@ void Game_Draw_Player1()
 
 	Camera_Draw();		//Drawの最初で呼ぶ！
 	Shader_SetMatrix(GetViewMatrix() * GetProjectionMatrix());
-	Field_Draw();
+	//Field_Draw();
+	g_stage.Draw();
 	TerrainDraw();
 	PlayerDraw();
 	Player2Draw();
@@ -239,7 +244,8 @@ void Game_Draw_Player2()
 
 	Camera2_Draw();
 	Shader_SetMatrix(GetViewMatrix2() * GetProjectionMatrix2());
-	Field_Draw();
+	//Field_Draw();
+	g_stage.Draw();
 	TerrainDraw();
 	PlayerDraw();
 	Player2Draw();
