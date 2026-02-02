@@ -51,6 +51,7 @@ public:
 	
 	WeaponTerrain m_reservedWT = WeaponTerrain::NONE; // —\–ñ‚³‚ê‚½•Ïgæ
 	WeaponTerrain m_currentWT = WeaponTerrain::NONE; // Œ»İ‚Ìp
+	WeaponTerrain m_baseWT; //‰Šú•Ší‘I‘ğ‚Å‘I‚ñ‚¾•Ší‚ğ•Û
 public:
 	void EquipWeapon(std::unique_ptr<IWeapon> weapon); // •Ší‚ğ‘•”õ‚·‚é
 	void OnCollision(const CollisionInfo& info)override;
@@ -59,6 +60,10 @@ public:
 	WeaponTerrain GetCurrentWT() const { return m_currentWT; }
 	void SetCurrentWT(WeaponTerrain wt) { m_currentWT = wt; }
 	WeaponTerrain GetReservedWT() const { return m_reservedWT; }
+
+	bool isDead() const { return m_isDead; }
+	void RoundReset(XMFLOAT3 startPos);
+	void EquipBaseWeapon();
 };
 
 extern PLAYER2 g_Player2;

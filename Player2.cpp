@@ -46,6 +46,7 @@ unsigned int g_changeP2;
 static bool g_Player2AttackPlaying = false; // 攻撃ワンショット再生中フラグ
 static bool g_Player2JumpPlaying = false; // ジャンプワンショット再生中フラグ
 static int g_Player2CurrentAnim = 0; // 0: idle, 1: move, 2: attack 3:jump
+
 void Player2Die()
 {
 	hal::dout << "Player2 died!" << std::endl;
@@ -58,8 +59,8 @@ void Player2Die()
 	g_Player2.State = PLAYER2_STATE::PLAYER2_STATE_IDLE;
 	
 	//フェードアウトさせてシーンを切り替える
-	XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
-	SetFade(40.0f, color, FADE_OUT, SCENE_RESULT);
+	//XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
+	//SetFade(40.0f, color, FADE_OUT, SCENE_RESULT);
 }
 
 void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, WeaponTerrain setWTp2)
@@ -694,6 +695,66 @@ void PLAYER2::OnCollision(const CollisionInfo& info)
 		}
 	}
 }
+
+void PLAYER2::RoundReset(XMFLOAT3 startPos)
+{
+	//物理的な状態のリセット
+	m_position = startPos;
+	m_velocity = XMFLOAT3(0, 0, 0);
+	m_rotation = XMFLOAT3(0, 0, 0); //必要に応じてY回転を初期値に
+
+	//パラメータのリセット
+	m_currentHp = m_maxHp; //体力全快
+	m_isDead = false;
+	State = PLAYER2_STATE_IDLE;
+
+	//武器と変身状態を「初期武器」に戻す
+	EquipBaseWeapon();
+}
+
+void PLAYER2::EquipBaseWeapon()
+{
+	// 現在の武器をクリア
+	m_currentWeapon = nullptr;
+
+	// 現在の変身状態をベースに戻す
+	m_currentWT = m_baseWT;
+	m_reservedWT = WeaponTerrain::NONE;
+
+	// ベース武器に応じて装備生成 & アニメーション設定
+	if (m_baseWT == WeaponTerrain::SWORD_WALL)
+	{
+		EquipWeapon(std::make_unique<Sword>(this, FALSE)); // P1なのでFALSE
+		//extern int g_changeP1; // グローバル変数を参照
+		g_changeP2 = 0;        // Sword用アニメーションID
+	}
+	else if (m_baseWT == WeaponTerrain::SPEAR_HILL)
+	{
+		EquipWeapon(std::make_unique<Spear>(this, FALSE));
+		//extern int g_changeP1;
+		g_changeP2 = 1;
+	}
+	else if (m_baseWT == WeaponTerrain::BOW_HILL)
+	{
+		EquipWeapon(std::make_unique<Arrow>(this, FALSE));
+		//extern int g_changeP1;
+		g_changeP2 = 3;
+	}
+	else if (m_baseWT == WeaponTerrain::HAMMER_)
+	{
+		EquipWeapon(std::make_unique<Hammer>(this, FALSE));
+		//extern int g_changeP1;
+		g_changeP2 = 2;
+	}
+	else if (m_baseWT == WeaponTerrain::SHURIKEN_)
+	{
+		EquipWeapon(std::make_unique<Shuriken>(this, FALSE));
+		//extern int g_changeP1;
+		g_changeP2 = 4;
+	}
+}
+
+
 
 WeaponTerrain GetSetWTP2()
 {

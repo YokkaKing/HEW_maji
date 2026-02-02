@@ -64,8 +64,8 @@ void PlayerDie()
 
 
 	//フェードアウトさせてシーンを切り替える
-	XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
-	SetFade(40.0f, color, FADE_OUT, SCENE_RESULT);
+	//XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
+	//SetFade(40.0f, color, FADE_OUT, SCENE_RESULT);
 }
 
 void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, WeaponTerrain setWTp1)
@@ -91,6 +91,7 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 	g_Player.EvolutionType = EVOLUTION_TYPE::EVOLUTION_TYPE_NONE;
 	g_Player.m_currentHp = g_Player.m_maxHp;
 	g_Player.m_isDead = false;
+	g_Player.m_baseWT = setWTp1;
 
 	// プレイヤーの当たり判定の追加
 	auto collider = g_Player.AddComponent<BoxCollider>(&g_Player, g_Player.m_scale);
@@ -125,6 +126,8 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 	{
 		g_Player.EquipWeapon(std::make_unique<Shuriken>(&g_Player, FALSE));
 	}
+
+	g_Player.EquipBaseWeapon(); //ラウンド処理用に初期武器を再装備
 	
 }
 void PlayerFinalize()
@@ -782,6 +785,64 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 		{
 			return; // 他は無視
 		}
+	}
+}
+
+void PLAYER::RoundReset(XMFLOAT3 startPos)
+{
+	//物理的な状態のリセット
+    m_position = startPos;
+    m_velocity = XMFLOAT3(0, 0, 0);
+    m_rotation = XMFLOAT3(0, 0, 0); //必要に応じてY回転を初期値に
+
+    //パラメータのリセット
+    m_currentHp = m_maxHp; //体力全快
+    m_isDead = false;
+    State = PLAYER_STATE_IDLE;
+
+    //武器と変身状態を「初期武器」に戻す
+    EquipBaseWeapon();
+}
+
+void PLAYER::EquipBaseWeapon()
+{
+	// 現在の武器をクリア
+	m_currentWeapon = nullptr;
+
+	// 現在の変身状態をベースに戻す
+	m_currentWT = m_baseWT;
+	m_reservedWT = WeaponTerrain::NONE;
+
+	// ベース武器に応じて装備生成 & アニメーション設定
+	if (m_baseWT == WeaponTerrain::SWORD_WALL)
+	{
+		EquipWeapon(std::make_unique<Sword>(this, FALSE)); // P1なのでFALSE
+		//extern int g_changeP1; // グローバル変数を参照
+		g_changeP1 = 0;        // Sword用アニメーションID
+	}
+	else if (m_baseWT == WeaponTerrain::SPEAR_HILL)
+	{
+		EquipWeapon(std::make_unique<Spear>(this, FALSE));
+		//extern int g_changeP1;
+		g_changeP1 = 1;
+	}
+	else if (m_baseWT == WeaponTerrain::BOW_HILL)
+	{
+		EquipWeapon(std::make_unique<Arrow>(this, FALSE));
+		//extern int g_changeP1;
+		g_changeP1 = 3;
+	}
+	else if (m_baseWT == WeaponTerrain::HAMMER_)
+	{
+		EquipWeapon(std::make_unique<Hammer>(this, FALSE));
+		//extern int g_changeP1;
+		g_changeP1 = 2;
+	}
+	else if (m_baseWT == WeaponTerrain::SHURIKEN_)
+	{
+		EquipWeapon(std::make_unique<Shuriken>(this, FALSE));
+		//extern int g_changeP1;
+		g_changeP1 = 4;
 	}
 }
 

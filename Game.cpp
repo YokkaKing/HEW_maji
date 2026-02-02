@@ -63,7 +63,7 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, const
 
 	PLAYER* pP1 = GetPlayer();
 	PLAYER2* pP2 = GetPlayer2();
-	generateWT_Apply(Manager_GetWTselect(), pP1, pP2, pDevice, pContext);
+	//generateWT_Apply(Manager_GetWTselect(), pP1, pP2, pDevice, pContext);
 
 	Camera_Initialize();	//カメラ初期化
 	Camera2_Initialize();	//カメラ初期化
@@ -296,4 +296,27 @@ void Game_Draw_Player2()
 	//Timer_Draw();
 	//Number_Draw();
 	//Hp2_Draw();
+}
+
+int Game_GetRoundResult()
+{
+	// プレイヤーの死亡判定関数をここで使用
+	bool p1Dead = g_Player.isDead();
+	bool p2Dead = g_Player2.isDead();
+
+	if (p1Dead && p2Dead) return 3; // 引き分け（同時死亡）
+	if (p2Dead) return 1;           // P1の勝ち
+	if (p1Dead) return 2;           // P2の勝ち
+
+	return 0; // 戦闘継続中
+}
+
+void Game_ResetRound()
+{
+	// プレイヤーを初期位置に戻して蘇生
+	g_Player.RoundReset(XMFLOAT3(0.0f, 0.5f, 1.0f));
+	g_Player2.RoundReset(XMFLOAT3(2.0f, 0.5f, 2.0f));
+
+	// 変身選択マネージャだけ再開（Initializeはしない）
+	g_transformMngr.StartSelection();
 }
