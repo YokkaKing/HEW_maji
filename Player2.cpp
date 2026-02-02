@@ -46,6 +46,7 @@ unsigned int g_changeP2;
 static bool g_Player2AttackPlaying = false; // 攻撃ワンショット再生中フラグ
 static bool g_Player2JumpPlaying = false; // ジャンプワンショット再生中フラグ
 static int g_Player2CurrentAnim = 0; // 0: idle, 1: move, 2: attack 3:jump
+bool g_isChangeP2;
 
 void Player2Die()
 {
@@ -129,6 +130,8 @@ void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 		g_Player2.m_model = ModelLoad("asset\\model\\default_shuriken.fbx");
 		g_changeP2 = 5;
 	}
+
+	g_isChangeP2 = false;
 }
 void Player2Finalize()
 {
@@ -149,10 +152,12 @@ void	Player2Update()
 	if (Keyboard_IsKeyDownTrigger(KK_D2))
 	{
 		slotToUse = 0;
+		g_isChangeP2 = true;
 	}
 	if (Keyboard_IsKeyDownTrigger(KK_D9))
 	{
 		slotToUse = 1;
+		g_isChangeP2 = true;
 	}
 
 	if (slotToUse != -1)
@@ -168,7 +173,7 @@ void	Player2Update()
 			data.player2 = reserved;            // P2に予約分を適用
 
 			// 武器の適用
-			generateWT_Apply(data, &g_Player, &g_Player2, g_pDevice2, g_pContext2);
+			//generateWT_Apply(data, &g_Player, &g_Player2, g_pDevice2, g_pContext2);
 
 			// 地形の生成（P2用なので第二引数はTRUE）
 			TerrainSet(reserved, TRUE);
@@ -796,6 +801,11 @@ void PLAYER2::EquipBaseWeapon()
 WeaponTerrain GetSetWTP2()
 {
 	return g_setWTP2;
+}
+
+bool GetChangeP2()
+{
+	return g_isChangeP2;
 }
 
 

@@ -102,5 +102,6 @@ bool GetPlayer2_IsAttacked();
 void SetPlayer2_IsAttacked(bool isAttacked);
 PLAYER2* GetPlayer2();
 WeaponTerrain GetSetWTP2();
+bool GetChangeP2();
 
 #endif // PLAYER2_H
