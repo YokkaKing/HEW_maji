@@ -9,6 +9,7 @@
 //================================================================
 //	インクルード
 //================================================================
+#include"Audio.h"
 #include"direct3d.h"
 #include"Manager.h"
 #include"keyboard.h"
@@ -24,6 +25,10 @@
 static	SCENE	g_Scene = SCENE_NONE;	//現在のシーン番号
 static  inGameWTselect g_currentWTselect; //シーン間で保持する選択した武器・地形データ
 
+static int g_RoundCount = 0; // 現在のラウンド数
+static int g_P1Wins = 0;     // 1P勝利数
+static int g_P2Wins = 0;     // 2P勝利数
+
 void Manager_Initialize()
 { 
 	Fade_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
@@ -33,13 +38,10 @@ void Manager_Initialize()
 	//SetFade(60.0f, color, FADE_STATE::FADE_IN, SCENE_GAME);
 	//SetScene(SCENE_GAME);	//最初に動かすシーンに切り替える
 
-
 	//本来の形
 	Fade_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
 	SetScene(SCENE_TITLE);	//最初に動かすシーンに切り替える
-
-
-
+	PlayAudio(g_title, true);
 }
 
 void Manager_Finalize()
@@ -65,7 +67,44 @@ void Manager_Update()
 			selectWT_Update();
 			break;
 		case SCENE_GAME:
+		{
 			Game_Update();
+
+			// 勝敗判定を取得
+			int result = Game_GetRoundResult();
+
+			// 決着がついた場合（0以外が返ってきた場合）
+			if (result != 0)
+			{
+				// 勝利カウント加算
+				if (result == 1) g_P1Wins++;
+				if (result == 2) g_P2Wins++;
+				// 引き分けの場合は両者加算しない、あるいは再試合などの調整可能
+
+				g_RoundCount++; // ラウンドを進める
+
+				// --- 試合終了判定 ---
+				bool isMatchOver = false;
+
+				// ここはどちらでも調整可能
+				//if (g_P1Wins >= 2 || g_P2Wins >= 2) isMatchOver = true; // 2勝したら終わり
+				if (g_RoundCount >= 3) isMatchOver = true;         // 3ラウンド終わったら終わり
+
+				if (isMatchOver)
+				{
+					// 全試合終了 -> リザルトへ
+					// ここで初めてGameシーンを破棄する
+					Game_Finalize();
+					SetScene(SCENE_TITLE);
+				}
+				else
+				{
+					// --- まだ続く場合 ---
+					// シーン遷移(SetScene)は使わず、リセット関数を呼ぶ
+					Game_ResetRound();
+				}
+			}
+		}
 			break;
 		case SCENE_RESULT:
 			Result_Update();
@@ -174,6 +213,7 @@ void SetScene(SCENE scene) //シーンを切り替える
 			Title_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
 			break;
 		case SCENE_GAME:
+			StopAudio(g_title);
 			Game_Initialize( Direct3D_GetDevice(), Direct3D_GetDeviceContext(), g_currentWTselect);
 			break;
 		case SCENE_SELECT_WT:

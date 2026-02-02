@@ -1,46 +1,44 @@
 /*
-* ƒtƒ@ƒCƒ‹–¼	shuriken.cpp
-* ƒ^ƒCƒgƒ‹	è— Œ•
-* ì¬Ò		O‹´‘ñ“l
-* ì¬“ú		12Œ09“ú
-* XV“ú		12Œ09“ú
+* ãƒ•ã‚¡ã‚¤ãƒ«å	shuriken.cpp
+* ã‚¿ã‚¤ãƒˆãƒ«	æ‰‹è£å‰£
+* ä½œæˆè€…		ä¸‰æ©‹æ‹“æ–—
+* ä½œæˆæ—¥		12æœˆ09æ—¥
+* æ›´æ–°æ—¥		12æœˆ09æ—¥
 */
 
 //================================================================
-//	ƒCƒ“ƒNƒ‹[ƒh
+//	ã‚¤ãƒ³ã‚¯ãƒ«ãƒ¼ãƒ‰
 //================================================================
+#include"Audio.h"
 #include"syuriken.h"
 #include"debug_ostream.h"
-
-/*********** ƒeƒXƒgƒR[ƒh **********/
 #include"model.h"
 #include"Camera.h"
 #include"Player.h"
 #include"Player2.h"
 #include"keyboard.h"
-/*********************************/
 
 //================================================================
-//	ƒOƒ[ƒoƒ‹•Ï”
+//	ã‚°ãƒ­ãƒ¼ãƒãƒ«å¤‰æ•°
 //================================================================
 MODEL* g_modelShuriken[2] = { NULL, NULL };
 PLAYER* g_PlayerShuriken1;
 PLAYER2* g_PlayerShuriken2;
-XMFLOAT3 g_moveShuriken[2]; // ŠÈˆÕƒAƒjƒ[ƒVƒ‡ƒ“
+XMFLOAT3 g_moveShuriken[2]; // ç°¡æ˜“ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³
 
 Shuriken::Shuriken(GameObject* player, bool select) : IWeapon(player)
 {
 	g_PlayerShuriken1 = GetPlayer();
 	g_PlayerShuriken2 = GetPlayer2();
 
-	// •Ší‚Ì“–‚½‚è”»’è‚Ìì¬
+	// æ­¦å™¨ã®å½“ãŸã‚Šåˆ¤å®šã®ä½œæˆ
 	m_weapon = std::make_unique<GameObject>();
-	m_weapon->m_tag = "Attack";	// ƒ^ƒO
-	m_weapon->m_layer = 0;		// ƒŒƒCƒ„[
+	m_weapon->m_tag = "Attack";	// ã‚¿ã‚°
+	m_weapon->m_layer = 0;		// ãƒ¬ã‚¤ãƒ¤ãƒ¼
 
-	m_selectPlayer = select; // ƒvƒŒƒCƒ„[İ’è 1P‚©2P‚©
+	m_selectPlayer = select; // ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼è¨­å®š 1Pã‹2Pã‹
 
-	// •Ší‚Ée‚Ö‚Ìƒ|ƒCƒ“ƒ^‚ğİ’è
+	// æ­¦å™¨ã«è¦ªã¸ã®ãƒã‚¤ãƒ³ã‚¿ã‚’è¨­å®š
 	m_weapon->m_weaponPtr = this;
 
 	XMFLOAT3 scale = { 0.25f, 0.125f, 0.25f };
@@ -49,16 +47,16 @@ Shuriken::Shuriken(GameObject* player, bool select) : IWeapon(player)
 	m_weapon->m_scale = scale;
 	m_weapon->m_rotation = { 0.0f, 0.0f, 0.0f };
 
-	ManagerCollider::AddCollider(m_collider); // “o˜^
+	ManagerCollider::AddCollider(m_collider); // ç™»éŒ²
 
-	m_collider->SetEnable(false); // Å‰‚Í“–‚½‚è”»’è‚ğ–³Œø‰»
+	m_collider->SetEnable(false); // æœ€åˆã¯å½“ãŸã‚Šåˆ¤å®šã‚’ç„¡åŠ¹åŒ–
 
 	m_attackTimer = 0.0f;
 
 	g_moveShuriken[m_selectPlayer] = { 0.0f, 0.0f, 0.0f };
 	m_coolTime = 0.0f;
 
-	/*********** ƒeƒXƒgƒR[ƒh **********/
+	/*********** ãƒ†ã‚¹ãƒˆã‚³ãƒ¼ãƒ‰ **********/
 	g_modelShuriken[0] = ModelLoad("asset\\model\\block.fbx");
 	g_modelShuriken[1] = ModelLoad("asset\\model\\block2.fbx");
 	/*********************************/
@@ -66,17 +64,15 @@ Shuriken::Shuriken(GameObject* player, bool select) : IWeapon(player)
 
 Shuriken::~Shuriken()
 {
-	ManagerCollider::RemoveCollider(m_collider); // íœ
+	ManagerCollider::RemoveCollider(m_collider); // å‰Šé™¤
 }
 
 void Shuriken::Attack()
 {
-	if (m_restBullet <= 0) return; // c’e”‚ª–³‚¯‚ê‚Î‚¾‚ß
-	if (m_coolTime > 0.0f) return; // ƒN[ƒ‹ƒ^ƒCƒ€’†‚È‚ç‚¾‚ß
-
+	if (m_coolTime > 0.0f) return; // ã‚¯ãƒ¼ãƒ«ã‚¿ã‚¤ãƒ ä¸­ãªã‚‰ã ã‚
+	PlayAudio(g_arrow_shuriken, false);
 	Throw(m_selectPlayer);
 	m_coolTime = 0.5f;
-	m_restBullet--;
 }
 
 void Shuriken::Update()
@@ -88,12 +84,7 @@ void Shuriken::Update()
 		}
 	}
 
-	if (Keyboard_IsKeyDown(KK_LEFTSHIFT))
-	{
-		Reload();
-	}
-
-	// ƒLƒƒƒ‰‚É‡‚í‚¹‚Ä•Ší‚à‰ñ“]
+	// ã‚­ãƒ£ãƒ©ã«åˆã‚ã›ã¦æ­¦å™¨ã‚‚å›è»¢
 	XMMATRIX rotationMatrixY;
 	XMVECTOR offsetVector;
 	XMVECTOR rotatedOffset;
@@ -145,7 +136,7 @@ void Shuriken::Update()
 
 void Shuriken::Draw()
 {
-	//ƒ[ƒ‹ƒhs—ñì¬
+	//ãƒ¯ãƒ¼ãƒ«ãƒ‰è¡Œåˆ—ä½œæˆ
 	XMMATRIX	scale = XMMatrixScaling(
 		m_weapon->m_scale.x,
 		m_weapon->m_scale.y,
@@ -160,7 +151,7 @@ void Shuriken::Draw()
 		m_weapon->m_position.z);
 	XMMATRIX	world = scale * rotation * translation;
 
-	//ƒVƒF[ƒ_[‚Ös—ñ‚ğƒZƒbƒg
+	//ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã¸è¡Œåˆ—ã‚’ã‚»ãƒƒãƒˆ
 	Shader_SetWorldMatrix(world);
 
 	ModelDraw(g_modelShuriken[0]);
@@ -173,8 +164,8 @@ void Shuriken::OnWeaponCollision(GameObject* target)
 
 void Shuriken::Throw(bool select)
 {
-	// ”ò‚Î‚·Šp“x‚ÌƒIƒtƒZƒbƒgiƒ‰ƒWƒAƒ“‚É•ÏŠ·j
-	// 45“x = PI / 4
+	// é£›ã°ã™è§’åº¦ã®ã‚ªãƒ•ã‚»ãƒƒãƒˆï¼ˆãƒ©ã‚¸ã‚¢ãƒ³ã«å¤‰æ›ï¼‰
+	// 45åº¦ = PI / 4
 	float angles[] = { -XM_PIDIV2 / 6, 0.0f, XM_PIDIV2 / 6 };
 	float baseSpeed = 0.3f;
 
@@ -186,31 +177,25 @@ void Shuriken::Throw(bool select)
 		shot->m_rotation = m_weapon->m_rotation;
 		shot->m_selectPlayer = select;
 
-		// Œ³‚ÌŒü‚«(y²‰ñ“])‚ÉƒIƒtƒZƒbƒg‚ğ‰Á‚¦‚é
+		// å…ƒã®å‘ã(yè»¸å›è»¢)ã«ã‚ªãƒ•ã‚»ãƒƒãƒˆã‚’åŠ ãˆã‚‹
 		float ry = shot->m_rotation.y + angles[i];
 
 		shot->m_rotation.y = ry;
 
-		// ”ò‚Î‚·•ûŒü‚ğŒvZ
+		// é£›ã°ã™æ–¹å‘ã‚’è¨ˆç®—
 		shot->m_velocity.x = sinf(ry) * baseSpeed;
 		shot->m_velocity.y = 0.0f;
 		shot->m_velocity.z = cosf(ry) * baseSpeed;
 
-		// ƒQ[ƒ€ƒIƒuƒWƒFƒNƒgƒŠƒXƒg‚É’Ç‰Á
+		// ã‚²ãƒ¼ãƒ ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆãƒªã‚¹ãƒˆã«è¿½åŠ 
 		extern std::vector<GameObject*> g_gameObjects;
 		g_gameObjects.push_back(shot);
 		shot->Start();
 	}
 }
 
-void Shuriken::Reload()
-{
-	m_restBullet = 6;
-	m_coolTime = 0.5f;
-}
-
 //================================================================
-//	ShurikenShotƒNƒ‰ƒX
+//	ShurikenShotã‚¯ãƒ©ã‚¹
 //================================================================
 void ShurikenShot::Start()
 {
@@ -224,40 +209,40 @@ void ShurikenShot::Start()
 
 void ShurikenShot::Update()
 {
-	// –î‚ªh‚³‚Á‚Ä‚½‚ç
+	// çŸ¢ãŒåˆºã•ã£ã¦ãŸã‚‰
 	if (m_isStuck)
 	{
 		m_stuckLife -= (1.0f / 60.0f);
-		// ƒ^ƒCƒ}[‚ğŒ¸‚ç‚·
+		// ã‚¿ã‚¤ãƒãƒ¼ã‚’æ¸›ã‚‰ã™
 		if (m_stuckLife <= 0.0f)
 		{
 			m_isDead = true;
 		}
 	}
-	else // ‚Ü‚¾”ò‚ñ‚Å‚½‚ç
+	else // ã¾ã é£›ã‚“ã§ãŸã‚‰
 	{
-		// ”ò‚Î‚µ‚Ä‚©‚ç‚Ìõ–½
+		// é£›ã°ã—ã¦ã‹ã‚‰ã®å¯¿å‘½
 		m_flyTimer -= (1.0f / 60.0f);
 		if (m_flyTimer <= 0.0f)
 		{
 			m_isDead = true;
 		}
 
-		m_velocity.y = 0.0f; // d—Í
-		// ‘å‚«‚¢‚Æd‚¢A¬‚³‚¢‚Æ‚Ó‚í‚Á‚Æ‚·‚é
+		m_velocity.y = 0.0f; // é‡åŠ›
+		// å¤§ãã„ã¨é‡ã„ã€å°ã•ã„ã¨ãµã‚ã£ã¨ã™ã‚‹
 
 		m_position.x += m_velocity.x;
 		m_position.y += m_velocity.y;
 		m_position.z += m_velocity.z;
 
-		// í‚Éæ’[‚ª”ò‚ñ‚Å‚é•ûŒü‚ğŒü‚­
+		// å¸¸ã«å…ˆç«¯ãŒé£›ã‚“ã§ã‚‹æ–¹å‘ã‚’å‘ã
 		m_rotation.x = atan2f(-m_velocity.y, sqrtf(m_velocity.x * m_velocity.x + m_velocity.z * m_velocity.z));
 	}
 }
 
 void ShurikenShot::Draw()
 {
-	//ƒ[ƒ‹ƒhs—ñì¬
+	//ãƒ¯ãƒ¼ãƒ«ãƒ‰è¡Œåˆ—ä½œæˆ
 	XMMATRIX	scale = XMMatrixScaling(
 		m_scale.x,
 		m_scale.y,
@@ -272,7 +257,7 @@ void ShurikenShot::Draw()
 		m_position.z);
 	XMMATRIX	world = scale * rotation * translation;
 
-	//ƒVƒF[ƒ_[‚Ös—ñ‚ğƒZƒbƒg
+	//ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã¸è¡Œåˆ—ã‚’ã‚»ãƒƒãƒˆ
 	Shader_SetWorldMatrix(world);
 
 	ModelDraw(g_modelShuriken[0]);
@@ -280,32 +265,39 @@ void ShurikenShot::Draw()
 
 void ShurikenShot::OnCollision(const CollisionInfo& info)
 {
-	// h‚³‚Á‚Ä‚½‚ç‰½‚à‚È‚µ
+	// åˆºã•ã£ã¦ãŸã‚‰ä½•ã‚‚ãªã—
 	if (m_isStuck) return;
 
-	if (info.other->m_tag == "Attack") return; // •Ší‚É“–‚½‚Á‚Ä‚à–³‹
-	if (!m_selectPlayer && info.other->m_tag == "Player") return; // •Ší‚Í‚È‚Á‚½–{l‚Í–³‹
-	if (m_selectPlayer && info.other->m_tag == "Player2") return; // •Ší‚Í‚È‚Á‚½–{l‚Í–³‹
+	if (info.other->m_tag == "Attack") return; // æ­¦å™¨ã«å½“ãŸã£ã¦ã‚‚ç„¡è¦–
+	if (!m_selectPlayer && info.other->m_tag == "Player") return; // æ­¦å™¨ã¯ãªã£ãŸæœ¬äººã¯ç„¡è¦–
+	if (m_selectPlayer && info.other->m_tag == "Player2") return; // æ­¦å™¨ã¯ãªã£ãŸæœ¬äººã¯ç„¡è¦–
 
 	m_velocity = { 0.0f, 0.0f, 0.0f };
 	m_isStuck = true;
 
-	// 1P‚©2P‚©
+	// 1Pã‹2Pã‹
 	switch (m_selectPlayer)
 	{
-	case FALSE: // 1P‚¾‚Á‚½‚ç
-		if (info.other->m_tag == "Player2") // ‘Šè‚ªPlayer2‚Ì‚Ì‚İ
+	case FALSE: // 1Pã ã£ãŸã‚‰
+		if (info.other->m_tag == "Player2") // ç›¸æ‰‹ãŒPlayer2ã®æ™‚ã®ã¿
 		{
-			info.other->TakeDamage(15.0f);
+			PlayAudio(g_damageSharp, false);
+
+			info.other->TakeDamage(5.0f);
 			m_isDead = true;
+			g_Player2.m_isAttacked = true;
 		}
 		break;
 
-	case TRUE: // 2P‚¾‚Á‚½‚ç
-		if (info.other->m_tag == "Player") // ‘Šè‚ªPlayer‚Ì‚Ì‚İ
+	case TRUE: // 2Pã ã£ãŸã‚‰
+		if (info.other->m_tag == "Player") // ç›¸æ‰‹ãŒPlayerã®æ™‚ã®ã¿
 		{
-			info.other->TakeDamage(15.0f);
+			PlayAudio(g_damageSharp, false);
+
+			info.other->TakeDamage(5.0f);
 			m_isDead = true;
+			g_Player.m_isAttacked = true;
+
 		}
 		break;
 	}

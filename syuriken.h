@@ -34,8 +34,6 @@ public:
     XMFLOAT3 m_animeRotation = { 0.0f, 0.0f, 0.0f };
 
     FLOAT m_coolTime = 0.0f;
-
-    int m_restBullet = 6; // écíeêî
 public:
     Shuriken(GameObject* player, bool select);
     virtual ~Shuriken();
@@ -45,7 +43,6 @@ public:
     void Attack() override;
 
     void Throw(bool select);
-    void Reload();
 
     void OnWeaponCollision(GameObject* target) override;
 };
