@@ -318,19 +318,19 @@ void	Player2Update()
 						switch (g_changeP2) //移動
 						{
 						case 1:
-							ModelPlayClip(g_Player2.m_model, 120, 165, 60.0f, true, 1.5f);
+							ModelPlayClip(g_Player2.m_model, 120, 165, 60.0f, true, 1.0f);
 							break;
 						case 2:
-							ModelPlayClip(g_Player2.m_model, 240, 360, 60.0f, true, 2.0f);
+							ModelPlayClip(g_Player2.m_model, 240, 360, 60.0f, true, 1.0f);
 							break;
 						case 3:
-							ModelPlayClip(g_Player2.m_model, 181, 240, 60.0f, true, 2.0f);
+							ModelPlayClip(g_Player2.m_model, 181, 240, 60.0f, true, 1.0f);
 							break;
 						case 4:
 							ModelPlayClip(g_Player2.m_model, 180, 240, 60.0f, true, 1.0f);
 							break;
 						case 5:
-							ModelPlayClip(g_Player2.m_model, 121, 150, 60.0f, true, 2.0f);
+							ModelPlayClip(g_Player2.m_model, 121, 150, 60.0f, true, 1.0f);
 							break;
 						}
 					}
@@ -339,19 +339,19 @@ void	Player2Update()
 						switch (g_setWTP2) //移動
 						{
 						case WeaponTerrain::SWORD_WALL:
-							ModelPlayClip(g_Player2.m_model, 120, 165, 60.0f, true, 1.5f);
+							ModelPlayClip(g_Player2.m_model, 120, 165, 60.0f, true, 1.0f);
 							break;
 						case WeaponTerrain::SPEAR_HILL:
-							ModelPlayClip(g_Player2.m_model, 240, 360, 60.0f, true, 2.0f);
+							ModelPlayClip(g_Player2.m_model, 240, 360, 60.0f, true, 1.0f);
 							break;
 						case WeaponTerrain::BOW_HILL:
-							ModelPlayClip(g_Player2.m_model, 181, 240, 60.0f, true, 2.0f);
+							ModelPlayClip(g_Player2.m_model, 181, 240, 60.0f, true, 1.0f);
 							break;
 						case WeaponTerrain::HAMMER_:
 							ModelPlayClip(g_Player2.m_model, 180, 240, 60.0f, true, 1.0f);
 							break;
 						case WeaponTerrain::SHURIKEN_:
-							ModelPlayClip(g_Player2.m_model, 121, 150, 60.0f, true, 2.0f);
+							ModelPlayClip(g_Player2.m_model, 121, 150, 60.0f, true, 1.0f);
 							break;
 						}
 					}
@@ -421,7 +421,7 @@ void	Player2Update()
 		{
 			if (g_Player2CurrentAnim != 1)
 			{
-				if (g_Player.m_isTransformed)
+				if (g_Player2.m_isTransformed)
 				{
 					switch (g_changeP2) //移動
 					{
@@ -432,13 +432,13 @@ void	Player2Update()
 						ModelPlayClip(g_Player2.m_model, 240, 360, 60.0f, true, 2.0f);
 						break;
 					case 3:
-						ModelPlayClip(g_Player2.m_model, 181, 240, 60.0f, true, 2.0f);
+						ModelPlayClip(g_Player2.m_model, 181, 240, 60.0f, true, 1.0f);
 						break;
 					case 4:
 						ModelPlayClip(g_Player2.m_model, 180, 240, 60.0f, true, 1.0f);
 						break;
 					case 5:
-						ModelPlayClip(g_Player2.m_model, 121, 150, 60.0f, true, 2.0f);
+						ModelPlayClip(g_Player2.m_model, 121, 150, 60.0f, true, 1.0f);
 						break;
 					}
 				}
@@ -471,9 +471,8 @@ void	Player2Update()
 		{
 			if (g_Player2CurrentAnim != 0)
 			{
-				switch (g_setWTP2) //移動
-				{
-					if (g_Player.m_isTransformed)
+				
+					if (g_Player2.m_isTransformed)
 					{
 						switch (g_changeP2)
 						{
@@ -517,7 +516,7 @@ void	Player2Update()
 						}
 					}
 				
-				}
+				
 				g_Player2CurrentAnim = 0;
 			}
 		}
@@ -526,7 +525,11 @@ void	Player2Update()
 	// アニメーション時間の進行は Update 側で一度だけ行う（フレーム固定レート環境を想定して 1/60 を使用）
 	// deltaTime が利用可能ならそちらを使ってください（例: ModelUpdateAnimation(g_Player.m_model, deltaTime);）
 	ModelUpdateAnimation(g_Player2.m_model, 1.0f / 60.0f);
-
+	if (g_Player2.m_currentHp <= 0.0f && !g_Player2.m_isDead)
+	{
+		g_Player2.m_isDead = true;
+		Player2Die();
+	}
 }
 
 void Player2_ManualMove()
@@ -638,7 +641,7 @@ void Player2_ManualMove()
 				ModelPlayClip(g_Player2.m_model, 240, 300, 60.0f, false, 1.0f);
 				break;
 			case 5: //shuriken
-				ModelPlayClip(g_Player2.m_model, 280, 350, 60.0f, false, 4.0f);
+				ModelPlayClip(g_Player2.m_model, 280, 350, 60.0f, false, 1.0f);
 				break;
 			}
 		}
@@ -660,7 +663,7 @@ void Player2_ManualMove()
 				break;
 
 			case WeaponTerrain::SHURIKEN_: //shuriken
-				ModelPlayClip(g_Player2.m_model, 280, 320, 60.0f, false, 4.0f);
+				ModelPlayClip(g_Player2.m_model, 280, 320, 60.0f, false, 1.0f);
 				break;
 			}
 		}
@@ -688,9 +691,16 @@ void	Player2Draw()
 		g_Player2.m_rotation.x,
 		g_Player2.m_rotation.y+ XM_PI,
 		g_Player2.m_rotation.z);
+	if (g_setWTP2 == WeaponTerrain::SPEAR_HILL || g_changeP2 == 2) //移動
+	{
+		XMMATRIX	translation = XMMatrixTranslation(
+			g_Player2.m_position.x,
+			g_Player2.m_position.y - 0.3f,
+			g_Player2.m_position.z);
+	}
 	XMMATRIX	translation = XMMatrixTranslation(
 		g_Player2.m_position.x,
-		g_Player2.m_position.y-0.3f,
+		g_Player2.m_position.y - 0.6f,
 		g_Player2.m_position.z);
 	XMMATRIX	world = scale * rotation * translation;
 
