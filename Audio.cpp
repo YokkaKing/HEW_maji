@@ -24,14 +24,60 @@ using namespace DirectX;
 static IXAudio2* g_Xaudio{};
 static IXAudio2MasteringVoice* g_MasteringVoice{};
 
+int arrow_shuriken = -1;
+int button = -1;
+int change = -1;
+int charge = -1;
+int crowd = -1;
+int cursorMove = -1;
+int damageHammer = -1;
+int damageSharp = -1;
+int down = -1;
+int fade = -1;
+int gameStart = -1;
+int hammer = -1;
+int health = -1;
+int item = -1;
+int map = -1;
+int roundEnd = -1;
+int spear = -1;
+int start = -1;
+int sword = -1;
+int teamLogo = -1;
+int terrain = -1;
+int title = -1;
+int winner = -1;
 
 void InitAudio()
 {
 	// XAudio生成
 	XAudio2Create(&g_Xaudio, 0);
-
 	// マスタリングボイス生成
 	g_Xaudio->CreateMasteringVoice(&g_MasteringVoice);
+
+	arrow_shuriken = LoadAudio("asset\\Audio\\arrow_shuriken.wav");
+	button = LoadAudio("asset\\Audio\\button.wav");
+	change = LoadAudio("asset\\Audio\\change.wav");
+	charge = LoadAudio("asset\\Audio\\charge.wav");
+	crowd = LoadAudio("asset\\Audio\\crowd.wav");
+	cursorMove = LoadAudio("asset\\Audio\\cursorMove.wav");
+	damageHammer = LoadAudio("asset\\Audio\\damageHammer.wav");
+	damageSharp = LoadAudio("asset\\Audio\\damageSharp.wav");
+	down = LoadAudio("asset\\Audio\\down.wav");
+	fade = LoadAudio("asset\\Audio\\fade.wav");
+	gameStart = LoadAudio("asset\\Audio\\gameStart.wav");
+	hammer = LoadAudio("asset\\Audio\\hammer.wav");
+	health = LoadAudio("asset\\Audio\\health.wav");
+	item = -LoadAudio("asset\\Audio\\item.wav");
+	map = LoadAudio("asset\\Audio\\map.wav");
+	roundEnd = LoadAudio("asset\\Audio\\roundEnd.wav");
+	spear = LoadAudio("asset\\Audio\\spear.wav");
+	start = LoadAudio("asset\\Audio\\start.wav");
+	sword = LoadAudio("asset\\Audio\\sword.wav");
+	teamLogo = LoadAudio("asset\\Audio\\teamLogo.wav");
+	terrain = LoadAudio("asset\\Audio\\terrain.wav");
+	title = LoadAudio("asset\\Audio\\title.wav");
+	winner = LoadAudio("asset\\Audio\\winner.wav");
 }
 
 void UninitAudio()
@@ -80,7 +126,6 @@ int LoadAudio(const char *FileName)
 		UINT32 buflen;
 		LONG readlen;
 
-
 		hmmio = mmioOpen((LPSTR)FileName, &mmioinfo, MMIO_READ);
 		assert(hmmio);
 
@@ -107,25 +152,19 @@ int LoadAudio(const char *FileName)
 		datachunkinfo.ckid = mmioFOURCC('d', 'a', 't', 'a');
 		mmioDescend(hmmio, &datachunkinfo, &riffchunkinfo, MMIO_FINDCHUNK);
 
-
-
 		buflen = datachunkinfo.cksize;
 		g_Audio[index].SoundData = new unsigned char[buflen];
 		readlen = mmioRead(hmmio, (HPSTR)g_Audio[index].SoundData, buflen);
 
-
 		g_Audio[index].Length = readlen;
 		g_Audio[index].PlayLength = readlen / wfx.nBlockAlign;
-
 
 		mmioClose(hmmio, 0);
 	}
 
-
 	// サウンドソース生成
 	g_Xaudio->CreateSourceVoice(&g_Audio[index].SourceVoice, &wfx);
 	assert(g_Audio[index].SourceVoice);
-
 
 	return index;
 }
@@ -143,7 +182,6 @@ void PlayAudio(int Index, bool Loop)
 {
 	g_Audio[Index].SourceVoice->Stop();
 	g_Audio[Index].SourceVoice->FlushSourceBuffers();
-
 
 	// バッファ設定
 	XAUDIO2_BUFFER bufinfo;
@@ -164,8 +202,20 @@ void PlayAudio(int Index, bool Loop)
 
 	g_Audio[Index].SourceVoice->SubmitSourceBuffer(&bufinfo, NULL);
 
-
 	// 再生
 	g_Audio[Index].SourceVoice->Start();
+}
 
+void StopAudio(int Index)
+{
+	if (Index < 0 || Index >= AUDIO_MAX || g_Audio[Index].SourceVoice == nullptr)
+	{
+		return;
+	}
+
+	// 再生を停止
+	g_Audio[Index].SourceVoice->Stop();
+
+	// 次回再生時に最初から流れるようにバッファをクリア
+	g_Audio[Index].SourceVoice->FlushSourceBuffers();
 }

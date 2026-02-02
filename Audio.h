@@ -20,6 +20,31 @@ void UninitAudio();		//サウンドの終了
 int LoadAudio(const char* FileName);		//サウンドデータ読み込み
 void UnloadAudio(int Index);				//サウンドデータ解放（停止）
 void PlayAudio(int Index, bool Loop = false);//サウンドデータ再生
+void StopAudio(int Index);
+
+extern int arrow_shuriken;
+extern int button;
+extern int change;
+extern int charge;
+extern int crowd;
+extern int cursorMove;
+extern int damageHammer;
+extern int damageSharp;
+extern int down;
+extern int fade;
+extern int gameStart;
+extern int hammer;
+extern int health;
+extern int item;
+extern int map;
+extern int roundEnd;
+extern int spear;
+extern int start;
+extern int sword;
+extern int teamLogo;
+extern int terrain;
+extern int title;
+extern int winner;
 
 /*
 //以下の関数はプログラムの最初と最後に1回ずつ呼び出せばOK
