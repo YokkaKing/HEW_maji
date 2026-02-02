@@ -154,7 +154,7 @@ bool TransformManager::Update(float deltaTime)
 	return false;
 }
 
-void TransformManager::StartSelection()
+void TransformManager::StartSelection(WeaponTerrain excludeP1, WeaponTerrain excludeP2)
 {
 	m_isActive = true;
 	m_timer = 20.0f;
@@ -164,8 +164,59 @@ void TransformManager::StartSelection()
 	m_p1.selectedIndex = 0;
 	m_p2.selectedIndex = 0;
 
-	ShuffleChoices(m_p1);
-	ShuffleChoices(m_p2);
+	//ShuffleChoices(m_p1);
+	//ShuffleChoices(m_p2);
+
+	// NONE(0)を除いた武器の数 (MAX=6なら5種類)
+	int weaponCount = (int)WeaponTerrain::MAX - 1;
+
+	// ------------
+	// P1 の抽選
+	// ------------
+	for (int i = 0; i < 2; i++)
+	{
+		WeaponTerrain candidate;
+		bool isValid = false;
+
+		// 有効な武器が出るまで回す
+		while (!isValid)
+		{
+			// 1 ～ weaponCount のランダム値
+			int r = (rand() % weaponCount) + 1;
+			candidate = (WeaponTerrain)r;
+
+			// チェック1: 引数で指定された「除外武器(1回目に選んだやつ)」ならNG
+			if (candidate == excludeP1) continue;
+
+			// チェック2: 今回の2択の中で重複していたらNG (choices[0]と同じなら弾く)
+			if (i == 1 && candidate == m_p1.choices[0]) continue;
+
+			// ここまで来ればOK
+			isValid = true;
+		}
+		m_p1.choices[i] = candidate;
+	}
+
+	// ----------
+	// P2 の抽選 
+	// ----------
+	for (int i = 0; i < 2; i++)
+	{
+		WeaponTerrain candidate;
+		bool isValid = false;
+
+		while (!isValid)
+		{
+			int r = (rand() % weaponCount) + 1;
+			candidate = (WeaponTerrain)r;
+
+			if (candidate == excludeP2) continue;
+			if (i == 1 && candidate == m_p2.choices[0]) continue;
+
+			isValid = true;
+		}
+		m_p2.choices[i] = candidate;
+	}
 }
 
 void TransformManager::ShuffleChoices(PlayerState& state)

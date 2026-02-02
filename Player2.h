@@ -49,17 +49,28 @@ public:
 	bool			m_isDead = false; // €–Sƒtƒ‰ƒO
 	XMFLOAT3 m_rotation; // •Ší‚ğ‰ñ“]‚³‚¹‚é
 	
-	WeaponTerrain m_reservedWT = WeaponTerrain::NONE; // —\–ñ‚³‚ê‚½•Ïgæ
+	WeaponTerrain m_reservedWT[2] = { WeaponTerrain::NONE, WeaponTerrain::NONE }; // —\–ñ‚³‚ê‚½•Ïgæ
 	WeaponTerrain m_currentWT = WeaponTerrain::NONE; // Œ»İ‚Ìp
 	WeaponTerrain m_baseWT; //‰Šú•Ší‘I‘ğ‚Å‘I‚ñ‚¾•Ší‚ğ•Û
 public:
 	void EquipWeapon(std::unique_ptr<IWeapon> weapon); // •Ší‚ğ‘•”õ‚·‚é
 	void OnCollision(const CollisionInfo& info)override;
 
-	void SetReservedWT(WeaponTerrain wt) { m_reservedWT = wt; }
+	void SetReservedWT(int index, WeaponTerrain wt) {
+		if (index >= 0 && index < 2) {
+			m_reservedWT[index] = wt;
+		}
+	};
+
+	WeaponTerrain GetReservedWT(int index) const {
+		if (index >= 0 && index < 2) {
+			return m_reservedWT[index];
+		}
+		return WeaponTerrain::NONE;
+	}
+
 	WeaponTerrain GetCurrentWT() const { return m_currentWT; }
 	void SetCurrentWT(WeaponTerrain wt) { m_currentWT = wt; }
-	WeaponTerrain GetReservedWT() const { return m_reservedWT; }
 
 	bool isDead() const { return m_isDead; }
 	void RoundReset(XMFLOAT3 startPos);

@@ -145,9 +145,20 @@ void	PlayerUpdate()
 //================================================================
 //	武器変更処理(一旦)
 //================================================================
+	int slotToUse = -1; //変身するスロット番号
 	if (Keyboard_IsKeyDownTrigger(KK_D1))
 	{
-		WeaponTerrain reserved = g_Player.GetReservedWT();
+		slotToUse = 0;
+	}
+	if (Keyboard_IsKeyDownTrigger(KK_D0))
+	{
+		slotToUse = 1;
+	}
+
+	//変身キーが押された場合
+	if (slotToUse != -1)
+	{
+		WeaponTerrain reserved = g_Player.GetReservedWT(slotToUse);
 
 		// 予約がある場合のみ実行
 		if (reserved != WeaponTerrain::NONE)
@@ -164,64 +175,16 @@ void	PlayerUpdate()
 			switch (reserved) {
 			case WeaponTerrain::SWORD_WALL: g_changeP1 = 0; break;
 			case WeaponTerrain::SPEAR_HILL: g_changeP1 = 1; break;
-			case WeaponTerrain::HAMMER_:    g_changeP1 = 2; break;
-			case WeaponTerrain::BOW_HILL:   g_changeP1 = 3; break;
+			case WeaponTerrain::BOW_HILL:    g_changeP1 = 2; break;
+			case WeaponTerrain::HAMMER_:   g_changeP1 = 3; break;
 			case WeaponTerrain::SHURIKEN_:  g_changeP1 = 4; break;
 			}
 
 			// 状態を更新
 			g_Player.SetCurrentWT(reserved);
-			g_Player.SetReservedWT(WeaponTerrain::NONE); // 予約を消費
+			g_Player.SetReservedWT(slotToUse, WeaponTerrain::NONE); // 予約を消費
 		}
 
-		//デバッグコード
-		/*
-		g_changeP1++;
-		if (g_changeP1 >= 5)
-		{
-			g_changeP1 = 0;
-		}
-		switch (g_changeP1)
-		{
-		case 0: //sword
-			g_Player.EquipWeapon(std::make_unique<Sword>(&g_Player, FALSE));
-			g_setWTP1 = WeaponTerrain::SWORD_WALL;
-			TerrainSet(WeaponTerrain::SWORD_WALL, FALSE);
-			g_Player.m_model = ModelLoad("asset\\model\\char_sword_motion_b.fbx");
-			break;
-
-		case 1: //spear
-			g_Player.EquipWeapon(std::make_unique<Spear>(&g_Player, FALSE));
-			g_setWTP1 = WeaponTerrain::SPEAR_HILL;
-			TerrainSet(WeaponTerrain::SPEAR_HILL, FALSE);
-			//g_Player.m_model = ModelLoad("asset\\model\\char_spear_motion_b.fbx");
-			break;
-
-		case 2: //hammer
-			g_Player.EquipWeapon(std::make_unique<Hammer>(&g_Player, FALSE));
-			g_setWTP1 = WeaponTerrain::HAMMER_;
-			TerrainSet(WeaponTerrain::HAMMER_, FALSE);
-		//	g_Player.m_model = ModelLoad("asset\\model\\char_hammer_motion_b.fbx");
-			break;
-
-		case 3: //arrow
-			g_Player.EquipWeapon(std::make_unique<Arrow>(&g_Player, FALSE));
-			g_setWTP1 = WeaponTerrain::BOW_HILL;
-			TerrainSet(WeaponTerrain::BOW_HILL, FALSE);
-			//g_Player.m_model = ModelLoad("asset\\model\\char_arrow_motion_b.fbx");
-			break;
-
-		case 4: //shuriken
-			g_Player.EquipWeapon(std::make_unique<Shuriken>(&g_Player, FALSE));
-			g_setWTP1 = WeaponTerrain::SHURIKEN_;
-			TerrainSet(WeaponTerrain::SHURIKEN_, FALSE);
-			g_Player.m_model = ModelLoad("asset\\model\\char_shuriken_motion_b.fbx");
-			break;
-
-		default:
-			break;
-		}
-		*/
 	}
 
 //================================================================
@@ -811,7 +774,7 @@ void PLAYER::EquipBaseWeapon()
 
 	// 現在の変身状態をベースに戻す
 	m_currentWT = m_baseWT;
-	m_reservedWT = WeaponTerrain::NONE;
+	m_reservedWT[2] = WeaponTerrain::NONE;
 
 	// ベース武器に応じて装備生成 & アニメーション設定
 	if (m_baseWT == WeaponTerrain::SWORD_WALL)
@@ -850,3 +813,52 @@ WeaponTerrain GetSetWTP1()
 {
 	return g_setWTP1;
 }
+
+//デバッグコード
+/*
+g_changeP1++;
+if (g_changeP1 >= 5)
+{
+	g_changeP1 = 0;
+}
+switch (g_changeP1)
+{
+case 0: //sword
+	g_Player.EquipWeapon(std::make_unique<Sword>(&g_Player, FALSE));
+	g_setWTP1 = WeaponTerrain::SWORD_WALL;
+	TerrainSet(WeaponTerrain::SWORD_WALL, FALSE);
+	g_Player.m_model = ModelLoad("asset\\model\\char_sword_motion_b.fbx");
+	break;
+
+case 1: //spear
+	g_Player.EquipWeapon(std::make_unique<Spear>(&g_Player, FALSE));
+	g_setWTP1 = WeaponTerrain::SPEAR_HILL;
+	TerrainSet(WeaponTerrain::SPEAR_HILL, FALSE);
+	//g_Player.m_model = ModelLoad("asset\\model\\char_spear_motion_b.fbx");
+	break;
+
+case 2: //hammer
+	g_Player.EquipWeapon(std::make_unique<Hammer>(&g_Player, FALSE));
+	g_setWTP1 = WeaponTerrain::HAMMER_;
+	TerrainSet(WeaponTerrain::HAMMER_, FALSE);
+//	g_Player.m_model = ModelLoad("asset\\model\\char_hammer_motion_b.fbx");
+	break;
+
+case 3: //arrow
+	g_Player.EquipWeapon(std::make_unique<Arrow>(&g_Player, FALSE));
+	g_setWTP1 = WeaponTerrain::BOW_HILL;
+	TerrainSet(WeaponTerrain::BOW_HILL, FALSE);
+	//g_Player.m_model = ModelLoad("asset\\model\\char_arrow_motion_b.fbx");
+	break;
+
+case 4: //shuriken
+	g_Player.EquipWeapon(std::make_unique<Shuriken>(&g_Player, FALSE));
+	g_setWTP1 = WeaponTerrain::SHURIKEN_;
+	TerrainSet(WeaponTerrain::SHURIKEN_, FALSE);
+	g_Player.m_model = ModelLoad("asset\\model\\char_shuriken_motion_b.fbx");
+	break;
+
+default:
+	break;
+}
+*/

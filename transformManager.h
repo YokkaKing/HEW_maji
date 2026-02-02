@@ -31,7 +31,8 @@ public:
 	~TransformManager();
 
 	//ラウンド開始前に呼ぶ：ランダムな2択を生成
-	void StartSelection();
+	void StartSelection(WeaponTerrain excludeP1 = WeaponTerrain::NONE,
+		WeaponTerrain excludeP2 = WeaponTerrain::NONE);
 
 	void Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
 	void Finalize();

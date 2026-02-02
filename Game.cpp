@@ -43,6 +43,7 @@ std::vector<GameObject*> g_gameObjects;
 static	int		g_BgmID = NULL;	//サウンド管理ID
 static int frame;
 static TransformManager g_transformMngr;
+static int g_selectionPhase = 0;
 ITEM_SPONER g_sponer;
 
 void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, const inGameWTselect& select)
@@ -69,7 +70,8 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, const
 	Camera2_Initialize();	//カメラ初期化
 
 	g_transformMngr.Initialize(pDevice, pContext); //変身先選択の初期化
-	g_transformMngr.StartSelection();
+	g_selectionPhase = 0;
+	g_transformMngr.StartSelection(WeaponTerrain::NONE, WeaponTerrain::NONE);
 
 	//===========UI===========
 	Hpbar_Initialize(pDevice, pContext);
@@ -147,10 +149,29 @@ void Game_Update()
 		{
 			inGameWTselect selectionData = g_transformMngr.GetPlayerSelectionWT();
 
-			g_Player.SetReservedWT(selectionData.player1);
-			g_Player2.SetReservedWT(selectionData.player2);
+			if (g_selectionPhase == 0)
+			{//１回目の変身先選択完了時
+				//P1,P2のスロット0に保存
+				g_Player.SetReservedWT(0, selectionData.player1);
+				g_Player2.SetReservedWT(0, selectionData.player2);
+
+				//変身先選択(2回目)に移る
+				g_selectionPhase = 1;
+
+				g_transformMngr.StartSelection(selectionData.player1, selectionData.player2);
+			}
+			else if (g_selectionPhase == 1)
+			{//２回目の変身先選択完了時
+				//P1,P2のスロット1に保存
+				g_Player.SetReservedWT(1, selectionData.player1);
+				g_Player2.SetReservedWT(1, selectionData.player2);
+
+				//変身先選択を終了してゲームへ移行
+				g_selectionPhase = 2;
+			}
 		}
 		
+		return;
 	}
 	else
 	{
@@ -317,6 +338,7 @@ void Game_ResetRound()
 	g_Player.RoundReset(XMFLOAT3(0.0f, 0.5f, 1.0f));
 	g_Player2.RoundReset(XMFLOAT3(2.0f, 0.5f, 2.0f));
 
+	g_selectionPhase = 0;
 	// 変身選択マネージャだけ再開（Initializeはしない）
-	g_transformMngr.StartSelection();
+	g_transformMngr.StartSelection(WeaponTerrain::NONE, WeaponTerrain::NONE);
 }

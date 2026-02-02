@@ -135,10 +135,20 @@ void	Player2Update()
 //================================================================
 //	武器変更処理(一旦)
 //================================================================
+	int slotToUse = -1;
 	if (Keyboard_IsKeyDownTrigger(KK_D2))
 	{
+		slotToUse = 0;
+	}
+	if (Keyboard_IsKeyDownTrigger(KK_D9))
+	{
+		slotToUse = 1;
+	}
+
+	if (slotToUse != -1)
+	{
 		// 予約されている変身先を取得
-		WeaponTerrain reserved = g_Player2.GetReservedWT();
+		WeaponTerrain reserved = g_Player2.GetReservedWT(slotToUse);
 
 		// 選択（予約）済みであり、かつ現在変身中でない（または NONE でない）場合
 		if (reserved != WeaponTerrain::NONE)
@@ -163,54 +173,9 @@ void	Player2Update()
 			}
 
 			g_Player2.SetCurrentWT(reserved);
-			g_Player2.SetReservedWT(WeaponTerrain::NONE); // 予約をクリア
+			g_Player2.SetReservedWT(slotToUse, WeaponTerrain::NONE); // 予約をクリア
 
 		}
-		//デバッグコード
-		/*
-		g_changeP2++;
-		if (g_changeP2 >= 5)
-		{
-			g_changeP2 = 0;
-		}
-		switch (g_changeP2)
-		{
-		case 0:
-			g_Player2.EquipWeapon(std::make_unique<Sword>(&g_Player2, TRUE));
-			g_setWTP2 = WeaponTerrain::SWORD_WALL;
-			TerrainSet(WeaponTerrain::SWORD_WALL, TRUE);
-			g_Player2.m_model = ModelLoad("asset\\model\\char_sword_motion_b.fbx");
-			break;
-
-		case 1:
-			g_Player2.EquipWeapon(std::make_unique<Spear>(&g_Player2, TRUE));
-			g_setWTP2 = WeaponTerrain::SPEAR_HILL;
-			TerrainSet(WeaponTerrain::SPEAR_HILL, TRUE);
-			break;
-
-		case 2:
-			g_Player2.EquipWeapon(std::make_unique<Hammer>(&g_Player2, TRUE));
-			g_setWTP2 = WeaponTerrain::HAMMER_;
-			TerrainSet(WeaponTerrain::HAMMER_, TRUE);
-			break;
-
-		case 3:
-			g_Player2.EquipWeapon(std::make_unique<Arrow>(&g_Player2, TRUE));
-			g_setWTP2 = WeaponTerrain::BOW_HILL;
-			TerrainSet(WeaponTerrain::BOW_HILL, TRUE);
-			break;
-
-		case 4:
-			g_Player2.EquipWeapon(std::make_unique<Shuriken>(&g_Player2, TRUE));
-			g_setWTP2 = WeaponTerrain::SHURIKEN_;
-			TerrainSet(WeaponTerrain::SHURIKEN_, TRUE);
-			 g_Player2.m_model = ModelLoad("asset\\model\\char_shuriken_motion_b.fbx");
-			break;
-
-		default:
-			break;
-		}
-		*/
 	}
 
 //================================================================
@@ -719,7 +684,7 @@ void PLAYER2::EquipBaseWeapon()
 
 	// 現在の変身状態をベースに戻す
 	m_currentWT = m_baseWT;
-	m_reservedWT = WeaponTerrain::NONE;
+	m_reservedWT[2] = WeaponTerrain::NONE;
 
 	// ベース武器に応じて装備生成 & アニメーション設定
 	if (m_baseWT == WeaponTerrain::SWORD_WALL)
@@ -754,9 +719,53 @@ void PLAYER2::EquipBaseWeapon()
 	}
 }
 
-
-
 WeaponTerrain GetSetWTP2()
 {
 	return g_setWTP2;
 }
+
+//デバッグコード
+/*
+g_changeP2++;
+if (g_changeP2 >= 5)
+{
+	g_changeP2 = 0;
+}
+switch (g_changeP2)
+{
+case 0:
+	g_Player2.EquipWeapon(std::make_unique<Sword>(&g_Player2, TRUE));
+	g_setWTP2 = WeaponTerrain::SWORD_WALL;
+	TerrainSet(WeaponTerrain::SWORD_WALL, TRUE);
+	g_Player2.m_model = ModelLoad("asset\\model\\char_sword_motion_b.fbx");
+	break;
+
+case 1:
+	g_Player2.EquipWeapon(std::make_unique<Spear>(&g_Player2, TRUE));
+	g_setWTP2 = WeaponTerrain::SPEAR_HILL;
+	TerrainSet(WeaponTerrain::SPEAR_HILL, TRUE);
+	break;
+
+case 2:
+	g_Player2.EquipWeapon(std::make_unique<Hammer>(&g_Player2, TRUE));
+	g_setWTP2 = WeaponTerrain::HAMMER_;
+	TerrainSet(WeaponTerrain::HAMMER_, TRUE);
+	break;
+
+case 3:
+	g_Player2.EquipWeapon(std::make_unique<Arrow>(&g_Player2, TRUE));
+	g_setWTP2 = WeaponTerrain::BOW_HILL;
+	TerrainSet(WeaponTerrain::BOW_HILL, TRUE);
+	break;
+
+case 4:
+	g_Player2.EquipWeapon(std::make_unique<Shuriken>(&g_Player2, TRUE));
+	g_setWTP2 = WeaponTerrain::SHURIKEN_;
+	TerrainSet(WeaponTerrain::SHURIKEN_, TRUE);
+	 g_Player2.m_model = ModelLoad("asset\\model\\char_shuriken_motion_b.fbx");
+	break;
+
+default:
+	break;
+}
+*/
