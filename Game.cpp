@@ -64,7 +64,7 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, const
 
 	PLAYER* pP1 = GetPlayer();
 	PLAYER2* pP2 = GetPlayer2();
-	generateWT_Apply(Manager_GetWTselect(), pP1, pP2, pDevice, pContext);
+	//generateWT_Apply(Manager_GetWTselect(), pP1, pP2, pDevice, pContext);
 
 	Camera_Initialize();	//カメラ初期化
 	Camera2_Initialize();	//カメラ初期化
@@ -230,7 +230,7 @@ void Game_Draw_Player1()
 	//Hpbar_Draw(); //<--HpBar描画
 	//Timer_Draw();
 	//Number_Draw();
-	//Hp_Draw();
+	Hp_Draw();
 	//
 	//================
 	Light.SetEnable(TRUE);			//ライティングON
@@ -259,7 +259,7 @@ void Game_Draw_Player2()
 	Light.SetEnable(FALSE);			//ライティングOFF
 	Shader_SetLight(Light.Light);	//ライト構造体をシェーダーへセット
 	SetDepthTest(FALSE);
-	//HpBar2_Draw();
+	Hp2_Draw();
 	//Timer_Draw();
 	//Number_Draw();
 	//Hp2_Draw();

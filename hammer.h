@@ -20,13 +20,17 @@ using namespace DirectX;
 
 class Hammer : public IWeapon
 {
+private:
+    int m_playerIndex = 0;      // 0 = P1, 1 = P2
+    int m_chargeKey = 0;        // P1: KK_C, P2: KK_P
+    XMFLOAT3 m_move = { 0,0,0 };  // g_moveHammer
 public:
     std::shared_ptr<Collider> m_collider; // コライダーへの参照を保持
 
     bool m_isAttacking = false;
     float m_attackTimer = 0.0f;
     const float ATTACK_DURATION = 0.5f;   // 攻撃の有効時間
-
+    
     // プレイヤーから見てどこに位置するか
     XMFLOAT3 m_offset = { 0.0f, 0.0f, 0.5f };
     // 攻撃したときにどう動くか
@@ -38,6 +42,15 @@ public:
     float m_chargePower = 0.0f; // チャージ
     bool m_isCharging = false; // チャージしてるか
     const float MAX_CHARGE = 5.5f;
+    enum CHARGE_STATE {
+        CHARGE_NONE = 0,    // idle
+        CHARGE_IN,          // initial 370->440 playing
+        CHARGE_HOLD,        // stopped/held at frame 440
+        CHARGE_MOVE_LOOP,   // 540->660 loop while moving during charge
+        CHARGE_ATTACK_PLAY  // 440->539 playing when releasing (=attack)
+    };
+    CHARGE_STATE m_chargeState = CHARGE_NONE;
+    bool m_wasCharging = false;
 public:
     Hammer(GameObject* player, bool select);
     virtual ~Hammer();

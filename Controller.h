@@ -41,7 +41,7 @@ private:
     GamepadReading m_currentState;
     GamepadReading m_prevState;
     bool m_isConnected;
-
+    DWORD m_id;
 public:
     // Player.cpp‚©‚ç‚ÌŒÄ‚Ño‚µ(g_Controller(0))‚É‡‚í‚¹‚é‚½‚ßˆø”‚ğc‚·
     Controller(DWORD id = 0);
