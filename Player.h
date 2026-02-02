@@ -1,16 +1,16 @@
 /*
-* ƒtƒ@ƒCƒ‹–¼	Player.h
-* ƒ^ƒCƒgƒ‹	ƒvƒŒƒCƒ„[
-* ì¬Ò		‹v•Û–ØŠ²‘¾
-* ì¬“ú		12Œ02“ú
-* XV“ú		12Œ02“ú
+* ãƒ•ã‚¡ã‚¤ãƒ«å	Player.h
+* ã‚¿ã‚¤ãƒˆãƒ«	ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼
+* ä½œæˆè€…		ä¹…ä¿æœ¨å¹¹å¤ª
+* ä½œæˆæ—¥		12æœˆ02æ—¥
+* æ›´æ–°æ—¥		12æœˆ02æ—¥
 */
 
 #ifndef PLAYER_H
 #define PLAYER_H
 
 //================================================================
-//	ƒCƒ“ƒNƒ‹[ƒh
+//	ã‚¤ãƒ³ã‚¯ãƒ«ãƒ¼ãƒ‰
 //================================================================
 #include<d3d11.h>
 #include<DirectXMath.h>
@@ -23,39 +23,42 @@ using namespace DirectX;
 
 enum class EVOLUTION_TYPE
 {
-	EVOLUTION_TYPE_A, // ‹@“®—Í“Á‰»
-	EVOLUTION_TYPE_B, // §“®E–hŒä“Á‰»
-	EVOLUTION_TYPE_NONE // –¢i‰»
+	EVOLUTION_TYPE_A, // æ©Ÿå‹•åŠ›ç‰¹åŒ–
+	EVOLUTION_TYPE_B, // åˆ¶å‹•ãƒ»é˜²å¾¡ç‰¹åŒ–
+	EVOLUTION_TYPE_NONE // æœªé€²åŒ–
 };
 
-//ƒvƒŒƒCƒ„[‚Ìó‘Ô
+//ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®çŠ¶æ…‹
 enum PLAYER_STATE
 {
-	PLAYER_STATE_IDLE = 0,	//‰½‚à‚µ‚È‚¢
-	PLAYER_STATE_MOVE,		//ˆÚ“®
-	PLAYER_STATE_DIRECTION,	//•ûŒüw¦
-	PLAYER_STATE_POWER,		//ˆĞ—Íw¦
-	PLAYER_STATE_JUMP,		//ƒWƒƒƒ“ƒv
+	PLAYER_STATE_IDLE = 0,	//ä½•ã‚‚ã—ãªã„
+	PLAYER_STATE_MOVE,		//ç§»å‹•
+	PLAYER_STATE_DIRECTION,	//æ–¹å‘æŒ‡ç¤º
+	PLAYER_STATE_POWER,		//å¨åŠ›æŒ‡ç¤º
+	PLAYER_STATE_JUMP,		//ã‚¸ãƒ£ãƒ³ãƒ—
 };
 
-//ƒvƒŒƒCƒ„[\‘¢‘Ì
+//ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼æ§‹é€ ä½“
 class PLAYER : public GameObject
 {
 public:
-	float           FrictionRate;   // ‘¬“xŒ¸Š—¦
-	EVOLUTION_TYPE  EvolutionType;  // i‰»ƒ^ƒCƒv (A or B or NONE)
+	float           FrictionRate;   // é€Ÿåº¦æ¸›è¡°ç‡
+	EVOLUTION_TYPE  EvolutionType;  // é€²åŒ–ã‚¿ã‚¤ãƒ— (A or B or NONE)
 	int EvolutionTimer;
-	PLAYER_STATE	State;		//ó‘Ô
-	std::unique_ptr<IWeapon> m_currentWeapon = nullptr; // Œ»İ‘•”õ’†‚Ì•Ší
-	bool			m_isDead = false; // €–Sƒtƒ‰ƒO
-	XMFLOAT3 m_rotation; // •Ší‚ğ‰ñ“]‚³‚¹‚é
-
-	WeaponTerrain m_reservedWT[2] = { WeaponTerrain::NONE, WeaponTerrain::NONE }; // —\–ñ‚³‚ê‚½•Ïgæ
-	WeaponTerrain m_currentWT = WeaponTerrain::NONE; // Œ»İ‚Ìp
-	WeaponTerrain m_baseWT; //‰Šú•Ší‘I‘ğ‚Å‘I‚ñ‚¾•Ší‚ğ•Û
+	PLAYER_STATE	State;		//çŠ¶æ…‹
+	std::unique_ptr<IWeapon> m_currentWeapon = nullptr; // ç¾åœ¨è£…å‚™ä¸­ã®æ­¦å™¨
+	bool			m_isDead = false; // æ­»äº¡ãƒ•ãƒ©ã‚°
+	XMFLOAT3 m_rotation; // æ­¦å™¨ã‚’å›è»¢ã•ã›ã‚‹
+	WeaponTerrain m_reservedWT[2] = { WeaponTerrain::NONE, WeaponTerrain::NONE }; // äºˆç´„ã•ã‚ŒãŸå¤‰èº«å…ˆ
+	WeaponTerrain m_currentWT = WeaponTerrain::NONE; // ç¾åœ¨ã®å§¿
+	WeaponTerrain m_baseWT; //åˆæœŸæ­¦å™¨é¸æŠã§é¸ã‚“ã æ­¦å™¨ã‚’ä¿æŒ
+	float m_moveSpeed; // ç§»å‹•é€Ÿåº¦
+	float m_jumpForce; // ç§»å‹•é€Ÿåº¦
+	bool m_isAttacked = false; // æ”»æ’ƒä¸­ãƒ•ãƒ©ã‚°
+	float m_moveMul = 1.0f;
 public:
-	//•Ší‘€ìŠÖ”
-	void EquipWeapon(std::unique_ptr<IWeapon> weapon); // •Ší‚ğ‘•”õ‚·‚é
+	//æ­¦å™¨æ“ä½œé–¢æ•°
+	void EquipWeapon(std::unique_ptr<IWeapon> weapon); // æ­¦å™¨ã‚’è£…å‚™ã™ã‚‹
 	void OnCollision(const CollisionInfo& info)override;
 
 	void SetReservedWT(int index, WeaponTerrain wt) {
@@ -90,8 +93,10 @@ XMFLOAT3 GetPlayerPosition();
 
 void Player_Jump();
 void Player_ManualMove();
-float Player_GetHP();
+float Player_GetHp();
 float Player_GetMaxHp();
+bool GetPlayer_IsAttacked();
+void SetPlayer_IsAttacked(bool isAttacked);
 PLAYER* GetPlayer();
 WeaponTerrain GetSetWTP1();
 

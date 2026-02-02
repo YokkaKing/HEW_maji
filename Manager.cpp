@@ -12,6 +12,7 @@
 #include"direct3d.h"
 #include"Manager.h"
 #include"keyboard.h"
+#include "Controller.h"
 #include"Game.h"
 #include"Title.h"
 #include"Result.h"
@@ -53,6 +54,10 @@ void Manager_Finalize()
 
 void Manager_Update()
 {
+	extern Controller g_Controller[2];
+	for (int i = 0; i < 2; i++) {
+		g_Controller[i].Update();
+	}
 	switch (g_Scene)	//現在シーンのアップデート関数を呼び出す
 	{
 		case SCENE_NONE:
@@ -109,6 +114,7 @@ void Manager_Update()
 		default:
 			break;
 	}
+
 
 	Fade_Update();
 

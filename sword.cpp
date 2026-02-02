@@ -58,7 +58,8 @@ Sword::Sword(GameObject* player, bool select) : IWeapon(player)
 	g_moveSword[m_selectPlayer] = { 0.0f, 0.0f, 0.0f };
 
 	/*********** テストコード **********/
-	g_modelSword[0] = ModelLoad("asset\\model\\block.fbx");
+	g_modelSword[0] = ModelLoad("asset\\model\\FX_sword.fbx");
+	m_fxAnim.Bind(g_modelSword[0]);
 	g_modelSword[1] = ModelLoad("asset\\model\\block2.fbx");
 	/*********************************/
 }
@@ -77,7 +78,7 @@ void Sword::Attack()
 	m_attackTimer = 0.0f; // 攻撃タイマー初期化
 	g_moveSword[m_selectPlayer] = {0.0f, 0.0f, 0.0f}; // 簡易アニメーションの初期化
 	m_coolTime = 1.0f; // クールタイムの設定
-
+	m_fxAnim.PlayFrames(1, 20, 30.0f, false, 1.0f);
 	m_collider->SetEnable(true); // 当たり判定の有効
 
 	// 多重ヒット帽子リストをリセット
@@ -86,11 +87,11 @@ void Sword::Attack()
 
 void Sword::Update()
 {
+	m_fxAnim.Update(1.0f / 60.0f);
 	if (m_coolTime > 0.0f)
 	{
-		m_coolTime -= 1.0f / 60.0f; // クールタイムを減らす
+		m_coolTime -= 1.0f / 60.0f; 
 	}
-
 	if (m_attackTimer < (ATTACK_DURATION / 2) && m_isAttacking)
 	{
 		float progress = m_attackTimer / (ATTACK_DURATION / 2.0f);
@@ -181,36 +182,40 @@ void Sword::Update()
 			m_collider->SetEnable(false); // 当たり判定止める
 		}
 	}
+
+	
+
 }
 
 void Sword::Draw()
 {
-	//ワールド行列作成
-	XMMATRIX	scale = XMMatrixScaling(
-		m_weapon->m_scale.x,
-		m_weapon->m_scale.y,
-		m_weapon->m_scale.z);
-	XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
-		m_weapon->m_rotation.x,
-		m_weapon->m_rotation.y,
-		m_weapon->m_rotation.z);
-	XMMATRIX	translation = XMMatrixTranslation(
-		m_weapon->m_position.x,
-		m_weapon->m_position.y,
-		m_weapon->m_position.z);
-	XMMATRIX	world = scale * rotation * translation;
-
-	//シェーダーへ行列をセット
-	Shader_SetWorldMatrix(world);
-
 	if (m_isAttacking)
 	{
-		ModelDraw(g_modelSword[1]);
-	}
-	else
-	{
+		XMMATRIX	scale = XMMatrixScaling(
+			m_weapon->m_scale.x * 0.04f,
+			m_weapon->m_scale.y * 0.02f,
+			m_weapon->m_scale.z * 0.02f);
+		XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
+			m_weapon->m_rotation.x,
+			m_weapon->m_rotation.y + XM_PI,
+			m_weapon->m_rotation.z);
+		XMMATRIX	translation = XMMatrixTranslation(
+			m_weapon->m_position.x,
+			m_weapon->m_position.y,
+			m_weapon->m_position.z);
+		XMMATRIX world = scale * rotation * translation;
+
+
+		XMMATRIX fxWorld = m_fxAnim.GetDeltaMatrix() * world;
+
+		Shader_SetWorldMatrix(fxWorld);
+
+
+		//Shader_SetBones(g_modelSword[0]);
 		ModelDraw(g_modelSword[0]);
+		
 	}
+
 }
 
 void Sword::OnWeaponCollision(GameObject* target)

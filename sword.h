@@ -16,6 +16,7 @@
 #include"IWeapon.h"
 #include"collider.h"
 #include"model.h"
+#include "effect_anim.h"
 #include<d3d11.h>
 #include<DirectXMath.h>
 using namespace DirectX;
@@ -45,6 +46,9 @@ public:
     void Attack() override;
 
     void OnWeaponCollision(GameObject* target) override;
+
+private:
+    EffectAnim m_fxAnim;
 };
 
 #endif // SWORD_H

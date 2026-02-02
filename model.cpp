@@ -412,8 +412,8 @@ void ReadNodeHierarchy(
 	const aiNode* node,
 	const XMMATRIX& parentTransform)
 {
-	//XMMATRIX nodeTransform = AiToXM(node->mTransformation);
-	XMMATRIX nodeTransform = XMMatrixIdentity();
+	XMMATRIX nodeTransform = AiToXM(node->mTransformation);
+	//XMMATRIX nodeTransform = XMMatrixIdentity();
 
 	const aiAnimation* animation = model->AiScene->mAnimations[0];
 	const aiNodeAnim* channel =
