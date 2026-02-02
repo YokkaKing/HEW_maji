@@ -9,6 +9,7 @@
 //================================================================
 //	インクルード
 //================================================================
+#include"Audio.h"
 #include"direct3d.h"
 #include"Manager.h"
 #include"keyboard.h"
@@ -37,13 +38,10 @@ void Manager_Initialize()
 	//SetFade(60.0f, color, FADE_STATE::FADE_IN, SCENE_GAME);
 	//SetScene(SCENE_GAME);	//最初に動かすシーンに切り替える
 
-
 	//本来の形
 	Fade_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
 	SetScene(SCENE_TITLE);	//最初に動かすシーンに切り替える
-
-
-
+	PlayAudio(g_title, true);
 }
 
 void Manager_Finalize()
@@ -97,7 +95,7 @@ void Manager_Update()
 					// 全試合終了 -> リザルトへ
 					// ここで初めてGameシーンを破棄する
 					Game_Finalize();
-					SetScene(SCENE_RESULT);
+					SetScene(SCENE_TITLE);
 				}
 				else
 				{
@@ -215,6 +213,7 @@ void SetScene(SCENE scene) //シーンを切り替える
 			Title_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
 			break;
 		case SCENE_GAME:
+			StopAudio(g_title);
 			Game_Initialize( Direct3D_GetDevice(), Direct3D_GetDeviceContext(), g_currentWTselect);
 			break;
 		case SCENE_SELECT_WT:

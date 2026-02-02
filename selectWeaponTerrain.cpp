@@ -6,6 +6,7 @@
 // 更新:2026/1/21
 // 更新:2026/01/24 - カーソル移動/スケールアニメ追加
 //============================================
+#include"Audio.h"
 #include "selectWeaponTerrain.h"
 #include "Manager.h"
 #include "keyboard.h"
@@ -575,6 +576,7 @@ void selectWT_Update()
             // Selection for any weapon: start cursor scale anim and mark ready
             if (Keyboard_IsKeyDownTrigger(KK_LEFTCONTROL)&& !g_isP1Ready)
             {
+                PlayAudio(g_button, false);
                 // start cursor animation
                 g_cursorScaleAnim[0] = true;
                 g_cursorScaleTime[0] = 0.0f;
@@ -642,6 +644,7 @@ void selectWT_Update()
 
             if (Keyboard_IsKeyDownTrigger(KK_D5) && !g_isP2Ready)
             {
+                PlayAudio(g_button, false);
                 // start cursor anim and mark ready for any weapon
                 g_cursorScaleAnim[1] = true;
                 g_cursorScaleTime[1] = 0.0f;
@@ -766,6 +769,7 @@ void selectWT_Update()
 
         if (Keyboard_IsKeyDownTrigger(KK_LEFT))
         {
+            PlayAudio(g_cursorMove, false);
             int oldIndex = g_cursorP1;
             g_cursorP1 = (g_cursorP1 + selectCount - 1) % selectCount;
 
@@ -782,6 +786,7 @@ void selectWT_Update()
         }
         if (Keyboard_IsKeyDownTrigger(KK_RIGHT))
         {
+            PlayAudio(g_cursorMove, false);
             int oldIndex = g_cursorP1;
             g_cursorP1 = (g_cursorP1 + 1) % selectCount;
 
@@ -797,6 +802,7 @@ void selectWT_Update()
 
         if (Keyboard_IsKeyDownTrigger(KK_LEFTCONTROL))
         {
+            PlayAudio(g_button, false);
             g_isP1Ready = true;
             g_selectData.player1 = static_cast<WeaponTerrain>(g_cursorP1+1);
         }
@@ -811,6 +817,7 @@ void selectWT_Update()
     {
         if (Keyboard_IsKeyDownTrigger(KK_D3))
         {
+            PlayAudio(g_cursorMove, false);
             int oldIndex = g_cursorP2;
             g_cursorP2 = (g_cursorP2 + selectCount - 1) % selectCount;
 
@@ -825,6 +832,7 @@ void selectWT_Update()
         }
         if (Keyboard_IsKeyDownTrigger(KK_D4))
         {
+            PlayAudio(g_cursorMove, false);
             int oldIndex = g_cursorP2;
             g_cursorP2 = (g_cursorP2 + 1) % selectCount;
 
@@ -840,6 +848,7 @@ void selectWT_Update()
 
         if (Keyboard_IsKeyDownTrigger(KK_D5))
         {
+            PlayAudio(g_button, false);
             g_isP2Ready = true;
             g_selectData.player2 = static_cast<WeaponTerrain>(g_cursorP2+1);
         }
@@ -894,7 +903,7 @@ void selectWT_Update()
    
         if (Keyboard_IsKeyDownTrigger(KK_A))
         {
-           
+            PlayAudio(g_gameStart, false);
             XMFLOAT4 fadeColor(0.0f, 0.0f, 0.0f, 1.0f);
             SetFade(40.0f, fadeColor, FADE_STATE::FADE_OUT, SCENE_GAME);
 

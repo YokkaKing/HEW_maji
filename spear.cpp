@@ -1,64 +1,62 @@
 /*
-* ƒtƒ@ƒCƒ‹–¼	spear.cpp
-* ƒ^ƒCƒgƒ‹	Œ•
-* ì¬Ò		O‹´‘ñ“l
-* ì¬“ú		12Œ09“ú
-* XV“ú		12Œ09“ú
+* ãƒ•ã‚¡ã‚¤ãƒ«å	spear.cpp
+* ã‚¿ã‚¤ãƒˆãƒ«	å‰£
+* ä½œæˆè€…		ä¸‰æ©‹æ‹“æ–—
+* ä½œæˆæ—¥		12æœˆ09æ—¥
+* æ›´æ–°æ—¥		12æœˆ09æ—¥
 */
 
 //================================================================
-//	ƒCƒ“ƒNƒ‹[ƒh
+//	ã‚¤ãƒ³ã‚¯ãƒ«ãƒ¼ãƒ‰
 //================================================================
+#include"Audio.h"
 #include"spear.h"
 #include"debug_ostream.h"
-
-/*********** ƒeƒXƒgƒR[ƒh **********/
 #include"model.h"
 #include"Camera.h"
 #include"Player.h"
 #include"Player2.h"
 #include"keyboard.h"
-/*********************************/
 
 //================================================================
-//	ƒOƒ[ƒoƒ‹•Ï”
+//	ã‚°ãƒ­ãƒ¼ãƒãƒ«å¤‰æ•°
 //================================================================
 MODEL* g_modelSpear[2] = { NULL, NULL };
 PLAYER* g_PlayerSpear1;
 PLAYER2* g_PlayerSpear2;
-XMFLOAT3 g_moveSpear[2]; // ŠÈˆÕƒAƒjƒ[ƒVƒ‡ƒ“
+XMFLOAT3 g_moveSpear[2]; // ç°¡æ˜“ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³
 
 Spear::Spear(GameObject* player, bool select) : IWeapon(player)
 {
 	g_PlayerSpear1 = GetPlayer();
 	g_PlayerSpear2 = GetPlayer2();
 
-	// •Ší‚Ì“–‚½‚è”»’è‚Ìì¬
+	// æ­¦å™¨ã®å½“ãŸã‚Šåˆ¤å®šã®ä½œæˆ
 	m_weapon = std::make_unique<GameObject>();
-	m_weapon->m_tag = "Attack";	// ƒ^ƒO
-	m_weapon->m_layer = 0;		// ƒŒƒCƒ„[
+	m_weapon->m_tag = "Attack";	// ã‚¿ã‚°
+	m_weapon->m_layer = 0;		// ãƒ¬ã‚¤ãƒ¤ãƒ¼
 
-	m_selectPlayer = select; // ƒvƒŒƒCƒ„[İ’è 1P‚©2P‚©
+	m_selectPlayer = select; // ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼è¨­å®š 1Pã‹2Pã‹
 
-	// •Ší‚Ée‚Ö‚Ìƒ|ƒCƒ“ƒ^‚ğİ’è
+	// æ­¦å™¨ã«è¦ªã¸ã®ãƒã‚¤ãƒ³ã‚¿ã‚’è¨­å®š
 	m_weapon->m_weaponPtr = this;
 
-	XMFLOAT3 scale = { 0.3f, 0.3f, 1.0f };
+	XMFLOAT3 scale = { 0.45f, 0.45f, 1.0f };
 	m_collider = m_weapon->AddComponent<BoxCollider>(m_weapon.get(), scale);
 
 	m_weapon->m_scale = scale;
 	m_weapon->m_rotation = { 0.0f, 0.0f, 0.0f };
 
-	ManagerCollider::AddCollider(m_collider); // “o˜^
+	ManagerCollider::AddCollider(m_collider); // ç™»éŒ²
 
-	m_collider->SetEnable(false); // Å‰‚Í“–‚½‚è”»’è‚ğ–³Œø‰»
+	m_collider->SetEnable(false); // æœ€åˆã¯å½“ãŸã‚Šåˆ¤å®šã‚’ç„¡åŠ¹åŒ–
 
 	m_attackTimer = 0.0f;
 
 	g_moveSpear[m_selectPlayer] = { 0.0f, 0.0f, 0.0f };
 	m_coolTime = 0.0f;
 
-	/*********** ƒeƒXƒgƒR[ƒh **********/
+	/*********** ãƒ†ã‚¹ãƒˆã‚³ãƒ¼ãƒ‰ **********/
 	g_modelSpear[0] = ModelLoad("asset\\model\\FX_spear.fbx");
 	m_fxAnim.Bind(g_modelSpear[0]);
 	g_modelSpear[1] = ModelLoad("asset\\model\\block2.fbx");
@@ -67,24 +65,25 @@ Spear::Spear(GameObject* player, bool select) : IWeapon(player)
 
 Spear::~Spear()
 {
-	ManagerCollider::RemoveCollider(m_collider); // íœ
+	ManagerCollider::RemoveCollider(m_collider); // å‰Šé™¤
 }
 
 void Spear::Attack()
 {
-	if (m_isAttacking) return; // UŒ‚‚µ‚Ä‚½‚çI‚í‚è
+	if (m_isAttacking) return; // æ”»æ’ƒã—ã¦ãŸã‚‰çµ‚ã‚ã‚Š
 	if (m_coolTime > 0.0f) return;
+	PlayAudio(g_spear, false);
 	m_weapon->m_scale.x = 0.1f;
 	m_weapon->m_scale.y = 0.1f;
 	m_weapon->m_scale.z = 0.1f;
-	m_isAttacking = true; // UŒ‚‚µ‚Ä‚¢‚é
-	m_attackTimer = 0.0f; // UŒ‚ƒ^ƒCƒ}[‰Šú‰»
+	m_isAttacking = true; // æ”»æ’ƒã—ã¦ã„ã‚‹
+	m_attackTimer = 0.0f; // æ”»æ’ƒã‚¿ã‚¤ãƒãƒ¼åˆæœŸåŒ–
 	g_moveSpear[m_selectPlayer] = {0.0f, 0.0f, 0.0f};
 	m_coolTime = 1.5f;
 	m_fxAnim.PlayFrames(1, 60, 60.0f, false, 1.0f);
-	m_collider->SetEnable(true); // “–‚½‚è”»’è‚Ì—LŒø
+	m_collider->SetEnable(true); // å½“ãŸã‚Šåˆ¤å®šã®æœ‰åŠ¹
 	m_weapon->m_delay = 0.1f;
-	// ‘½dƒqƒbƒg–XqƒŠƒXƒg‚ğƒŠƒZƒbƒg
+	// å¤šé‡ãƒ’ãƒƒãƒˆå¸½å­ãƒªã‚¹ãƒˆã‚’ãƒªã‚»ãƒƒãƒˆ
 	m_hitTargets.clear();
 }
 
@@ -98,26 +97,55 @@ void Spear::Update()
 		}
 	}
 
-	if (Keyboard_IsKeyDown(KK_RIGHTSHIFT))
+
+	if (!m_selectPlayer)
 	{
-		// UŒ‚’†‚¶‚á‚È‚¯‚ê‚Îƒ`ƒƒ[ƒW‚Å‚«‚é
-		if (!m_isAttacking && m_coolTime <= 0.0f)
+		if (Keyboard_IsKeyDown(KK_C))
 		{
-			m_isCharging = true;
-			m_chargePower += (1.0f / 60.0f);
-			if (m_chargePower > MAX_CHARGE) m_chargePower = MAX_CHARGE;
+			// æ”»æ’ƒä¸­ã˜ã‚ƒãªã‘ã‚Œã°ãƒãƒ£ãƒ¼ã‚¸ã§ãã‚‹
+			if (!m_isAttacking && m_coolTime <= 0.0f)
+			{
+				m_isCharging = true;
+				m_chargePower += (1.0f / 60.0f);
+				if (m_chargePower > MAX_CHARGE) m_chargePower = MAX_CHARGE;
+			}
+		}
+		else if (m_isCharging)
+		{
+			// ã‚­ãƒ¼ã‚’é›¢ã—ãŸç¬é–“ã«æŠ•ã’ã‚‹
+			Throw(m_chargePower, m_selectPlayer);
+			m_isCharging = false;
+			m_chargePower = 0.0f;
+
+			// æŠ•ã’ãŸå¾Œã®ã‚¯ãƒ¼ãƒ«ã‚¿ã‚¤ãƒ 
+			m_coolTime = 1.5f;
 		}
 	}
-	else if (m_isCharging)
-	{
-		// ƒL[‚ğ—£‚µ‚½uŠÔ‚É“Š‚°‚é
-		Throw(m_chargePower, m_selectPlayer);
-		m_isCharging = false;
-		m_chargePower = 0.0f;
 
-		// “Š‚°‚½Œã‚ÌƒN[ƒ‹ƒ^ƒCƒ€
-		m_coolTime = 1.5f;
+	if (m_selectPlayer)
+	{
+		if (Keyboard_IsKeyDown(KK_P))
+		{
+			// æ”»æ’ƒä¸­ã˜ã‚ƒãªã‘ã‚Œã°ãƒãƒ£ãƒ¼ã‚¸ã§ãã‚‹
+			if (!m_isAttacking && m_coolTime <= 0.0f)
+			{
+				m_isCharging = true;
+				m_chargePower += (1.0f / 60.0f);
+				if (m_chargePower > MAX_CHARGE) m_chargePower = MAX_CHARGE;
+			}
+		}
+		else if (m_isCharging)
+		{
+			// ã‚­ãƒ¼ã‚’é›¢ã—ãŸç¬é–“ã«æŠ•ã’ã‚‹
+			Throw(m_chargePower, m_selectPlayer);
+			m_isCharging = false;
+			m_chargePower = 0.0f;
+
+			// æŠ•ã’ãŸå¾Œã®ã‚¯ãƒ¼ãƒ«ã‚¿ã‚¤ãƒ 
+			m_coolTime = 1.5f;
+		}
 	}
+	
 
 	if (m_attackTimer < (ATTACK_DURATION / 2) && m_isAttacking)
 	{
@@ -188,24 +216,24 @@ void Spear::Update()
 		break;
 	}
 
-	// UŒ‚‚µ‚Ä‚é‚Æ‚«
+	// æ”»æ’ƒã—ã¦ã‚‹ã¨ã
 	if (m_isAttacking)
 	{
 
 		if (m_weapon->m_delay <= 0)
 		{
 			m_attackTimer += (1.0f / 60.0f);
-			// UŒ‚‚Ì—LŒøŠÔ‚ªI‚í‚Á‚½‚ç
+			// æ”»æ’ƒã®æœ‰åŠ¹æ™‚é–“ãŒçµ‚ã‚ã£ãŸã‚‰
 			if (m_attackTimer >= ATTACK_DURATION)
 			{
-				m_isAttacking = false; // UŒ‚I—¹
-				m_collider->SetEnable(false); // “–‚½‚è”»’è~‚ß‚é
+				m_isAttacking = false; // æ”»æ’ƒçµ‚äº†
+				m_collider->SetEnable(false); // å½“ãŸã‚Šåˆ¤å®šæ­¢ã‚ã‚‹
 			}
 			if (m_weapon->m_scale.x <= 0.5)
 			{
-				m_weapon->m_scale.x += 0.1f; // UŒ‚’†‚Í­‚µ×‚­‚·‚é
-				m_weapon->m_scale.y += 0.1f; // UŒ‚’†‚Í­‚µ×‚­‚·‚é
-				m_weapon->m_scale.z += 0.1f; // UŒ‚’†‚Í­‚µ×‚­‚·‚é
+				m_weapon->m_scale.x += 0.1f; // æ”»æ’ƒä¸­ã¯å°‘ã—ç´°ãã™ã‚‹
+				m_weapon->m_scale.y += 0.1f; // æ”»æ’ƒä¸­ã¯å°‘ã—ç´°ãã™ã‚‹
+				m_weapon->m_scale.z += 0.1f; // æ”»æ’ƒä¸­ã¯å°‘ã—ç´°ãã™ã‚‹
 			}
 		}
 		else
@@ -248,13 +276,13 @@ void Spear::Draw()
 
 void Spear::OnWeaponCollision(GameObject* target)
 {
-	// ©•ª‚ÌƒI[ƒi[‚¾‚Á‚½‚ç”ò‚Î‚·
+	// è‡ªåˆ†ã®ã‚ªãƒ¼ãƒŠãƒ¼ã ã£ãŸã‚‰é£›ã°ã™
 	if (target == owner)
 	{
 		return;
 	}
 
-	// ‘½dƒqƒbƒg–h~AŠù‚Éˆê‰ñ‚ÌUŒ‚‚Åƒ_ƒ[ƒW‚ğ—^‚¦‚Ä‚½‚ç
+	// å¤šé‡ãƒ’ãƒƒãƒˆé˜²æ­¢ã€æ—¢ã«ä¸€å›ã®æ”»æ’ƒã§ãƒ€ãƒ¡ãƒ¼ã‚¸ã‚’ä¸ãˆã¦ãŸã‚‰
 	if (m_hitTargets.count(target) > 0)
 	{
 		return;
@@ -262,22 +290,22 @@ void Spear::OnWeaponCollision(GameObject* target)
 
 	if (m_isAttacking)
 	{
-		// 1P‚©2P‚©
+		// 1Pã‹2Pã‹
 		switch (m_selectPlayer)
 		{
-		case FALSE: // 1P‚¾‚Á‚½‚ç
-			if (target->m_tag == "Player2") // ‘Šè‚ªPlayer2‚Ì‚Ì‚İ
+		case FALSE: // 1Pã ã£ãŸã‚‰
+			if (target->m_tag == "Player2") // ç›¸æ‰‹ãŒPlayer2ã®æ™‚ã®ã¿
 			{
 				m_hitTargets.insert(target);
-				target->TakeDamage(20.0f); // ‰¼‚É20ƒ_ƒ[ƒW
+				target->TakeDamage(15.0f); // ä»®ã«20ãƒ€ãƒ¡ãƒ¼ã‚¸
 			}
 			break;
 
-		case TRUE: // 2P‚¾‚Á‚½‚ç
-			if (target->m_tag == "Player") // ‘Šè‚ªPlayer‚Ì‚Ì‚İ
+		case TRUE: // 2Pã ã£ãŸã‚‰
+			if (target->m_tag == "Player") // ç›¸æ‰‹ãŒPlayerã®æ™‚ã®ã¿
 			{
 				m_hitTargets.insert(target);
-				target->TakeDamage(20.0f);
+				target->TakeDamage(15.0f);
 			}
 			break;
 		}
@@ -286,13 +314,15 @@ void Spear::OnWeaponCollision(GameObject* target)
 
 void Spear::Throw(float power, bool select)
 {
+	PlayAudio(g_spear, false);
+
 	SpearShot* shot = new SpearShot();
 
 	shot->m_position = m_weapon->m_position;
 	shot->m_rotation = m_weapon->m_rotation;
 	shot->m_selectPlayer = select;
 
-	// ”ò‚Î‚·•ûŒü‚ğŒvZ
+	// é£›ã°ã™æ–¹å‘ã‚’è¨ˆç®—
 	float baseSpeed = 0.25f;
 	float finalSpeed = baseSpeed * (1.0f + power);
 	float ry = shot->m_rotation.y;
@@ -306,7 +336,7 @@ void Spear::Throw(float power, bool select)
 }
 
 //================================================================
-//	SpearShotƒNƒ‰ƒX
+//	SpearShotã‚¯ãƒ©ã‚¹
 //================================================================
 void SpearShot::Start()
 {
@@ -320,40 +350,40 @@ void SpearShot::Start()
 
 void SpearShot::Update()
 {
-	// ‘„‚ªh‚³‚Á‚Ä‚½‚ç
+	// æ§ãŒåˆºã•ã£ã¦ãŸã‚‰
 	if (m_isStuck)
 	{
 		m_stuckLife -= (1.0f / 60.0f);
-		// ƒ^ƒCƒ}[‚ğŒ¸‚ç‚·
+		// ã‚¿ã‚¤ãƒãƒ¼ã‚’æ¸›ã‚‰ã™
 		if (m_stuckLife <= 0.0f)
 		{
 			m_isDead = true;
 		}
 	}
-	else // ‚Ü‚¾”ò‚ñ‚Å‚½‚ç
+	else // ã¾ã é£›ã‚“ã§ãŸã‚‰
 	{
-		// ”ò‚Î‚µ‚Ä‚©‚ç‚Ìõ–½
+		// é£›ã°ã—ã¦ã‹ã‚‰ã®å¯¿å‘½
 		m_flyTimer -= (1.0f / 60.0f);
 		if (m_flyTimer <= 0.0f)
 		{
 			m_isDead = true;
 		}
 
-		m_velocity.y -= 0.0025f; // d—Í
-		// ‘å‚«‚¢‚Æd‚¢A¬‚³‚¢‚Æ‚Ó‚í‚Á‚Æ‚·‚é
+		m_velocity.y -= 0.0025f; // é‡åŠ›
+		// å¤§ãã„ã¨é‡ã„ã€å°ã•ã„ã¨ãµã‚ã£ã¨ã™ã‚‹
 
 		m_position.x += m_velocity.x;
 		m_position.y += m_velocity.y;
 		m_position.z += m_velocity.z;
 
-		// í‚Éæ’[‚ª”ò‚ñ‚Å‚é•ûŒü‚ğŒü‚­
+		// å¸¸ã«å…ˆç«¯ãŒé£›ã‚“ã§ã‚‹æ–¹å‘ã‚’å‘ã
 		m_rotation.x = atan2f(-m_velocity.y, sqrtf(m_velocity.x * m_velocity.x + m_velocity.z * m_velocity.z));
 	}
 }
 
 void SpearShot::Draw()
 {
-	//ƒ[ƒ‹ƒhs—ñì¬
+	//ãƒ¯ãƒ¼ãƒ«ãƒ‰è¡Œåˆ—ä½œæˆ
 	XMMATRIX	scale = XMMatrixScaling(
 		m_scale.x,
 		m_scale.y,
@@ -368,7 +398,7 @@ void SpearShot::Draw()
 		m_position.z);
 	XMMATRIX	world = scale * rotation * translation;
 
-	//ƒVƒF[ƒ_[‚Ös—ñ‚ğƒZƒbƒg
+	//ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã¸è¡Œåˆ—ã‚’ã‚»ãƒƒãƒˆ
 	Shader_SetWorldMatrix(world);
 
 	ModelDraw(g_modelSpear[0]);
@@ -376,31 +406,33 @@ void SpearShot::Draw()
 
 void SpearShot::OnCollision(const CollisionInfo& info)
 {
-	// h‚³‚Á‚Ä‚½‚ç‰½‚à‚È‚µ
+	// åˆºã•ã£ã¦ãŸã‚‰ä½•ã‚‚ãªã—
 	if (m_isStuck) return;
 
-	if (info.other->m_tag == "Attack") return; // •Ší‚É“–‚½‚Á‚Ä‚à–³‹
-	if (!m_selectPlayer && info.other->m_tag == "Player") return; // •Ší‚Í‚È‚Á‚½–{l‚Í–³‹
-	if (m_selectPlayer && info.other->m_tag == "Player2") return; // •Ší‚Í‚È‚Á‚½–{l‚Í–³‹
+	if (info.other->m_tag == "Attack") return; // æ­¦å™¨ã«å½“ãŸã£ã¦ã‚‚ç„¡è¦–
+	if (!m_selectPlayer && info.other->m_tag == "Player") return; // æ­¦å™¨ã¯ãªã£ãŸæœ¬äººã¯ç„¡è¦–
+	if (m_selectPlayer && info.other->m_tag == "Player2") return; // æ­¦å™¨ã¯ãªã£ãŸæœ¬äººã¯ç„¡è¦–
 
 	m_velocity = { 0.0f, 0.0f, 0.0f };
 	m_isStuck = true;
 
-	// 1P‚©2P‚©
+	// 1Pã‹2Pã‹
 	switch (m_selectPlayer)
 	{
-	case FALSE: // 1P‚¾‚Á‚½‚ç
-		if (info.other->m_tag == "Player2") // ‘Šè‚ªPlayer2‚Ì‚Ì‚İ
+	case FALSE: // 1Pã ã£ãŸã‚‰
+		if (info.other->m_tag == "Player2") // ç›¸æ‰‹ãŒPlayer2ã®æ™‚ã®ã¿
 		{
-			info.other->TakeDamage(20.0f); // ‰¼‚É20ƒ_ƒ[ƒW
+			PlayAudio(g_damageSharp, false);
+			info.other->TakeDamage(15.0f); // ä»®ã«20ãƒ€ãƒ¡ãƒ¼ã‚¸
 			m_isDead = true;
 		}
 		break;
 
-	case TRUE: // 2P‚¾‚Á‚½‚ç
-		if (info.other->m_tag == "Player") // ‘Šè‚ªPlayer‚Ì‚Ì‚İ
+	case TRUE: // 2Pã ã£ãŸã‚‰
+		if (info.other->m_tag == "Player") // ç›¸æ‰‹ãŒPlayerã®æ™‚ã®ã¿
 		{
-			info.other->TakeDamage(20.0f);
+			PlayAudio(g_damageSharp, false);
+			info.other->TakeDamage(15.0f);
 			m_isDead = true;
 		}
 		break;

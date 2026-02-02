@@ -9,6 +9,7 @@
 //================================================================
 //	インクルード
 //================================================================
+#include"Audio.h"
 #include"Manager.h"
 #include"sprite.h"
 #include"keyboard.h"
@@ -53,6 +54,7 @@ void Title_Update()
 	//フェード処理中はキーを受け付けない
 	if (Keyboard_IsKeyDownTrigger(KK_ENTER) && (GetFadeState() == FADE_NONE))
 	{
+        PlayAudio(g_fade, false);
 		//フェードアウトさせてシーンを切り替える
 		XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
 		SetFade(40.0f, color, FADE_OUT, SCENE_SELECT_WT);
