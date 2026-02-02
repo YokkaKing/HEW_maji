@@ -31,7 +31,8 @@
 #include"syuriken.h"
 #include"terrain.h"
 #include<memory>
-
+#include"generateWT.h"
+#include"selectWeaponTerrain.h"
 //================================================================
 //	グローバル変数
 //================================================================
@@ -63,9 +64,11 @@ void PlayerDie()
 	g_Player.State = PLAYER_STATE::PLAYER_STATE_IDLE;
 
 
-	//フェードアウトさせてシーンを切り替える
-	XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
-	SetFade(40.0f, color, FADE_OUT, SCENE_RESULT);
+
+	//�t�F�[�h�A�E�g�����ăV�[����؂�ւ���
+	//XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
+	//SetFade(40.0f, color, FADE_OUT, SCENE_RESULT);
+
 }
 
 void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, WeaponTerrain setWTp1)
@@ -91,8 +94,9 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 	g_Player.EvolutionType = EVOLUTION_TYPE::EVOLUTION_TYPE_NONE;
 	g_Player.m_currentHp = g_Player.m_maxHp;
 	g_Player.m_isDead = false;
+	g_Player.m_baseWT = setWTp1;
 	g_Player.m_isAttacked = false;
-	// プレイヤーの当たり判定の追加
+
 	auto collider = g_Player.AddComponent<BoxCollider>(&g_Player, g_Player.m_scale);
 	ManagerCollider::AddCollider(collider);
 
@@ -129,6 +133,8 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 		g_Player.m_model = ModelLoad("asset\\model\\char_shuriken_motion.fbx");
 	
 	}
+
+	g_Player.EquipBaseWeapon(); //���E���h�����p�ɏ���������đ���
 	
 }
 void PlayerFinalize()
@@ -145,55 +151,46 @@ void	PlayerUpdate()
 //================================================================
 //	武器変更処理(一旦)
 //================================================================
+	int slotToUse = -1; //�ϐg����X���b�g�ԍ�
 	if (Keyboard_IsKeyDownTrigger(KK_D1))
 	{
-		g_changeP1++;
+		slotToUse = 0;
+	}
+	if (Keyboard_IsKeyDownTrigger(KK_D0))
+	{
+		slotToUse = 1;
+	}
 
-		if (g_changeP1 >= 5)
+	//�ϐg�L�[�������ꂽ�ꍇ
+	if (slotToUse != -1)
+	{
+		WeaponTerrain reserved = g_Player.GetReservedWT(slotToUse);
+
+		// �\�񂪂���ꍇ�̂ݎ��s
+		if (reserved != WeaponTerrain::NONE)
 		{
-			g_changeP1 = 0;
+			inGameWTselect data;
+			data.player1 = reserved;         // �����͗\�񂵂Ă��������
+			data.player2 = g_Player2.GetCurrentWT(); // ����́u���̂܂܁v�̏�Ԃ��w��
+
+			// generateWT_Apply���Ă�ŁA���f����n�`�𕨗��I�ɐ����E�u��
+			generateWT_Apply(data, &g_Player, &g_Player2, g_pDevice, g_pContext);
+			TerrainSet(reserved, FALSE);
+
+			//���ɂ���U�������̃A�j���[�V�����̏��ƍ��킹��
+			switch (reserved) {
+			case WeaponTerrain::SWORD_WALL: g_changeP1 = 0; break;
+			case WeaponTerrain::SPEAR_HILL: g_changeP1 = 1; break;
+			case WeaponTerrain::BOW_HILL:    g_changeP1 = 2; break;
+			case WeaponTerrain::HAMMER_:   g_changeP1 = 3; break;
+			case WeaponTerrain::SHURIKEN_:  g_changeP1 = 4; break;
+			}
+
+			// ��Ԃ��X�V
+			g_Player.SetCurrentWT(reserved);
+			g_Player.SetReservedWT(slotToUse, WeaponTerrain::NONE); // �\�������
 		}
 
-		switch (g_changeP1)
-		{
-		case 0: //sword
-			g_Player.EquipWeapon(std::make_unique<Sword>(&g_Player, FALSE));
-			g_setWTP1 = WeaponTerrain::SWORD_WALL;
-			TerrainSet(WeaponTerrain::SWORD_WALL, FALSE);
-			g_Player.m_model = ModelLoad("asset\\model\\char_sword_motion_b.fbx");
-			break;
-
-		case 1: //spear
-			g_Player.EquipWeapon(std::make_unique<Spear>(&g_Player, FALSE));
-			g_setWTP1 = WeaponTerrain::SPEAR_HILL;
-			TerrainSet(WeaponTerrain::SPEAR_HILL, FALSE);
-			//g_Player.m_model = ModelLoad("asset\\model\\char_spear_motion_b.fbx");
-			break;
-
-		case 2: //hammer
-			g_Player.EquipWeapon(std::make_unique<Hammer>(&g_Player, FALSE));
-			g_setWTP1 = WeaponTerrain::HAMMER_;
-			TerrainSet(WeaponTerrain::HAMMER_, FALSE);
-		//	g_Player.m_model = ModelLoad("asset\\model\\char_hammer_motion_b.fbx");
-			break;
-
-		case 3: //arrow
-			g_Player.EquipWeapon(std::make_unique<Arrow>(&g_Player, FALSE));
-			g_setWTP1 = WeaponTerrain::BOW_HILL;
-			TerrainSet(WeaponTerrain::BOW_HILL, FALSE);
-			//g_Player.m_model = ModelLoad("asset\\model\\char_arrow_motion_b.fbx");
-			break;
-
-		case 4: //shuriken
-			g_Player.EquipWeapon(std::make_unique<Shuriken>(&g_Player, FALSE));
-			g_setWTP1 = WeaponTerrain::SHURIKEN_;
-			TerrainSet(WeaponTerrain::SHURIKEN_, FALSE);
-			g_Player.m_model = ModelLoad("asset\\model\\char_shuriken_motion_b.fbx");
-			break;
-
-		default:
-			break;
-		}
 	}
 
 //================================================================
@@ -759,7 +756,114 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 	}
 }
 
+void PLAYER::RoundReset(XMFLOAT3 startPos)
+{
+	//�����I�ȏ�Ԃ̃��Z�b�g
+    m_position = startPos;
+    m_velocity = XMFLOAT3(0, 0, 0);
+    m_rotation = XMFLOAT3(0, 0, 0); //�K�v�ɉ�����Y��]�������l��
+
+    //�p�����[�^�̃��Z�b�g
+    m_currentHp = m_maxHp; //�̗͑S��
+    m_isDead = false;
+    State = PLAYER_STATE_IDLE;
+
+    //����ƕϐg��Ԃ��u��������v�ɖ߂�
+    EquipBaseWeapon();
+}
+
+void PLAYER::EquipBaseWeapon()
+{
+	// ���݂̕�����N���A
+	m_currentWeapon = nullptr;
+
+	// ���݂̕ϐg��Ԃ��x�[�X�ɖ߂�
+	m_currentWT = m_baseWT;
+	m_reservedWT[2] = WeaponTerrain::NONE;
+
+	// �x�[�X����ɉ����đ������� & �A�j���[�V�����ݒ�
+	if (m_baseWT == WeaponTerrain::SWORD_WALL)
+	{
+		EquipWeapon(std::make_unique<Sword>(this, FALSE)); // P1�Ȃ̂�FALSE
+		//extern int g_changeP1; // �O���[�o���ϐ����Q��
+		g_changeP1 = 0;        // Sword�p�A�j���[�V����ID
+	}
+	else if (m_baseWT == WeaponTerrain::SPEAR_HILL)
+	{
+		EquipWeapon(std::make_unique<Spear>(this, FALSE));
+		//extern int g_changeP1;
+		g_changeP1 = 1;
+	}
+	else if (m_baseWT == WeaponTerrain::BOW_HILL)
+	{
+		EquipWeapon(std::make_unique<Arrow>(this, FALSE));
+		//extern int g_changeP1;
+		g_changeP1 = 3;
+	}
+	else if (m_baseWT == WeaponTerrain::HAMMER_)
+	{
+		EquipWeapon(std::make_unique<Hammer>(this, FALSE));
+		//extern int g_changeP1;
+		g_changeP1 = 2;
+	}
+	else if (m_baseWT == WeaponTerrain::SHURIKEN_)
+	{
+		EquipWeapon(std::make_unique<Shuriken>(this, FALSE));
+		//extern int g_changeP1;
+		g_changeP1 = 4;
+	}
+}
+
 WeaponTerrain GetSetWTP1()
 {
 	return g_setWTP1;
 }
+
+//�f�o�b�O�R�[�h
+/*
+g_changeP1++;
+if (g_changeP1 >= 5)
+{
+	g_changeP1 = 0;
+}
+switch (g_changeP1)
+{
+case 0: //sword
+	g_Player.EquipWeapon(std::make_unique<Sword>(&g_Player, FALSE));
+	g_setWTP1 = WeaponTerrain::SWORD_WALL;
+	TerrainSet(WeaponTerrain::SWORD_WALL, FALSE);
+	g_Player.m_model = ModelLoad("asset\\model\\char_sword_motion_b.fbx");
+	break;
+
+case 1: //spear
+	g_Player.EquipWeapon(std::make_unique<Spear>(&g_Player, FALSE));
+	g_setWTP1 = WeaponTerrain::SPEAR_HILL;
+	TerrainSet(WeaponTerrain::SPEAR_HILL, FALSE);
+	//g_Player.m_model = ModelLoad("asset\\model\\char_spear_motion_b.fbx");
+	break;
+
+case 2: //hammer
+	g_Player.EquipWeapon(std::make_unique<Hammer>(&g_Player, FALSE));
+	g_setWTP1 = WeaponTerrain::HAMMER_;
+	TerrainSet(WeaponTerrain::HAMMER_, FALSE);
+//	g_Player.m_model = ModelLoad("asset\\model\\char_hammer_motion_b.fbx");
+	break;
+
+case 3: //arrow
+	g_Player.EquipWeapon(std::make_unique<Arrow>(&g_Player, FALSE));
+	g_setWTP1 = WeaponTerrain::BOW_HILL;
+	TerrainSet(WeaponTerrain::BOW_HILL, FALSE);
+	//g_Player.m_model = ModelLoad("asset\\model\\char_arrow_motion_b.fbx");
+	break;
+
+case 4: //shuriken
+	g_Player.EquipWeapon(std::make_unique<Shuriken>(&g_Player, FALSE));
+	g_setWTP1 = WeaponTerrain::SHURIKEN_;
+	TerrainSet(WeaponTerrain::SHURIKEN_, FALSE);
+	g_Player.m_model = ModelLoad("asset\\model\\char_shuriken_motion_b.fbx");
+	break;
+
+default:
+	break;
+}
+*/
