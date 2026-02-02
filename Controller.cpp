@@ -13,13 +13,9 @@ Controller::Controller(DWORD id) : m_id(id), m_isConnected(false)
 
 void Controller::Update()
 {
-    // 前の状態を保存
     m_prevState = m_currentState;
 
-    // WGIのスタティックス（管理クラス）を取得
     ComPtr<IGamepadStatics> gamepadStatics;
-
-    // エラーが出ていた箇所：ABI::Windows::Foundation:: を明示的に指定
     HRESULT hr = ABI::Windows::Foundation::GetActivationFactory(
         HStringReference(RuntimeClass_Windows_Gaming_Input_Gamepad).Get(),
         &gamepadStatics);
@@ -32,19 +28,28 @@ void Controller::Update()
     unsigned int count = 0;
     gamepads->get_Size(&count);
 
-    // 修正ポイント: 自分のID（0または1）が接続台数以内かチェック
-    // m_id はヘッダーで保存しておく必要があります
     if (count > m_id)
     {
-        // IDに対応したコントローラーを取得
-        gamepads->GetAt(m_id, &m_gamepad);
-        m_gamepad->GetCurrentReading(&m_currentState);
-        m_isConnected = true;
+        // 毎回 GetAt で最新のインスタンスを取得し直す
+        ComPtr<IGamepad> currentGamepad;
+        if (SUCCEEDED(gamepads->GetAt(m_id, &currentGamepad)))
+        {
+            m_gamepad = currentGamepad;
+            m_gamepad->GetCurrentReading(&m_currentState);
+            m_isConnected = true;
+        }
     }
     else
     {
         m_isConnected = false;
         m_gamepad = nullptr;
+    }
+
+    // デバッグ用出力：これで Buttons: の後の数字が変わるか確認してください
+    if (m_isConnected) {
+        char buf[128];
+        sprintf_s(buf, "ID:%d Buttons:%u\n", m_id, (unsigned int)m_currentState.Buttons);
+        OutputDebugStringA(buf);
     }
 }
 // ボタン押下判定（ビット演算）
@@ -58,10 +63,13 @@ bool Controller::IsButtonDown(ControllerButton::Button button) const
 bool Controller::IsButtonPushed(ControllerButton::Button button) const
 {
     if (!m_isConnected) return false;
-    return (static_cast<unsigned int>(m_currentState.Buttons) & button) &&
-        !(static_cast<unsigned int>(m_prevState.Buttons) & button);
-}
+    unsigned int btn = (unsigned int)button;
+    unsigned int current = (unsigned int)m_currentState.Buttons;
+    unsigned int prev = (unsigned int)m_prevState.Buttons;
 
+    // 今回押されていて、前回押されていなければ「押した瞬間」
+    return ((current & btn) != 0) && ((prev & btn) == 0);
+}
 // 離した瞬間
 bool Controller::IsButtonReleased(ControllerButton::Button button) const
 {

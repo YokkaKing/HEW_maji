@@ -192,7 +192,7 @@ void	Player2Update()
 //	攻撃処理
 //================================================================
 	// CキーかAボタンで
-	if (Keyboard_IsKeyDownTrigger(KK_P) || g_Controller[1].IsButtonPushed(ControllerButton::B_BUTTON))
+	if (Keyboard_IsKeyDownTrigger(KK_P) || g_Controller[1].IsButtonPushed(ControllerButton::X_BUTTON))
 	{
 		// 武器があるか
 		if (g_Player2.m_currentWeapon)
@@ -463,7 +463,8 @@ void Player2_ManualMove()
 	}
 
 	// スペース押した && コヨーテタイムが0.0fより大きい
-	if (Keyboard_IsKeyDownTrigger(KK_SPACE) && g_Player2.m_koyoteTime > 0.0f)
+	//if (Keyboard_IsKeyDownTrigger(KK_SPACE) && g_Player2.m_koyoteTime > 0.0f)
+	if (g_Controller[1].IsButtonPushed(ControllerButton::A_BUTTON) && g_Player2.m_koyoteTime > 0.0f) //Aボタン**
 	{
 		g_Player2.m_velocity.y = g_Player2.m_jumpForce;
 		g_Player2.m_isGround = false;

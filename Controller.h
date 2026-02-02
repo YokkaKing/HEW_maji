@@ -17,20 +17,20 @@ namespace ControllerButton
     enum Button
     {
         NONE = 0,
-        A_BUTTON = 1,  // PS: Å~
-        B_BUTTON = 2,  // PS: Åõ
-        X_BUTTON = 4,  // PS: Å†
-        Y_BUTTON = 8,  // PS: Å¢
-        DPAD_UP = 16,
-        DPAD_DOWN = 32,
-        DPAD_LEFT = 64,
-        DPAD_RIGHT = 128,
-        L_SHOULDER = 256,
-        R_SHOULDER = 512,
-        L_THUMB = 1024,
-        R_THUMB = 2048,
-        START = 4096, // PS: Options
-        BACK = 8192, // PS: Share / Create
+        DPAD_UP = (unsigned int)GamepadButtons::GamepadButtons_DPadUp,    // 1
+        DPAD_DOWN = (unsigned int)GamepadButtons::GamepadButtons_DPadDown,  // 2
+        DPAD_LEFT = (unsigned int)GamepadButtons::GamepadButtons_DPadLeft,  // 4
+        DPAD_RIGHT = (unsigned int)GamepadButtons::GamepadButtons_DPadRight, // 8
+        A_BUTTON = (unsigned int)GamepadButtons::GamepadButtons_A,         // 16
+        B_BUTTON = (unsigned int)GamepadButtons::GamepadButtons_B,         // 32
+        X_BUTTON = (unsigned int)GamepadButtons::GamepadButtons_X,         // 64
+        Y_BUTTON = (unsigned int)GamepadButtons::GamepadButtons_Y,         // 128
+        L_SHOULDER = (unsigned int)GamepadButtons::GamepadButtons_LeftShoulder, // 256
+        R_SHOULDER = (unsigned int)GamepadButtons::GamepadButtons_RightShoulder,// 512
+        L_THUMB = (unsigned int)GamepadButtons::GamepadButtons_LeftThumbstick,
+        R_THUMB = (unsigned int)GamepadButtons::GamepadButtons_RightThumbstick,
+        START = (unsigned int)GamepadButtons::GamepadButtons_Menu,
+        BACK = (unsigned int)GamepadButtons::GamepadButtons_View,
     };
 }
 

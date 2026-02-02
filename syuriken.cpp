@@ -18,6 +18,7 @@
 #include"Player.h"
 #include"Player2.h"
 #include"keyboard.h"
+#include"controller.h"
 /*********************************/
 
 //================================================================
@@ -27,6 +28,7 @@ MODEL* g_modelShuriken[2] = { NULL, NULL };
 PLAYER* g_PlayerShuriken1;
 PLAYER2* g_PlayerShuriken2;
 XMFLOAT3 g_moveShuriken[2]; // 簡易アニメーション
+extern Controller g_Controller[2];
 
 Shuriken::Shuriken(GameObject* player, bool select) : IWeapon(player)
 {
@@ -39,7 +41,10 @@ Shuriken::Shuriken(GameObject* player, bool select) : IWeapon(player)
 	m_weapon->m_layer = 0;		// レイヤー
 
 	m_selectPlayer = select; // プレイヤー設定 1Pか2Pか
+	m_playerIndex = (m_selectPlayer == FALSE) ? 0 : 1;
 
+	m_reloadKey = (m_playerIndex == 0) ? KK_LEFTSHIFT : KK_RIGHTSHIFT;
+	m_reloadButton = ControllerButton::Y_BUTTON;
 	// 武器に親へのポインタを設定
 	m_weapon->m_weaponPtr = this;
 
@@ -88,8 +93,18 @@ void Shuriken::Update()
 		}
 	}
 
-	if (Keyboard_IsKeyDown(KK_LEFTSHIFT))
-	{
+	bool shouldReload = false;
+	if (Keyboard_IsKeyDown(m_reloadKey)) {
+		shouldReload = true;
+	}
+	if (g_Controller[m_playerIndex].IsConnected()) {
+		if (g_Controller[m_playerIndex].IsButtonPushed(m_reloadButton)) {
+			shouldReload = true;
+		}
+	}
+
+	// リロード実行
+	if (shouldReload) {
 		Reload();
 	}
 

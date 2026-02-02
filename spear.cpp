@@ -18,6 +18,7 @@
 #include"Player.h"
 #include"Player2.h"
 #include"keyboard.h"
+#include"controller.h"
 /*********************************/
 
 //================================================================
@@ -27,6 +28,7 @@ MODEL* g_modelSpear[2] = { NULL, NULL };
 PLAYER* g_PlayerSpear1;
 PLAYER2* g_PlayerSpear2;
 XMFLOAT3 g_moveSpear[2]; // 簡易アニメーション
+extern Controller g_Controller[2];
 
 Spear::Spear(GameObject* player, bool select) : IWeapon(player)
 {
@@ -39,6 +41,9 @@ Spear::Spear(GameObject* player, bool select) : IWeapon(player)
 	m_weapon->m_layer = 0;		// レイヤー
 
 	m_selectPlayer = select; // プレイヤー設定 1Pか2Pか
+	m_playerIndex = (m_selectPlayer == FALSE) ? 0 : 1;
+	m_chargeKey = (m_playerIndex == 0) ? KK_C : KK_P;
+	m_chargeButton = ControllerButton::X_BUTTON;
 
 	// 武器に親へのポインタを設定
 	m_weapon->m_weaponPtr = this;
@@ -98,9 +103,22 @@ void Spear::Update()
 		}
 	}
 
-	if (Keyboard_IsKeyDown(KK_RIGHTSHIFT))
+	bool inputCharge = false;
+
+	// キーボードチェック
+	if (Keyboard_IsKeyDown(m_chargeKey)) {
+		inputCharge = true;
+	}
+	// コントローラーチェック
+	if (g_Controller[m_playerIndex].IsConnected()) {
+		if (g_Controller[m_playerIndex].IsButtonDown(m_chargeButton)) {
+			inputCharge = true;
+		}
+	}
+
+	// 判定用フラグを使ってチャージ処理
+	if (inputCharge)
 	{
-		// 攻撃中じゃなければチャージできる
 		if (!m_isAttacking && m_coolTime <= 0.0f)
 		{
 			m_isCharging = true;
@@ -110,12 +128,10 @@ void Spear::Update()
 	}
 	else if (m_isCharging)
 	{
-		// キーを離した瞬間に投げる
+		// 離した瞬間に投げる
 		Throw(m_chargePower, m_selectPlayer);
 		m_isCharging = false;
 		m_chargePower = 0.0f;
-
-		// 投げた後のクールタイム
 		m_coolTime = 1.5f;
 	}
 

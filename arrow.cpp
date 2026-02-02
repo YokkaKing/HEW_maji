@@ -18,6 +18,7 @@
 #include"Player.h"
 #include"Player2.h"
 #include"keyboard.h"
+#include"Controller.h"
 /*********************************/
 
 //================================================================
@@ -27,6 +28,7 @@ MODEL* g_modelArrow[2] = { NULL, NULL };
 PLAYER* g_PlayerArrow1;
 PLAYER2* g_PlayerArrow2;
 XMFLOAT3 g_moveArrow[2]; // 簡易アニメーション
+extern Controller g_Controller[2];
 
 Arrow::Arrow(GameObject* player, bool select) : IWeapon(player)
 {
@@ -83,7 +85,7 @@ void Arrow::Update()
 		}
 	}
 
-	if (Keyboard_IsKeyDown(KK_C))
+	if (Keyboard_IsKeyDown(KK_C)|| g_Controller[0].IsButtonPushed(ControllerButton::X_BUTTON))
 	{
 		// 攻撃中じゃなければチャージできる
 		if (!m_isAttacking && m_coolTime <= 0.0f)
