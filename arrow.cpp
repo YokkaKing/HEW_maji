@@ -319,21 +319,23 @@ void ArrowShot::OnCollision(const CollisionInfo& info)
 			PlayAudio(g_damageSharp, false);
 			if (m_chargePower < 0.5f)
 			{
-				info.other->TakeDamage(3.0f);
+				info.other->TakeDamage(5.0f);
 			}
 			else if (m_chargePower < 1.0f)
 			{
-				info.other->TakeDamage(6.0f);
+				info.other->TakeDamage(10.0f);
 			}
 			else if (m_chargePower < 2.0f)
 			{
-				info.other->TakeDamage(12.0f);
+				info.other->TakeDamage(20.0f);
 			}
 			else if (m_chargePower > 2.0f)
 			{
-				info.other->TakeDamage(12.0f);
+				info.other->TakeDamage(30.0f);
 			}
 			m_isDead = true;
+			g_Player2.m_isAttacked = true;
+
 		}
 		break;
 
@@ -343,21 +345,22 @@ void ArrowShot::OnCollision(const CollisionInfo& info)
 			PlayAudio(g_damageSharp, false);
 			if (m_chargePower < 0.5f)
 			{
-				info.other->TakeDamage(3.0f);
+				info.other->TakeDamage(5.0f);
 			}
 			else if (m_chargePower < 1.0f)
 			{
-				info.other->TakeDamage(6.0f);
+				info.other->TakeDamage(10.0f);
 			}
 			else if (m_chargePower < 2.0f)
 			{
-				info.other->TakeDamage(12.0f);
+				info.other->TakeDamage(20.0f);
 			}
 			else if (m_chargePower > 2.0f)
 			{
-				info.other->TakeDamage(12.0f);
+				info.other->TakeDamage(30.0f);
 			}
 			m_isDead = true;
+			g_Player.m_isAttacked = true;
 		}
 		break;
 	}
