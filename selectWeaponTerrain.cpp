@@ -260,8 +260,8 @@ void selectWT_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 #pragma endregion
 #pragma region スロットスケール初期化
     // 基本セットアップ
-    g_cursorP1 = 0;
-    g_cursorP2 = 0;
+    g_cursorP1 = 1;
+    g_cursorP2 = 1;
     g_isP1Ready = false;
     g_isP2Ready = false;
     g_selectData.player1 = WeaponTerrain::SWORD_WALL;
@@ -541,6 +541,7 @@ void selectWT_Update()
 
             if (Keyboard_IsKeyDownTrigger(KK_LEFTCONTROL) && !g_isP1Ready)
             {
+                g_selectData.player1 = static_cast<WeaponTerrain>(g_cursorP1 + 1);
                 // sword-specific attack playback
                 if (!g_p1AttackPlaying)
                 {
@@ -580,7 +581,7 @@ void selectWT_Update()
 
                 // mark ready and save choice
                 g_isP1Ready = true;
-                g_selectData.player1 = static_cast<WeaponTerrain>(g_cursorP1);
+                g_selectData.player1 = static_cast<WeaponTerrain>(g_cursorP1+1);
             }
 
     
@@ -646,7 +647,7 @@ void selectWT_Update()
                 g_cursorScaleTime[1] = 0.0f;
 
                 g_isP2Ready = true;
-                g_selectData.player2 = static_cast<WeaponTerrain>(g_cursorP2);
+                g_selectData.player2 = static_cast<WeaponTerrain>(g_cursorP2 +1);
             }
 
             // cancel for any weapon (D6 or DELETE)
@@ -677,7 +678,7 @@ void selectWT_Update()
             // 攻撃アニメ終了 -> Ready にして idle に戻す
             g_p1AttackPlaying = false;
             g_isP1Ready = true;
-            g_selectData.player1 = static_cast<WeaponTerrain>(g_cursorP1);
+            g_selectData.player1 = static_cast<WeaponTerrain>(g_cursorP1+1);
             g_swordIdleAnim[0].PlayLoop(0);
         }
     }
@@ -695,7 +696,7 @@ void selectWT_Update()
         {
             g_p2AttackPlaying = false;
             g_isP2Ready = true;
-            g_selectData.player2 = static_cast<WeaponTerrain>(g_cursorP2);
+            g_selectData.player2 = static_cast<WeaponTerrain>(g_cursorP2+1);
             g_swordIdleAnim[1].PlayLoop(0);
         }
     }
@@ -797,7 +798,7 @@ void selectWT_Update()
         if (Keyboard_IsKeyDownTrigger(KK_LEFTCONTROL))
         {
             g_isP1Ready = true;
-            g_selectData.player1 = static_cast<WeaponTerrain>(g_cursorP1);
+            g_selectData.player1 = static_cast<WeaponTerrain>(g_cursorP1+1);
         }
         else
         {
@@ -840,7 +841,7 @@ void selectWT_Update()
         if (Keyboard_IsKeyDownTrigger(KK_D5))
         {
             g_isP2Ready = true;
-            g_selectData.player2 = static_cast<WeaponTerrain>(g_cursorP2);
+            g_selectData.player2 = static_cast<WeaponTerrain>(g_cursorP2+1);
         }
         else
         {

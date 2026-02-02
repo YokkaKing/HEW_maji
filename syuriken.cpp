@@ -298,6 +298,7 @@ void ShurikenShot::OnCollision(const CollisionInfo& info)
 		{
 			info.other->TakeDamage(15.0f);
 			m_isDead = true;
+			g_Player2.m_isAttacked = true;
 		}
 		break;
 
@@ -306,6 +307,8 @@ void ShurikenShot::OnCollision(const CollisionInfo& info)
 		{
 			info.other->TakeDamage(15.0f);
 			m_isDead = true;
+			g_Player.m_isAttacked = true;
+
 		}
 		break;
 	}
