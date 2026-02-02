@@ -115,19 +115,13 @@ void Game_Finalize()
 {
 	Field_Finalize();	// フィールドの終了処理
 	TerrainFinalize();
-
 	g_sponer.Finalize();
-
 	PlayerFinalize();	// ボールの終了処理
 	Player2Finalize();
 	Camera_Finalize();	//カメラ終了処理
 	Camera2_Finalize();	//カメラ終了処理
-
-
-
 	//=======UI===========
-	Hpbar_Finalize();
-	HpBar2_Finalize();
+
 	Timer_Finalize();
 	Number_Finalize();
 	Hp_Finalize();

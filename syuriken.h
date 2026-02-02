@@ -16,6 +16,8 @@
 #include"IWeapon.h"
 #include"model.h"
 #include"managerCollider.h"
+#include "keyboard.h"
+#include "controller.h"
 using namespace DirectX;
 
 class Shuriken : public IWeapon
@@ -34,8 +36,6 @@ public:
     XMFLOAT3 m_animeRotation = { 0.0f, 0.0f, 0.0f };
 
     FLOAT m_coolTime = 0.0f;
-
-    int m_restBullet = 6; // 残弾数
 public:
     Shuriken(GameObject* player, bool select);
     virtual ~Shuriken();
@@ -45,9 +45,12 @@ public:
     void Attack() override;
 
     void Throw(bool select);
-    void Reload();
 
     void OnWeaponCollision(GameObject* target) override;
+private:
+    int m_playerIndex = 0;      // 0 = 1P, 1 = 2P
+    Keyboard_Keys m_reloadKey;  // リロードキー
+    ControllerButton::Button m_reloadButton; // リロードボタン
 };
 
 class ShurikenShot : public GameObject

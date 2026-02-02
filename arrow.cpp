@@ -9,16 +9,17 @@
 //================================================================
 //	インクルード
 //================================================================
+#include"Audio.h"
 #include"arrow.h"
 #include"debug_ostream.h"
-
-/*********** テストコード **********/
 #include"model.h"
 #include"Camera.h"
 #include"Player.h"
 #include"Player2.h"
 #include"keyboard.h"
-/*********************************/
+
+#include"Controller.h"
+
 
 //================================================================
 //	グローバル変数
@@ -27,6 +28,7 @@ MODEL* g_modelArrow[2] = { NULL, NULL };
 PLAYER* g_PlayerArrow1;
 PLAYER2* g_PlayerArrow2;
 XMFLOAT3 g_moveArrow[2]; // 簡易アニメーション
+extern Controller g_Controller[2];
 
 Arrow::Arrow(GameObject* player, bool select) : IWeapon(player)
 {
@@ -83,25 +85,54 @@ void Arrow::Update()
 		}
 	}
 
-	if (Keyboard_IsKeyDown(KK_C))
+
+	if (Keyboard_IsKeyDown(KK_C)|| g_Controller[0].IsButtonPushed(ControllerButton::X_BUTTON))
+
 	{
-		// 攻撃中じゃなければチャージできる
-		if (!m_isAttacking && m_coolTime <= 0.0f)
+		if (Keyboard_IsKeyDown(KK_C))
 		{
-			m_isCharging = true;
-			m_chargePower += (1.0f / 60.0f);
-			if (m_chargePower > MAX_CHARGE) m_chargePower = MAX_CHARGE;
+			// 攻撃中じゃなければチャージできる
+			if (!m_isAttacking && m_coolTime <= 0.0f)
+			{
+				m_isCharging = true;
+				m_chargePower += (1.0f / 60.0f);
+				if (m_chargePower > MAX_CHARGE) m_chargePower = MAX_CHARGE;
+			}
+		}
+		else if (m_isCharging)
+		{
+			// キーを離した瞬間に投げる
+			Throw(m_chargePower, m_selectPlayer);
+			m_isCharging = false;
+			m_chargePower = 0.0f;
+			PlayAudio(g_arrow_shuriken, false);
+			// 投げた後のクールタイム
+			m_coolTime = 1.5f;
 		}
 	}
-	else if (m_isCharging)
-	{
-		// キーを離した瞬間に投げる
-		Throw(m_chargePower, m_selectPlayer);
-		m_isCharging = false;
-		m_chargePower = 0.0f;
 
-		// 投げた後のクールタイム
-		m_coolTime = 1.5f;
+	if (m_selectPlayer)
+	{
+		if (Keyboard_IsKeyDown(KK_P))
+		{
+			// 攻撃中じゃなければチャージできる
+			if (!m_isAttacking && m_coolTime <= 0.0f)
+			{
+				m_isCharging = true;
+				m_chargePower += (1.0f / 60.0f);
+				if (m_chargePower > MAX_CHARGE) m_chargePower = MAX_CHARGE;
+			}
+		}
+		else if (m_isCharging)
+		{
+			// キーを離した瞬間に投げる
+			Throw(m_chargePower, m_selectPlayer);
+			m_isCharging = false;
+			m_chargePower = 0.0f;
+			PlayAudio(g_arrow_shuriken, false);
+			// 投げた後のクールタイム
+			m_coolTime = 1.5f;
+		}
 	}
 
 	// キャラに合わせて武器も回転
@@ -291,46 +322,51 @@ void ArrowShot::OnCollision(const CollisionInfo& info)
 	case FALSE: // 1Pだったら
 		if (info.other->m_tag == "Player2") // 相手がPlayer2の時のみ
 		{
+			PlayAudio(g_damageSharp, false);
 			if (m_chargePower < 0.5f)
 			{
-				info.other->TakeDamage(3.0f);
+				info.other->TakeDamage(5.0f);
 			}
 			else if (m_chargePower < 1.0f)
 			{
-				info.other->TakeDamage(6.0f);
+				info.other->TakeDamage(10.0f);
 			}
 			else if (m_chargePower < 2.0f)
 			{
-				info.other->TakeDamage(12.0f);
+				info.other->TakeDamage(20.0f);
 			}
 			else if (m_chargePower > 2.0f)
 			{
-				info.other->TakeDamage(12.0f);
+				info.other->TakeDamage(30.0f);
 			}
 			m_isDead = true;
+			g_Player2.m_isAttacked = true;
+
 		}
 		break;
 
 	case TRUE: // 2Pだったら
 		if (info.other->m_tag == "Player") // 相手がPlayerの時のみ
 		{
+			PlayAudio(g_damageSharp, false);
 			if (m_chargePower < 0.5f)
 			{
-				info.other->TakeDamage(3.0f);
+				info.other->TakeDamage(5.0f);
 			}
 			else if (m_chargePower < 1.0f)
 			{
-				info.other->TakeDamage(6.0f);
+				info.other->TakeDamage(10.0f);
 			}
 			else if (m_chargePower < 2.0f)
 			{
-				info.other->TakeDamage(12.0f);
+				info.other->TakeDamage(20.0f);
 			}
 			else if (m_chargePower > 2.0f)
 			{
-				info.other->TakeDamage(12.0f);
+				info.other->TakeDamage(30.0f);
 			}
 			m_isDead = true;
+			g_Player.m_isAttacked = true;
 		}
 		break;
 	}

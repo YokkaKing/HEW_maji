@@ -9,16 +9,14 @@
 //================================================================
 //	インクルード
 //================================================================
+#include"Audio.h"
 #include"sword.h"
 #include"managerCollider.h"
 #include"debug_ostream.h"
-
-/*********** テストコード **********/
 #include"model.h"
 #include"Camera.h"
 #include"Player.h"
 #include"Player2.h"
-/*********************************/
 
 //================================================================
 //	グローバル変数
@@ -44,7 +42,8 @@ Sword::Sword(GameObject* player, bool select) : IWeapon(player)
 	m_weapon->m_weaponPtr = this;
 
 	XMFLOAT3 scale = { 0.3f, 1.0f, 0.3f };
-	m_collider = m_weapon->AddComponent<BoxCollider>(m_weapon.get(), scale);
+	XMFLOAT3 bukiScale = { 1.5f, 1.0f, 1.0f };
+	m_collider = m_weapon->AddComponent<BoxCollider>(m_weapon.get(), bukiScale);
 
 	m_weapon->m_scale = scale;
 	m_weapon->m_rotation = { 0.0f, 0.0f, 0.0f };
@@ -57,11 +56,9 @@ Sword::Sword(GameObject* player, bool select) : IWeapon(player)
 
 	g_moveSword[m_selectPlayer] = { 0.0f, 0.0f, 0.0f };
 
-	/*********** テストコード **********/
 	g_modelSword[0] = ModelLoad("asset\\model\\FX_sword.fbx");
 	m_fxAnim.Bind(g_modelSword[0]);
 	g_modelSword[1] = ModelLoad("asset\\model\\block2.fbx");
-	/*********************************/
 }
 
 Sword::~Sword()
@@ -73,7 +70,7 @@ void Sword::Attack()
 {
 	if (m_isAttacking) return; // 攻撃してたら終わり
 	if (m_coolTime > 0.0f) return;
-
+	PlayAudio(g_sword, false);
 	m_isAttacking = true; // 攻撃している
 	m_attackTimer = 0.0f; // 攻撃タイマー初期化
 	g_moveSword[m_selectPlayer] = {0.0f, 0.0f, 0.0f}; // 簡易アニメーションの初期化
@@ -240,14 +237,16 @@ void Sword::OnWeaponCollision(GameObject* target)
 		case FALSE: // 1Pだったら
 			if (target->m_tag == "Player2") // 相手がPlayer2の時のみ
 			{
+				PlayAudio(g_damageSharp, false);
 				m_hitTargets.insert(target);
-				target->TakeDamage(10.0f); // 仮に20ダメージ
+				target->TakeDamage(100.0f); // 仮に20ダメージ
 			}
 			break;
 
 		case TRUE: // 2Pだったら
 			if (target->m_tag == "Player") // 相手がPlayerの時のみ
 			{
+				PlayAudio(g_damageSharp, false);
 				m_hitTargets.insert(target);
 				target->TakeDamage(10.0f);
 			}
