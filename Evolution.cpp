@@ -38,10 +38,10 @@ void EvolutionInitialize(WeaponTerrain selectP1, WeaponTerrain selectP2)
     g_Player.m_jumpForce = 0;
     // P1ÇÃèâä˙ÉÇÉfÉãê›íË
     switch (selectP1) {
-    case WeaponTerrain::SWORD_WALL: INITIAL_MODEL_PATH_P1 = "asset\\model\\char_shuriken.fbx"; break;
-    case WeaponTerrain::SPEAR_HILL: INITIAL_MODEL_PATH_P1 = "asset\\model\\char_shuriken.fbx"; break;
-    case WeaponTerrain::BOW_HILL:   INITIAL_MODEL_PATH_P1 = "asset\\model\\char_shuriken.fbx"; break;
-    case WeaponTerrain::HAMMER_:    INITIAL_MODEL_PATH_P1 = "asset\\model\\char_shuriken.fbx"; break;
+    case WeaponTerrain::SWORD_WALL: INITIAL_MODEL_PATH_P1 = "asset\\model\\default_sword.fbx"; break;
+    case WeaponTerrain::SPEAR_HILL: INITIAL_MODEL_PATH_P1 = "asset\\model\\default_spear.fbx"; break;
+    case WeaponTerrain::BOW_HILL:   INITIAL_MODEL_PATH_P1 = "asset\\model\\default_bow.fbx"; break;
+    case WeaponTerrain::HAMMER_:    INITIAL_MODEL_PATH_P1 = "asset\\model\\default_hammer.fbx"; break;
     case WeaponTerrain::SHURIKEN_:  INITIAL_MODEL_PATH_P1 = "asset\\model\\char_shuriken.fbx"; break;
     default:                        INITIAL_MODEL_PATH_P1 = "asset\\model\\default.fbx"; break;
     }
@@ -69,13 +69,13 @@ void EvolvePlayer()
     if (g_Player.EvolutionType == EVOLUTION_TYPE::EVOLUTION_TYPE_NONE)
     {
         bool evolved = false;
-        if (Keyboard_IsKeyDownTrigger(KK_D1)||g_Controller[0].IsButtonPushed(ControllerButton::L_THUMB))
+        if (Keyboard_IsKeyDownTrigger(KK_D1)||g_Controller[0].IsButtonPushed(ControllerButton::L_SHOULDER))
         {
             g_Player.EvolutionType = EVOLUTION_TYPE::EVOLUTION_TYPE_A;
             newModelPath = "asset\\model\\ball.fbx";
             evolved = true;
         }
-        else if (Keyboard_IsKeyDownTrigger(KK_D2)||g_Controller[0].IsButtonPushed(ControllerButton::R_THUMB))
+        else if (Keyboard_IsKeyDownTrigger(KK_D2)||g_Controller[0].IsButtonPushed(ControllerButton::R_SHOULDER))
         {
             g_Player.EvolutionType = EVOLUTION_TYPE::EVOLUTION_TYPE_B;
             newModelPath = "asset\\model\\tree.fbx";
@@ -149,11 +149,17 @@ void ApplyEvolutionEffect()
     {
         switch (weapon) {
         case WeaponTerrain::SWORD_WALL:
-            g_Player.m_moveSpeed = 0.12f; g_Player.m_jumpForce = 0.20f; break;
+            g_Player.m_moveSpeed = 0.2f; g_Player.m_jumpForce = 0.1f; break;
+        case WeaponTerrain::SPEAR_HILL:
+            g_Player.m_moveSpeed = 0.18f; g_Player.m_jumpForce = 0.08f; break;
+        case WeaponTerrain::BOW_HILL:
+            g_Player.m_moveSpeed = 0.18f; g_Player.m_jumpForce = 0.11f; break;
+        case WeaponTerrain::SHURIKEN_:
+            g_Player.m_moveSpeed = 0.24f; g_Player.m_jumpForce = 0.12f; break;
         case WeaponTerrain::HAMMER_:
-            g_Player.m_moveSpeed = 0.10f; g_Player.m_jumpForce = 0.18f; break;
+            g_Player.m_moveSpeed = 0.18f; g_Player.m_jumpForce = 0.08f; break;
         default:
-            g_Player.m_moveSpeed = 0.12f; g_Player.m_jumpForce = 0.20f; break;
+            g_Player.m_moveSpeed = 0.2f; g_Player.m_jumpForce = 0.1f; break;
         }
     }
 }
@@ -224,11 +230,17 @@ void ApplyEvolutionEffect2()
     {
         switch (weapon) {
         case WeaponTerrain::SWORD_WALL:
-            g_Player.m_moveSpeed = 0.12f; g_Player.m_jumpForce = 0.20f; break;
+            g_Player2.m_moveSpeed = 0.2f; g_Player2.m_jumpForce = 0.1f; break;
+        case WeaponTerrain::SPEAR_HILL:
+            g_Player2.m_moveSpeed = 0.18f; g_Player2.m_jumpForce = 0.08f; break;
+        case WeaponTerrain::BOW_HILL:
+            g_Player2.m_moveSpeed = 0.18f; g_Player2.m_jumpForce = 0.11f; break;
+        case WeaponTerrain::SHURIKEN_:
+            g_Player2.m_moveSpeed = 0.24f; g_Player2.m_jumpForce = 0.12f; break;
         case WeaponTerrain::HAMMER_:
-            g_Player.m_moveSpeed = 0.10f; g_Player.m_jumpForce = 0.18f; break;
+            g_Player2.m_moveSpeed = 0.18f; g_Player2.m_jumpForce = 0.08f; break;
         default:
-            g_Player.m_moveSpeed = 0.12f; g_Player.m_jumpForce = 0.20f; break;
+            g_Player2.m_moveSpeed = 0.2f; g_Player2.m_jumpForce = 0.1f; break;
         }
     }
 }
