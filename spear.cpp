@@ -98,7 +98,7 @@ void Spear::Update()
 		}
 	}
 
-	if (Keyboard_IsKeyDown(KK_RIGHTSHIFT))
+	if (Keyboard_IsKeyDown(KK_LEFTSHIFT))
 	{
 		// 攻撃中じゃなければチャージできる
 		if (!m_isAttacking && m_coolTime <= 0.0f)
@@ -269,7 +269,7 @@ void Spear::OnWeaponCollision(GameObject* target)
 			if (target->m_tag == "Player2") // 相手がPlayer2の時のみ
 			{
 				m_hitTargets.insert(target);
-				target->TakeDamage(20.0f); // 仮に20ダメージ
+				target->TakeDamage(15.0f); // 仮に20ダメージ
 			}
 			break;
 
@@ -277,7 +277,7 @@ void Spear::OnWeaponCollision(GameObject* target)
 			if (target->m_tag == "Player") // 相手がPlayerの時のみ
 			{
 				m_hitTargets.insert(target);
-				target->TakeDamage(20.0f);
+				target->TakeDamage(15.0f);
 			}
 			break;
 		}
@@ -392,7 +392,7 @@ void SpearShot::OnCollision(const CollisionInfo& info)
 	case FALSE: // 1Pだったら
 		if (info.other->m_tag == "Player2") // 相手がPlayer2の時のみ
 		{
-			info.other->TakeDamage(20.0f); // 仮に20ダメージ
+			info.other->TakeDamage(15.0f); // 仮に20ダメージ
 			m_isDead = true;
 		}
 		break;
@@ -400,7 +400,7 @@ void SpearShot::OnCollision(const CollisionInfo& info)
 	case TRUE: // 2Pだったら
 		if (info.other->m_tag == "Player") // 相手がPlayerの時のみ
 		{
-			info.other->TakeDamage(20.0f);
+			info.other->TakeDamage(15.0f);
 			m_isDead = true;
 		}
 		break;

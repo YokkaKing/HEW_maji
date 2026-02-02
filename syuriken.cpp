@@ -296,7 +296,7 @@ void ShurikenShot::OnCollision(const CollisionInfo& info)
 	case FALSE: // 1P‚¾‚Á‚½‚ç
 		if (info.other->m_tag == "Player2") // ‘ŠŽè‚ªPlayer2‚ÌŽž‚Ì‚Ý
 		{
-			info.other->TakeDamage(15.0f);
+			info.other->TakeDamage(5.0f);
 			m_isDead = true;
 			g_Player2.m_isAttacked = true;
 		}
@@ -305,7 +305,7 @@ void ShurikenShot::OnCollision(const CollisionInfo& info)
 	case TRUE: // 2P‚¾‚Á‚½‚ç
 		if (info.other->m_tag == "Player") // ‘ŠŽè‚ªPlayer‚ÌŽž‚Ì‚Ý
 		{
-			info.other->TakeDamage(15.0f);
+			info.other->TakeDamage(5.0f);
 			m_isDead = true;
 			g_Player.m_isAttacked = true;
 

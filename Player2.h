@@ -59,6 +59,7 @@ public:
 	float m_jumpForce; // 移動速度
 	float m_moveMul = 1.0f;
 	//武器操作関数
+	bool m_isTransformed = false; // 変身中フラグ
 
 public:
 	void EquipWeapon(std::unique_ptr<IWeapon> weapon); // 武器を装備する
