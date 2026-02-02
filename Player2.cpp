@@ -8,8 +8,8 @@
 //================================================================
 //	マクロ定義
 //================================================================
-#define JUMP_FORCE (0.15f)
-#define CLIMB_SPEED (JUMP_FORCE / 2.0f)
+//#define JUMP_FORCE (0.15f)
+#define CLIMB_SPEED (m_moveSpeed / 2.0f)
 
 //================================================================
 //	インクルード
@@ -73,7 +73,7 @@ void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 	g_Player2.m_rotation = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	g_Player2.m_velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
-	g_Player2.m_scale = XMFLOAT3(0.6f, 1.0f, 0.6f);
+	g_Player2.m_scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
 	g_Player2.m_tag = "Player2";
 	g_Player2.m_layer = 0;
 
@@ -83,7 +83,7 @@ void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 	g_Player2.FrictionRate = 0.98f;
 	g_Player2.m_currentHp = g_Player2.m_maxHp;
 	g_Player2.m_isDead = false;
-
+	g_Player2.m_isAttacked = false;
 	// プレイヤーの当たり判定の追加
 	auto collider = g_Player2.AddComponent<BoxCollider>(&g_Player2, g_Player2.m_scale);
 	ManagerCollider::AddCollider(collider);
@@ -450,8 +450,8 @@ void Player2_ManualMove()
 	moveZ += rightZ * strafe;
 
 	// 最終速度
-	g_Player2.m_velocity.x = moveX;
-	g_Player2.m_velocity.z = moveZ;
+	g_Player2.m_velocity.x = moveX*g_Player2.m_moveMul;
+	g_Player2.m_velocity.z = moveZ*g_Player2.m_moveMul;
 
 	// モデルの向きを移動方向に合わせる
 	XMFLOAT3 moveDir = { g_Player2.m_velocity.x, 0.0f, g_Player2.m_velocity.z };
@@ -465,7 +465,7 @@ void Player2_ManualMove()
 	// スペース押した && コヨーテタイムが0.0fより大きい
 	if (Keyboard_IsKeyDownTrigger(KK_SPACE) && g_Player2.m_koyoteTime > 0.0f)
 	{
-		g_Player2.m_velocity.y = JUMP_FORCE;
+		g_Player2.m_velocity.y = g_Player2.m_jumpForce;
 		g_Player2.m_isGround = false;
 		g_Player2.m_koyoteTime = 0.0f;
 		switch (g_setWTP2)
@@ -474,13 +474,13 @@ void Player2_ManualMove()
 			ModelPlayClip(g_Player2.m_model, 300, 335, 60.0f, false, 1.0f);
 			break;
 		case WeaponTerrain::SPEAR_HILL: // spear
-			ModelPlayClip(g_Player2.m_model, 361, 420, 60.0f, false, 1.0f);
+			ModelPlayClip(g_Player2.m_model, 361, 420, 60.0f, false, 2.0f);
 			break;
 		case WeaponTerrain::BOW_HILL: // arrow
 			ModelPlayClip(g_Player2.m_model, 400, 450, 60.0f, false, 1.0f);
 			break;
 		case WeaponTerrain::HAMMER_: // hammer
-			ModelPlayClip(g_Player2.m_model, 240, 300, 60.0f, false, 0.0f);
+			ModelPlayClip(g_Player2.m_model, 240, 300, 60.0f, false, 1.0f);
 			break;
 
 		case WeaponTerrain::SHURIKEN_: //shuriken
@@ -504,9 +504,9 @@ void	Player2Draw()
 {
 	//ワールド行列作成
 	XMMATRIX	scale = XMMatrixScaling(
-		0.01f*0.6f,
 		0.01f,
-		0.01f * 0.6f);
+		0.01f,
+		0.01f);
 	XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
 		g_Player2.m_rotation.x,
 		g_Player2.m_rotation.y+ XM_PI,
@@ -576,6 +576,7 @@ void PLAYER2::OnCollision(const CollisionInfo& info)
 			{	
 				// 武器の衝突判定を呼び出す
 				info.other->m_weaponPtr->OnWeaponCollision(this);
+				g_Player2.m_isAttacked = true;
 			}
 		}
 
@@ -722,4 +723,12 @@ void PLAYER2::OnCollision(const CollisionInfo& info)
 WeaponTerrain GetSetWTP2()
 {
 	return g_setWTP2;
+}
+bool GetPlayer2_IsAttacked()
+{
+	return g_Player2.m_isAttacked;
+}
+void SetPlayer2_IsAttacked(bool isAttacked)
+{
+	g_Player2.m_isAttacked = isAttacked;
 }

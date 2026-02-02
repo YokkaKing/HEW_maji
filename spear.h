@@ -14,6 +14,7 @@
 //================================================================
 #include<DirectXMath.h>
 #include"IWeapon.h"
+#include "effect_anim.h"
 #include"model.h"
 #include"managerCollider.h"
 using namespace DirectX;
@@ -49,6 +50,10 @@ public:
     void Throw(float power, bool select);
 
     void OnWeaponCollision(GameObject* target) override;
+
+
+private:
+    EffectAnim m_fxAnim;
 };
 
 class SpearShot : public GameObject

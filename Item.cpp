@@ -80,8 +80,8 @@ void ITEM_SPONER::Spwan()
 XMFLOAT3 ITEM_SPONER::WherePosition()
 {
 	// Player1とPlayer2のどっちが体力が少ないか
-	bool nearPlayer = (Player_GetHP < Player2_GetHp) ? false :
-		(Player_GetHP > Player2_GetHp) ? true : false;
+	bool nearPlayer = (Player_GetHp < Player2_GetHp) ? false :
+		(Player_GetHp > Player2_GetHp) ? true : false;
 
 	// プレイヤーの範囲10マス以内くらいに落ちてくるようにする
 	if (nearPlayer)
@@ -239,7 +239,7 @@ void ITEM::OnCollision(const CollisionInfo& info)
 		{
 			if (m_itemType == ITEM_TYPE::HEALTH_RECOVERY)
 			{
-				float health = 100.0f - Player_GetHP();
+				float health = 100.0f - Player_GetHp();
 
 				// Player1が体力マックス-30.0f以下だったら30.0f回復
 				if (health > 30.0f)

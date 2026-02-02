@@ -41,10 +41,8 @@ public:
     XMFLOAT3 m_velocity{ 0.0f, 0.0f, 0.0f };
     XMFLOAT3 m_acceleration{ 0.0f, 0.0f, 0.0f };
     FIELD m_type = FIELD_BOX; // ƒuƒƒbƒN‚Ìí—Ş
-
     FLOAT m_maxHp = 100.0f; // Å‘å‘Ì—Í
     FLOAT m_currentHp;	    // Œ»İ‚Ì‘Ì—Í
-
     std::string m_tag = "Untagged";
     int m_layer = 0;
 
@@ -58,7 +56,8 @@ public:
 
     bool m_isDead = false;
     bool m_isStatic = false;
-
+    float m_delay = 0.0f;
+	float m_frame = 1.0f / 60.0f;
     std::vector<std::shared_ptr<Component>> components;
     bool m_isEnable = true;
 public:

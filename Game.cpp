@@ -32,6 +32,7 @@
 #include "Hp.h"
 #include "Hp2.h"
 #include "generateWT.h"
+#include"Stage.h"
 
 #include"Item.h"
 //================================================================
@@ -44,11 +45,14 @@ static	int		g_BgmID = NULL;	//サウンド管理ID
 
 ITEM_SPONER g_sponer;
 
+STAGE g_stage;
+
 void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, const inGameWTselect& select)
 {
 	//Controller_Initialize();
 	Field_Initialize(pDevice, pContext); // フィールドの初期化
-	
+	g_stage.Initialize(pDevice, pContext);
+
 	g_sponer.Initialize();
 
 	EvolutionInitialize(select.player1, select.player2);
@@ -60,7 +64,7 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, const
 
 	PLAYER* pP1 = GetPlayer();
 	PLAYER2* pP2 = GetPlayer2();
-	generateWT_Apply(Manager_GetWTselect(), pP1, pP2, pDevice, pContext);
+	//generateWT_Apply(Manager_GetWTselect(), pP1, pP2, pDevice, pContext);
 
 	Camera_Initialize();	//カメラ初期化
 	Camera2_Initialize();	//カメラ初期化
@@ -206,7 +210,8 @@ void Game_Draw_Player1()
 
 	Camera_Draw();		//Drawの最初で呼ぶ！
 	Shader_SetMatrix(GetViewMatrix() * GetProjectionMatrix());
-	Field_Draw();
+	//Field_Draw();
+	g_stage.Draw();
 	TerrainDraw();
 	PlayerDraw();
 	Player2Draw();
@@ -225,7 +230,7 @@ void Game_Draw_Player1()
 	//Hpbar_Draw(); //<--HpBar描画
 	//Timer_Draw();
 	//Number_Draw();
-	//Hp_Draw();
+	Hp_Draw();
 	//
 	//================
 	Light.SetEnable(TRUE);			//ライティングON
@@ -239,7 +244,8 @@ void Game_Draw_Player2()
 
 	Camera2_Draw();
 	Shader_SetMatrix(GetViewMatrix2() * GetProjectionMatrix2());
-	Field_Draw();
+	//Field_Draw();
+	g_stage.Draw();
 	TerrainDraw();
 	PlayerDraw();
 	Player2Draw();
@@ -253,7 +259,7 @@ void Game_Draw_Player2()
 	Light.SetEnable(FALSE);			//ライティングOFF
 	Shader_SetLight(Light.Light);	//ライト構造体をシェーダーへセット
 	SetDepthTest(FALSE);
-	//HpBar2_Draw();
+	Hp2_Draw();
 	//Timer_Draw();
 	//Number_Draw();
 	//Hp2_Draw();

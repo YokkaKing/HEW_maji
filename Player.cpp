@@ -1,5 +1,5 @@
-/*
-* ファイル名	Player.cpp
+
+/* ファイル名	Player.cpp
 * タイトル	プレイヤー
 * 作成者		久保木幹太
 * 作成日		12月02日
@@ -9,8 +9,8 @@
 //================================================================
 //	マクロ定義
 //================================================================
-#define JUMP_FORCE (0.15f)
-#define CLIMB_SPEED (JUMP_FORCE / 2.0f)
+//#define JUMP_FORCE (0.15f)
+#define CLIMB_SPEED (m_jumpForce / 2.0f)
 
 //================================================================
 //	インクルード
@@ -80,7 +80,7 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 	g_Player.m_rotation = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	g_Player.m_velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	
-	g_Player.m_scale = XMFLOAT3(0.6f, 1.0f, 0.6f);
+	g_Player.m_scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
 	g_Player.m_tag = "Player";
 	g_Player.m_layer = 0;
 
@@ -91,13 +91,14 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 	g_Player.EvolutionType = EVOLUTION_TYPE::EVOLUTION_TYPE_NONE;
 	g_Player.m_currentHp = g_Player.m_maxHp;
 	g_Player.m_isDead = false;
-
+	g_Player.m_isAttacked = false;
 	// プレイヤーの当たり判定の追加
 	auto collider = g_Player.AddComponent<BoxCollider>(&g_Player, g_Player.m_scale);
 	ManagerCollider::AddCollider(collider);
 
 	// のちのちセレクト画面から分岐できるようにする
 	// 自分をownerとして武器を生成
+
 	g_changeP1 = 0;
 	g_setWTP1 = setWTp1;
 	if (g_setWTP1 == WeaponTerrain::SWORD_WALL)
@@ -125,7 +126,8 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 	else if (g_setWTP1 == WeaponTerrain::SHURIKEN_)
 	{
 		g_Player.EquipWeapon(std::make_unique<Shuriken>(&g_Player, FALSE));
-		g_Player.m_model = ModelLoad("asset\\model\\default_shuriken.fbx");
+		g_Player.m_model = ModelLoad("asset\\model\\char_shuriken_motion.fbx");
+	
 	}
 	
 }
@@ -135,7 +137,6 @@ void PlayerFinalize()
 }
 void	PlayerUpdate()
 {
-	
 	EvolvePlayer();
 	// こいつの中でscaleが1.0fに固定されている
 	ApplyEvolutionEffect();   // 進化タイプに応じたパラメータを適用
@@ -272,19 +273,19 @@ void	PlayerUpdate()
 					switch (g_setWTP1) //移動
 					{
 					case WeaponTerrain::SWORD_WALL: 
-						ModelPlayClip(g_Player.m_model, 120, 165, 60.0f, true, 1.5f);
+						ModelPlayClip(g_Player.m_model, 120, 165, 60.0f, true, 1.0f);
 						break;
 				    case WeaponTerrain::SPEAR_HILL: 
-			        	ModelPlayClip(g_Player.m_model, 240, 360, 60.0f, true, 2.0f);
+			        	ModelPlayClip(g_Player.m_model, 240, 360, 60.0f, true, 1.0f);
 			        	break;
 			        case WeaponTerrain::BOW_HILL: 
-			        	ModelPlayClip(g_Player.m_model, 181, 240, 60.0f, true, 2.0f);
+			        	ModelPlayClip(g_Player.m_model, 181, 240, 60.0f, true, 1.0f);
 			        	break;
 			        case WeaponTerrain::HAMMER_:
 			        	ModelPlayClip(g_Player.m_model, 180, 240, 60.0f, true, 1.0f);
 			        	break;
 					case WeaponTerrain::SHURIKEN_:
-						ModelPlayClip(g_Player.m_model, 121, 150, 60.0f, true, 2.0f);
+						ModelPlayClip(g_Player.m_model, 121, 150, 60.0f, true, 1.0f);
 						break;
 					}
 					g_Player1CurrentAnim = 1;
@@ -332,16 +333,16 @@ void	PlayerUpdate()
 					ModelPlayClip(g_Player.m_model, 120, 165, 60.0f, true, 1.5f);
 					break;
 				case WeaponTerrain::SPEAR_HILL: // spear
-			    	ModelPlayClip(g_Player.m_model, 240, 360, 60.0f, true, 2.0f);
+			    	ModelPlayClip(g_Player.m_model, 240, 360, 60.0f, true, 1.5f);
 			    	break;
 				case WeaponTerrain::BOW_HILL: // hammer
-					ModelPlayClip(g_Player.m_model, 181, 240, 60.0f, true, 2.0f);
+					ModelPlayClip(g_Player.m_model, 181, 240, 60.0f, true, 1.0f);
 					break;
 			    case WeaponTerrain::HAMMER_: // arrow
 			    	ModelPlayClip(g_Player.m_model, 180, 240, 60.0f, true, 1.0f);
 			    	break;
 				case WeaponTerrain::SHURIKEN_:
-					ModelPlayClip(g_Player.m_model, 121, 150, 60.0f, true, 2.0f);
+					ModelPlayClip(g_Player.m_model, 121, 150, 60.0f, true, 1.0f);
 					break;
 				}
 				g_Player1CurrentAnim = 1;
@@ -473,8 +474,8 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 	moveZ += rightZ * strafe;
 
 	// 最終速度
-	g_Player.m_velocity.x = moveX;
-	g_Player.m_velocity.z = moveZ;
+	g_Player.m_velocity.x = moveX * g_Player.m_moveMul;
+	g_Player.m_velocity.z = moveZ * g_Player.m_moveMul;
 
 	// モデルの向きを移動方向に合わせる
 	XMFLOAT3 moveDir = { g_Player.m_velocity.x, 0.0f, g_Player.m_velocity.z };
@@ -489,7 +490,7 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 	if (Keyboard_IsKeyDownTrigger(KK_SPACE) && g_Player.m_koyoteTime > 0.0f)
 	//if (g_Controller.IsButtonPushed(ControllerButton::A_BUTTON) && g_Player.m_koyoteTime > 0.0f) //Aボタン**
 	{
-		g_Player.m_velocity.y = JUMP_FORCE;
+		g_Player.m_velocity.y = g_Player.m_jumpForce;
 		g_Player.m_isGround = false;
 		g_Player.m_koyoteTime = 0.0f;
 		switch (g_setWTP1)
@@ -498,7 +499,7 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 			ModelPlayClip(g_Player.m_model, 300, 335, 60.0f, false, 1.0f);
 			break;
 		case WeaponTerrain::SPEAR_HILL: // spear
-			ModelPlayClip(g_Player.m_model, 361, 420, 60.0f, false, 1.0f);
+			ModelPlayClip(g_Player.m_model, 361, 420, 60.0f, false, 2.0f);
 			break;
 		case WeaponTerrain::BOW_HILL: // arrow
 			ModelPlayClip(g_Player.m_model, 400, 450, 60.0f, false, 1.0f);
@@ -528,9 +529,9 @@ void PlayerDraw()
 {
 	//ワールド行列作成
 	XMMATRIX	scale = XMMatrixScaling(
-		0.01f*0.6f,
 		0.01f,
-		0.01f * 0.6f);
+		0.01f,
+		0.01f );
 	XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
 		g_Player.m_rotation.x,
 		g_Player.m_rotation.y + XM_PI,
@@ -552,8 +553,6 @@ void PlayerDraw()
 	{
 		g_Player.m_currentWeapon->Draw();
 	}
-
-
 	//ModelDraw(g_modelP1);
 }
 
@@ -572,7 +571,7 @@ PLAYER* GetPlayer()
 {
 	return &g_Player;
 }
-float Player_GetHP() 
+float Player_GetHp() 
 {
 	return g_Player.m_currentHp; 
 }
@@ -580,7 +579,14 @@ float Player_GetMaxHp()
 {
 	return g_Player.m_maxHp;
 }
-
+bool GetPlayer_IsAttacked()
+{
+	return g_Player.m_isAttacked;
+}
+void SetPlayer_IsAttacked(bool isAttacked)
+{
+    g_Player.m_isAttacked = isAttacked;
+}
 //武器を装備する
 void PLAYER::EquipWeapon(std::unique_ptr<IWeapon> weapon)
 {
@@ -602,6 +608,7 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 			if (info.other->m_weaponPtr)
 			{
 				// 武器の衝突判定を呼び出す
+				g_Player.m_isAttacked = true;
 				info.other->m_weaponPtr->OnWeaponCollision(this);
 			}
 		}
