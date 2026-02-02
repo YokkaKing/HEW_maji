@@ -100,30 +100,35 @@ void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 	{
 		g_Player2.EquipWeapon(std::make_unique<Sword>(&g_Player2, TRUE));
 		g_Player2.m_model = ModelLoad("asset\\model\\default_sword.fbx");
-
+		g_changeP2 = 1;
 	}
 	else if (g_setWTP2 == WeaponTerrain::SPEAR_HILL)
 	{
 		g_Player2.EquipWeapon(std::make_unique<Spear>(&g_Player2, TRUE));
 		g_Player2.m_model = ModelLoad("asset\\model\\default_spear.fbx");
+		g_changeP2 = 2;
 
 	}
 	else if (g_setWTP2 == WeaponTerrain::BOW_HILL)
 	{
 		g_Player2.EquipWeapon(std::make_unique<Arrow>(&g_Player2, TRUE));
 		g_Player2.m_model = ModelLoad("asset\\model\\default_bow.fbx");
+		g_changeP2 = 3;
 
 	}
 	else if (g_setWTP2 == WeaponTerrain::HAMMER_)
 	{
 		g_Player2.EquipWeapon(std::make_unique<Hammer>(&g_Player2, TRUE));
 		g_Player2.m_model = ModelLoad("asset\\model\\default_hammer.fbx");
+		g_changeP2 = 4;
 
 	}
 	else if (g_setWTP2 == WeaponTerrain::SHURIKEN_)
 	{
 		g_Player2.EquipWeapon(std::make_unique<Shuriken>(&g_Player2, TRUE));
 		g_Player2.m_model = ModelLoad("asset\\model\\default_shuriken.fbx");
+		g_changeP2 = 5;
+	}
 }
 void Player2Finalize()
 {
@@ -170,11 +175,26 @@ void	Player2Update()
 
 			//下にある攻撃処理のアニメーションの順と合わせる
 			switch (reserved) {
-			case WeaponTerrain::SWORD_WALL: g_changeP2 = 0; break;
-			case WeaponTerrain::SPEAR_HILL: g_changeP2 = 1; break;
-			case WeaponTerrain::BOW_HILL:   g_changeP2 = 2; break;
-			case WeaponTerrain::HAMMER_:    g_changeP2 = 3; break;
-			case WeaponTerrain::SHURIKEN_:  g_changeP2 = 4; break;
+			case WeaponTerrain::SWORD_WALL:
+				g_changeP2 = 1;
+				g_Player2.m_model = ModelLoad("asset\\model\\sword.fbx"); break;
+				g_Player2.EquipWeapon(std::make_unique<Sword>(&g_Player2, TRUE));
+			case WeaponTerrain::SPEAR_HILL:
+				g_changeP2 = 2;
+				g_Player2.m_model = ModelLoad("asset\\model\\spear.fbx"); break;
+				g_Player2.EquipWeapon(std::make_unique<Spear>(&g_Player2, TRUE));
+			case WeaponTerrain::BOW_HILL:
+				g_changeP2 = 3;
+				g_Player2.m_model = ModelLoad("asset\\model\\bow.fbx"); break;
+				g_Player2.EquipWeapon(std::make_unique<Arrow>(&g_Player2, TRUE));
+			case WeaponTerrain::HAMMER_:
+				g_changeP2 = 4;
+				g_Player2.m_model = ModelLoad("asset\\model\\hammer.fbx"); break;
+				g_Player2.EquipWeapon(std::make_unique<Hammer>(&g_Player2, TRUE));
+			case WeaponTerrain::SHURIKEN_:
+				g_changeP2 = 5;
+				g_Player2.m_model = ModelLoad("asset\\model\\shuriken.fbx"); break;
+				g_Player2.EquipWeapon(std::make_unique<Shuriken>(&g_Player2, TRUE));
 			}
 
 			g_Player2.SetCurrentWT(reserved);
