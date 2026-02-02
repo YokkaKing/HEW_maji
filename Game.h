@@ -21,5 +21,7 @@ void Game_Update();
 void Game_Draw_Player1();
 void Game_Draw_Player2();
 
+int Game_GetRoundResult();
+void Game_ResetRound();
 
 #endif // GAME_H

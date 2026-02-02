@@ -1,5 +1,6 @@
 
 #pragma comment(lib, "runtimeobject.lib")
+
 #include "Controller.h"
 #include <algorithm>
 
