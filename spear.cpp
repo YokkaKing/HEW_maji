@@ -9,16 +9,14 @@
 //================================================================
 //	インクルード
 //================================================================
+#include"Audio.h"
 #include"spear.h"
 #include"debug_ostream.h"
-
-/*********** テストコード **********/
 #include"model.h"
 #include"Camera.h"
 #include"Player.h"
 #include"Player2.h"
 #include"keyboard.h"
-/*********************************/
 
 //================================================================
 //	グローバル変数
@@ -43,7 +41,7 @@ Spear::Spear(GameObject* player, bool select) : IWeapon(player)
 	// 武器に親へのポインタを設定
 	m_weapon->m_weaponPtr = this;
 
-	XMFLOAT3 scale = { 0.3f, 0.3f, 1.0f };
+	XMFLOAT3 scale = { 0.45f, 0.45f, 1.0f };
 	m_collider = m_weapon->AddComponent<BoxCollider>(m_weapon.get(), scale);
 
 	m_weapon->m_scale = scale;
@@ -74,6 +72,7 @@ void Spear::Attack()
 {
 	if (m_isAttacking) return; // 攻撃してたら終わり
 	if (m_coolTime > 0.0f) return;
+	PlayAudio(g_spear, false);
 	m_weapon->m_scale.x = 0.1f;
 	m_weapon->m_scale.y = 0.1f;
 	m_weapon->m_scale.z = 0.1f;
@@ -98,26 +97,54 @@ void Spear::Update()
 		}
 	}
 
-	if (Keyboard_IsKeyDown(KK_RIGHTSHIFT))
+	if (!m_selectPlayer)
 	{
-		// 攻撃中じゃなければチャージできる
-		if (!m_isAttacking && m_coolTime <= 0.0f)
+		if (Keyboard_IsKeyDown(KK_C))
 		{
-			m_isCharging = true;
-			m_chargePower += (1.0f / 60.0f);
-			if (m_chargePower > MAX_CHARGE) m_chargePower = MAX_CHARGE;
+			// 攻撃中じゃなければチャージできる
+			if (!m_isAttacking && m_coolTime <= 0.0f)
+			{
+				m_isCharging = true;
+				m_chargePower += (1.0f / 60.0f);
+				if (m_chargePower > MAX_CHARGE) m_chargePower = MAX_CHARGE;
+			}
+		}
+		else if (m_isCharging)
+		{
+			// キーを離した瞬間に投げる
+			Throw(m_chargePower, m_selectPlayer);
+			m_isCharging = false;
+			m_chargePower = 0.0f;
+
+			// 投げた後のクールタイム
+			m_coolTime = 1.5f;
 		}
 	}
-	else if (m_isCharging)
-	{
-		// キーを離した瞬間に投げる
-		Throw(m_chargePower, m_selectPlayer);
-		m_isCharging = false;
-		m_chargePower = 0.0f;
 
-		// 投げた後のクールタイム
-		m_coolTime = 1.5f;
+	if (m_selectPlayer)
+	{
+		if (Keyboard_IsKeyDown(KK_P))
+		{
+			// 攻撃中じゃなければチャージできる
+			if (!m_isAttacking && m_coolTime <= 0.0f)
+			{
+				m_isCharging = true;
+				m_chargePower += (1.0f / 60.0f);
+				if (m_chargePower > MAX_CHARGE) m_chargePower = MAX_CHARGE;
+			}
+		}
+		else if (m_isCharging)
+		{
+			// キーを離した瞬間に投げる
+			Throw(m_chargePower, m_selectPlayer);
+			m_isCharging = false;
+			m_chargePower = 0.0f;
+
+			// 投げた後のクールタイム
+			m_coolTime = 1.5f;
+		}
 	}
+	
 
 	if (m_attackTimer < (ATTACK_DURATION / 2) && m_isAttacking)
 	{
@@ -286,6 +313,8 @@ void Spear::OnWeaponCollision(GameObject* target)
 
 void Spear::Throw(float power, bool select)
 {
+	PlayAudio(g_spear, false);
+
 	SpearShot* shot = new SpearShot();
 
 	shot->m_position = m_weapon->m_position;
@@ -392,6 +421,7 @@ void SpearShot::OnCollision(const CollisionInfo& info)
 	case FALSE: // 1Pだったら
 		if (info.other->m_tag == "Player2") // 相手がPlayer2の時のみ
 		{
+			PlayAudio(g_damageSharp, false);
 			info.other->TakeDamage(20.0f); // 仮に20ダメージ
 			m_isDead = true;
 		}
@@ -400,6 +430,7 @@ void SpearShot::OnCollision(const CollisionInfo& info)
 	case TRUE: // 2Pだったら
 		if (info.other->m_tag == "Player") // 相手がPlayerの時のみ
 		{
+			PlayAudio(g_damageSharp, false);
 			info.other->TakeDamage(20.0f);
 			m_isDead = true;
 		}

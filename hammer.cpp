@@ -9,17 +9,15 @@
 //================================================================
 //	インクルード
 //================================================================
+#include"Audio.h"
 #include"hammer.h"
 #include"debug_ostream.h"
-
-/*********** テストコード **********/
 #include"model.h"
 #include"Camera.h"
 #include"Player.h"
 #include"Player2.h"
 #include"keyboard.h"
 #include"Manager.h"
-/*********************************/
 
 //================================================================
 //	グローバル変数
@@ -144,6 +142,7 @@ void Hammer::Update()
 	}
 	else if (m_isCharging)
 	{
+		PlayAudio(g_hammer, false);
 		// キーを離した瞬間攻撃
 		m_isCharging = false;
 		Attack();
@@ -350,6 +349,8 @@ void Hammer::OnWeaponCollision(GameObject* target)
 		case FALSE: // 1Pだったら
 			if (target->m_tag == "Player2") // 相手がPlayer2の時のみ
 			{
+				PlayAudio(g_damageHammer, false);
+
 				m_hitTargets.insert(target);
 
 				if (m_chargePower < 3.5f)
@@ -374,6 +375,8 @@ void Hammer::OnWeaponCollision(GameObject* target)
 		case TRUE: // 2Pだったら
 			if (target->m_tag == "Player") // 相手がPlayerの時のみ
 			{
+				PlayAudio(g_damageHammer, false);
+
 				m_hitTargets.insert(target);
 
 				if (m_chargePower < 3.5f)

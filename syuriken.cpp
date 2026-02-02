@@ -9,16 +9,14 @@
 //================================================================
 //	インクルード
 //================================================================
+#include"Audio.h"
 #include"syuriken.h"
 #include"debug_ostream.h"
-
-/*********** テストコード **********/
 #include"model.h"
 #include"Camera.h"
 #include"Player.h"
 #include"Player2.h"
 #include"keyboard.h"
-/*********************************/
 
 //================================================================
 //	グローバル変数
@@ -71,12 +69,10 @@ Shuriken::~Shuriken()
 
 void Shuriken::Attack()
 {
-	if (m_restBullet <= 0) return; // 残弾数が無ければだめ
 	if (m_coolTime > 0.0f) return; // クールタイム中ならだめ
-
+	PlayAudio(g_arrow_shuriken, false);
 	Throw(m_selectPlayer);
 	m_coolTime = 0.5f;
-	m_restBullet--;
 }
 
 void Shuriken::Update()
@@ -86,11 +82,6 @@ void Shuriken::Update()
 		{
 			m_coolTime -= 1.0f / 60.0f;
 		}
-	}
-
-	if (Keyboard_IsKeyDown(KK_LEFTSHIFT))
-	{
-		Reload();
 	}
 
 	// キャラに合わせて武器も回転
@@ -203,12 +194,6 @@ void Shuriken::Throw(bool select)
 	}
 }
 
-void Shuriken::Reload()
-{
-	m_restBullet = 6;
-	m_coolTime = 0.5f;
-}
-
 //================================================================
 //	ShurikenShotクラス
 //================================================================
@@ -296,6 +281,7 @@ void ShurikenShot::OnCollision(const CollisionInfo& info)
 	case FALSE: // 1Pだったら
 		if (info.other->m_tag == "Player2") // 相手がPlayer2の時のみ
 		{
+			PlayAudio(g_damageSharp, false);
 			info.other->TakeDamage(15.0f);
 			m_isDead = true;
 			g_Player2.m_isAttacked = true;
@@ -305,6 +291,7 @@ void ShurikenShot::OnCollision(const CollisionInfo& info)
 	case TRUE: // 2Pだったら
 		if (info.other->m_tag == "Player") // 相手がPlayerの時のみ
 		{
+			PlayAudio(g_damageSharp, false);
 			info.other->TakeDamage(15.0f);
 			m_isDead = true;
 			g_Player.m_isAttacked = true;

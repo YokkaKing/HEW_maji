@@ -22,29 +22,29 @@ void UnloadAudio(int Index);				//サウンドデータ解放（停止）
 void PlayAudio(int Index, bool Loop = false);//サウンドデータ再生
 void StopAudio(int Index);
 
-extern int arrow_shuriken;
-extern int button;
-extern int change;
-extern int charge;
-extern int crowd;
-extern int cursorMove;
-extern int damageHammer;
-extern int damageSharp;
-extern int down;
-extern int fade;
-extern int gameStart;
-extern int hammer;
-extern int health;
-extern int item;
-extern int map;
-extern int roundEnd;
-extern int spear;
-extern int start;
-extern int sword;
-extern int teamLogo;
-extern int terrain;
-extern int title;
-extern int winner;
+extern int g_arrow_shuriken;
+extern int g_button;
+extern int g_change;
+extern int g_charge;
+extern int g_crowd;
+extern int g_cursorMove;
+extern int g_damageHammer;
+extern int g_damageSharp;
+extern int g_down;
+extern int g_fade;
+extern int g_gameStart;
+extern int g_hammer;
+extern int g_health;
+extern int g_item;
+extern int g_map;
+extern int g_roundEnd;
+extern int g_spear;
+extern int g_start;
+extern int g_sword;
+extern int g_teamLogo;
+extern int g_terrain;
+extern int g_title;
+extern int g_winner;
 
 /*
 //以下の関数はプログラムの最初と最後に1回ずつ呼び出せばOK

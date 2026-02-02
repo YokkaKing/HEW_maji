@@ -24,29 +24,29 @@ using namespace DirectX;
 static IXAudio2* g_Xaudio{};
 static IXAudio2MasteringVoice* g_MasteringVoice{};
 
-int arrow_shuriken = -1;
-int button = -1;
-int change = -1;
-int charge = -1;
-int crowd = -1;
-int cursorMove = -1;
-int damageHammer = -1;
-int damageSharp = -1;
-int down = -1;
-int fade = -1;
-int gameStart = -1;
-int hammer = -1;
-int health = -1;
-int item = -1;
-int map = -1;
-int roundEnd = -1;
-int spear = -1;
-int start = -1;
-int sword = -1;
-int teamLogo = -1;
-int terrain = -1;
-int title = -1;
-int winner = -1;
+int g_arrow_shuriken = -1;
+int g_button = -1;
+int g_change = -1;
+int g_charge = -1;
+int g_crowd = -1;
+int g_cursorMove = -1;
+int g_damageHammer = -1;
+int g_damageSharp = -1;
+int g_down = -1;
+int g_fade = -1;
+int g_gameStart = -1;
+int g_hammer = -1;
+int g_health = -1;
+int g_item = -1;
+int g_map = -1;
+int g_roundEnd = -1;
+int g_spear = -1;
+int g_start = -1;
+int g_sword = -1;
+int g_teamLogo = -1;
+int g_terrain = -1;
+int g_title = -1;
+int g_winner = -1;
 
 void InitAudio()
 {
@@ -55,29 +55,29 @@ void InitAudio()
 	// マスタリングボイス生成
 	g_Xaudio->CreateMasteringVoice(&g_MasteringVoice);
 
-	arrow_shuriken = LoadAudio("asset\\Audio\\arrow_shuriken.wav");
-	button = LoadAudio("asset\\Audio\\button.wav");
-	change = LoadAudio("asset\\Audio\\change.wav");
-	charge = LoadAudio("asset\\Audio\\charge.wav");
-	crowd = LoadAudio("asset\\Audio\\crowd.wav");
-	cursorMove = LoadAudio("asset\\Audio\\cursorMove.wav");
-	damageHammer = LoadAudio("asset\\Audio\\damageHammer.wav");
-	damageSharp = LoadAudio("asset\\Audio\\damageSharp.wav");
-	down = LoadAudio("asset\\Audio\\down.wav");
-	fade = LoadAudio("asset\\Audio\\fade.wav");
-	gameStart = LoadAudio("asset\\Audio\\gameStart.wav");
-	hammer = LoadAudio("asset\\Audio\\hammer.wav");
-	health = LoadAudio("asset\\Audio\\health.wav");
-	item = -LoadAudio("asset\\Audio\\item.wav");
-	map = LoadAudio("asset\\Audio\\map.wav");
-	roundEnd = LoadAudio("asset\\Audio\\roundEnd.wav");
-	spear = LoadAudio("asset\\Audio\\spear.wav");
-	start = LoadAudio("asset\\Audio\\start.wav");
-	sword = LoadAudio("asset\\Audio\\sword.wav");
-	teamLogo = LoadAudio("asset\\Audio\\teamLogo.wav");
-	terrain = LoadAudio("asset\\Audio\\terrain.wav");
-	title = LoadAudio("asset\\Audio\\title.wav");
-	winner = LoadAudio("asset\\Audio\\winner.wav");
+	g_arrow_shuriken = LoadAudio("asset\\Audio\\arrow_shuriken.wav");
+	g_button = LoadAudio("asset\\Audio\\button.wav");
+	g_change = LoadAudio("asset\\Audio\\change.wav");
+	g_charge = LoadAudio("asset\\Audio\\charge.wav");
+	g_crowd = LoadAudio("asset\\Audio\\crowd.wav");
+	g_cursorMove = LoadAudio("asset\\Audio\\cursorMove.wav");
+	g_damageHammer = LoadAudio("asset\\Audio\\damageHammer.wav");
+	g_damageSharp = LoadAudio("asset\\Audio\\damageSharp.wav");
+	g_down = LoadAudio("asset\\Audio\\down.wav");
+	g_fade = LoadAudio("asset\\Audio\\fade.wav");
+	g_gameStart = LoadAudio("asset\\Audio\\gameStart.wav");
+	g_hammer = LoadAudio("asset\\Audio\\hammer.wav");
+	g_health = LoadAudio("asset\\Audio\\health.wav");
+	g_item = LoadAudio("asset\\Audio\\item.wav");
+	g_map = LoadAudio("asset\\Audio\\map.wav");
+	g_roundEnd = LoadAudio("asset\\Audio\\roundEnd.wav");
+	g_spear = LoadAudio("asset\\Audio\\spear.wav");
+	g_start = LoadAudio("asset\\Audio\\start.wav");
+	g_sword = LoadAudio("asset\\Audio\\sword.wav");
+	g_teamLogo = LoadAudio("asset\\Audio\\teamLogo.wav");
+	g_terrain = LoadAudio("asset\\Audio\\terrain.wav");
+	g_title = LoadAudio("asset\\Audio\\title.wav");
+	g_winner = LoadAudio("asset\\Audio\\winner.wav");
 }
 
 void UninitAudio()
