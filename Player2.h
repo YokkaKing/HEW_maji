@@ -47,7 +47,11 @@ public:
 	PLAYER2_STATE	State;		//状態
 	std::unique_ptr<IWeapon> m_currentWeapon = nullptr; // 現在装備中の武器
 	bool			m_isDead = false; // 死亡フラグ
+	bool 		  m_isAttacked = false; // 攻撃を受けたかどうか
 	XMFLOAT3 m_rotation; // 武器を回転させる
+	float m_moveSpeed; // 移動速度
+	float m_jumpForce; // 移動速度
+	float m_moveMul = 1.0f;
 	//武器操作関数
 public:
 	void EquipWeapon(std::unique_ptr<IWeapon> weapon); // 武器を装備する
@@ -65,6 +69,8 @@ void Player2_Jump();
 void Player2_ManualMove();
 float Player2_GetHp();
 float Player2_GetMaxHp();
+bool GetPlayer2_IsAttacked();
+void SetPlayer2_IsAttacked(bool isAttacked);
 PLAYER2* GetPlayer2();
 WeaponTerrain GetSetWTP2();
 

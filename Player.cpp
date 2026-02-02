@@ -1,19 +1,19 @@
-/*
-* ƒtƒ@ƒCƒ‹–¼	Player.cpp
-* ƒ^ƒCƒgƒ‹	ƒvƒŒƒCƒ„[
-* ì¬Ò		‹v•Û–ØŠ²‘¾
-* ì¬“ú		12Œ02“ú
-* XV“ú		12Œ02“ú
+
+/* ãƒ•ã‚¡ã‚¤ãƒ«å	Player.cpp
+* ã‚¿ã‚¤ãƒˆãƒ«	ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼
+* ä½œæˆè€…		ä¹…ä¿æœ¨å¹¹å¤ª
+* ä½œæˆæ—¥		12æœˆ02æ—¥
+* æ›´æ–°æ—¥		12æœˆ02æ—¥
 */
 
 //================================================================
-//	ƒ}ƒNƒ’è‹`
+//	ãƒã‚¯ãƒ­å®šç¾©
 //================================================================
-#define JUMP_FORCE (0.15f)
-#define CLIMB_SPEED (JUMP_FORCE / 2.0f)
+//#define JUMP_FORCE (0.15f)
+#define CLIMB_SPEED (m_jumpForce / 2.0f)
 
 //================================================================
-//	ƒCƒ“ƒNƒ‹[ƒh
+//	ã‚¤ãƒ³ã‚¯ãƒ«ãƒ¼ãƒ‰
 //================================================================
 #include"keyboard.h"
 #include"Controller.h"
@@ -33,36 +33,37 @@
 #include<memory>
 
 //================================================================
-//	ƒOƒ[ƒoƒ‹•Ï”
+//	ã‚°ãƒ­ãƒ¼ãƒãƒ«å¤‰æ•°
 //================================================================
 PLAYER	g_Player;
 ID3D11Device* g_pDevice;
 ID3D11DeviceContext* g_pContext;
-Controller g_Controller(0); //ID 0‚ÌƒRƒ“ƒgƒ[ƒ‰[‚ğg—p
+extern Controller g_Controller[2]; //ID 0ã®ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ©ãƒ¼ã‚’ä½¿ç”¨
+extern const char* INITIAL_MODEL_PATH_P1;
 MODEL* g_modelP1;
-WeaponTerrain g_setWTP1; // ƒvƒŒƒCƒ„[‚Ì•Ší‚Æ’nŒ`î•ñ
+WeaponTerrain g_setWTP1; // ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®æ­¦å™¨ã¨åœ°å½¢æƒ…å ±
 unsigned int g_changeP1;
-static bool g_Player1AttackPlaying = false; // UŒ‚ƒƒ“ƒVƒ‡ƒbƒgÄ¶’†ƒtƒ‰ƒO
-static bool g_Player1JumpPlaying = false; // ƒWƒƒƒ“ƒvƒƒ“ƒVƒ‡ƒbƒgÄ¶’†ƒtƒ‰ƒO
+static bool g_Player1AttackPlaying = false; // æ”»æ’ƒãƒ¯ãƒ³ã‚·ãƒ§ãƒƒãƒˆå†ç”Ÿä¸­ãƒ•ãƒ©ã‚°
+static bool g_Player1JumpPlaying = false; // ã‚¸ãƒ£ãƒ³ãƒ—ãƒ¯ãƒ³ã‚·ãƒ§ãƒƒãƒˆå†ç”Ÿä¸­ãƒ•ãƒ©ã‚°
 static int g_Player1CurrentAnim = 0; // 0: idle, 1: move, 2: attack 3:jump
 
 
 void PlayerDie()
 {
 	hal::dout << "Player died!" << std::endl;
-	//€–Sˆ—
+	//æ­»äº¡å‡¦ç†
 
-	//ƒvƒŒƒCƒ„[‚ğ”ñ•\¦‚É‚·‚é
+	//ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã‚’éè¡¨ç¤ºã«ã™ã‚‹
 	if (g_Player.m_gameObject != nullptr)
 	{
 		g_Player.m_gameObject->m_isEnable = false;
 	}
 
-	// —á: “ü—Í‚ğó‚¯•t‚¯‚È‚¢‚æ‚¤‚É‚·‚éió‘Ô‚ğIDLE‚É‚·‚é‚È‚Çj
+	// ä¾‹: å…¥åŠ›ã‚’å—ã‘ä»˜ã‘ãªã„ã‚ˆã†ã«ã™ã‚‹ï¼ˆçŠ¶æ…‹ã‚’IDLEã«ã™ã‚‹ãªã©ï¼‰
 	g_Player.State = PLAYER_STATE::PLAYER_STATE_IDLE;
 
 
-	//ƒtƒF[ƒhƒAƒEƒg‚³‚¹‚ÄƒV[ƒ“‚ğØ‚è‘Ö‚¦‚é
+	//ãƒ•ã‚§ãƒ¼ãƒ‰ã‚¢ã‚¦ãƒˆã•ã›ã¦ã‚·ãƒ¼ãƒ³ã‚’åˆ‡ã‚Šæ›¿ãˆã‚‹
 	XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
 	SetFade(40.0f, color, FADE_OUT, SCENE_RESULT);
 }
@@ -72,14 +73,14 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 	g_pDevice = pDevice;
 	g_pContext = pContext;
 
-	g_Player.m_model = ModelLoad("asset\\model\\char_sword_motion_b.fbx");
+	g_Player.m_model = ModelLoad(INITIAL_MODEL_PATH_P1);
 	g_modelP1 = ModelLoad("asset\\model\\block.fbx");
 
 	g_Player.m_position = XMFLOAT3(0.0f, 0.5f, 1.0f);
 	g_Player.m_rotation = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	g_Player.m_velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	
-	g_Player.m_scale = XMFLOAT3(0.6f, 1.0f, 0.6f);
+	g_Player.m_scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
 	g_Player.m_tag = "Player";
 	g_Player.m_layer = 0;
 
@@ -90,39 +91,43 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 	g_Player.EvolutionType = EVOLUTION_TYPE::EVOLUTION_TYPE_NONE;
 	g_Player.m_currentHp = g_Player.m_maxHp;
 	g_Player.m_isDead = false;
-
-	// ƒvƒŒƒCƒ„[‚Ì“–‚½‚è”»’è‚Ì’Ç‰Á
+	g_Player.m_isAttacked = false;
+	// ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®å½“ãŸã‚Šåˆ¤å®šã®è¿½åŠ 
 	auto collider = g_Player.AddComponent<BoxCollider>(&g_Player, g_Player.m_scale);
 	ManagerCollider::AddCollider(collider);
 
-	// ‚Ì‚¿‚Ì‚¿ƒZƒŒƒNƒg‰æ–Ê‚©‚ç•ªŠò‚Å‚«‚é‚æ‚¤‚É‚·‚é
-	// ©•ª‚ğowner‚Æ‚µ‚Ä•Ší‚ğ¶¬
+	// ã®ã¡ã®ã¡ã‚»ãƒ¬ã‚¯ãƒˆç”»é¢ã‹ã‚‰åˆ†å²ã§ãã‚‹ã‚ˆã†ã«ã™ã‚‹
+	// è‡ªåˆ†ã‚’ownerã¨ã—ã¦æ­¦å™¨ã‚’ç”Ÿæˆ
+
 	g_changeP1 = 0;
-
 	g_setWTP1 = setWTp1;
-
-	//“Í‚¢‚½‘æ3ˆø”‚Ì’†g‚É‰‚¶‚ÄğŒ®‚Å”»’èA¶¬‚·‚éƒNƒ‰ƒX‚ğ•Ï‚¦‚é
-	//‘¼‚Ì•Ší‚à“¯—l‚É¶¬‚µAterrain‚Ìinitialize‚Å‚à“¯‚¶ˆ—‚Ì•K—v‚ ‚è
 	if (g_setWTP1 == WeaponTerrain::SWORD_WALL)
 	{
 		g_Player.EquipWeapon(std::make_unique<Sword>(&g_Player, FALSE));
+		g_Player.m_model = ModelLoad("asset\\model\\default_sword.fbx");
 	}
 	else if (g_setWTP1 == WeaponTerrain::SPEAR_HILL)
 	{
 		g_Player.EquipWeapon(std::make_unique<Spear>(&g_Player, FALSE));
+		g_Player.m_model = ModelLoad("asset\\model\\default_spear.fbx");
 	}
+	
 	else if (g_setWTP1 == WeaponTerrain::BOW_HILL)
-	{
+	{		
 		g_Player.EquipWeapon(std::make_unique<Arrow>(&g_Player, FALSE));
+		g_Player.m_model = ModelLoad("asset\\model\\default_bow.fbx");
+		g_changeP1 = 3;
 	}
 	else if (g_setWTP1 == WeaponTerrain::HAMMER_)
 	{
 		g_Player.EquipWeapon(std::make_unique<Hammer>(&g_Player, FALSE));
-		//g_Player.m_model = ModelLoad("asset\\model\\char_hammer_motion_b.fbx");
+		g_Player.m_model = ModelLoad("asset\\model\\default_hammer.fbx");
 	}
 	else if (g_setWTP1 == WeaponTerrain::SHURIKEN_)
 	{
 		g_Player.EquipWeapon(std::make_unique<Shuriken>(&g_Player, FALSE));
+		g_Player.m_model = ModelLoad("asset\\model\\char_shuriken_motion.fbx");
+	
 	}
 	
 }
@@ -132,14 +137,13 @@ void PlayerFinalize()
 }
 void	PlayerUpdate()
 {
-	g_Controller.Update();//–ˆƒtƒŒ[ƒ€ƒRƒ“ƒgƒ[ƒ‰[‚Ìó‘Ô‚ğXV
-	EvolvePlayer3();
-	// ‚±‚¢‚Â‚Ì’†‚Åscale‚ª1.0f‚ÉŒÅ’è‚³‚ê‚Ä‚¢‚é
-	ApplyEvolutionEffect3();   // i‰»ƒ^ƒCƒv‚É‰‚¶‚½ƒpƒ‰ƒ[ƒ^‚ğ“K—p
-	if (g_Player.m_isDead)return;	//€–S‚µ‚Ä‚¢‚éê‡‚ÍXVˆ—‚ğƒXƒLƒbƒv
+	EvolvePlayer();
+	// ã“ã„ã¤ã®ä¸­ã§scaleãŒ1.0fã«å›ºå®šã•ã‚Œã¦ã„ã‚‹
+	ApplyEvolutionEffect();   // é€²åŒ–ã‚¿ã‚¤ãƒ—ã«å¿œã˜ãŸãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã‚’é©ç”¨
+	if (g_Player.m_isDead)return;	//æ­»äº¡ã—ã¦ã„ã‚‹å ´åˆã¯æ›´æ–°å‡¦ç†ã‚’ã‚¹ã‚­ãƒƒãƒ—
 
 //================================================================
-//	•Ší•ÏXˆ—(ˆê’U)
+//	æ­¦å™¨å¤‰æ›´å‡¦ç†(ä¸€æ—¦)
 //================================================================
 	if (Keyboard_IsKeyDownTrigger(KK_D1))
 	{
@@ -193,41 +197,41 @@ void	PlayerUpdate()
 	}
 
 //================================================================
-//	UŒ‚ˆ—
+//	æ”»æ’ƒå‡¦ç†(å¤‰èº«å‰)
 //================================================================
-	if (Keyboard_IsKeyDownTrigger(KK_C) || g_Controller.IsButtonPushed(ControllerButton::A_BUTTON))
+	if (Keyboard_IsKeyDownTrigger(KK_C) || g_Controller[0].IsButtonPushed(ControllerButton::A_BUTTON))
 	{
-		// •Ší‚ª‘¶İ‚µUŒ‚’†‚Å‚È‚¯‚ê‚ÎUŒ‚ŠJn
+		// æ­¦å™¨ãŒå­˜åœ¨ã—æ”»æ’ƒä¸­ã§ãªã‘ã‚Œã°æ”»æ’ƒé–‹å§‹
 		if (g_Player.m_currentWeapon && !g_Player1AttackPlaying)
 		{
 			g_Player.m_currentWeapon->Attack();
-			switch (g_changeP1)
+			switch (g_setWTP1)
 			{
-			case 0: // Sword
-				ModelPlayClip(g_Player.m_model, 301, 360, 60.0f, false, 2.0f);
+			case WeaponTerrain::SWORD_WALL: // Sword
+				ModelPlayClip(g_Player.m_model, 167, 227, 60.0f, false, 2.0f);
 				break;
-			//case 1: // spear
-			//	ModelPlayClip(g_Player.m_model, 301, 360, 60.0f, false, 2.0f);
-			//	break;
-			case 2: // hammer
-			//	ModelPlayClip(g_Player.m_model, 301, 360, 60.0f, false, 2.0f);
-			//	break;
-			//case 3: // arrow
-			//	ModelPlayClip(g_Player.m_model, 301, 360, 60.0f, false, 2.0f);
-			//	break;
-			case 4: //shuriken
+			case WeaponTerrain::SPEAR_HILL: // spear
+				ModelPlayClip(g_Player.m_model, 500, 600, 60.0f, false, 4.0f);
+				break;
+			case WeaponTerrain::BOW_HILL: // arrow
+				ModelPlayClip(g_Player.m_model, 240, 360, 60.0f, false, 4.0f);
+				break;
+			case WeaponTerrain::HAMMER_: // hammer
+				ModelPlayClip(g_Player.m_model, 360, 539, 60.0f, false, 2.0f);
+				break;
+			case WeaponTerrain::SHURIKEN_: //shuriken
 				ModelPlayClip(g_Player.m_model, 151, 210, 60.0f, false, 4.0f);
 				break;
 			}
 			g_Player1AttackPlaying = true;
-			g_Player1CurrentAnim = 2; // attack ó‘Ô
+			g_Player1CurrentAnim = 2; // attack çŠ¶æ…‹
 		}
 
-		hal::dout << "Player UŒ‚“ü—ÍŒŸo\n";
+		hal::dout << "Player æ”»æ’ƒå…¥åŠ›æ¤œå‡º\n";
 	}
 
 //================================================================
-//	•Ší‚ÌXV
+//	æ­¦å™¨ã®æ›´æ–°
 //================================================================
 	if (g_Player.m_currentWeapon)
 	{
@@ -235,53 +239,53 @@ void	PlayerUpdate()
 	}
 
 	Player_ManualMove();
-	//€–S”»’è
+	//æ­»äº¡åˆ¤å®š
 	if (g_Player.m_currentHp <= 0.0f && !g_Player.m_isDead)
 	{
 		g_Player.m_isDead = true;
 		PlayerDie();
 	}
 	//================================================================
-	// ƒAƒjƒ[ƒVƒ‡ƒ“ˆ—
+	// ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³å‡¦ç†
 	// ================================================================
-	// ˆÚ“®‘¬“x”»’è
+	// ç§»å‹•é€Ÿåº¦åˆ¤å®š
 	float moveSpeed = sqrtf(g_Player.m_velocity.x * g_Player.m_velocity.x +
 		g_Player.m_velocity.z * g_Player.m_velocity.z);
 	bool isMoving = (moveSpeed > 0.001f);
 
-	// ƒAƒjƒ[ƒVƒ‡ƒ“ó‘ÔŠÇ—F
-	//  - UŒ‚ƒƒ“ƒVƒ‡ƒbƒgÄ¶’†‚Í‚»‚ÌŠ®—¹‚ğŠÄ‹‚µAŠ®—¹‚µ‚½‚çˆÚ“®/‘Ò‹@ƒ‹[ƒv‚Ö•œ‹A
-	//  - UŒ‚’†‚Å‚È‚¯‚ê‚ÎˆÚ“®/‘Ò‹@‚Ìƒ‹[ƒvƒAƒjƒ‚ğŠmÀ‚ÉÄ¶‚µ‚Ä‚¨‚­
+	// ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³çŠ¶æ…‹ç®¡ç†ï¼š
+	//  - æ”»æ’ƒãƒ¯ãƒ³ã‚·ãƒ§ãƒƒãƒˆå†ç”Ÿä¸­ã¯ãã®å®Œäº†ã‚’ç›£è¦–ã—ã€å®Œäº†ã—ãŸã‚‰ç§»å‹•/å¾…æ©Ÿãƒ«ãƒ¼ãƒ—ã¸å¾©å¸°
+	//  - æ”»æ’ƒä¸­ã§ãªã‘ã‚Œã°ç§»å‹•/å¾…æ©Ÿã®ãƒ«ãƒ¼ãƒ—ã‚¢ãƒ‹ãƒ¡ã‚’ç¢ºå®Ÿã«å†ç”Ÿã—ã¦ãŠã
 	if (g_Player1AttackPlaying||g_Player1JumpPlaying)
 	{
-		// ƒƒ“ƒVƒ‡ƒbƒgƒNƒŠƒbƒv‚ªI—¹‚µ‚½‚©Šm”F
+		// ãƒ¯ãƒ³ã‚·ãƒ§ãƒƒãƒˆã‚¯ãƒªãƒƒãƒ—ãŒçµ‚äº†ã—ãŸã‹ç¢ºèª
 		if (ModelConsumeClipFinished(g_Player.m_model))
 		{
-			// UŒ‚ƒAƒjƒŠ®—¹: ƒtƒ‰ƒO‰ğœ‚µ‚Ä“KØ‚Èƒ‹[ƒv‚Ö–ß‚·
+			// æ”»æ’ƒã‚¢ãƒ‹ãƒ¡å®Œäº†: ãƒ•ãƒ©ã‚°è§£é™¤ã—ã¦é©åˆ‡ãªãƒ«ãƒ¼ãƒ—ã¸æˆ»ã™
 			g_Player1AttackPlaying = false;
 			g_Player1JumpPlaying = false;
 			if (isMoving)
 			{
-				// ˆÚ“®ƒ‹[ƒv
+				// ç§»å‹•ãƒ«ãƒ¼ãƒ—
 				if (g_Player1CurrentAnim != 1)
 				{
 					
-					switch (g_changeP1)
+					switch (g_setWTP1) //ç§»å‹•
 					{
-					case 0: // Sword
-						ModelPlayClip(g_Player.m_model, 201, 245, 60.0f, true, 1.5f);
+					case WeaponTerrain::SWORD_WALL: 
+						ModelPlayClip(g_Player.m_model, 120, 165, 60.0f, true, 1.0f);
 						break;
-				    //case 1: // spear
-			        //	ModelPlayClip(g_Player.m_model, 301, 360, 60.0f, false, 2.0f);
-			        //	break;
-			        case 2: // hammer
-			        	ModelPlayClip(g_Player.m_model, 181, 240, 60.0f, true, 2.0f);
+				    case WeaponTerrain::SPEAR_HILL: 
+			        	ModelPlayClip(g_Player.m_model, 240, 360, 60.0f, true, 1.0f);
 			        	break;
-			        //case 3: // arrow
-			        //	ModelPlayClip(g_Player.m_model, 301, 360, 60.0f, false, 2.0f);
-			        //	break;
-					case 4:
-						ModelPlayClip(g_Player.m_model, 121, 150, 60.0f, true, 2.0f);
+			        case WeaponTerrain::BOW_HILL: 
+			        	ModelPlayClip(g_Player.m_model, 181, 240, 60.0f, true, 1.0f);
+			        	break;
+			        case WeaponTerrain::HAMMER_:
+			        	ModelPlayClip(g_Player.m_model, 180, 240, 60.0f, true, 1.0f);
+			        	break;
+					case WeaponTerrain::SHURIKEN_:
+						ModelPlayClip(g_Player.m_model, 121, 150, 60.0f, true, 1.0f);
 						break;
 					}
 					g_Player1CurrentAnim = 1;
@@ -289,24 +293,24 @@ void	PlayerUpdate()
 			}
 			else
 			{
-				// ‘Ò‹@ƒ‹[ƒvi0~60j
+				// å¾…æ©Ÿãƒ«ãƒ¼ãƒ—ï¼ˆ0~60ï¼‰
 				if (g_Player1CurrentAnim != 0)
 				{
-					switch (g_changeP1)
+					switch (g_setWTP1) //ç§»å‹•
 					{
-					case 0: // Sword
+					case WeaponTerrain::SWORD_WALL:
 						ModelPlayClip(g_Player.m_model, 0, 60, 60.0f, true);
 						break;
-					//case 1: // spear
-			        //	ModelPlayClip(g_Player.m_model, 301, 360, 60.0f, false, 2.0f);
-			        //	break;
-			        case 2: // hammer
+					case WeaponTerrain::SPEAR_HILL: 
 			        	ModelPlayClip(g_Player.m_model, 0, 120, 60.0f, true);
 			        	break;
-			        //case 3: // arrow
-			        //	ModelPlayClip(g_Player.m_model, 301, 360, 60.0f, false, 2.0f);
-			        //	break;
-					case 4:
+			        case WeaponTerrain::BOW_HILL:
+			        	ModelPlayClip(g_Player.m_model, 0, 120, 60.0f, true);
+			        	break;
+			        case WeaponTerrain::HAMMER_:
+			        	ModelPlayClip(g_Player.m_model, 0, 120, 60.0f, true);
+			        	break;
+					case WeaponTerrain::SHURIKEN_:
 						ModelPlayClip(g_Player.m_model, 0, 60, 60.0f, true);
 						break;
 					}
@@ -314,31 +318,31 @@ void	PlayerUpdate()
 				}
 			}
 		}
-		// UŒ‚’†‚ÍˆÚ“®‚É‚æ‚éØ‘Ö‚ğs‚í‚È‚¢iUŒ‚—Dæj
+		// æ”»æ’ƒä¸­ã¯ç§»å‹•ã«ã‚ˆã‚‹åˆ‡æ›¿ã‚’è¡Œã‚ãªã„ï¼ˆæ”»æ’ƒå„ªå…ˆï¼‰
 	}
 	else
 	{
-		// UŒ‚’†‚Å‚È‚¯‚ê‚ÎˆÚ“®/‘Ò‹@‚ğˆÛ
+		// æ”»æ’ƒä¸­ã§ãªã‘ã‚Œã°ç§»å‹•/å¾…æ©Ÿã‚’ç¶­æŒ
 		if (isMoving)
 		{
 			if (g_Player1CurrentAnim != 1)
 			{
-				switch (g_changeP1)
+				switch (g_setWTP1) //ç§»å‹•
 				{
-				case 0: // Sword
-					ModelPlayClip(g_Player.m_model, 201, 245, 60.0f, true, 1.5f);
+				case WeaponTerrain::SWORD_WALL:
+					ModelPlayClip(g_Player.m_model, 120, 165, 60.0f, true, 1.5f);
 					break;
-				//case 1: // spear
-			    //	ModelPlayClip(g_Player.m_model, 301, 360, 60.0f, false, 2.0f);
-			    //	break;
-				case 2: // hammer
-					ModelPlayClip(g_Player.m_model, 181, 240, 60.0f, true, 2.0f);
+				case WeaponTerrain::SPEAR_HILL: // spear
+			    	ModelPlayClip(g_Player.m_model, 240, 360, 60.0f, true, 1.5f);
+			    	break;
+				case WeaponTerrain::BOW_HILL: // hammer
+					ModelPlayClip(g_Player.m_model, 181, 240, 60.0f, true, 1.0f);
 					break;
-			    //case 3: // arrow
-			    //	ModelPlayClip(g_Player.m_model, 301, 360, 60.0f, false, 2.0f);
-			    //	break;
-				case 4:
-					ModelPlayClip(g_Player.m_model, 121, 150, 60.0f, true, 2.0f);
+			    case WeaponTerrain::HAMMER_: // arrow
+			    	ModelPlayClip(g_Player.m_model, 180, 240, 60.0f, true, 1.0f);
+			    	break;
+				case WeaponTerrain::SHURIKEN_:
+					ModelPlayClip(g_Player.m_model, 121, 150, 60.0f, true, 1.0f);
 					break;
 				}
 				g_Player1CurrentAnim = 1;
@@ -348,21 +352,21 @@ void	PlayerUpdate()
 		{
 			if (g_Player1CurrentAnim != 0)
 			{
-				switch (g_changeP1)
+				switch (g_setWTP1) //å¾…æ©Ÿ
 				{
-				case 0: // Sword
+				case WeaponTerrain::SWORD_WALL:
 					ModelPlayClip(g_Player.m_model, 0, 60, 60.0f, true);
 					break;
-				//case 1: // spear
-			    //	ModelPlayClip(g_Player.m_model, 301, 360, 60.0f, false, 2.0f);
-			    //	break;
-				case 2: // hammer
+				case WeaponTerrain::SPEAR_HILL: // spear
+			    	ModelPlayClip(g_Player.m_model, 0, 120, 60.0f, true);
+			    	break;
+				case WeaponTerrain::BOW_HILL: // hammer
 					ModelPlayClip(g_Player.m_model, 0, 120, 60.0f, true);
 					break;
-			    //case 3: // arrow
-			    //	ModelPlayClip(g_Player.m_model, 301, 360, 60.0f, false, 2.0f);
-			    //	break;
-				case 4:
+			    case WeaponTerrain::HAMMER_: // arrow
+			    	ModelPlayClip(g_Player.m_model, 0, 120, 60.0f, true);
+			    	break;
+				case WeaponTerrain::SHURIKEN_:
 					ModelPlayClip(g_Player.m_model, 0, 60, 60.0f, true);
 					break;
 				}
@@ -371,11 +375,11 @@ void	PlayerUpdate()
 		}
 	}
 
-	// ƒAƒjƒ[ƒVƒ‡ƒ“ŠÔ‚Ìis‚Í Update ‘¤‚Åˆê“x‚¾‚¯s‚¤iƒtƒŒ[ƒ€ŒÅ’èƒŒ[ƒgŠÂ‹«‚ğ‘z’è‚µ‚Ä 1/60 ‚ğg—pj
-	// deltaTime ‚ª—˜—p‰Â”\‚È‚ç‚»‚¿‚ç‚ğg‚Á‚Ä‚­‚¾‚³‚¢i—á: ModelUpdateAnimation(g_Player.m_model, deltaTime);j
+	// ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³æ™‚é–“ã®é€²è¡Œã¯ Update å´ã§ä¸€åº¦ã ã‘è¡Œã†ï¼ˆãƒ•ãƒ¬ãƒ¼ãƒ å›ºå®šãƒ¬ãƒ¼ãƒˆç’°å¢ƒã‚’æƒ³å®šã—ã¦ 1/60 ã‚’ä½¿ç”¨ï¼‰
+	// deltaTime ãŒåˆ©ç”¨å¯èƒ½ãªã‚‰ãã¡ã‚‰ã‚’ä½¿ã£ã¦ãã ã•ã„ï¼ˆä¾‹: ModelUpdateAnimation(g_Player.m_model, deltaTime);ï¼‰
 	ModelUpdateAnimation(g_Player.m_model, 1.0f / 60.0f);
 
-	// €–S”»’è
+	// æ­»äº¡åˆ¤å®š
 	if (g_Player.m_currentHp <= 0.0f && !g_Player.m_isDead)
 	{
 		g_Player.m_isDead = true;
@@ -384,20 +388,20 @@ void	PlayerUpdate()
 
 }
 
-void Player_ManualMove() // V‚µ‚¢è“®ˆÚ“®ŠÖ”‚Æ‚µ‚Äì¬
+void Player_ManualMove() // æ–°ã—ã„æ‰‹å‹•ç§»å‹•é–¢æ•°ã¨ã—ã¦ä½œæˆ
 {
-	// ƒJƒƒ‰‚Ì‘O•ûŒüƒxƒNƒgƒ‹
+	// ã‚«ãƒ¡ãƒ©ã®å‰æ–¹å‘ãƒ™ã‚¯ãƒˆãƒ«
 	float forwardX = GetCameraAtPosition().x - GetCameraPosition().x;
 	float forwardZ = GetCameraAtPosition().z - GetCameraPosition().z;
 
-	if (!g_Player.m_isGround) // ’n–Ê‚É‚Â‚¢‚Ä‚È‚¢‚Æ‚«‚Éd—Í”­“®
+	if (!g_Player.m_isGround) // åœ°é¢ã«ã¤ã„ã¦ãªã„ã¨ãã«é‡åŠ›ç™ºå‹•
 	{
 		g_Player.m_velocity.x += g_Player.m_acceleration.x;
 		g_Player.m_velocity.y += g_Player.m_acceleration.y;
 		g_Player.m_velocity.z += g_Player.m_acceleration.z;
 	}
 
-	// ’n–Ê‚É‚Â‚¢‚Ä‚¢‚é‚Æ‚«‚ÉƒRƒˆ[ƒeƒ^ƒCƒ€‚ª1.0f‚É‚È‚é
+	// åœ°é¢ã«ã¤ã„ã¦ã„ã‚‹ã¨ãã«ã‚³ãƒ¨ãƒ¼ãƒ†ã‚¿ã‚¤ãƒ ãŒ1.0fã«ãªã‚‹
 	if (g_Player.m_isGround)
 	{
 		g_Player.m_koyoteTime = 1.0f;
@@ -419,20 +423,20 @@ void Player_ManualMove() // V‚µ‚¢è“®ˆÚ“®ŠÖ”‚Æ‚µ‚Äì¬
 		forwardZ = 0.0f;
 	}
 
-	// ƒJƒƒ‰‚Ì‰E•ûŒüƒxƒNƒgƒ‹
-	float rightX = forwardZ;    // ‰E•ûŒü‚Í‘O•ûŒüƒxƒNƒgƒ‹‚ğ90“x‰ñ“]
+	// ã‚«ãƒ¡ãƒ©ã®å³æ–¹å‘ãƒ™ã‚¯ãƒˆãƒ«
+	float rightX = forwardZ;    // å³æ–¹å‘ã¯å‰æ–¹å‘ãƒ™ã‚¯ãƒˆãƒ«ã‚’90åº¦å›è»¢
 	float rightZ = -forwardX;
 
-	// ˆÚ“®—Ê‰Šú‰»
+	// ç§»å‹•é‡åˆæœŸåŒ–
 	float moveX = 0.0f;
 	float moveZ = 0.0f;
 
 	float speed = 0.0f;
-	float stickY = g_Controller.GetLeftStickY();
-	if (fabs(stickY) > 0.05f) // ƒfƒbƒhƒ][ƒ“‚ğİ’è (•K—v‚É‰‚¶‚Ä’²®)
+	float stickY = g_Controller[0].GetLeftStickY();
+	if (fabs(stickY) > 0.05f) // ãƒ‡ãƒƒãƒ‰ã‚¾ãƒ¼ãƒ³ã‚’è¨­å®š (å¿…è¦ã«å¿œã˜ã¦èª¿æ•´)
 	{
-		// ƒxƒNƒgƒ‹‚ª‹t‚¾‚©‚çˆÚ“®‚ª‹t‚É‚È‚é
-		// ¶ƒXƒeƒBƒbƒNã•ûŒü (+1.0f) ‚Å‘Oi (speed = -0.1f) ‚É‘Î‰
+		// ãƒ™ã‚¯ãƒˆãƒ«ãŒé€†ã ã‹ã‚‰ç§»å‹•ãŒé€†ã«ãªã‚‹
+		// å·¦ã‚¹ãƒ†ã‚£ãƒƒã‚¯ä¸Šæ–¹å‘ (+1.0f) ã§å‰é€² (speed = -0.1f) ã«å¯¾å¿œ
 		speed = stickY * 0.1f;
 	}
 
@@ -449,57 +453,67 @@ void Player_ManualMove() // V‚µ‚¢è“®ˆÚ“®ŠÖ”‚Æ‚µ‚Äì¬
 	moveX += forwardX * speed;
 	moveZ += forwardZ * speed;
 
-	// ‰¡ˆÚ“®
+	// æ¨ªç§»å‹•
 	float strafe = 0.0f;
-	float stickX = g_Controller.GetLeftStickX();
-	if (fabs(stickX) > 0.05f) // ƒfƒbƒhƒ][ƒ“‚ğİ’è (•K—v‚É‰‚¶‚Ä’²®)
+	float stickX = g_Controller[0].GetLeftStickX();
+	if (fabs(stickX) > 0.05f) // ãƒ‡ãƒƒãƒ‰ã‚¾ãƒ¼ãƒ³ã‚’è¨­å®š (å¿…è¦ã«å¿œã˜ã¦èª¿æ•´)
 	{
-		// ¶ƒXƒeƒBƒbƒN¶•ûŒü (-1.0f) ‚Å¶ˆÚ“® (strafe = +0.1f) ‚É‘Î‰
+		// å·¦ã‚¹ãƒ†ã‚£ãƒƒã‚¯å·¦æ–¹å‘ (-1.0f) ã§å·¦ç§»å‹• (strafe = +0.1f) ã«å¯¾å¿œ
 		strafe = stickX * 0.1f;
 	}
 
 	if (Keyboard_IsKeyDown(KK_A))
 	{
-		strafe = -0.1f;  // ¶
+		strafe = -0.1f;  // å·¦
 	}
 	if (Keyboard_IsKeyDown(KK_D))
 	{
-		strafe = +0.1f;  // ‰E
+		strafe = +0.1f;  // å³
 	}
 	moveX += rightX * strafe;
 	moveZ += rightZ * strafe;
 
-	// ÅI‘¬“x
-	g_Player.m_velocity.x = moveX;
-	g_Player.m_velocity.z = moveZ;
+	// æœ€çµ‚é€Ÿåº¦
+	g_Player.m_velocity.x = moveX * g_Player.m_moveMul;
+	g_Player.m_velocity.z = moveZ * g_Player.m_moveMul;
 
-	// ƒ‚ƒfƒ‹‚ÌŒü‚«‚ğˆÚ“®•ûŒü‚É‡‚í‚¹‚é
+	// ãƒ¢ãƒ‡ãƒ«ã®å‘ãã‚’ç§»å‹•æ–¹å‘ã«åˆã‚ã›ã‚‹
 	XMFLOAT3 moveDir = { g_Player.m_velocity.x, 0.0f, g_Player.m_velocity.z };
 	float length = sqrtf(moveDir.x * moveDir.x + moveDir.z * moveDir.z);
-	if (length > 0.001f) // ˆÚ“®‚µ‚Ä‚¢‚é‚Æ‚«‚¾‚¯Œü‚«‚ğ•Ï‚¦‚é
+	if (length > 0.001f) // ç§»å‹•ã—ã¦ã„ã‚‹ã¨ãã ã‘å‘ãã‚’å¤‰ãˆã‚‹
 	{
-		// Y²‰ñ“]Šp‚ğŒvZ
-		g_Player.m_rotation.y = atan2f(moveDir.x, moveDir.z); // atan2f(X,Z)‚ÅY‰ñ“]
+		// Yè»¸å›è»¢è§’ã‚’è¨ˆç®—
+		g_Player.m_rotation.y = atan2f(moveDir.x, moveDir.z); // atan2f(X,Z)ã§Yå›è»¢
 	}
 
-	// Aƒ{ƒ^ƒ“‚ğ‰Ÿ‚µ‚½ && ƒRƒˆ[ƒeƒ^ƒCƒ€‚ª0.0f‚æ‚è‘å‚«‚¢
+	// Aãƒœã‚¿ãƒ³ã‚’æŠ¼ã—ãŸ && ã‚³ãƒ¨ãƒ¼ãƒ†ã‚¿ã‚¤ãƒ ãŒ0.0fã‚ˆã‚Šå¤§ãã„
 	if (Keyboard_IsKeyDownTrigger(KK_SPACE) && g_Player.m_koyoteTime > 0.0f)
-	//if (g_Controller.IsButtonPushed(ControllerButton::A_BUTTON) && g_Player.m_koyoteTime > 0.0f) //Aƒ{ƒ^ƒ“**
+	//if (g_Controller.IsButtonPushed(ControllerButton::A_BUTTON) && g_Player.m_koyoteTime > 0.0f) //Aãƒœã‚¿ãƒ³**
 	{
-		g_Player.m_velocity.y = JUMP_FORCE;
+		g_Player.m_velocity.y = g_Player.m_jumpForce;
 		g_Player.m_isGround = false;
 		g_Player.m_koyoteTime = 0.0f;
-		switch (g_changeP1)
+		switch (g_setWTP1)
 		{
-		case 0: // Sword
-			ModelPlayClip(g_Player.m_model, 521, 560, 60.0f, false, 1.0f);
+		case WeaponTerrain::SWORD_WALL: // Sword
+			ModelPlayClip(g_Player.m_model, 300, 335, 60.0f, false, 1.0f);
 			break;
-		case 4:
-			ModelPlayClip(g_Player.m_model, 290, 350, 60.0f, false, 1.0f);
+		case WeaponTerrain::SPEAR_HILL: // spear
+			ModelPlayClip(g_Player.m_model, 361, 420, 60.0f, false, 2.0f);
+			break;
+		case WeaponTerrain::BOW_HILL: // arrow
+			ModelPlayClip(g_Player.m_model, 400, 450, 60.0f, false, 1.0f);
+			break;
+		case WeaponTerrain::HAMMER_: // hammer
+			ModelPlayClip(g_Player.m_model, 240, 300, 60.0f, false, 0.0f);
+			break;
+
+		case WeaponTerrain::SHURIKEN_: //shuriken
+			ModelPlayClip(g_Player.m_model, 280, 320, 60.0f, false, 4.0f);
 			break;
 		}
 		g_Player1JumpPlaying = true;
-		g_Player1CurrentAnim = 3; // ƒWƒƒƒ“ƒv ó‘Ô
+		g_Player1CurrentAnim = 3; // ã‚¸ãƒ£ãƒ³ãƒ— çŠ¶æ…‹
 	}
 	else
 	{
@@ -513,51 +527,32 @@ void Player_ManualMove() // V‚µ‚¢è“®ˆÚ“®ŠÖ”‚Æ‚µ‚Äì¬
 
 void PlayerDraw() 
 {
-	//ƒ[ƒ‹ƒhs—ñì¬
+	//ãƒ¯ãƒ¼ãƒ«ãƒ‰è¡Œåˆ—ä½œæˆ
 	XMMATRIX	scale = XMMatrixScaling(
-		0.01f*0.6f,
 		0.01f,
-		0.01f * 0.6f);
+		0.01f,
+		0.01f );
 	XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
 		g_Player.m_rotation.x,
 		g_Player.m_rotation.y + XM_PI,
 		g_Player.m_rotation.z);
 	XMMATRIX	translation = XMMatrixTranslation(
 		g_Player.m_position.x,
-		g_Player.m_position.y ,
+		g_Player.m_position.y - 0.3f,
 		g_Player.m_position.z);
 	XMMATRIX	world = scale * rotation * translation;
 
-	//ƒVƒF[ƒ_[‚Ös—ñ‚ğƒZƒbƒg
+	//ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã¸è¡Œåˆ—ã‚’ã‚»ãƒƒãƒˆ
 	Shader_SetWorldMatrix(world);
 
 	Shader_SetBones(g_Player.m_model);
-	//ƒ‚ƒfƒ‹‚Ì•`‰æƒŠƒNƒGƒXƒg
+	//ãƒ¢ãƒ‡ãƒ«ã®æç”»ãƒªã‚¯ã‚¨ã‚¹ãƒˆ
 	ModelDraw(g_Player.m_model);
 
 	if (g_Player.m_currentWeapon)
 	{
 		g_Player.m_currentWeapon->Draw();
 	}
-
-	//ƒ[ƒ‹ƒhs—ñì¬
-	scale = XMMatrixScaling(
-		0.6f,
-		1.0f,
-		0.6f);
-	rotation = XMMatrixRotationRollPitchYaw(
-		g_Player.m_rotation.x,
-		g_Player.m_rotation.y,
-		g_Player.m_rotation.z);
-	translation = XMMatrixTranslation(
-		g_Player.m_position.x,
-		g_Player.m_position.y,
-		g_Player.m_position.z);
-	world = scale * rotation * translation;
-
-	//ƒVƒF[ƒ_[‚Ös—ñ‚ğƒZƒbƒg
-	Shader_SetWorldMatrix(world);
-
 	//ModelDraw(g_modelP1);
 }
 
@@ -576,7 +571,7 @@ PLAYER* GetPlayer()
 {
 	return &g_Player;
 }
-float Player_GetHP() 
+float Player_GetHp() 
 {
 	return g_Player.m_currentHp; 
 }
@@ -584,8 +579,15 @@ float Player_GetMaxHp()
 {
 	return g_Player.m_maxHp;
 }
-
-//•Ší‚ğ‘•”õ‚·‚é
+bool GetPlayer_IsAttacked()
+{
+	return g_Player.m_isAttacked;
+}
+void SetPlayer_IsAttacked(bool isAttacked)
+{
+    g_Player.m_isAttacked = isAttacked;
+}
+//æ­¦å™¨ã‚’è£…å‚™ã™ã‚‹
 void PLAYER::EquipWeapon(std::unique_ptr<IWeapon> weapon)
 {
 	m_currentWeapon = std::move(weapon);
@@ -594,35 +596,36 @@ void PLAYER::EquipWeapon(std::unique_ptr<IWeapon> weapon)
 void PLAYER::OnCollision(const CollisionInfo& info)
 {
 	if (!info.isHit) return;
-	if (m_isDead) return; //€–S‚µ‚Ä‚¢‚½‚çÕ“Ëˆ—‚ğ–³‹
+	if (m_isDead) return; //æ­»äº¡ã—ã¦ã„ãŸã‚‰è¡çªå‡¦ç†ã‚’ç„¡è¦–
 
-	// --- ‚Ü‚¸ƒ^ƒO‚Å‘Šè‚ğ¯•Ê ---
+	// --- ã¾ãšã‚¿ã‚°ã§ç›¸æ‰‹ã‚’è­˜åˆ¥ ---
 	if (info.other)
 	{
-		// UŒ‚‚Ì
+		// æ”»æ’ƒã®æ™‚
 		if (info.other->m_tag == "Attack")
 		{
-			// ‘Šè‚ª•ŠíƒIƒuƒWƒFƒNƒg‚Á‚Ä‚½‚ç
+			// ç›¸æ‰‹ãŒæ­¦å™¨ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆæŒã£ã¦ãŸã‚‰
 			if (info.other->m_weaponPtr)
 			{
-				// •Ší‚ÌÕ“Ë”»’è‚ğŒÄ‚Ño‚·
+				// æ­¦å™¨ã®è¡çªåˆ¤å®šã‚’å‘¼ã³å‡ºã™
+				g_Player.m_isAttacked = true;
 				info.other->m_weaponPtr->OnWeaponCollision(this);
 			}
 		}
 
-		// —á‚¦‚Î•ÇE–Ø‚¾‚¯ƒRƒŠƒWƒ‡ƒ“—LŒø
+		// ä¾‹ãˆã°å£ãƒ»æœ¨ã ã‘ã‚³ãƒªã‚¸ãƒ§ãƒ³æœ‰åŠ¹
 		if (info.other->m_tag == "Wall" ||
 			info.other->m_tag == "Tree")
 		{
 			//================================================================
-			//	‰Ÿ‚µ–ß‚µ
+			//	æŠ¼ã—æˆ»ã—
 			//================================================================
 			m_position.x += info.normal.x * info.penetration;
 			m_position.y += info.normal.y * info.penetration;
 			m_position.z += info.normal.z * info.penetration;
 
 			//================================================================
-			//	’n–Ê”»’è
+			//	åœ°é¢åˆ¤å®š
 			//================================================================
 			if (info.normal.y > 0.7f)
 			{
@@ -631,7 +634,7 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 			}
 
 			//================================================================
-			//	•Ç”»’è
+			//	å£åˆ¤å®š
 			//================================================================
 			float horiz = fabs(info.normal.x) + fabs(info.normal.z);
 			if (horiz > 0.7f)
@@ -641,7 +644,7 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 			}
 		}
 
-		// —á‚¦‚Î•ÇE–Ø‚¾‚¯ƒRƒŠƒWƒ‡ƒ“—LŒø
+		// ä¾‹ãˆã°å£ãƒ»æœ¨ã ã‘ã‚³ãƒªã‚¸ãƒ§ãƒ³æœ‰åŠ¹
 		if (info.other->m_tag == "WALL" ||
 			info.other->m_tag == "TREE")
 		{
@@ -652,14 +655,14 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 			INFO.normal.z *= -1;
 
 			//================================================================
-			//	‰Ÿ‚µ–ß‚µ
+			//	æŠ¼ã—æˆ»ã—
 			//================================================================
 			m_position.x += INFO.normal.x * INFO.penetration;
 			m_position.y += INFO.normal.y * INFO.penetration;
 			m_position.z += INFO.normal.z * INFO.penetration;
 
 			//================================================================
-			//	’n–Ê”»’è
+			//	åœ°é¢åˆ¤å®š
 			//================================================================
 			if (INFO.normal.y > 0.7f)
 			{
@@ -668,7 +671,7 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 			}
 
 			//================================================================
-			//	•Ç”»’è
+			//	å£åˆ¤å®š
 			//================================================================
 			float horiz = fabs(INFO.normal.x) + fabs(INFO.normal.z);
 			if (horiz > 0.7f)
@@ -687,14 +690,14 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 			INFO.normal.z *= -1;
 
 			//================================================================
-			//	‰Ÿ‚µ–ß‚µ
+			//	æŠ¼ã—æˆ»ã—
 			//================================================================
 			m_position.x += INFO.normal.x * INFO.penetration;
 			m_position.y += INFO.normal.y * INFO.penetration;
 			m_position.z += INFO.normal.z * INFO.penetration;
 
 			//================================================================
-			//	’n–Ê”»’è
+			//	åœ°é¢åˆ¤å®š
 			//================================================================
 			if (INFO.normal.y > 0.7f)
 			{
@@ -703,7 +706,7 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 			}
 
 			//================================================================
-			//	•Ç”»’è
+			//	å£åˆ¤å®š
 			//================================================================
 			float horiz = fabs(INFO.normal.x) + fabs(INFO.normal.z);
 			if (horiz > 0.7f)
@@ -723,14 +726,14 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 			INFO.normal.z *= -1;
 
 			//================================================================
-			//	‰Ÿ‚µ–ß‚µ
+			//	æŠ¼ã—æˆ»ã—
 			//================================================================
 			m_position.x += INFO.normal.x * INFO.penetration;
 			m_position.y += INFO.normal.y * INFO.penetration;
 			m_position.z += INFO.normal.z * INFO.penetration;
 
 			//================================================================
-			//	’n–Ê”»’è
+			//	åœ°é¢åˆ¤å®š
 			//================================================================
 			if (INFO.normal.y > 0.7f)
 			{
@@ -739,7 +742,7 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 			}
 
 			//================================================================
-			//	•Ç”»’è
+			//	å£åˆ¤å®š
 			//================================================================
 			float horiz = fabs(INFO.normal.x) + fabs(INFO.normal.z);
 			if (horiz > 0.7f)
@@ -751,7 +754,7 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 		}
 		else
 		{
-			return; // ‘¼‚Í–³‹
+			return; // ä»–ã¯ç„¡è¦–
 		}
 	}
 }

@@ -18,6 +18,7 @@
 #include"Player.h"
 #include"Player2.h"
 #include"keyboard.h"
+#include"Manager.h"
 /*********************************/
 
 //================================================================
@@ -37,9 +38,13 @@ Hammer::Hammer(GameObject* player, bool select) : IWeapon(player)
 	m_weapon = std::make_unique<GameObject>();
 	m_weapon->m_tag = "Attack";	// タグ
 	m_weapon->m_layer = 0;		// レイヤー
-
+	m_chargeState = CHARGE_NONE;
+	m_wasCharging = false;
 	m_selectPlayer = select; // プレイヤー設定 1Pか2Pか
+	m_playerIndex = (m_selectPlayer == FALSE) ? 0 : 1;
+	m_chargeKey = (m_playerIndex == 0) ? KK_C : KK_P; //<< キー設定
 
+	m_move = { 0.0f, 0.0f, 0.0f };
 	// 武器に親へのポインタを設定
 	m_weapon->m_weaponPtr = this;
 
@@ -55,7 +60,7 @@ Hammer::Hammer(GameObject* player, bool select) : IWeapon(player)
 
 	m_attackTimer = 0.0f;
 
-	g_moveHammer[m_selectPlayer] = { 0.0f, 0.0f, 0.0f };
+	m_move = { 0.0f, 0.0f, 0.0f };
 	m_coolTime = 0.0f;
 
 	/*********** テストコード **********/
@@ -73,15 +78,44 @@ void Hammer::Attack()
 {
 	if (m_isAttacking) return; // 攻撃してたら終わり
 	if (m_coolTime > 0.0f) return;
-	if (m_chargePower < 2.5f) return;
+	if (m_chargePower < 1.0f) return;
 	if (m_isCharging) return;
 
 	m_isAttacking = true; // 攻撃している
 	m_attackTimer = 0.0f; // 攻撃タイマー初期化
-	g_moveHammer[m_selectPlayer] = { 0.0f, 0.0f, 0.0f };
+	m_move = { 0.0f, 0.0f, 0.0f };
 	m_coolTime = 1.5f;
 
 	m_collider->SetEnable(true); // 当たり判定の有効
+	MODEL* model = nullptr;
+	bool isMoving = false;
+
+	if (m_selectPlayer == FALSE)
+	{
+		PLAYER* player = g_PlayerHammer1;
+		if (player)
+		{
+			model = player->m_model;
+
+			float mv = sqrtf(player->m_velocity.x * player->m_velocity.x +
+				player->m_velocity.z * player->m_velocity.z);
+			isMoving = (mv > 0.001f);
+			ModelPlayClip(model, 440, 539, 60.0f, false, 2.0f);
+		}
+	}
+	else
+	{
+		PLAYER2* player = g_PlayerHammer2;
+		if (player)
+		{
+			model = player->m_model;
+
+			float mv = sqrtf(player->m_velocity.x * player->m_velocity.x +
+				player->m_velocity.z * player->m_velocity.z);
+			isMoving = (mv > 0.001f);
+			ModelPlayClip(model, 440, 539, 60.0f, false, 2.0f);
+		}
+	}
 
 	// 多重ヒット帽子リストをリセット
 	m_hitTargets.clear();
@@ -89,16 +123,18 @@ void Hammer::Attack()
 
 void Hammer::Update()
 {
-	if (m_coolTime > 0.0f)
-	{
-		{
-			m_coolTime -= 1.0f / 60.0f;
-		}
+	if (m_coolTime > 0.0f) {
+		m_coolTime -= 1.0f / 60.0f;
+		if (m_coolTime < 0.0f) m_coolTime = 0.0f;
 	}
+	
+	bool inputCharge = false;
+	if (m_playerIndex == 0) inputCharge = Keyboard_IsKeyDown(KK_C);//<< キー設定
+	else                    inputCharge = Keyboard_IsKeyDown(KK_P);//<< キー設定
 
-	if (Keyboard_IsKeyDown(KK_C))
+
+	if (inputCharge)
 	{
-		// 攻撃中じゃなければチャージできる
 		if (!m_isAttacking && m_coolTime <= 0.0f)
 		{
 			m_isCharging = true;
@@ -112,26 +148,102 @@ void Hammer::Update()
 		m_isCharging = false;
 		Attack();
 	}
+	const float mul = (m_isCharging || m_isAttacking) ? 0.3f : 1.0f;
 
+	if (m_selectPlayer == FALSE)
+	{
+		if (g_PlayerHammer1) g_PlayerHammer1->m_moveMul = mul;
+	}
+	else
+	{
+		if (g_PlayerHammer2) g_PlayerHammer2->m_moveMul = mul;
+	}
+	MODEL* model = nullptr;
+	bool isMoving = false;
+	if (m_playerIndex == 0)
+	{
+		PLAYER* p = g_PlayerHammer1;
+		if (p)
+		{
+			model = p->m_model;
+			float mv = sqrtf(p->m_velocity.x * p->m_velocity.x + p->m_velocity.z * p->m_velocity.z);
+			isMoving = (mv > 0.001f);
+		}
+	}
+	else
+	{
+		PLAYER2* p = g_PlayerHammer2;
+		if (p)
+		{
+			model = p->m_model;
+			float mv = sqrtf(p->m_velocity.x * p->m_velocity.x + p->m_velocity.z * p->m_velocity.z);
+			isMoving = (mv > 0.001f);
+		}
+	}
+
+	if (m_isCharging && !m_wasCharging)
+	{
+		
+		if (model) {
+			ModelPlayClip(model, 370, 440, 60.0f, false, 1.0f);
+		}
+		m_chargeState = CHARGE_IN;
+	}
+	if (m_isCharging && isMoving)
+	{
+		if (m_chargeState != CHARGE_MOVE_LOOP)
+		{
+			if (model) {
+				ModelPlayClip(model, 540, 660, 60.0f, true, 2.0f);
+			}
+			m_chargeState = CHARGE_MOVE_LOOP;
+		}
+	}
+	if (m_isCharging && !isMoving)
+	{
+		if (m_chargeState == CHARGE_MOVE_LOOP)
+		{
+			
+			if (model) {
+				ModelPlayClip(model, 440, 440, 60.0f, true, 1.0f);
+			}
+			m_chargeState = CHARGE_HOLD;
+		}
+		else if (m_chargeState == CHARGE_IN)
+		{
+			
+			if (model && ModelConsumeClipFinished(model))
+			{
+				
+				ModelPlayClip(model, 440, 440, 60.0f, true, 1.0f);
+				m_chargeState = CHARGE_HOLD;
+			}
+		}
+		else if (m_chargeState == CHARGE_NONE)
+		{
+			// nothing
+		}
+	}
+	m_wasCharging = m_isCharging;
 	if (m_attackTimer < (ATTACK_DURATION / 2) && m_isAttacking)
 	{
 		float progress = m_attackTimer / (ATTACK_DURATION / 2.0f);
 
 		if (progress > 1.0f) progress = 1.0f;
 
-		g_moveHammer[m_selectPlayer].x = m_animePosition.x * progress;
-		g_moveHammer[m_selectPlayer].y = m_animePosition.y * progress;
-		g_moveHammer[m_selectPlayer].z = m_animePosition.z * progress;
+		m_move.x = m_animePosition.x * progress;
+		m_move.y = m_animePosition.y * progress;
+		m_move.z = m_animePosition.z * progress;
 	}
 	else
 	{
-		g_moveHammer[m_selectPlayer].x -= (m_animePosition.x / 30.0f);
-		g_moveHammer[m_selectPlayer].y -= (m_animePosition.y / 30.0f);
-		g_moveHammer[m_selectPlayer].z -= (m_animePosition.z / 30.0f);
+		m_move.x -= (m_animePosition.x / 30.0f);
+		m_move.y -= (m_animePosition.y / 30.0f);
+		m_move.z -= (m_animePosition.z / 30.0f);
 
-		if (g_moveHammer[m_selectPlayer].x < 0.0f) g_moveHammer[m_selectPlayer].x = 0.0f;
-		if (g_moveHammer[m_selectPlayer].y < 0.0f) g_moveHammer[m_selectPlayer].y = 0.0f;
-		if (g_moveHammer[m_selectPlayer].z < 0.0f) g_moveHammer[m_selectPlayer].z = 0.0f;
+		if (m_move.x < 0.0f) m_move.x = 0.0f;
+		if (m_move.y < 0.0f) m_move.y = 0.0f;
+		if (m_move.z < 0.0f) m_move.z = 0.0f;
 	}
 
 	XMMATRIX rotationMatrixY;
@@ -145,9 +257,9 @@ void Hammer::Update()
 	case FALSE:
 		XMFLOAT3 offset1 =
 		{
-			m_offset.x + g_moveHammer[m_selectPlayer].x,
-			m_offset.y + g_moveHammer[m_selectPlayer].y,
-			m_offset.z + g_moveHammer[m_selectPlayer].z
+			m_offset.x + m_move.x,
+			m_offset.y + m_move.y,
+			m_offset.z + m_move.z
 		};
 
 		rotationMatrixY = XMMatrixRotationY(g_PlayerHammer1->m_rotation.y);
@@ -163,9 +275,9 @@ void Hammer::Update()
 	case TRUE:
 		XMFLOAT3 offset2 =
 		{
-			m_offset.x + g_moveHammer[m_selectPlayer].x,
-			m_offset.y + g_moveHammer[m_selectPlayer].y,
-			m_offset.z + g_moveHammer[m_selectPlayer].z
+			m_offset.x + m_move.x,
+			m_offset.y + m_move.y,
+			m_offset.z + m_move.z
 		};
 
 		rotationMatrixY = XMMatrixRotationY(g_PlayerHammer2->m_rotation.y);
@@ -193,6 +305,7 @@ void Hammer::Update()
 			m_isAttacking = false; // 攻撃終了
 			m_collider->SetEnable(false); // 当たり判定止める
 			m_chargePower = 0.0f;
+			m_chargeState = CHARGE_NONE;
 		}
 	}
 }
@@ -213,18 +326,6 @@ void Hammer::Draw()
 		m_weapon->m_position.y,
 		m_weapon->m_position.z);
 	XMMATRIX	world = scale * rotation * translation;
-
-	//シェーダーへ行列をセット
-	Shader_SetWorldMatrix(world);
-
-	if (m_isAttacking)
-	{
-		ModelDraw(g_modelHammer[1]);
-	}
-	else
-	{
-		ModelDraw(g_modelHammer[0]);
-	}
 }
 
 void Hammer::OnWeaponCollision(GameObject* target)

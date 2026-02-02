@@ -174,7 +174,7 @@ void Arrow::Draw()
 	//シェーダーへ行列をセット
 	Shader_SetWorldMatrix(world);
 
-	ModelDraw(g_modelArrow[0]);
+	//ModelDraw(g_modelArrow[0]);
 }
 
 void Arrow::OnWeaponCollision(GameObject* target)

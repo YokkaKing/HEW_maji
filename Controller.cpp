@@ -1,9 +1,11 @@
-#pragma comment(lib,"runtimeobject.lib")
+
+#pragma comment(lib, "runtimeobject.lib")
 #include "Controller.h"
 #include <algorithm>
 
-// ƒRƒ“ƒXƒgƒ‰ƒNƒ^
-Controller::Controller(DWORD id) : m_isConnected(false)
+Controller g_Controller[2] = { Controller(0), Controller(1) };
+
+Controller::Controller(DWORD id) : m_id(id), m_isConnected(false)
 {
     m_currentState = {};
     m_prevState = {};
@@ -11,30 +13,31 @@ Controller::Controller(DWORD id) : m_isConnected(false)
 
 void Controller::Update()
 {
-    // ‘O‚Ìó‘Ô‚ğ•Û‘¶
+    // å‰ã®çŠ¶æ…‹ã‚’ä¿å­˜
     m_prevState = m_currentState;
 
-    // WGI‚ÌƒXƒ^ƒeƒBƒbƒNƒXiŠÇ—ƒNƒ‰ƒXj‚ğæ“¾
+    // WGIã®ã‚¹ã‚¿ãƒ†ã‚£ãƒƒã‚¯ã‚¹ï¼ˆç®¡ç†ã‚¯ãƒ©ã‚¹ï¼‰ã‚’å–å¾—
     ComPtr<IGamepadStatics> gamepadStatics;
 
-    // ƒGƒ‰[‚ªo‚Ä‚¢‚½‰ÓŠFABI::Windows::Foundation:: ‚ğ–¾¦“I‚Éw’è
+    // ã‚¨ãƒ©ãƒ¼ãŒå‡ºã¦ã„ãŸç®‡æ‰€ï¼šABI::Windows::Foundation:: ã‚’æ˜ç¤ºçš„ã«æŒ‡å®š
     HRESULT hr = ABI::Windows::Foundation::GetActivationFactory(
         HStringReference(RuntimeClass_Windows_Gaming_Input_Gamepad).Get(),
         &gamepadStatics);
 
     if (FAILED(hr)) return;
 
-    // Ú‘±‚³‚ê‚Ä‚¢‚éƒQ[ƒ€ƒpƒbƒh‚ÌƒŠƒXƒg‚ğæ“¾
     ComPtr<ABI::Windows::Foundation::Collections::IVectorView<Gamepad*>> gamepads;
     if (FAILED(gamepadStatics->get_Gamepads(&gamepads))) return;
 
     unsigned int count = 0;
     gamepads->get_Size(&count);
 
-    if (count > 0)
+    // ä¿®æ­£ãƒã‚¤ãƒ³ãƒˆ: è‡ªåˆ†ã®IDï¼ˆ0ã¾ãŸã¯1ï¼‰ãŒæ¥ç¶šå°æ•°ä»¥å†…ã‹ãƒã‚§ãƒƒã‚¯
+    // m_id ã¯ãƒ˜ãƒƒãƒ€ãƒ¼ã§ä¿å­˜ã—ã¦ãŠãå¿…è¦ãŒã‚ã‚Šã¾ã™
+    if (count > m_id)
     {
-        // Å‰‚ÌƒRƒ“ƒgƒ[ƒ‰[‚ğg—p
-        gamepads->GetAt(0, &m_gamepad);
+        // IDã«å¯¾å¿œã—ãŸã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ©ãƒ¼ã‚’å–å¾—
+        gamepads->GetAt(m_id, &m_gamepad);
         m_gamepad->GetCurrentReading(&m_currentState);
         m_isConnected = true;
     }
@@ -44,15 +47,14 @@ void Controller::Update()
         m_gamepad = nullptr;
     }
 }
-
-// ƒ{ƒ^ƒ“‰Ÿ‰º”»’èiƒrƒbƒg‰‰Zj
+// ãƒœã‚¿ãƒ³æŠ¼ä¸‹åˆ¤å®šï¼ˆãƒ“ãƒƒãƒˆæ¼”ç®—ï¼‰
 bool Controller::IsButtonDown(ControllerButton::Button button) const
 {
     if (!m_isConnected) return false;
     return (static_cast<unsigned int>(m_currentState.Buttons) & button);
 }
 
-// ‰Ÿ‚µ‚½uŠÔ
+// æŠ¼ã—ãŸç¬é–“
 bool Controller::IsButtonPushed(ControllerButton::Button button) const
 {
     if (!m_isConnected) return false;
@@ -60,7 +62,7 @@ bool Controller::IsButtonPushed(ControllerButton::Button button) const
         !(static_cast<unsigned int>(m_prevState.Buttons) & button);
 }
 
-// —£‚µ‚½uŠÔ
+// é›¢ã—ãŸç¬é–“
 bool Controller::IsButtonReleased(ControllerButton::Button button) const
 {
     if (!m_isConnected) return false;
@@ -68,11 +70,11 @@ bool Controller::IsButtonReleased(ControllerButton::Button button) const
         (static_cast<unsigned int>(m_prevState.Buttons) & button);
 }
 
-// ƒXƒeƒBƒbƒN‚Ì’læ“¾iƒfƒbƒhƒ][ƒ“ˆ—‚ğ’Ç‰Áj
+// ã‚¹ãƒ†ã‚£ãƒƒã‚¯ã®å€¤å–å¾—ï¼ˆãƒ‡ãƒƒãƒ‰ã‚¾ãƒ¼ãƒ³å‡¦ç†ã‚’è¿½åŠ ï¼‰
 float Controller::GetLeftStickX() const {
     if (!m_isConnected) return 0.0f;
     float val = (float)m_currentState.LeftThumbstickX;
-    return (fabs(val) < 0.1f) ? 0.0f : val; // 0.1(10%)–¢–‚ÌŒX‚«‚Í0‚É‚·‚é
+    return (fabs(val) < 0.1f) ? 0.0f : val; // 0.1(10%)æœªæº€ã®å‚¾ãã¯0ã«ã™ã‚‹
 }
 
 float Controller::GetLeftStickY() const {
@@ -92,11 +94,11 @@ float Controller::GetRightStickY() const {
     float val = (float)m_currentState.RightThumbstickY;
     return (fabs(val) < 0.1f) ? 0.0f : val;
 }
-// ƒgƒŠƒK[‚Ì’læ“¾iWGI‚Í 0.0`1.0j
+// ãƒˆãƒªã‚¬ãƒ¼ã®å€¤å–å¾—ï¼ˆWGIã¯ 0.0ï½1.0ï¼‰
 float Controller::GetLeftTrigger() const { return m_isConnected ? (float)m_currentState.LeftTrigger : 0.0f; }
 float Controller::GetRightTrigger() const { return m_isConnected ? (float)m_currentState.RightTrigger : 0.0f; }
 
-// U“®‚Ìİ’è
+// æŒ¯å‹•ã®è¨­å®š
 void Controller::SetVibration(float leftMotor, float rightMotor)
 {
     if (!m_isConnected || !m_gamepad) return;

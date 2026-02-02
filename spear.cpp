@@ -59,7 +59,8 @@ Spear::Spear(GameObject* player, bool select) : IWeapon(player)
 	m_coolTime = 0.0f;
 
 	/*********** テストコード **********/
-	g_modelSpear[0] = ModelLoad("asset\\model\\block.fbx");
+	g_modelSpear[0] = ModelLoad("asset\\model\\FX_spear.fbx");
+	m_fxAnim.Bind(g_modelSpear[0]);
 	g_modelSpear[1] = ModelLoad("asset\\model\\block2.fbx");
 	/*********************************/
 }
@@ -73,20 +74,23 @@ void Spear::Attack()
 {
 	if (m_isAttacking) return; // 攻撃してたら終わり
 	if (m_coolTime > 0.0f) return;
-
+	m_weapon->m_scale.x = 0.1f;
+	m_weapon->m_scale.y = 0.1f;
+	m_weapon->m_scale.z = 0.1f;
 	m_isAttacking = true; // 攻撃している
 	m_attackTimer = 0.0f; // 攻撃タイマー初期化
 	g_moveSpear[m_selectPlayer] = {0.0f, 0.0f, 0.0f};
 	m_coolTime = 1.5f;
-
+	m_fxAnim.PlayFrames(1, 60, 60.0f, false, 1.0f);
 	m_collider->SetEnable(true); // 当たり判定の有効
-
+	m_weapon->m_delay = 0.1f;
 	// 多重ヒット帽子リストをリセット
 	m_hitTargets.clear();
 }
 
 void Spear::Update()
 {
+	m_fxAnim.Update(1.0f / 60.0f);
 	if (m_coolTime > 0.0f)
 	{
 		{
@@ -187,45 +191,59 @@ void Spear::Update()
 	// 攻撃してるとき
 	if (m_isAttacking)
 	{
-		m_attackTimer += (1.0f / 60.0f);
 
-		// 攻撃の有効時間が終わったら
-		if (m_attackTimer >= ATTACK_DURATION)
+		if (m_weapon->m_delay <= 0)
 		{
-			m_isAttacking = false; // 攻撃終了
-			m_collider->SetEnable(false); // 当たり判定止める
+			m_attackTimer += (1.0f / 60.0f);
+			// 攻撃の有効時間が終わったら
+			if (m_attackTimer >= ATTACK_DURATION)
+			{
+				m_isAttacking = false; // 攻撃終了
+				m_collider->SetEnable(false); // 当たり判定止める
+			}
+			if (m_weapon->m_scale.x <= 0.5)
+			{
+				m_weapon->m_scale.x += 0.1f; // 攻撃中は少し細くする
+				m_weapon->m_scale.y += 0.1f; // 攻撃中は少し細くする
+				m_weapon->m_scale.z += 0.1f; // 攻撃中は少し細くする
+			}
+		}
+		else
+		{
+			m_weapon->m_delay -= m_weapon->m_frame;
+			m_weapon->m_scale.x = 0.0f;
+			m_weapon->m_scale.y = 0.0f;
+			m_weapon->m_scale.z = 0.0f;
 		}
 	}
+
 }
 
 void Spear::Draw()
 {
-	//ワールド行列作成
-	XMMATRIX	scale = XMMatrixScaling(
-		m_weapon->m_scale.x,
-		m_weapon->m_scale.y,
-		m_weapon->m_scale.z);
-	XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
-		m_weapon->m_rotation.x,
-		m_weapon->m_rotation.y,
-		m_weapon->m_rotation.z);
-	XMMATRIX	translation = XMMatrixTranslation(
-		m_weapon->m_position.x,
-		m_weapon->m_position.y,
-		m_weapon->m_position.z);
-	XMMATRIX	world = scale * rotation * translation;
-
-	//シェーダーへ行列をセット
-	Shader_SetWorldMatrix(world);
-
 	if (m_isAttacking)
 	{
-		ModelDraw(g_modelSpear[1]);
-	}
-	else
-	{
+		XMMATRIX	scale = XMMatrixScaling(
+			m_weapon->m_scale.x * 0.1f,
+			m_weapon->m_scale.y * 0.1f,
+			m_weapon->m_scale.z * 0.1f);
+		XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
+			m_weapon->m_rotation.x,
+			m_weapon->m_rotation.y + XM_PI,
+			m_weapon->m_rotation.z);
+		XMMATRIX	translation = XMMatrixTranslation(
+			m_weapon->m_position.x,
+			m_weapon->m_position.y,
+			m_weapon->m_position.z);
+		XMMATRIX world = scale * rotation * translation;
+
+
+		XMMATRIX fxWorld = m_fxAnim.GetDeltaMatrix() * world;
+
+		Shader_SetWorldMatrix(fxWorld);
 		ModelDraw(g_modelSpear[0]);
 	}
+	
 }
 
 void Spear::OnWeaponCollision(GameObject* target)

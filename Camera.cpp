@@ -22,7 +22,7 @@ static	CAMERA	CameraObject;
 static	CAMERA  Camera2Object;
 XMFLOAT3 g_PlayerPosOld;
 XMFLOAT3 g_Player2PosOld;
-extern Controller g_Controller;
+extern Controller g_Controller[2];
 
 void Camera_Initialize()
 { 
@@ -34,7 +34,7 @@ void Camera_Initialize()
 
 	float width = (float)Direct3D_GetBackBufferWidth();
 	float height = (float)Direct3D_GetBackBufferHeight();
-	CameraObject.Aspect = (width / height) / 2;
+	CameraObject.Aspect = (width / height);
 	CameraObject.NearClip = 0.5f;
 	CameraObject.FarClip = 1000.0f;
 	g_PlayerPosOld = GetPlayerPosition();//<<<<<<<<<<<<<<<<
@@ -52,7 +52,7 @@ void Camera2_Initialize()
 
 	Camera2Object.Fov = 45.0f;
 
-	Camera2Object.Aspect = (width / height) / 2;
+	Camera2Object.Aspect = (width / height);
 	Camera2Object.NearClip = 0.5f;
 	Camera2Object.FarClip = 1000.0f;
 
@@ -105,11 +105,11 @@ void Camera_Update()
 	//回転角度の累積と制限
 	//現在の累積角度を保持する静的変数 (初期値 0.0f)
 	static float nowYaw = 0.0f;   // 水平回転 (左右)
-	static float nowPitch = 20.0f; // 垂直回転 (上下)
+	static float nowPitch = 22.0f; // 垂直回転 (上下)
 
 	//コントローラー・キーボードからの入力を取得
-	float inputX = g_Controller.GetRightStickX() * -2.0f;
-	float inputY = g_Controller.GetRightStickY() * 1.5f;
+	float inputX = g_Controller[0].GetRightStickX() * -2.0f;
+	float inputY = g_Controller[0].GetRightStickY() * 1.5f;
 
 	if (Keyboard_IsKeyDown(KK_Q)) inputX = 1.0f;
 	if (Keyboard_IsKeyDown(KK_E)) inputX = -1.0f;
@@ -244,8 +244,8 @@ void Camera2_Update()
 	static float nowPitch = 22.0f; // 垂直回転 (上下)
 
 	//コントローラー・キーボードからの入力を取得
-	float inputX = g_Controller.GetRightStickX() * -2.0f;
-	float inputY = g_Controller.GetRightStickY() * 1.5f;
+	float inputX = g_Controller[1].GetRightStickX() * -2.0f;
+	float inputY = g_Controller[1].GetRightStickY() * 1.5f;
 
 	if (Keyboard_IsKeyDown(KK_Y)) inputX = 1.0f;
 	if (Keyboard_IsKeyDown(KK_I)) inputX = -1.0f;
