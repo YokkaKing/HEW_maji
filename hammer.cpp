@@ -17,6 +17,7 @@
 #include"Player.h"
 #include"Player2.h"
 #include"keyboard.h"
+#include"controller.h"
 #include"Manager.h"
 
 //================================================================
@@ -26,6 +27,7 @@ MODEL* g_modelHammer[2] = { NULL, NULL };
 PLAYER* g_PlayerHammer1;
 PLAYER2* g_PlayerHammer2;
 XMFLOAT3 g_moveHammer[2]; // 簡易アニメーション
+extern Controller g_Controller[2];
 
 Hammer::Hammer(GameObject* player, bool select) : IWeapon(player)
 {
@@ -41,6 +43,7 @@ Hammer::Hammer(GameObject* player, bool select) : IWeapon(player)
 	m_selectPlayer = select; // プレイヤー設定 1Pか2Pか
 	m_playerIndex = (m_selectPlayer == FALSE) ? 0 : 1;
 	m_chargeKey = (m_playerIndex == 0) ? KK_C : KK_P; //<< キー設定
+	m_chargeButton = ControllerButton::X_BUTTON;
 
 	m_move = { 0.0f, 0.0f, 0.0f };
 	// 武器に親へのポインタを設定
@@ -127,9 +130,17 @@ void Hammer::Update()
 	}
 	
 	bool inputCharge = false;
-	if (m_playerIndex == 0) inputCharge = Keyboard_IsKeyDown(KK_C);//<< キー設定
-	else                    inputCharge = Keyboard_IsKeyDown(KK_P);//<< キー設定
-
+	if (Keyboard_IsKeyDown(m_chargeKey)) {
+		inputCharge = true;
+	}
+	//if (m_playerIndex == 0) inputCharge = Keyboard_IsKeyDown(KK_C);//<< キー設定
+	//else                    inputCharge = Keyboard_IsKeyDown(KK_P);//<< キー設定
+	// コントローラー入力チェック (Xボタン)
+	if (g_Controller[m_playerIndex].IsConnected()) {
+		if (g_Controller[m_playerIndex].IsButtonDown(m_chargeButton)) {
+			inputCharge = true;
+		}
+	}
 
 	if (inputCharge)
 	{
