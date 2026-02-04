@@ -19,7 +19,7 @@
 #include"Player2.h"
 #include"Camera.h"
 #include"shader.h"
-#include"Evolution.h"
+#include"Transform.h"
 #include"colliderFactory.h"
 #include"debug_ostream.h"
 #include"fade.h"
@@ -67,9 +67,12 @@ void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 {
 	g_pDevice2 = pDevice;
 	g_pContext2 = pContext;
-	g_Player2.m_model = ModelLoad(INITIAL_MODEL_PATH_P2);
-	g_modelP2 = ModelLoad("asset\\model\\block.fbx");
-
+	if (INITIAL_MODEL_PATH_P2 == nullptr) {
+		g_Player2.m_model = ModelLoad("asset\\model\\block.fbx"); // 確実に存在するファイル
+	}
+	else {
+		g_Player2.m_model = ModelLoad(INITIAL_MODEL_PATH_P2);
+	}
 	g_Player2.m_position = XMFLOAT3(10.0f, 0.5f, 1.0f);
 	g_Player2.m_rotation = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	g_Player2.m_velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
@@ -140,8 +143,8 @@ void	Player2Update()
 {
 
 
-	EvolvePlayer2();           // Eキーで進化タイプを選択
-	ApplyEvolutionEffect2();   // 進化タイプに応じたパラメータを適用
+	TransformPlayer2();           // Eキーで進化タイプを選択
+	ApplyTransformEffect2();   // 進化タイプに応じたパラメータを適用
 	if (g_Player2.m_isDead)return;	//死亡している場合は更新処理をスキップ
 	
 //================================================================
@@ -182,7 +185,7 @@ void	Player2Update()
 			switch (reserved) {
 			case WeaponTerrain::SWORD_WALL:
 				g_changeP2 = 1;
-				g_Player2.m_model = ModelLoad("asset\\model\\char_sword_motion.fbx"); 
+				g_Player2.m_model = ModelLoad("asset\\model\\char_sword_motion_FX.fbx"); 
 				g_Player2.EquipWeapon(std::make_unique<Sword>(&g_Player2, TRUE));
 				break;
 			case WeaponTerrain::SPEAR_HILL:
@@ -193,6 +196,7 @@ void	Player2Update()
 			case WeaponTerrain::BOW_HILL:
 				g_changeP2 = 3;
 				g_Player2.m_model = ModelLoad("asset\\model\\char_bow_motion.fbx"); 
+
 				g_Player2.EquipWeapon(std::make_unique<Arrow>(&g_Player2, TRUE));
 				break;
 			case WeaponTerrain::HAMMER_:

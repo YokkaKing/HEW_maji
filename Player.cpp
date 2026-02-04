@@ -20,7 +20,7 @@
 #include"Player.h"
 #include"Camera.h"
 #include"shader.h"
-#include"Evolution.h"
+#include"Transform.h"
 #include"colliderFactory.h"
 #include"debug_ostream.h"
 #include"fade.h"
@@ -47,7 +47,7 @@ unsigned int g_changeP1;
 static bool g_Player1AttackPlaying = false; // 攻撃ワンショット再生中フラグ
 static bool g_Player1JumpPlaying = false; // ジャンプワンショット再生中フラグ
 static int g_Player1CurrentAnim = 0; // 0: idle, 1: move, 2: attack 3:jump
-
+WeaponTerrain m_baseWT;
 
 void PlayerDie()
 {
@@ -73,8 +73,12 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 	g_pDevice = pDevice;
 	g_pContext = pContext;
 
-	g_Player.m_model = ModelLoad(INITIAL_MODEL_PATH_P1);
-	//g_modelP1 = ModelLoad("asset\\model\\block.fbx");
+	if (INITIAL_MODEL_PATH_P1 == nullptr) {
+		g_Player.m_model = ModelLoad("asset\\model\\block.fbx"); // 確実に存在するファイル
+	}
+	else {
+		g_Player.m_model = ModelLoad(INITIAL_MODEL_PATH_P1);
+	}	//g_modelP1 = ModelLoad("asset\\model\\block.fbx");
 
 	g_Player.m_position = XMFLOAT3(-10.0f, 0.5f, 1.0f);
 	g_Player.m_rotation = XMFLOAT3(0.0f, 0.0f, 0.0f);
@@ -88,7 +92,7 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 
 	g_Player.m_acceleration = XMFLOAT3(0.0f, -9.8f / 600.0f * 0.5f, 0.0f);
 	g_Player.FrictionRate = 0.98f;
-	g_Player.EvolutionType = EVOLUTION_TYPE::EVOLUTION_TYPE_NONE;
+	g_Player.TransformType = TRANSFORM_TYPE::TRANSFORM_TYPE_NONE;
 	g_Player.m_currentHp = g_Player.m_maxHp;
 	g_Player.m_isDead = false;
 	g_Player.m_baseWT = setWTp1;
@@ -145,14 +149,15 @@ void PlayerFinalize()
 }
 void	PlayerUpdate()
 {
-	EvolvePlayer();
+	TransformPlayer();
 	// こいつの中でscaleが1.0fに固定されている
-	ApplyEvolutionEffect();   // 進化タイプに応じたパラメータを適用
+	ApplyTransformEffect();   // 進化タイプに応じたパラメータを適用
 	if (g_Player.m_isDead)return;	//死亡している場合は更新処理をスキップ
 
 //================================================================
 //	武器変更処理(一旦)
 //================================================================
+
 	int slotToUse = -1; 
 
 	if (Keyboard_IsKeyDownTrigger(KK_D1))
@@ -213,6 +218,7 @@ void	PlayerUpdate()
 
 
 	}
+
 
 //================================================================
 //	攻撃処理(変身前)
@@ -936,6 +942,31 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 	}
 }
 
+void PLAYER::EquipBaseWeapon()
+{
+	m_currentWT = m_baseWT;
+	g_setWTP1 = m_baseWT;
+
+	switch (m_baseWT)
+	{
+	case WeaponTerrain::SWORD_WALL:
+		g_Player.EquipWeapon(std::make_unique<Sword>(&g_Player, FALSE));
+		break;
+	case WeaponTerrain::SPEAR_HILL:
+		g_Player.EquipWeapon(std::make_unique<Spear>(&g_Player, FALSE));
+		break;
+	case WeaponTerrain::BOW_HILL:
+		g_Player.EquipWeapon(std::make_unique<Arrow>(&g_Player, FALSE));
+		break;
+	case WeaponTerrain::HAMMER_:
+		g_Player.EquipWeapon(std::make_unique<Hammer>(&g_Player, FALSE));
+		break;
+	case WeaponTerrain::SHURIKEN_:
+		g_Player.EquipWeapon(std::make_unique<Shuriken>(&g_Player, FALSE));
+		break;
+
+	}
+}
 void PLAYER::RoundReset(XMFLOAT3 startPos)
 {
 	//�����I�ȏ�Ԃ̃��Z�b�g
@@ -952,52 +983,11 @@ void PLAYER::RoundReset(XMFLOAT3 startPos)
     EquipBaseWeapon();
 }
 
-void PLAYER::EquipBaseWeapon()
-{
-	// ���݂̕�����N���A
-	m_currentWeapon = nullptr;
-
-	// ���݂̕ϐg��Ԃ��x�[�X�ɖ߂�
-	m_currentWT = m_baseWT;
-	m_reservedWT[2] = WeaponTerrain::NONE;
-
-	// �x�[�X����ɉ����đ������� & �A�j���[�V�����ݒ�
-	if (m_baseWT == WeaponTerrain::SWORD_WALL)
-	{
-		EquipWeapon(std::make_unique<Sword>(this, FALSE)); // P1�Ȃ̂�FALSE
-		//extern int g_changeP1; // �O���[�o���ϐ����Q��
-		g_changeP1 = 0;        // Sword�p�A�j���[�V����ID
-	}
-	else if (m_baseWT == WeaponTerrain::SPEAR_HILL)
-	{
-		EquipWeapon(std::make_unique<Spear>(this, FALSE));
-		//extern int g_changeP1;
-		g_changeP1 = 1;
-	}
-	else if (m_baseWT == WeaponTerrain::BOW_HILL)
-	{
-		EquipWeapon(std::make_unique<Arrow>(this, FALSE));
-		//extern int g_changeP1;
-		g_changeP1 = 3;
-	}
-	else if (m_baseWT == WeaponTerrain::HAMMER_)
-	{
-		EquipWeapon(std::make_unique<Hammer>(this, FALSE));
-		//extern int g_changeP1;
-		g_changeP1 = 2;
-	}
-	else if (m_baseWT == WeaponTerrain::SHURIKEN_)
-	{
-		EquipWeapon(std::make_unique<Shuriken>(this, FALSE));
-		//extern int g_changeP1;
-		g_changeP1 = 4;
-	}
-}
-
 WeaponTerrain GetSetWTP1()
 {
 	return g_setWTP1;
 }
+
 
 //�f�o�b�O�R�[�h
 /*
