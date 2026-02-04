@@ -157,63 +157,68 @@ void	PlayerUpdate()
 //================================================================
 //	武器変更処理(一旦)
 //================================================================
-	//int slotToUse = -1; 
-	//if (Keyboard_IsKeyDownTrigger(KK_D1))
-	//{
-	//	slotToUse = 0;
-	//	g_Player.m_isTransformed = true;
-	//}
-	//if (Keyboard_IsKeyDownTrigger(KK_D0))
-	//{
-	//	slotToUse = 1;
-	//	g_Player.m_isTransformed = true;
-	//}
+
+	int slotToUse = -1; 
+
+	if (Keyboard_IsKeyDownTrigger(KK_D1))
+	{
+		slotToUse = 0;
+		g_Player.m_isTransformed = true;
+	}
+	if (Keyboard_IsKeyDownTrigger(KK_D0))
+	{
+		slotToUse = 1;
+		g_Player.m_isTransformed = true;
+	}
 
 
-	//if (slotToUse != -1)
-	//{
-	//	WeaponTerrain reserved = g_Player.GetReservedWT(slotToUse);
-	//	if (reserved != WeaponTerrain::NONE)
-	//	{
-	//		inGameWTselect data;
-	//		data.player1 = reserved;       
-	//		data.player2 = g_Player2.GetCurrentWT();
+	if (slotToUse != -1)
+	{
+		WeaponTerrain reserved = g_Player.GetReservedWT(slotToUse);
+		if (reserved != WeaponTerrain::NONE)
+		{
+			inGameWTselect data;
+			data.player1 = reserved;       
+			data.player2 = g_Player2.GetCurrentWT();
 
-	//		// generateWT_Apply
-	//		generateWT_Apply(data, &g_Player, &g_Player2, g_pDevice, g_pContext);
-	//		TerrainSet(reserved, FALSE);
-	//		switch (reserved) {
-	//		case WeaponTerrain::SWORD_WALL: 
-	//			g_changeP1 = 1;
-	//			g_Player.m_model = ModelLoad("asset\\model\\char_sword_motion.fbx"); 
-	//			g_Player.EquipWeapon(std::make_unique<Sword>(&g_Player, FALSE));
-	//			break;
-	//		case WeaponTerrain::SPEAR_HILL:
-	//			g_changeP1 = 2;
-	//			g_Player.m_model = ModelLoad("asset\\model\\spear.fbx"); 
-	//			g_Player.EquipWeapon(std::make_unique<Spear>(&g_Player, FALSE));
-	//			break;
-	//		case WeaponTerrain::BOW_HILL:   
-	//			g_changeP1 = 3;
-	//			g_Player.m_model = ModelLoad("asset\\model\\bow.fbx");
-	//			g_Player.EquipWeapon(std::make_unique<Arrow>(&g_Player, FALSE));
-	//			break;
-	//		case WeaponTerrain::HAMMER_:   
-	//			g_changeP1 = 4;
-	//			g_Player.m_model = ModelLoad("asset\\model\\hammer.fbx");
-	//			g_Player.EquipWeapon(std::make_unique<Hammer>(&g_Player, FALSE)); 
-	//			break;
-	//		case WeaponTerrain::SHURIKEN_: 
-	//			g_changeP1 = 5; 
-	//			g_Player.m_model = ModelLoad("asset\\model\\char_shuriken_motion.fbx");
-	//			g_Player.EquipWeapon(std::make_unique<Shuriken>(&g_Player, FALSE));
-	//			break;
-	//		}
-	//		g_Player.SetCurrentWT(reserved);
-	//		g_Player.SetReservedWT(slotToUse, WeaponTerrain::NONE);
-	//	}
+			// generateWT_Apply
+			//generateWT_Apply(data, &g_Player, &g_Player2, g_pDevice, g_pContext);
+			TerrainSet(reserved, FALSE);
+			switch (reserved) {
+			case WeaponTerrain::SWORD_WALL: 
+				g_changeP1 = 1;
+				g_Player.m_model = ModelLoad("asset\\model\\char_sword_motion.fbx"); 
+				g_Player.EquipWeapon(std::make_unique<Sword>(&g_Player, FALSE));
+				break;
+			case WeaponTerrain::SPEAR_HILL:
+				g_changeP1 = 2;
+				g_Player.m_model = ModelLoad("asset\\model\\spear.fbx"); 
+				g_Player.EquipWeapon(std::make_unique<Spear>(&g_Player, FALSE));
+				break;
+			case WeaponTerrain::BOW_HILL:   
+				g_changeP1 = 3;
+				g_Player.m_model = ModelLoad("asset\\model\\char_bow_motion.fbx");
+				g_Player.EquipWeapon(std::make_unique<Arrow>(&g_Player, FALSE));
+				break;
+			case WeaponTerrain::HAMMER_:   
+				g_changeP1 = 4;
+				g_Player.m_model = ModelLoad("asset\\model\\hammer.fbx");
+				g_Player.EquipWeapon(std::make_unique<Hammer>(&g_Player, FALSE)); 
+				break;
+			case WeaponTerrain::SHURIKEN_: 
+				g_changeP1 = 5; 
+				g_Player.m_model = ModelLoad("asset\\model\\char_shuriken_motion.fbx");
+				g_Player.EquipWeapon(std::make_unique<Shuriken>(&g_Player, FALSE));
+				break;
+			}
+			g_Player.SetCurrentWT(reserved);
+			g_Player.SetReservedWT(slotToUse, WeaponTerrain::NONE);
+		}
 
-	//}
+
+
+	}
+
 
 //================================================================
 //	攻撃処理(変身前)

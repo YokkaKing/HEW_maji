@@ -321,4 +321,13 @@ void Hp2_Draw()
     DrawSprite(XMFLOAT2(200, SCREEN_HEIGHT - 150), XMFLOAT2(452 * 0.5, 261 * 0.5), g_Hp.col);
 }
 
+float Hp2_GetTime()
+{
+    return g_Timer.time;
+}
+
+void Hp2_SetTime(float time)
+{
+    g_Timer.time = time;
+}
 

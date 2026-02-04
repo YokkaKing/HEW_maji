@@ -176,7 +176,7 @@ void	Player2Update()
 			data.player2 = reserved;            // P2に予約分を適用
 
 			// 武器の適用
-			generateWT_Apply(data, &g_Player, &g_Player2, g_pDevice2, g_pContext2);
+			//generateWT_Apply(data, &g_Player, &g_Player2, g_pDevice2, g_pContext2);
 
 			// 地形の生成（P2用なので第二引数はTRUE）
 			TerrainSet(reserved, TRUE);
@@ -195,7 +195,8 @@ void	Player2Update()
 				break;
 			case WeaponTerrain::BOW_HILL:
 				g_changeP2 = 3;
-				g_Player2.m_model = ModelLoad("asset\\model\\default_bow.fbx"); 
+				g_Player2.m_model = ModelLoad("asset\\model\\char_bow_motion.fbx"); 
+
 				g_Player2.EquipWeapon(std::make_unique<Arrow>(&g_Player2, TRUE));
 				break;
 			case WeaponTerrain::HAMMER_:
