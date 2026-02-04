@@ -22,7 +22,7 @@
 #include"managerCollider.h"
 #include"terrain.h"
 #include"Player2.h"
-#include"Evolution.h"
+#include"Transform.h"
 #include"Viewport.h"
 #include"direct3d.h"
 #include "HpBar.h"
@@ -58,8 +58,6 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, const
 	g_stage.Initialize(pDevice, pContext);
 
 	g_sponer.Initialize();
-
-	EvolutionInitialize(select.player1, select.player2);
 
 	PlayerInitialize(pDevice, pContext, select.player1); //
 	Player2Initialize(pDevice, pContext, select.player2);
@@ -164,6 +162,12 @@ void Game_Update()
 				g_Player.SetReservedWT(1, selectionData.player1);
 				g_Player2.SetReservedWT(1, selectionData.player2);
 
+				TransformInitialize(
+					g_Player.GetReservedWT(0),  // P1 変身先A
+					g_Player.GetReservedWT(1),  // P1 変身先B
+					g_Player2.GetReservedWT(0), // P2 変身先A
+					g_Player2.GetReservedWT(1)  // P2 変身先B
+				);
 				//変身先選択を終了してゲームへ移行
 				g_selectionPhase = 2;
 			}
@@ -324,12 +328,37 @@ void Game_Draw_Player2()
 int Game_GetRoundResult()
 {
 	// プレイヤーの死亡判定関数をここで使用
+	// プレイヤーの死亡判定で勝敗を判別
 	bool p1Dead = g_Player.isDead();
 	bool p2Dead = g_Player2.isDead();
 
 	if (p1Dead && p2Dead) return 3; // 引き分け（同時死亡）
 	if (p2Dead) return 1;           // P1の勝ち
 	if (p1Dead) return 2;           // P2の勝ち
+
+	// 時間切れ判定の勝敗判別も追加
+	if (Hp_GetTime() <= 0.0f)
+	{//時間切れ時、残りHPで勝敗を判定
+		float P1_hp = Player_GetHp();
+		float P2_hp = Player2_GetHp();
+
+		if (P1_hp > P2_hp)
+		{
+			XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
+			SetFade(40.0f, color, FADE_OUT, SCENE_GAME);
+			Hp_SetTime(60);
+			return 1; //P1の判定勝ち
+		}
+		if (P2_hp > P1_hp)
+		{
+			XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
+			SetFade(40.0f, color, FADE_OUT, SCENE_GAME);
+			Hp_SetTime(60);
+			return 2; //P2の判定勝ち
+		}
+		return 3;                    //完全な引き分け
+
+	}
 
 	return 0; // 戦闘継続中
 }

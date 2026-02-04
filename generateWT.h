@@ -12,11 +12,11 @@
 class PLAYER;
 class PLAYER2;
 
-void generateWT_Apply(
-	const inGameWTselect& selection,
-	PLAYER* pP1,
-	PLAYER2* pP2,
-	ID3D11Device* pDevice,
-	ID3D11DeviceContext* pContext);
+//void generateWT_Apply(
+//	const inGameWTselect& selection,
+//	PLAYER* pP1,
+//	PLAYER2* pP2,
+//	ID3D11Device* pDevice,
+//	ID3D11DeviceContext* pContext);
 
 
