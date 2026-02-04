@@ -79,13 +79,14 @@ void Hammer::Attack()
 {
 	if (m_isAttacking) return; // 攻撃してたら終わり
 	if (m_coolTime > 0.0f) return;
-	if (m_chargePower < 1.0f) return;
 	if (m_isCharging) return;
+	if (!m_isAttack) return;
 
 	m_isAttacking = true; // 攻撃している
 	m_attackTimer = 0.0f; // 攻撃タイマー初期化
 	m_move = { 0.0f, 0.0f, 0.0f };
 	m_coolTime = 1.5f;
+	m_isAttack = false;
 
 	m_collider->SetEnable(true); // 当たり判定の有効
 	MODEL* model = nullptr;
@@ -130,7 +131,8 @@ void Hammer::Update()
 	}
 	
 	bool inputCharge = false;
-	if (Keyboard_IsKeyDown(m_chargeKey)) {
+	if (Keyboard_IsKeyDown(m_chargeKey))
+	{
 		inputCharge = true;
 	}
 	//if (m_playerIndex == 0) inputCharge = Keyboard_IsKeyDown(KK_C);//<< キー設定
@@ -154,6 +156,7 @@ void Hammer::Update()
 	else if (m_isCharging)
 	{
 		PlayAudio(g_hammer, false);
+		m_isAttack = true;
 		// キーを離した瞬間攻撃
 		m_isCharging = false;
 		Attack();
@@ -364,7 +367,11 @@ void Hammer::OnWeaponCollision(GameObject* target)
 
 				m_hitTargets.insert(target);
 
-				if (m_chargePower < 3.5f)
+				if (m_chargePower < 3.4f)
+				{
+					target->TakeDamage(10.0f);
+				}
+				else if (m_chargePower < 3.5f)
 				{
 					target->TakeDamage(20.0f);
 				}
@@ -390,7 +397,11 @@ void Hammer::OnWeaponCollision(GameObject* target)
 
 				m_hitTargets.insert(target);
 
-				if (m_chargePower < 3.5f)
+				if (m_chargePower < 3.4f)
+				{
+					target->TakeDamage(10.0f);
+				}
+				else if (m_chargePower < 3.5f)
 				{
 					target->TakeDamage(20.0f);
 				}

@@ -32,8 +32,6 @@ PLAYER2* g_PlayerShuriken2;
 XMFLOAT3 g_moveShuriken[2]; // �ȈՃA�j���[�V����
 extern Controller g_Controller[2];
 
-
-
 Shuriken::Shuriken(GameObject* player, bool select) : IWeapon(player)
 {
 	g_PlayerShuriken1 = GetPlayer();
@@ -96,7 +94,6 @@ void Shuriken::Update()
 			m_coolTime -= 1.0f / 60.0f;
 		}
 	}
-
 
 	//bool shouldReload = false;
 	//if (Keyboard_IsKeyDown(m_reloadKey)) {

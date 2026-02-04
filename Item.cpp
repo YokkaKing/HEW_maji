@@ -126,7 +126,7 @@ void ITEM::Set()
 	m_isScale = false;
 	m_isDead = false;
 
-	XMFLOAT3 scale = { 0.4f, 0.4f, 0.4f };
+	XMFLOAT3 scale = { 0.1f, 0.1f, 0.1f };
 	m_scale = scale;
 	m_collider = AddComponent<BoxCollider>(this, scale);
 	ManagerCollider::AddCollider(m_collider);
@@ -139,7 +139,7 @@ void ITEM::Update()
 	}
 	m_rotation.y += 0.1f;
 
-	float scaleStep = 0.01f;
+	float scaleStep = 0.0025f;
 
 	if (m_isScale) 
 	{
@@ -151,11 +151,11 @@ void ITEM::Update()
 	}
 
 	// 0.65‚ð’´‚¦‚½‚ç¬‚³‚­‚·‚é(false)A0.15‚ð‰º‰ñ‚Á‚½‚ç‘å‚«‚­‚·‚é(true)
-	if (m_scale.x > 0.65f)
+	if (m_scale.x > 0.15f)
 	{
 		m_isScale = false;
 	}
-	else if (m_scale.x < 0.15f) 
+	else if (m_scale.x < 0.05f) 
 	{
 		m_isScale = true;
 	}

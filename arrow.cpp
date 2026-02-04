@@ -85,11 +85,9 @@ void Arrow::Update()
 		}
 	}
 
-
-	if (Keyboard_IsKeyDown(KK_C)|| g_Controller[0].IsButtonPushed(ControllerButton::X_BUTTON))
-
+	if (!m_selectPlayer)
 	{
-		if (Keyboard_IsKeyDown(KK_C))
+		if (Keyboard_IsKeyDown(KK_C) || g_Controller[0].IsButtonPushed(ControllerButton::X_BUTTON))
 		{
 			// 攻撃中じゃなければチャージできる
 			if (!m_isAttacking && m_coolTime <= 0.0f)
