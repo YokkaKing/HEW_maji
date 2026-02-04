@@ -22,7 +22,7 @@
 #include"managerCollider.h"
 #include"terrain.h"
 #include"Player2.h"
-#include"Evolution.h"
+#include"Transform.h"
 #include"Viewport.h"
 #include"direct3d.h"
 #include "HpBar.h"
@@ -58,8 +58,6 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, const
 	g_stage.Initialize(pDevice, pContext);
 
 	g_sponer.Initialize();
-
-	EvolutionInitialize(select.player1, select.player2);
 
 	PlayerInitialize(pDevice, pContext, select.player1); //
 	Player2Initialize(pDevice, pContext, select.player2);
@@ -164,6 +162,12 @@ void Game_Update()
 				g_Player.SetReservedWT(1, selectionData.player1);
 				g_Player2.SetReservedWT(1, selectionData.player2);
 
+				TransformInitialize(
+					g_Player.GetReservedWT(0),  // P1 変身先A
+					g_Player.GetReservedWT(1),  // P1 変身先B
+					g_Player2.GetReservedWT(0), // P2 変身先A
+					g_Player2.GetReservedWT(1)  // P2 変身先B
+				);
 				//変身先選択を終了してゲームへ移行
 				g_selectionPhase = 2;
 			}
