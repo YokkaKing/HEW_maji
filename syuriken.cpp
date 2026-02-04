@@ -98,20 +98,20 @@ void Shuriken::Update()
 	}
 
 
-	bool shouldReload = false;
-	if (Keyboard_IsKeyDown(m_reloadKey)) {
-		shouldReload = true;
-	}
-	if (g_Controller[m_playerIndex].IsConnected()) {
-		if (g_Controller[m_playerIndex].IsButtonPushed(m_reloadButton)) {
-			shouldReload = true;
-		}
-	}
+	//bool shouldReload = false;
+	//if (Keyboard_IsKeyDown(m_reloadKey)) {
+	//	shouldReload = true;
+	//}
+	//if (g_Controller[m_playerIndex].IsConnected()) {
+	//	if (g_Controller[m_playerIndex].IsButtonPushed(m_reloadButton)) {
+	//		shouldReload = true;
+	//	}
+	//}
 
-	// �����[�h���s
-	if (shouldReload) {
-		Reload();
-	}
+	//// �����[�h���s
+	//if (shouldReload) {
+	//	Reload();
+	//}
 	XMMATRIX rotationMatrixY;
 	XMVECTOR offsetVector;
 	XMVECTOR rotatedOffset;

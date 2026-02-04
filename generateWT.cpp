@@ -33,10 +33,10 @@ void AssignWeaponToPlayer(GameObject* pPlayerObj, T* pOwner, WeaponTerrain type,
 }
 
 
-void generateWT_Apply(const inGameWTselect& selection, PLAYER* pP1, PLAYER2* pP2, ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
-{
-	//プレイヤー1の武器を生成
-	AssignWeaponToPlayer(pP1, pP1, selection.player1, true);
-	//プレイヤー2の武器を生成
-	AssignWeaponToPlayer(pP2, pP2, selection.player2, false);
-}
+//void generateWT_Apply(const inGameWTselect& selection, PLAYER* pP1, PLAYER2* pP2, ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
+//{
+//	//プレイヤー1の武器を生成
+//	AssignWeaponToPlayer(pP1, pP1, selection.player1, true);
+//	//プレイヤー2の武器を生成
+//	AssignWeaponToPlayer(pP2, pP2, selection.player2, false);
+//}

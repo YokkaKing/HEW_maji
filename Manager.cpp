@@ -96,6 +96,11 @@ void Manager_Update()
 					// ここで初めてGameシーンを破棄する
 					//Game_Finalize();
 					SetScene(SCENE_TITLE);
+					//複数回のゲームプレイを想定してゲームループ用変数を初期化
+					g_RoundCount = 0;
+					g_P1Wins = 0;
+					g_P2Wins = 0;
+					isMatchOver = false;
 				}
 				else
 				{
