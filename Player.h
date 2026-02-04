@@ -21,11 +21,11 @@ using namespace DirectX;
 #include "IWeapon.h"
 #include"selectWeaponTerrain.h"
 
-enum class EVOLUTION_TYPE
+enum class TRANSFORM_TYPE
 {
-	EVOLUTION_TYPE_A, // 機動力特化
-	EVOLUTION_TYPE_B, // 制動・防御特化
-	EVOLUTION_TYPE_NONE // 未進化
+	TRANSFORM_TYPE_A, // 機動力特化
+	TRANSFORM_TYPE_B, // 制動・防御特化
+	TRANSFORM_TYPE_NONE // 未進化
 };
 
 //プレイヤーの状態
@@ -43,8 +43,8 @@ class PLAYER : public GameObject
 {
 public:
 	float           FrictionRate;   // 速度減衰率
-	EVOLUTION_TYPE  EvolutionType;  // 進化タイプ (A or B or NONE)
-	int EvolutionTimer;
+	TRANSFORM_TYPE  TransformType;  // 進化タイプ (A or B or NONE)
+	int TransformTimer;
 	PLAYER_STATE	State;		//状態
 	std::unique_ptr<IWeapon> m_currentWeapon = nullptr; // 現在装備中の武器
 	bool			m_isDead = false; // 死亡フラグ
