@@ -27,6 +27,7 @@ public:
     std::shared_ptr<Collider> m_collider; // コライダーへの参照を保持
 
     bool m_isAttacking = false;
+    bool m_isAttack = false;
     float m_attackTimer = 0.0f;
     const float ATTACK_DURATION = 0.5f;   // 攻撃の有効時間
 

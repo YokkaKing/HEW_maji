@@ -32,8 +32,6 @@ PLAYER2* g_PlayerShuriken2;
 XMFLOAT3 g_moveShuriken[2]; // �ȈՃA�j���[�V����
 extern Controller g_Controller[2];
 
-
-
 Shuriken::Shuriken(GameObject* player, bool select) : IWeapon(player)
 {
 	g_PlayerShuriken1 = GetPlayer();
@@ -97,21 +95,6 @@ void Shuriken::Update()
 		}
 	}
 
-
-	bool shouldReload = false;
-	if (Keyboard_IsKeyDown(m_reloadKey)) {
-		shouldReload = true;
-	}
-	if (g_Controller[m_playerIndex].IsConnected()) {
-		if (g_Controller[m_playerIndex].IsButtonPushed(m_reloadButton)) {
-			shouldReload = true;
-		}
-	}
-
-	// �����[�h���s
-	if (shouldReload) {
-		Reload();
-	}
 	XMMATRIX rotationMatrixY;
 	XMVECTOR offsetVector;
 	XMVECTOR rotatedOffset;
