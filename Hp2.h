@@ -58,4 +58,7 @@ void Hp2_Finalize();
 void Hp2_Update();
 void Hp2_Draw();
 
+float Hp_GetTime(); //時間制限用の関数
+void Hp_SetTime(float time); //時間制限のリセット用
+
 #endif // HP2_H

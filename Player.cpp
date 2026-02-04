@@ -154,6 +154,7 @@ void	PlayerUpdate()
 //	武器変更処理(一旦)
 //================================================================
 	int slotToUse = -1; 
+
 	if (Keyboard_IsKeyDownTrigger(KK_D1))
 	{
 		slotToUse = 0;
@@ -176,7 +177,7 @@ void	PlayerUpdate()
 			data.player2 = g_Player2.GetCurrentWT();
 
 			// generateWT_Apply
-			generateWT_Apply(data, &g_Player, &g_Player2, g_pDevice, g_pContext);
+			//generateWT_Apply(data, &g_Player, &g_Player2, g_pDevice, g_pContext);
 			TerrainSet(reserved, FALSE);
 			switch (reserved) {
 			case WeaponTerrain::SWORD_WALL: 
@@ -191,7 +192,7 @@ void	PlayerUpdate()
 				break;
 			case WeaponTerrain::BOW_HILL:   
 				g_changeP1 = 3;
-				g_Player.m_model = ModelLoad("asset\\model\\char_bow_motion_b.fbx");
+				g_Player.m_model = ModelLoad("asset\\model\\char_bow_motion.fbx");
 				g_Player.EquipWeapon(std::make_unique<Arrow>(&g_Player, FALSE));
 				break;
 			case WeaponTerrain::HAMMER_:   
@@ -208,6 +209,8 @@ void	PlayerUpdate()
 			g_Player.SetCurrentWT(reserved);
 			g_Player.SetReservedWT(slotToUse, WeaponTerrain::NONE);
 		}
+
+
 
 	}
 
