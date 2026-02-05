@@ -326,4 +326,41 @@ void ApplyTransformEffect2()
     }
 }
 
-
+bool GetIsUsedA_P1()
+{
+    return g_IsUsedA_P1;
+}
+bool GetIsUsedB_P1()
+{
+    return g_IsUsedB_P1;
+}
+bool GetIsUsedA_P2()
+{
+    return g_IsUsedA_P2;
+}
+bool GetIsUsedB_P2()
+{
+    return g_IsUsedB_P2;
+}
+void SetIsUsed_P1(int no, bool flag)
+{
+    if (no == 0)
+    {
+        g_IsUsedA_P1 = flag;
+    }
+    else
+    {
+        g_IsUsedB_P1 = flag;
+    }
+}
+void SetIsUsed_P2(int no, bool flag)
+{
+    if (no == 0)
+    {
+        g_IsUsedA_P2 = flag;
+    }
+    else
+    {
+        g_IsUsedB_P2 = flag;
+    }
+}

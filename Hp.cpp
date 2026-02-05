@@ -143,7 +143,6 @@ void Hp_Finalize()
 }
 void Hp_Update()
 { 
-
     float prevHp1 = g_Hp.m_Hp;
     float prevHp2 = g_Hp2.m_Hp;
 
