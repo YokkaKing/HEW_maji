@@ -10,6 +10,17 @@
 #include <random>
 #include "keyboard.h"
 #include "shader.h"
+#include "Select_Transform_Ui.h"
+
+//背景を暗くするテクスチャ
+static	ID3D11ShaderResourceView* g_TextureBg = NULL;
+
+//================================================================
+//	初期化
+//================================================================
+static ID3D11Device* g_pDevice = nullptr;
+static ID3D11DeviceContext* g_pContext = nullptr;
+
 
 //コンストラクタ
 TransformManager::TransformManager()
@@ -47,7 +58,13 @@ TransformManager::~TransformManager()
 void TransformManager::Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
 	m_pContext = pContext;
-
+	g_pDevice = pDevice;
+	g_pContext = pContext;
+	TexMetadata		metadata;
+	ScratchImage	image;
+	LoadFromWICFile(L"asset\\texture\\selectBg2.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+	CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureBg);
+	assert(&g_TextureBg);
 	//変身先テクスチャのロード 選択中と非選択中で全10種
 	const char* paths[6][2] = {
 		"", "", //enum class WeaponTerrainにNONEを追加したため
@@ -90,9 +107,10 @@ bool TransformManager::Update(float deltaTime)
 	{
 		return false;
 	}
-
+	SetTransformUi_IsUsed(m_isActive);
 	//タイマー更新
 	m_timer -= deltaTime;
+	SetTransformUi_time(m_timer);
 	if (m_timer <= 0.0f)
 	{
 		m_timer = 0.0f;
@@ -265,7 +283,7 @@ void TransformManager::Draw(int windowID)
 	//ブレンド有効化
 	SetBlendState(BLENDSTATE_ALFA);
 
-	//描画座標用変数
+	//描画座標用変数s
 	float centerX = sw * 0.5f;
 	float centerY = sh * 0.5f;
 
@@ -282,7 +300,10 @@ void TransformManager::Draw(int windowID)
 //変身先選択用関数
 void TransformManager::DrawPlayerUI(const PlayerState& state, XMFLOAT2 basePos)
 {
-	float cardSpacing = 200.0f; //変身先UIの間隔
+	g_pContext->PSSetShaderResources(0, 1, &g_TextureBg);
+	SetBlendState(BLENDSTATE_ALFA);
+	DrawSprite(XMFLOAT2(1920 / 2, 1080 / 2 - 25), XMFLOAT2(1920, 1130), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f));
+	float cardSpacing = 300.0f; //変身先UIの間隔
 
 	for (int i = 0; i < 2; i++)
 	{
@@ -294,10 +315,12 @@ void TransformManager::DrawPlayerUI(const PlayerState& state, XMFLOAT2 basePos)
 		ID3D11ShaderResourceView* pTex = m_pWeaponTextures[(int)type][textureState];
 
 		if (pTex) {
+
+
 			m_pContext->PSSetShaderResources(0, 1, &pTex);
 
 			//選択中の強調サイズ
-			XMFLOAT2 size = (state.selectedIndex == i) ? XMFLOAT2(240, 340) : XMFLOAT2(200, 300);
+			XMFLOAT2 size = (state.selectedIndex == i) ? XMFLOAT2(649*0.6, 762*0.6) : XMFLOAT2(649 * 0.5, 762 * 0.5);
 
 			DrawSprite(pos, size, DirectX::XMFLOAT4(1, 1, 1, 1));
 		}
