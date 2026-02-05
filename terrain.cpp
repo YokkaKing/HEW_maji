@@ -703,7 +703,7 @@ void TerrainFinalize()
 }
 void TerrainUpdate()
 {
-	if (Keyboard_IsKeyDown(KK_L))
+	if (Keyboard_IsKeyDown(KK_O))
 	{
 		// クールタイムがあれば発動できない
 		if (g_Terrain.m_coolTime[0] <= 0)
