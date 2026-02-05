@@ -901,6 +901,8 @@ void PLAYER2::RoundReset(XMFLOAT3 startPos)
 	EquipBaseWeapon();
 
 	g_Player2AttackPlaying = false;
+	g_Player2.SetReservedWT(0, WeaponTerrain::NONE);
+	g_Player2.SetReservedWT(1, WeaponTerrain::NONE);
 }
 
 void PLAYER2::EquipBaseWeapon()

@@ -199,7 +199,6 @@ void	PlayerUpdate()
 				break;
 			}
 			g_Player.SetCurrentWT(reserved);
-			g_Player.SetReservedWT(slotToUse, WeaponTerrain::NONE);
 		}
 	}
 
@@ -970,6 +969,8 @@ void PLAYER::RoundReset(XMFLOAT3 startPos)
     EquipBaseWeapon();
 
 	g_Player1AttackPlaying = false;
+	g_Player.SetReservedWT(0, WeaponTerrain::NONE);
+	g_Player.SetReservedWT(1, WeaponTerrain::NONE);
 }
 
 WeaponTerrain GetSetWTP1()
