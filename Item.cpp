@@ -15,11 +15,12 @@
 #include"Player.h"
 #include"Player2.h"
 #include"managerCollider.h"
+#include"Transform.h"
 
 //================================================================
 //	マクロ定義
 //================================================================
-#define SPONE_TIME (10.0f)
+#define SPONE_TIME (40.0f)
 
 //================================================================
 //	グローバル変数
@@ -257,6 +258,36 @@ void ITEM::OnCollision(const CollisionInfo& info)
 
 				m_isDead = true; // 消滅
 			}
+			else
+			{
+				PlayAudio(g_item, false);
+
+				bool flag[2];
+
+				flag[0] = GetIsUsedA_P1();
+				flag[1] = GetIsUsedB_P1();
+
+				// どちらも変身していなければ
+				if (flag[0] && flag[1])
+				{
+					// 何もしない
+				}
+				else if (!flag[0] && flag[1]) // 変身を一回していたら
+				{
+					SetIsUsed_P1(0, true); // 変身を回復
+				}
+				else if (flag[0] && !flag[1]) // 変身を一回していたら
+				{
+					SetIsUsed_P1(1, true); // 変身を回復
+				}
+				else if (!flag[0] && !flag[1]) // 二回変身していたら
+				{
+					int r = rand() % 2;
+					SetIsUsed_P1(r, true); // どちらかの変身を回復
+				}
+
+				m_isDead = true; // 消滅するだけ
+			}
 		}
 
 		if (info.other->m_tag == "Player2")
@@ -279,6 +310,36 @@ void ITEM::OnCollision(const CollisionInfo& info)
 				}
 
 				m_isDead = true; // 消滅
+			}
+			else
+			{
+				PlayAudio(g_item, false);
+
+				bool flag[2];
+
+				flag[0] = GetIsUsedA_P2();
+				flag[1] = GetIsUsedB_P2();
+
+				// どちらも変身していなければ
+				if (flag[0] && flag[1])
+				{
+					// 何もしない
+				}
+				else if (!flag[0] && flag[1]) // 変身を一回していたら
+				{
+					SetIsUsed_P2(0, true); // 変身を回復
+				}
+				else if (flag[0] && !flag[1]) // 変身を一回していたら
+				{
+					SetIsUsed_P2(1, true); // 変身を回復
+				}
+				else if (!flag[0] && !flag[1]) // 二回変身していたら
+				{
+					int r = rand() % 2;
+					SetIsUsed_P2(r, true); // どちらかの変身を回復
+				}
+
+				m_isDead = true; // 消滅するだけ
 			}
 		}
 	}
