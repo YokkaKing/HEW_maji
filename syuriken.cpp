@@ -295,6 +295,7 @@ void ShurikenShot::OnCollision(const CollisionInfo& info)
 	if (info.other->m_tag == "Attack") return; // 武器に当たっても無視
 	if (!m_selectPlayer && info.other->m_tag == "Player") return; // 武器はなった本人は無視
 	if (m_selectPlayer && info.other->m_tag == "Player2") return; // 武器はなった本人は無視
+	if (info.other->m_tag == "Item") return;
 
 	m_velocity = { 0.0f, 0.0f, 0.0f };
 	m_isStuck = true;

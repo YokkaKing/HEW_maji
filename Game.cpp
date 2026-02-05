@@ -35,6 +35,7 @@
 #include "transformManager.h"
 #include"Stage.h"
 #include"Item.h"
+#include "Select_Transform_Ui.h"
 //================================================================
 //	グローバル変数
 //================================================================
@@ -70,7 +71,7 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, const
 
 	Camera_Initialize();	//カメラ初期化
 	Camera2_Initialize();	//カメラ初期化
-
+	Select_Weapon_Ui_Initialize(pDevice, pContext);
 	g_transformMngr.Initialize(pDevice, pContext); //変身先選択の初期化
 	g_selectionPhase = 0;
 	g_transformMngr.StartSelection(WeaponTerrain::NONE, WeaponTerrain::NONE);
@@ -125,6 +126,7 @@ void Game_Finalize()
 	Hp_Finalize();
 	Hp2_Finalize();
 	g_transformMngr.Finalize();
+	Select_Weapon_Ui_Finalize();
 	//=====================
 	ManagerCollider::ClearCollider();
 	//UnloadAudio(g_BgmID);//サウンドの解放
@@ -153,6 +155,7 @@ void Game_Update()
 
 				//変身先選択(2回目)に移る
 				g_selectionPhase = 1;
+				SetTransformUi_SelectNum(g_selectionPhase);
 
 				g_transformMngr.StartSelection(selectionData.player1, selectionData.player2);
 			}
@@ -170,6 +173,7 @@ void Game_Update()
 				);
 				//変身先選択を終了してゲームへ移行
 				g_selectionPhase = 2;
+				SetTransformUi_IsUsed(false);
 			}
 		}
 		
@@ -195,6 +199,7 @@ void Game_Update()
 		Timer_Update();
 		Number_Update();
 		Hp_Update();
+		Select_Weapon_Ui_Update();
 		Hp2_Update();
 		//=====================
 
@@ -274,16 +279,14 @@ void Game_Draw_Player1()
 	Shader_SetLight(Light.Light);	//ライト構造体をシェーダーへセット
 	SetDepthTest(FALSE);
 	//===UI描画========
+	Hp_Draw();
 	if (g_transformMngr.IsActive())
 	{
 		g_transformMngr.Draw(0);
 	}
+	Select_Weapon_Ui_Draw();
 
-	//Hpbar_Draw(); //<--HpBar描画
-	//Timer_Draw();
-	//Number_Draw();
 
-	Hp_Draw();
 
 	//================
 	Light.SetEnable(TRUE);			//ライティングON
@@ -313,12 +316,14 @@ void Game_Draw_Player2()
 	Shader_SetLight(Light.Light);	//ライト構造体をシェーダーへセット
 	SetDepthTest(FALSE);
 
+	Hp2_Draw();
 	if (g_transformMngr.IsActive())
 	{
 		g_transformMngr.Draw(1);
 	}
+	Select_Weapon_Ui_Draw();
 
-	Hp2_Draw();
+
 
 	//Timer_Draw();
 	//Number_Draw();
