@@ -712,17 +712,18 @@ void PlayerDraw()
 		g_Player.m_rotation.x,
 		g_Player.m_rotation.y + XM_PI,
 		g_Player.m_rotation.z);
+	XMMATRIX	translation = XMMatrixTranslation(
+		g_Player.m_position.x,
+		g_Player.m_position.y - 0.8f,
+		g_Player.m_position.z);
 	if (g_setWTP1 == WeaponTerrain::SPEAR_HILL||g_changeP1 == 2) //移動
 	{
-		XMMATRIX	translation = XMMatrixTranslation(
+		    translation = XMMatrixTranslation(
 			g_Player.m_position.x,
 			g_Player.m_position.y - 0.3f,
 			g_Player.m_position.z);
 	}
-	XMMATRIX	translation = XMMatrixTranslation(
-		g_Player.m_position.x,
-		g_Player.m_position.y - 0.6f,
-		g_Player.m_position.z);
+
 	XMMATRIX	world = scale * rotation * translation;
 
 	//シェーダーへ行列をセット

@@ -84,6 +84,7 @@ void Spear::Attack()
 {
 	if (m_isAttacking) return; // 攻撃してたら終わり
 	if (m_coolTime > 0.0f) return;
+	if (!m_isAttack) return;
 	PlayAudio(g_spear, false);
 	m_weapon->m_scale.x = 0.1f;
 	m_weapon->m_scale.y = 0.1f;
@@ -95,6 +96,7 @@ void Spear::Attack()
 	m_fxAnim.PlayFrames(1, 60, 60.0f, false, 1.0f);
 	m_collider->SetEnable(true); // 当たり判定の有効
 	m_weapon->m_delay = 0.1f;
+	m_isAttack = false;
 	// 多重ヒット帽子リストをリセット
 	m_hitTargets.clear();
 }
@@ -109,11 +111,10 @@ void Spear::Update()
 		}
 	}
 
-
 	bool inputCharge = false;
 
 	// �L�[�{�[�h�`�F�b�N
-	if (Keyboard_IsKeyDown(m_chargeKey)) {
+	if (Keyboard_IsKeyDown(m_chargeKey) || Keyboard_IsKeyDown(KK_C)) {
 		inputCharge = true;
 	}
 	// �R���g���[���[�`�F�b�N
@@ -124,10 +125,9 @@ void Spear::Update()
 	}
 
 	// ����p�t���O���g���ă`���[�W����
-	if (inputCharge)
+	if (!m_selectPlayer)
 	{
-		if (!m_isAttacking && m_coolTime <= 0.0f)
-
+		if (inputCharge)
 		{
 			// 攻撃中じゃなければチャージできる
 			if (!m_isAttacking && m_coolTime <= 0.0f)
@@ -139,19 +139,27 @@ void Spear::Update()
 		}
 		else if (m_isCharging)
 		{
-			// キーを離した瞬間に投げる
-			Throw(m_chargePower, m_selectPlayer);
-			m_isCharging = false;
-			m_chargePower = 0.0f;
+			if (m_chargePower <= 1.0f)
+			{
+				m_isAttack = true;
+				Attack();
+				m_isCharging = false;
+			}
+			else
+			{
+				// キーを離した瞬間に投げる
+				Throw(m_chargePower, m_selectPlayer);
+				m_isCharging = false;
+				m_chargePower = 0.0f;
 
-			// 投げた後のクールタイム
-			m_coolTime = 1.5f;
+				// 投げた後のクールタイム
+				m_coolTime = 1.5f;
+			}
 		}
 	}
 
 	if (m_selectPlayer)
 	{
-
 		if (Keyboard_IsKeyDown(KK_P))
 		{
 			// 攻撃中じゃなければチャージできる
@@ -164,13 +172,22 @@ void Spear::Update()
 		}
 		else if (m_isCharging)
 		{
-			// キーを離した瞬間に投げる
-			Throw(m_chargePower, m_selectPlayer);
-			m_isCharging = false;
-			m_chargePower = 0.0f;
+			if (m_chargePower <= 1.0f)
+			{
+				m_isAttack = true;
+				Attack();
+				m_isCharging = false;
+			}
+			else
+			{
+				// キーを離した瞬間に投げる
+				Throw(m_chargePower, m_selectPlayer);
+				m_isCharging = false;
+				m_chargePower = 0.0f;
 
-			// 投げた後のクールタイム
-			m_coolTime = 1.5f;
+				// 投げた後のクールタイム
+				m_coolTime = 1.5f;
+			}
 		}
 	}
 	
@@ -247,7 +264,6 @@ void Spear::Update()
 	// 攻撃してるとき
 	if (m_isAttacking)
 	{
-
 		if (m_weapon->m_delay <= 0)
 		{
 			m_attackTimer += (1.0f / 60.0f);
