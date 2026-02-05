@@ -696,19 +696,21 @@ void	Player2Draw()
 		g_Player2.m_rotation.x,
 		g_Player2.m_rotation.y+ XM_PI,
 		g_Player2.m_rotation.z);
+
+	XMMATRIX	translation = XMMatrixTranslation(
+		g_Player2.m_position.x,
+		g_Player2.m_position.y - 1.0f,
+		g_Player2.m_position.z);
+
 	if (g_setWTP2 == WeaponTerrain::SPEAR_HILL || g_changeP2 == 2) //移動
 	{
-		XMMATRIX	translation = XMMatrixTranslation(
+		    translation = XMMatrixTranslation(
 			g_Player2.m_position.x,
 			g_Player2.m_position.y - 0.3f,
 			g_Player2.m_position.z);
 	}
-	XMMATRIX	translation = XMMatrixTranslation(
-		g_Player2.m_position.x,
-		g_Player2.m_position.y - 0.6f,
-		g_Player2.m_position.z);
-	XMMATRIX	world = scale * rotation * translation;
 
+	XMMATRIX	world = scale * rotation * translation;
 	//シェーダーへ行列をセット
 	Shader_SetWorldMatrix(world);
 
