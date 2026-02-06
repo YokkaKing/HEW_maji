@@ -41,7 +41,7 @@ public:
 
 	//描画処理：用意されているテクスチャを描画
 	void Draw(int windowID);
-	void DrawPlayerUI(const PlayerState& state, XMFLOAT2 basePos);
+	void DrawPlayerUI(int playerIndex, const PlayerState& state, XMFLOAT2 basePos);
 	float GetTransformTimer();
 
 	//決定したデータを取得

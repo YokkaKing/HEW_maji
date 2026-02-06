@@ -47,6 +47,7 @@ int g_teamLogo = -1;
 int g_terrain = -1;
 int g_title = -1;
 int g_winner = -1;
+int g_select_transform = -1;
 
 void InitAudio()
 {
@@ -78,6 +79,7 @@ void InitAudio()
 	g_terrain = LoadAudio("asset\\Audio\\terrain.wav");
 	g_title = LoadAudio("asset\\Audio\\title.wav");
 	g_winner = LoadAudio("asset\\Audio\\winner.wav");
+	g_select_transform = LoadAudio("asset\\Audio\\select_transform.wav");
 }
 
 void UninitAudio()

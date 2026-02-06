@@ -111,6 +111,20 @@ void Spear::Update()
 		}
 	}
 
+
+	bool inputCharge = false;
+
+	if (Keyboard_IsKeyDown(m_chargeKey) || Keyboard_IsKeyDown(KK_C)) {
+		inputCharge = true;
+	}
+	// �R���g���[���[�`�F�b�N
+	if (g_Controller[m_playerIndex].IsConnected()) {
+		if (g_Controller[m_playerIndex].IsButtonDown(m_chargeButton)) {
+			inputCharge = true;
+		}
+	}
+
+
 	// ����p�t���O���g���ă`���[�W����
 	if (!m_selectPlayer)
 	{

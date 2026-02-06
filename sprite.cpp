@@ -284,6 +284,52 @@ void DrawSpriteScroll(XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 col,
 }
 
 
+void DrawSpriteAnimation(XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 col,
+	XMFLOAT2 texcoord)
+{
+
+	g_pDevice = Direct3D_GetDevice();
+	g_pContext = Direct3D_GetDeviceContext();
+
+	// 頂点バッファをロックする
+	D3D11_MAPPED_SUBRESOURCE msr;
+	g_pContext->Map(g_pVertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &msr);
+
+	// 頂点バッファへの仮想ポインタを取得
+	Vertex3D* v = (Vertex3D*)msr.pData;
+
+	// 指定の位置に指定のサイズ、色の四角形を描画する /////////テクスチャ追加
+	v[0].position = { pos.x - (size.x / 2), pos.y - (size.y / 2), 0.0f };
+	v[0].color = col;
+	v[0].texCoord = { 0, 0 };
+
+	v[1].position = { pos.x + (size.x / 2), pos.y - (size.y / 2), 0.0f };
+	v[1].color = col;
+	v[1].texCoord = { texcoord.x, 0 };
+
+	v[2].position = { pos.x - (size.x / 2), pos.y + (size.y / 2), 0.0f };
+	v[2].color = col;
+	v[2].texCoord = { 0, texcoord.y };
+
+	v[3].position = { pos.x + (size.x / 2), pos.y + (size.y / 2), 0.0f };
+	v[3].color = col;
+	v[3].texCoord = { texcoord.x, texcoord.y };
+
+
+	// 頂点バッファのロックを解除
+	g_pContext->Unmap(g_pVertexBuffer, 0);
+
+	// 頂点バッファを描画パイプラインに設定
+	UINT stride = sizeof(Vertex3D);//頂点１つあたりのサイズを指定
+	UINT offset = 0;
+	g_pContext->IASetVertexBuffers(0, 1, &g_pVertexBuffer, &stride, &offset);
+
+	// プリミティブトポロジ設定　ポリゴンの描画ルール的なもの
+	g_pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+
+	// ポリゴン描画命令発行
+	g_pContext->Draw(4, 0);//表示に使用する頂点数を指定}
+}
 void DrawSpriteExRotation(XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 col, int bno, int wc, int hc, float radian)
 {
 
