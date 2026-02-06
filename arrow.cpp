@@ -17,9 +17,7 @@
 #include"Player.h"
 #include"Player2.h"
 #include"keyboard.h"
-
 #include"Controller.h"
-
 
 //================================================================
 //	グローバル変数
@@ -111,7 +109,7 @@ void Arrow::Update()
 
 	if (m_selectPlayer)
 	{
-		if (Keyboard_IsKeyDown(KK_P))
+		if (Keyboard_IsKeyDown(KK_P) || g_Controller[1].IsButtonPushed(ControllerButton::X_BUTTON))
 		{
 			// 攻撃中じゃなければチャージできる
 			if (!m_isAttacking && m_coolTime <= 0.0f)

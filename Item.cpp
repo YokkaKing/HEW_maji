@@ -20,7 +20,7 @@
 //================================================================
 //	マクロ定義
 //================================================================
-#define SPONE_TIME (40.0f)
+#define SPONE_TIME (5.0f)
 
 //================================================================
 //	グローバル変数
@@ -268,22 +268,22 @@ void ITEM::OnCollision(const CollisionInfo& info)
 				flag[1] = GetIsUsedB_P1();
 
 				// どちらも変身していなければ
-				if (flag[0] && flag[1])
+				if (!flag[0] && !flag[1])
 				{
 					// 何もしない
 				}
-				else if (!flag[0] && flag[1]) // 変身を一回していたら
-				{
-					SetIsUsed_P1(0, true); // 変身を回復
-				}
 				else if (flag[0] && !flag[1]) // 変身を一回していたら
 				{
-					SetIsUsed_P1(1, true); // 変身を回復
+					SetIsUsed_P1(0, false); // 変身を回復
 				}
-				else if (!flag[0] && !flag[1]) // 二回変身していたら
+				else if (!flag[0] && flag[1]) // 変身を一回していたら
+				{
+					SetIsUsed_P1(1, false); // 変身を回復
+				}
+				else if (flag[0] && flag[1]) // 二回変身していたら
 				{
 					int r = rand() % 2;
-					SetIsUsed_P1(r, true); // どちらかの変身を回復
+					SetIsUsed_P1(r, false); // どちらかの変身を回復
 				}
 
 				m_isDead = true; // 消滅するだけ
@@ -321,22 +321,22 @@ void ITEM::OnCollision(const CollisionInfo& info)
 				flag[1] = GetIsUsedB_P2();
 
 				// どちらも変身していなければ
-				if (flag[0] && flag[1])
+				if (!flag[0] && !flag[1])
 				{
 					// 何もしない
 				}
-				else if (!flag[0] && flag[1]) // 変身を一回していたら
-				{
-					SetIsUsed_P2(0, true); // 変身を回復
-				}
 				else if (flag[0] && !flag[1]) // 変身を一回していたら
 				{
-					SetIsUsed_P2(1, true); // 変身を回復
+					SetIsUsed_P2(0, false); // 変身を回復
 				}
-				else if (!flag[0] && !flag[1]) // 二回変身していたら
+				else if (!flag[0] && flag[1]) // 変身を一回していたら
+				{
+					SetIsUsed_P2(1, false); // 変身を回復
+				}
+				else if (flag[0] && flag[1]) // 二回変身していたら
 				{
 					int r = rand() % 2;
-					SetIsUsed_P2(r, true); // どちらかの変身を回復
+					SetIsUsed_P2(r, false); // どちらかの変身を回復
 				}
 
 				m_isDead = true; // 消滅するだけ
