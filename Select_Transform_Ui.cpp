@@ -260,13 +260,21 @@ void SelectTransformUi_Draw()
     }
 }
 
-void SetTransformUi_IsUsed(bool flg,int num)
+void SetTransformUi_IsUsed(bool flg, int num)
 {
+    // numの安全チェック（念のため）
+    if (num < 0 || num > 1) return;
+
+    // Before状態を保存
+    bool wasUsed = g_Ui[num].isUsed;
+
+    // 状態更新
     g_Ui[num].isUsed = flg;
-    if (flg)
+
+    // ★false→trueになった瞬間だけリセットする
+    if (flg && !wasUsed)
     {
         SelectTransformUi_CardAnim_Reset(num);
-        
     }
 }
 void SetTransformUi_time(float time)
