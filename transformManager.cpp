@@ -11,7 +11,7 @@
 #include "keyboard.h"
 #include "shader.h"
 #include "Select_Transform_Ui.h"
-
+#include "Audio.h"
 //背景を暗くするテクスチャ
 static	ID3D11ShaderResourceView* g_TextureBg = NULL;
 
@@ -38,6 +38,9 @@ TransformManager::TransformManager()
 	// 状態の初期化
 	m_isActive = false;
 	m_timer = 20.0f;
+	//カードアニメーションのリセット
+	SelectTransformUi_CardAnim_Reset(0);
+	SelectTransformUi_CardAnim_Reset(1);
 
 	// プレイヤー状態の初期化
 	m_p1.isReady = false;
@@ -67,22 +70,18 @@ void TransformManager::Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pC
 	assert(&g_TextureBg);
 	//変身先テクスチャのロード 選択中と非選択中で全10種
 	const char* paths[6][2] = {
-		"", "", //enum class WeaponTerrainにNONEを追加したため
+		"", "", 
 		"asset\\texture\\Sword_Active.png", "asset\\texture\\Sword_Inactive.png",
 		"asset\\texture\\Spear_Active.png", "asset\\texture\\Spear_Inactive.png",
 		"asset\\texture\\Bow_Active.png", "asset\\texture\\Bow_Inactive.png",
 		"asset\\texture\\Hammer_Active.png", "asset\\texture\\Hammer_Inactive.png",
 		"asset\\texture\\Shuriken_Active.png", "asset\\texture\\Shuriken_Inactive.png",
 	};
-
 	for (int i = 1; i < (int)WeaponTerrain::MAX; i++) //0番(NONE)を飛ばす
 	{
 		m_pWeaponTextures[i][0] = CreateSRV(pDevice, paths[i][0]); //選択中(明るい)
 		m_pWeaponTextures[i][1] = CreateSRV(pDevice, paths[i][1]); //非選択中(暗い)
-
 	}
-
-
 }
 
 void TransformManager::Finalize()
@@ -107,7 +106,7 @@ bool TransformManager::Update(float deltaTime)
 	{
 		return false;
 	}
-	SetTransformUi_IsUsed(m_isActive);
+	
 	//タイマー更新
 	m_timer -= deltaTime;
 	SetTransformUi_time(m_timer);
@@ -128,15 +127,18 @@ bool TransformManager::Update(float deltaTime)
 		if (Keyboard_IsKeyDownTrigger(KK_LEFT))
 		{
 			m_p1.selectedIndex = 0; //左を選択
+			PlayAudio(g_cursorMove, false);
 		}
 		if (Keyboard_IsKeyDownTrigger(KK_RIGHT))
 		{
 			m_p1.selectedIndex = 1; //右を選択
+			PlayAudio(g_cursorMove, false);
 		}
 		if (Keyboard_IsKeyDownTrigger(KK_LEFTCONTROL))
 		{
 			m_p1.isReady = true;
 			m_p1.selectedWT = m_p1.choices[m_p1.selectedIndex]; //決定
+			PlayAudio(g_button, false);
 		}
 	}
 	//P2の入力処理
@@ -145,16 +147,25 @@ bool TransformManager::Update(float deltaTime)
 		if (Keyboard_IsKeyDownTrigger(KK_D3))
 		{
 			m_p2.selectedIndex = 0; //左を選択
+			PlayAudio(g_cursorMove, false);
 		}
 		if (Keyboard_IsKeyDownTrigger(KK_D4))
 		{
 			m_p2.selectedIndex = 1; //右を選択
+			PlayAudio(g_cursorMove, false);
 		}
 		if (Keyboard_IsKeyDownTrigger(KK_D5))
 		{
 			m_p2.isReady = true;
 			m_p2.selectedWT = m_p2.choices[m_p2.selectedIndex]; //決定
+			PlayAudio(g_button, false);
 		}
+	}
+	//カードアニメーション更新
+	if (m_isActive)
+	{
+		SelectTransformUi_CardAnim_Update(0, m_p1.selectedIndex, m_p1.isReady, deltaTime);
+		SelectTransformUi_CardAnim_Update(1, m_p2.selectedIndex, m_p2.isReady, deltaTime);
 	}
 
 	//両者が準備完了したかのチェック
@@ -181,6 +192,10 @@ void TransformManager::StartSelection(WeaponTerrain excludeP1, WeaponTerrain exc
 	m_p2.isReady = false;
 	m_p1.selectedIndex = 0;
 	m_p2.selectedIndex = 0;
+
+	//カードアニメーションリセット
+	SelectTransformUi_CardAnim_Reset(0);
+	SelectTransformUi_CardAnim_Reset(1);
 
 	//ShuffleChoices(m_p1);
 	//ShuffleChoices(m_p2);
@@ -289,16 +304,16 @@ void TransformManager::Draw(int windowID)
 
 	if (windowID == 0)
 	{
-		DrawPlayerUI(m_p1, XMFLOAT2(centerX, centerY));
+		DrawPlayerUI(0,m_p1, XMFLOAT2(centerX, centerY));
 	}
 	else if (windowID == 1)
 	{
-		DrawPlayerUI(m_p2, XMFLOAT2(centerX, centerY));
+		DrawPlayerUI(1,m_p2, XMFLOAT2(centerX, centerY));
 	}
 }
 
 //変身先選択用関数
-void TransformManager::DrawPlayerUI(const PlayerState& state, XMFLOAT2 basePos)
+void TransformManager::DrawPlayerUI(int playerIndex,const PlayerState& state, XMFLOAT2 basePos)
 {
 	g_pContext->PSSetShaderResources(0, 1, &g_TextureBg);
 	SetBlendState(BLENDSTATE_ALFA);
@@ -308,21 +323,19 @@ void TransformManager::DrawPlayerUI(const PlayerState& state, XMFLOAT2 basePos)
 	for (int i = 0; i < 2; i++)
 	{
 		WeaponTerrain type = state.choices[i];
-		XMFLOAT2 pos = { basePos.x + (i == 0 ? -cardSpacing : cardSpacing), basePos.y };
+
+		XMFLOAT2 sizeUnfocus = XMFLOAT2(649.0f * 0.75f, 762.0f * 0.75f);
+		XMFLOAT2 sizeFocus = XMFLOAT2(649.0f * 0.90f, 762.0f * 0.90f);
+		SELECT_TRANSFORM_CARD param = SelectTransformUi_GetCardParam(playerIndex, i, basePos, cardSpacing, sizeUnfocus, sizeFocus);
 
 		//選択中ならインデックス[0](明るい)、そうでなければ[1](暗い)を使用
 		int textureState = (state.selectedIndex == i) ? 0 : 1;
 		ID3D11ShaderResourceView* pTex = m_pWeaponTextures[(int)type][textureState];
 
 		if (pTex) {
-
-
 			m_pContext->PSSetShaderResources(0, 1, &pTex);
+			DrawSprite(param.pos, param.size, param.col);
 
-			//選択中の強調サイズ
-			XMFLOAT2 size = (state.selectedIndex == i) ? XMFLOAT2(649*0.6, 762*0.6) : XMFLOAT2(649 * 0.5, 762 * 0.5);
-
-			DrawSprite(pos, size, DirectX::XMFLOAT4(1, 1, 1, 1));
 		}
 	}
 

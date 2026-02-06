@@ -113,7 +113,6 @@ void Spear::Update()
 
 	bool inputCharge = false;
 
-	// �L�[�{�[�h�`�F�b�N
 	if (Keyboard_IsKeyDown(m_chargeKey) || Keyboard_IsKeyDown(KK_C)) {
 		inputCharge = true;
 	}

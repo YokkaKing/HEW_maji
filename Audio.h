@@ -45,7 +45,7 @@ extern int g_teamLogo;
 extern int g_terrain;
 extern int g_title;
 extern int g_winner;
-
+extern int g_select_transform;
 /*
 //以下の関数はプログラムの最初と最後に1回ずつ呼び出せばOK
 void InitAudio();		//サウンドの初期化
