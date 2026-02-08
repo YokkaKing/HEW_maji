@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <random>
 #include "keyboard.h"
+#include"Controller.h"
 #include "shader.h"
 #include "Select_Transform_Ui.h"
 
@@ -20,7 +21,7 @@ static	ID3D11ShaderResourceView* g_TextureBg = NULL;
 //================================================================
 static ID3D11Device* g_pDevice = nullptr;
 static ID3D11DeviceContext* g_pContext = nullptr;
-
+extern Controller g_Controller[2];
 
 //コンストラクタ
 TransformManager::TransformManager()
@@ -107,6 +108,19 @@ bool TransformManager::Update(float deltaTime)
 	{
 		return false;
 	}
+
+	static bool lastLeftP1 = false;
+	static bool lastRightP1 = false;
+	static bool lastLeftP2 = false;
+	static bool lastRightP2 = false;
+	const float THRESHOLD = 0.5f;
+
+	// 現在のスティック入力を取得
+	bool curLeftP1 = g_Controller[0].GetLeftStickX() < -THRESHOLD;
+	bool curRightP1 = g_Controller[0].GetLeftStickX() > THRESHOLD;
+	bool curLeftP2 = g_Controller[1].GetLeftStickX() < -THRESHOLD;
+	bool curRightP2 = g_Controller[1].GetLeftStickX() > THRESHOLD;
+
 	SetTransformUi_IsUsed(m_isActive);
 	//タイマー更新
 	m_timer -= deltaTime;
@@ -125,37 +139,43 @@ bool TransformManager::Update(float deltaTime)
 	//P1の入力処理
 	if (!m_p1.isReady)
 	{
-		if (Keyboard_IsKeyDownTrigger(KK_LEFT))
+		if (Keyboard_IsKeyDownTrigger(KK_LEFT) || (curLeftP1 && !lastLeftP1))
 		{
 			m_p1.selectedIndex = 0; //左を選択
 		}
-		if (Keyboard_IsKeyDownTrigger(KK_RIGHT))
+		if (Keyboard_IsKeyDownTrigger(KK_RIGHT) || (curRightP1 && !lastRightP1))
 		{
 			m_p1.selectedIndex = 1; //右を選択
 		}
-		if (Keyboard_IsKeyDownTrigger(KK_LEFTCONTROL))
+		if (Keyboard_IsKeyDownTrigger(KK_LEFTCONTROL) || g_Controller[0].IsButtonPushed(ControllerButton::A_BUTTON))
 		{
 			m_p1.isReady = true;
 			m_p1.selectedWT = m_p1.choices[m_p1.selectedIndex]; //決定
+
 		}
 	}
 	//P2の入力処理
 	if (!m_p2.isReady)
 	{
-		if (Keyboard_IsKeyDownTrigger(KK_D3))
+		if (Keyboard_IsKeyDownTrigger(KK_D3) || (curLeftP2 && !lastLeftP2))
 		{
 			m_p2.selectedIndex = 0; //左を選択
 		}
-		if (Keyboard_IsKeyDownTrigger(KK_D4))
+		if (Keyboard_IsKeyDownTrigger(KK_D4) || (curRightP2 && !lastRightP2))
 		{
 			m_p2.selectedIndex = 1; //右を選択
 		}
-		if (Keyboard_IsKeyDownTrigger(KK_D5))
+		if (Keyboard_IsKeyDownTrigger(KK_D5) || g_Controller[1].IsButtonPushed(ControllerButton::A_BUTTON))
 		{
 			m_p2.isReady = true;
 			m_p2.selectedWT = m_p2.choices[m_p2.selectedIndex]; //決定
 		}
 	}
+
+		lastLeftP1 = curLeftP1;
+		lastRightP1 = curRightP1;
+		lastLeftP2 = curLeftP2;
+		lastRightP2 = curRightP2;
 
 	//両者が準備完了したかのチェック
 	if (m_p1.isReady && m_p2.isReady)

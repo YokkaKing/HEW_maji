@@ -513,8 +513,8 @@ void	Player2Update()
 void Player2_ManualMove()
 {
 	// カメラの前方向ベクトル
-	float forwardX = GetCamera2Position().x - GetCamera2AtPosition().x;
-	float forwardZ = GetCamera2Position().z - GetCamera2AtPosition().z;
+	float forwardX = GetCamera2AtPosition().x - GetCamera2Position().x;
+	float forwardZ = GetCamera2AtPosition().z - GetCamera2Position().z;
 
 	if (!g_Player2.m_isGround) // 地面についてないときに重力発動
 	{
