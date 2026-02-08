@@ -28,6 +28,7 @@ void DrawSprite(XMFLOAT2 size, XMFLOAT4 col, int bno, int wc, int hc);//行列�
 void DrawSpriteEx(XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 col, float hp, bool isPlayer1);
 void DrawSpriteAnimation(XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 col,
 	XMFLOAT2 texcoord);
+void DrawSpriteEx(XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 col, int bno, int wc, int hc, float angle);
 // 頂点構造体
 struct Vertex
 {
