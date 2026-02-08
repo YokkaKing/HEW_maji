@@ -144,7 +144,7 @@ void	PlayerUpdate()
 //================================================================
 //	武器変更処理(一旦)
 //================================================================
-
+	/*
 	int slotToUse = -1; 
 
 	if (Keyboard_IsKeyDownTrigger(KK_D1) && !GetIsUsedA_P1())
@@ -193,9 +193,11 @@ void	PlayerUpdate()
 				g_Player.EquipWeapon(std::make_unique<Shuriken>(&g_Player, FALSE));
 				break;
 			}
+			g_setWTP1 = reserved;
 			//g_Player.SetCurrentWT(reserved);
 		}
 	}
+	*/
 
 //================================================================
 //	攻撃処理(変身前)
@@ -510,6 +512,11 @@ void	PlayerUpdate()
 	{
 		g_Player.m_isDead = true;
 		PlayerDie();
+	}
+
+	if (Keyboard_IsKeyDownTrigger(KK_D1) || Keyboard_IsKeyDownTrigger(KK_D0))
+	{
+		g_Player1CurrentAnim = 0;
 	}
 }
 
