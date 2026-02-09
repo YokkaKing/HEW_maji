@@ -103,5 +103,6 @@ void SetPlayer2_IsAttacked(bool isAttacked);
 PLAYER2* GetPlayer2();
 WeaponTerrain GetSetWTP2();
 void SetWTP2(WeaponTerrain wt);
+void SetPlayer2_IsTransformed(bool isTransformed);
 
 #endif // PLAYER2_H

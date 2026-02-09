@@ -42,4 +42,8 @@ extern WeaponTerrain g_TransformA_P1; // P1の2回目選択
 extern WeaponTerrain g_TransformB_P1; // P1の3回目選択
 extern WeaponTerrain g_TransformA_P2; // P2の2回目選択
 extern WeaponTerrain g_TransformB_P2; // P2の3回目選択
+WeaponTerrain GetTransform_P1(int num);
+WeaponTerrain GetTransform_P2(int num);
+
+
 #endif //TRANSFORM_H
