@@ -310,7 +310,11 @@ void Game_Draw_Player1()
 	Shader_SetLight(Light.Light);	//ライト構造体をシェーダーへセット
 	SetDepthTest(FALSE);
 	//===UI描画========
-	Hp_Draw();
+	if (!g_transformMngr.IsActive()&&!CountdownUI_IsBlockingGameplay())
+	{
+		Hp_Draw();
+	}
+
 	if (g_transformMngr.IsActive())
 	{
 		g_transformMngr.Draw(0);
@@ -331,16 +335,16 @@ void Game_Draw_Player1()
 		}
 	}
 
-	//================
-	Light.SetEnable(TRUE);			//ライティングON
-	Shader_SetLight(Light.Light);	//ライト構造体をシェーダーへセット
-	SetDepthTest(TRUE);
-	//============lightをまたtrueにして、camera2に影響がないように================
+
 }
 void Game_Draw_Player2()
 {
 	//g_pContext->RSSetViewports(1, &g_RightViewPort);
-
+		//================
+	Light.SetEnable(TRUE);			//ライティングON
+	Shader_SetLight(Light.Light);	//ライト構造体をシェーダーへセット
+	SetDepthTest(TRUE);
+	//============lightをまたtrueにして、camera2に影響がないように================
 	Camera2_Draw();
 	Shader_SetMatrix(GetViewMatrix2() * GetProjectionMatrix2());
 	//Field_Draw();
@@ -359,7 +363,12 @@ void Game_Draw_Player2()
 	Shader_SetLight(Light.Light);	//ライト構造体をシェーダーへセット
 	SetDepthTest(FALSE);
 
-	Hp2_Draw();
+	if (!g_transformMngr.IsActive() && !CountdownUI_IsBlockingGameplay())
+	{
+		Hp2_Draw();
+	}
+
+
 	if (g_transformMngr.IsActive())
 	{
 		g_transformMngr.Draw(1);

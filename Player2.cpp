@@ -82,7 +82,7 @@ void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 	g_Player2.m_layer = 0;
 
 	g_Player2.State = PLAYER2_STATE::PLAYER2_STATE_MOVE;
-
+	g_Player2AttackPlaying = false;
 	g_Player2.m_acceleration = XMFLOAT3(0.0f, -9.8f / 600.0f * 0.5f, 0.0f);
 	g_Player2.FrictionRate = 0.98f;
 	g_Player2.TransformType = TRANSFORM_TYPE2::TRANSFORM_TYPE_NONE;
@@ -204,21 +204,21 @@ void	Player2Update()
 			g_Player2.m_currentWeapon->Attack(); // 攻撃
 			if (g_Player2.m_isTransformed)
 			{
-				switch (g_changeP2)
+				switch (g_Player2.m_currentWT)
 				{
-				case 1: // Sword
+				case WeaponTerrain::SWORD_WALL: // Sword
 					ModelPlayClip(g_Player2.m_model, 167, 227, 60.0f, false, 2.0f);
 					break;
-				case 2: // spear
+				case WeaponTerrain::SPEAR_HILL: // spear
 					ModelPlayClip(g_Player2.m_model, 500, 600, 60.0f, false, 4.0f);
 					break;
-				case 3: // arrow
-					ModelPlayClip(g_Player2.m_model, 460, 580, 60.0f, false, 4.0f);
+				case WeaponTerrain::BOW_HILL: // arrow
+					ModelPlayClip(g_Player2.m_model, 240, 360, 60.0f, false, 4.0f);
 					break;
-				case 4: // hammer
+				case WeaponTerrain::HAMMER_: // hammer
 					ModelPlayClip(g_Player2.m_model, 360, 539, 60.0f, false, 2.0f);
 					break;
-				case 5: //shuriken
+				case WeaponTerrain::SHURIKEN_: //shuriken
 					ModelPlayClip(g_Player2.m_model, 151, 210, 60.0f, false, 4.0f);
 					break;
 				}
@@ -294,21 +294,21 @@ void	Player2Update()
 				{
 					if (g_Player2.m_isTransformed)
 					{
-						switch (g_changeP2) //移動
+						switch (g_Player2.m_currentWT)
 						{
-						case 1:
+						case WeaponTerrain::SWORD_WALL:
 							ModelPlayClip(g_Player2.m_model, 120, 165, 60.0f, true, 1.0f);
 							break;
-						case 2:
+						case WeaponTerrain::SPEAR_HILL:
 							ModelPlayClip(g_Player2.m_model, 240, 360, 60.0f, true, 1.0f);
 							break;
-						case 3:
+						case WeaponTerrain::BOW_HILL:
 							ModelPlayClip(g_Player2.m_model, 181, 240, 60.0f, true, 1.0f);
 							break;
-						case 4:
+						case WeaponTerrain::HAMMER_:
 							ModelPlayClip(g_Player2.m_model, 180, 240, 60.0f, true, 1.0f);
 							break;
-						case 5:
+						case WeaponTerrain::SHURIKEN_:
 							ModelPlayClip(g_Player2.m_model, 121, 150, 60.0f, true, 1.0f);
 							break;
 						}
@@ -345,21 +345,21 @@ void	Player2Update()
 				{
 					if (g_Player2.m_isTransformed)
 					{
-						switch (g_changeP2) //移動
+						switch (g_Player2.m_currentWT)
 						{
-						case 1:
+						case WeaponTerrain::SWORD_WALL:
 							ModelPlayClip(g_Player2.m_model, 0, 60, 60.0f, true);
 							break;
-						case 2:
+						case WeaponTerrain::SPEAR_HILL:
 							ModelPlayClip(g_Player2.m_model, 0, 120, 60.0f, true);
 							break;
-						case 3:
+						case WeaponTerrain::BOW_HILL:
 							ModelPlayClip(g_Player2.m_model, 0, 120, 60.0f, true);
 							break;
-						case 4:
+						case WeaponTerrain::HAMMER_:
 							ModelPlayClip(g_Player2.m_model, 0, 120, 60.0f, true);
 							break;
-						case 5:
+						case WeaponTerrain::SHURIKEN_:
 							ModelPlayClip(g_Player2.m_model, 0, 60, 60.0f, true);
 							break;
 						}
@@ -402,22 +402,22 @@ void	Player2Update()
 			{
 				if (g_Player2.m_isTransformed)
 				{
-					switch (g_changeP2) //移動
+					switch (g_Player2.m_currentWT)
 					{
-					case 1:
+					case WeaponTerrain::SWORD_WALL:
 						ModelPlayClip(g_Player2.m_model, 120, 165, 60.0f, true, 1.5f);
 						break;
-					case 2:
+					case WeaponTerrain::SPEAR_HILL:
 						ModelPlayClip(g_Player2.m_model, 240, 360, 60.0f, true, 2.0f);
 						break;
-					case 3:
-						ModelPlayClip(g_Player2.m_model, 181, 240, 60.0f, true, 1.0f);
+					case WeaponTerrain::BOW_HILL:
+						ModelPlayClip(g_Player2.m_model, 181, 240, 60.0f, true, 2.0f);
 						break;
-					case 4:
+					case WeaponTerrain::HAMMER_:
 						ModelPlayClip(g_Player2.m_model, 180, 240, 60.0f, true, 1.0f);
 						break;
-					case 5:
-						ModelPlayClip(g_Player2.m_model, 121, 150, 60.0f, true, 1.0f);
+					case WeaponTerrain::SHURIKEN_:
+						ModelPlayClip(g_Player2.m_model, 121, 150, 60.0f, true, 2.0f);
 						break;
 					}
 				}
@@ -452,21 +452,21 @@ void	Player2Update()
 			{
 				if (g_Player2.m_isTransformed)
 				{
-					switch (g_changeP2)
+					switch (g_Player2.m_currentWT)
 					{
-					case 1:
+					case WeaponTerrain::SWORD_WALL:
 						ModelPlayClip(g_Player2.m_model, 0, 60, 60.0f, true);
 						break;
-					case 2:
+					case WeaponTerrain::SPEAR_HILL:
 						ModelPlayClip(g_Player2.m_model, 0, 120, 60.0f, true);
 						break;
-					case 3:
+					case WeaponTerrain::BOW_HILL:
 						ModelPlayClip(g_Player2.m_model, 0, 120, 60.0f, true);
 						break;
-					case 4:
+					case WeaponTerrain::HAMMER_:
 						ModelPlayClip(g_Player2.m_model, 0, 120, 60.0f, true);
 						break;
-					case 5:
+					case WeaponTerrain::SHURIKEN_:
 						ModelPlayClip(g_Player2.m_model, 0, 60, 60.0f, true);
 						break;
 					}
@@ -588,7 +588,7 @@ void Player2_ManualMove()
 
 	// 最終速度
 	g_Player2.m_velocity.x = moveX*g_Player2.m_moveMul;
-	g_Player2.m_velocity.z = moveZ*g_Player2.m_moveMul;
+	g_Player2.m_velocity.z = moveZ * g_Player2.m_moveMul;
 
 	// モデルの向きを移動方向に合わせる
 	XMFLOAT3 moveDir = { g_Player2.m_velocity.x, 0.0f, g_Player2.m_velocity.z };
@@ -608,22 +608,23 @@ void Player2_ManualMove()
 		g_Player2.m_koyoteTime = 0.0f;
 		if (g_Player2.m_isTransformed)
 		{
-			switch (g_changeP2)
+			switch (g_Player2.m_currentWT)
 			{
-			case 1: // Sword
+			case WeaponTerrain::SWORD_WALL: // Sword
 				ModelPlayClip(g_Player2.m_model, 300, 335, 60.0f, false, 1.0f);
 				break;
-			case 2: // spear
+			case WeaponTerrain::SPEAR_HILL: // spear
 				ModelPlayClip(g_Player2.m_model, 361, 420, 60.0f, false, 2.0f);
 				break;
-			case 3: // arrow
+			case WeaponTerrain::BOW_HILL: // arrow
+				ModelPlayClip(g_Player2.m_model, 400, 450, 60.0f, false, 1.0f);
+				break;
+			case WeaponTerrain::HAMMER_: // hammer
 				ModelPlayClip(g_Player2.m_model, 240, 300, 60.0f, false, 1.0f);
 				break;
-			case 4: // hammer
-				ModelPlayClip(g_Player2.m_model, 240, 300, 60.0f, false, 1.0f);
-				break;
-			case 5: //shuriken
-				ModelPlayClip(g_Player2.m_model, 280, 350, 60.0f, false, 1.0f);
+
+			case WeaponTerrain::SHURIKEN_: //shuriken
+				ModelPlayClip(g_Player2.m_model, 280, 320, 60.0f, false, 1.0f);
 				break;
 			}
 		}
@@ -671,21 +672,29 @@ void	Player2Draw()
 		0.01f);
 	XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
 		g_Player2.m_rotation.x,
-		g_Player2.m_rotation.y+ XM_PI,
+		g_Player2.m_rotation.y + XM_PI,
 		g_Player2.m_rotation.z);
 
 	XMMATRIX	translation = XMMatrixTranslation(
 		g_Player2.m_position.x,
 		g_Player2.m_position.y - 1.0f,
 		g_Player2.m_position.z);
-
-	if (g_setWTP2 == WeaponTerrain::SPEAR_HILL || g_changeP2 == 2) //移動
+	if (g_Player2.m_position.y < g_Player2.m_position.y - 1.0f)
 	{
-		    translation = XMMatrixTranslation(
-			g_Player2.m_position.x,
-			g_Player2.m_position.y - 0.3f,
-			g_Player2.m_position.z);
+		g_Player2.m_position.y = g_Player2.m_position.y - 0.99f;
 	}
+	if (g_setWTP2 == WeaponTerrain::SPEAR_HILL) //移動
+	{
+		translation = XMMatrixTranslation(
+			g_Player2.m_position.x,
+			g_Player2.m_position.y - 0.5f,
+			g_Player2.m_position.z);
+		if (g_Player2.m_position.y < g_Player2.m_position.y - 0.5f)
+		{
+			g_Player2.m_position.y = g_Player2.m_position.y - 0.49f;
+		}
+	}
+	
 
 	XMMATRIX	world = scale * rotation * translation;
 	//シェーダーへ行列をセット
@@ -956,4 +965,8 @@ bool GetPlayer2_IsAttacked()
 void SetPlayer2_IsAttacked(bool isAttacked)
 {
 	g_Player2.m_isAttacked = isAttacked;
+}
+void SetPlayer2_IsTransformed(bool isTransformed)
+{
+	g_Player2.m_isTransformed = isTransformed;
 }

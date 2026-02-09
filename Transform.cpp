@@ -102,7 +102,8 @@ void ApplyTransformationP1(PLAYER* p, WeaponTerrain wt, bool isTransform)
     TerrainSet(wt, FALSE);
     p->SetCurrentWT(wt);
 
-    switch (wt) {
+    switch (wt)
+    {
     case WeaponTerrain::SWORD_WALL:
         p->EquipWeapon(std::make_unique<Sword>(p, FALSE));
         break;
@@ -233,14 +234,15 @@ void TransformPlayer()
             g_Player.TransformType = TRANSFORM_TYPE::TRANSFORM_TYPE_A;
             targetWT = g_TransformA_P1;
             g_IsUsedA_P1 = true;
-            g_Player.m_isTransformed = true;
+			SetPlayer_IsTransformed(true);
         }
         else if ((Keyboard_IsKeyDownTrigger(KK_D0) || g_Controller[0].IsButtonPushed(ControllerButton::R_SHOULDER)) && !g_IsUsedB_P1)
         {
             g_Player.TransformType = TRANSFORM_TYPE::TRANSFORM_TYPE_B;
             targetWT = g_TransformB_P1;
             g_IsUsedB_P1 = true;
-            g_Player.m_isTransformed = true;
+            SetPlayer_IsTransformed(true);
+
         }
         if (targetWT != WeaponTerrain::NONE) {
             ApplyTransformationP1(&g_Player, targetWT, true);
@@ -256,7 +258,7 @@ void TransformPlayer()
 
         if (unevolve) {
             g_Player.TransformType = TRANSFORM_TYPE::TRANSFORM_TYPE_NONE;
-            g_Player.m_isTransformed = false;
+            SetPlayer_IsTransformed(false);
             ApplyTransformationP1(&g_Player, g_Player.m_baseWT, false); // å≥ÇÃïêäÌÇ…ñﬂÇ∑
             SetWTP1(g_Player.m_baseWT);
             g_Player.m_scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
@@ -320,17 +322,22 @@ void TransformPlayer2()
             g_Player2.TransformType = TRANSFORM_TYPE2::TRANSFORM_TYPE_A;
             targetWT = g_TransformA_P2;
             g_IsUsedA_P2 = true;
+            SetPlayer2_IsTransformed(true);
         }
         else if ((Keyboard_IsKeyDownTrigger(KK_D9) || g_Controller[1].IsButtonPushed(ControllerButton::R_SHOULDER)) && !g_IsUsedB_P2)
         {
             g_Player2.TransformType = TRANSFORM_TYPE2::TRANSFORM_TYPE_B;
             targetWT = g_TransformB_P2;
             g_IsUsedB_P2 = true;
+            SetPlayer2_IsTransformed(true);
+
         }
         if (targetWT != WeaponTerrain::NONE) {
             ApplyTransformationP2(&g_Player2, targetWT, true);
             g_Player2.m_isTransformed = true;
             g_Player2.TransformTimer = TRANSFORM_LIMIT_FRAME;
+            
+
         }
     }
     else {
@@ -344,6 +351,8 @@ void TransformPlayer2()
             g_Player2.m_isTransformed = false;
             ApplyTransformationP2(&g_Player2, g_Player2.m_baseWT, false); // å≥ÇÃïêäÌÇ…ñﬂÇ∑
             SetWTP2(g_Player2.m_baseWT);
+            SetPlayer2_IsTransformed(false);
+
             g_Player2.m_scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
         }
     }
@@ -427,4 +436,26 @@ void SetIsUsed_P2(int no, bool flag)
     {
         g_IsUsedB_P2 = flag;
     }
+}
+WeaponTerrain GetTransform_P1(int num)
+{
+    if (num == 0)
+    {
+        return g_TransformA_P1;
+    }
+    else
+    {
+        return g_TransformB_P1;
+	}
+}
+WeaponTerrain GetTransform_P2(int num)
+{
+    if (num == 0)
+    {
+        return g_TransformA_P2;
+    }
+    else
+    {
+        return g_TransformB_P2;
+	}
 }

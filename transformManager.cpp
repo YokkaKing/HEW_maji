@@ -120,7 +120,7 @@ bool TransformManager::Update(float deltaTime)
 	bool curLeftP2 = g_Controller[1].GetLeftStickX() < -THRESHOLD;
 	bool curRightP2 = g_Controller[1].GetLeftStickX() > THRESHOLD;
 
-	SetTransformUi_IsUsed(m_isActive);
+	//SetTransformUi_IsUsed(m_isActive,);
 	//タイマー更新
 	m_timer -= deltaTime;
 	SetTransformUi_time(m_timer);

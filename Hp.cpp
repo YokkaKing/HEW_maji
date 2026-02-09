@@ -17,10 +17,12 @@
 #include"shader.h"
 #include "player.h"
 #include "player2.h"
+#include "Transform.h"
 #include "Audio.h"
 #include <random>
 #include <cmath>
 #include <algorithm>
+#include <utility> 
 //================================================================
 //	グローバル変数
 //================================================================
@@ -29,12 +31,12 @@ static	ID3D11ShaderResourceView* g_TextureNumber = NULL;
 static	ID3D11ShaderResourceView* g_TextureHp_1P[4] = { NULL };
 static	ID3D11ShaderResourceView* g_TextureHp_2P[4] = { NULL };
 static	ID3D11ShaderResourceView* g_TextureGuide = NULL;   
-static	ID3D11ShaderResourceView* g_TextureTranformA_1P[5] = { NULL };
-static	ID3D11ShaderResourceView* g_TextureTranformB_1P[5] = { NULL };
-static	ID3D11ShaderResourceView* g_TextureTranformA_2P[5] = { NULL };
-static	ID3D11ShaderResourceView* g_TextureTranformB_2P[5] = { NULL };
-static	ID3D11ShaderResourceView* g_TextureTranformNow_1P[5] = { NULL };
-static	ID3D11ShaderResourceView* g_TextureTranformNow_2P[5] = { NULL };
+static	ID3D11ShaderResourceView* g_TextureTransform_1P[6] = { NULL };
+static	ID3D11ShaderResourceView* g_TextureTransform_2P[6] = { NULL };
+static	ID3D11ShaderResourceView* g_TextureTransformNow_1P[6] = { NULL };
+static	ID3D11ShaderResourceView* g_TextureTransformNow_2P[6] = { NULL };
+static	ID3D11ShaderResourceView* g_Texture_1P[6] = { NULL };
+static	ID3D11ShaderResourceView* g_Texture_2P[6] = { NULL };
 
 const float RED_SHRINK_PER_FRAME = 0.4f;
 static ID3D11Device* g_pDevice = nullptr;
@@ -42,8 +44,36 @@ static ID3D11DeviceContext* g_pContext = nullptr;
 HP g_Hp;
 HP_2P g_Hp2;
 TIMER g_Timer;
+STATUS_1P g_Status1;
+STATUS_2P g_Status2;
+
 static std::mt19937 g_Rng;
 static std::uniform_real_distribution<float> g_Dist01(0.0f, 1.0f);
+static int WTToUIIndex(WeaponTerrain wt)
+{
+    switch (wt)
+    {
+    case WeaponTerrain::SWORD_WALL:  return 0;
+    case WeaponTerrain::SPEAR_HILL:  return 1;
+    case WeaponTerrain::BOW_HILL:    return 2;
+    case WeaponTerrain::HAMMER_:     return 3;
+    case WeaponTerrain::SHURIKEN_:   return 4;
+    default:                         return 5; // NONEなどはデフォルト
+    }
+}
+
+// UIだけで「左/中央/右」を入れ替えるためのスロット
+struct UITransformSlotsInt
+{
+    int left;     // 1(左)  = 変身候補A
+    int cur;      // 2(中央)= 現在(最初はdefault=5)
+    int right;    // 3(右)  = 変身候補B
+    int prevType; // 前フレームのTransformType
+    bool inited;
+};
+
+static UITransformSlotsInt g_UITr1P = {};
+static UITransformSlotsInt g_UITr2P = {};
 void Hp_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
 	g_pDevice = pDevice;
@@ -107,23 +137,102 @@ void Hp_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 
 #pragma endregion
 
-#pragma region status
+#pragma region status_1P
     LoadFromWICFile(L"asset\\texture\\sword_select.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
-    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureTranformNow_1P[0]);
-    assert(&g_TextureTranformNow_1P[0]);
-    LoadFromWICFile(L"asset\\texture\\spear_select.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
-    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureTranformNow_1P[0]);
-    assert(&g_TextureTranformNow_1P[0]);
-    LoadFromWICFile(L"asset\\texture\\bow_select.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
-    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureTranformNow_1P[0]);
-    LoadFromWICFile(L"asset\\texture\\hammer_select.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
-    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureTranformNow_1P[0]);
-    LoadFromWICFile(L"asset\\texture\\shuriken_select.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
-    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureTranformNow_1P[0]);
-    assert(&g_TextureTranformNow_1P[0]);
-    assert(&g_TextureTranformNow_1P[0]);
-    assert(&g_TextureTranformNow_1P[0]);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureTransformNow_1P[0]);
+    assert(&g_TextureTransformNow_1P[0]);
 
+    LoadFromWICFile(L"asset\\texture\\spear_select.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureTransformNow_1P[1]);
+    assert(&g_TextureTransformNow_1P[1]);
+
+    LoadFromWICFile(L"asset\\texture\\bow_select.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureTransformNow_1P[2]);
+    assert(&g_TextureTransformNow_1P[2]);
+
+    LoadFromWICFile(L"asset\\texture\\hammer_select.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureTransformNow_1P[3]);
+    assert(&g_TextureTransformNow_1P[3]);
+
+    LoadFromWICFile(L"asset\\texture\\shuriken_select.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureTransformNow_1P[4]);
+    assert(&g_TextureTransformNow_1P[4]);
+
+    LoadFromWICFile(L"asset\\texture\\default_select.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureTransformNow_1P[5]);
+    assert(&g_TextureTransformNow_1P[5]);
+
+
+    LoadFromWICFile(L"asset\\texture\\sword_noselect.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureTransform_1P[0]);
+    assert(&g_TextureTransform_1P[0]);
+
+    LoadFromWICFile(L"asset\\texture\\spear_noselect.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureTransform_1P[1]);
+    assert(&g_TextureTransform_1P[1]);
+    LoadFromWICFile(L"asset\\texture\\bow_noselect.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureTransform_1P[2]);
+    assert(&g_TextureTransform_1P[2]);
+
+    LoadFromWICFile(L"asset\\texture\\hammer_noselect.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureTransform_1P[3]);
+    assert(&g_TextureTransform_1P[3]);
+
+    LoadFromWICFile(L"asset\\texture\\shuriken_noselect.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureTransform_1P[4]);
+    assert(&g_TextureTransform_1P[4]);
+
+    LoadFromWICFile(L"asset\\texture\\default_noselect.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureTransform_1P[5]);
+    assert(&g_TextureTransform_1P[5]);
+#pragma endregion
+
+#pragma region status_2P
+    LoadFromWICFile(L"asset\\texture\\sword_select_2P.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureTransformNow_2P[0]);
+    assert(&g_TextureTransformNow_2P[0]);
+
+    LoadFromWICFile(L"asset\\texture\\spear_select_2P.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureTransformNow_2P[1]);
+    assert(&g_TextureTransformNow_2P[1]);
+
+    LoadFromWICFile(L"asset\\texture\\bow_select_2P.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureTransformNow_2P[2]);
+    assert(&g_TextureTransformNow_2P[2]);
+
+    LoadFromWICFile(L"asset\\texture\\hammer_select_2P.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureTransformNow_2P[3]);
+    assert(&g_TextureTransformNow_2P[3]);
+
+    LoadFromWICFile(L"asset\\texture\\shuriken_select_2P.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureTransformNow_2P[4]);
+    assert(&g_TextureTransformNow_2P[4]);
+
+    LoadFromWICFile(L"asset\\texture\\default_select_2P.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureTransformNow_2P[5]);
+    assert(&g_TextureTransformNow_2P[5]);
+
+
+    LoadFromWICFile(L"asset\\texture\\sword_noselect_2P.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureTransform_2P[0]);
+    assert(&g_TextureTransform_2P[0]);
+
+    LoadFromWICFile(L"asset\\texture\\spear_noselect_2P.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureTransform_2P[1]);
+    assert(&g_TextureTransform_2P[1]);
+    LoadFromWICFile(L"asset\\texture\\bow_noselect_2P.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureTransform_2P[2]);
+    assert(&g_TextureTransform_2P[2]);
+    LoadFromWICFile(L"asset\\texture\\hammer_noselect_2P.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureTransform_2P[3]);
+    assert(&g_TextureTransform_2P[3]);
+    LoadFromWICFile(L"asset\\texture\\shuriken_noselect_2P.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureTransform_2P[4]);
+    assert(&g_TextureTransform_2P[4]);
+
+    LoadFromWICFile(L"asset\\texture\\default_noselect_2p.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureTransform_2P[5]);
+    assert(&g_TextureTransform_2P[5]);
 #pragma endregion
 	//フェードインのセット
     g_Hp.col = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -137,6 +246,7 @@ void Hp_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
     g_Hp.shakeDuration = 0.6f;
     g_Hp.shakeMagnitude = 6.0f;
     g_Hp.prevHp = g_Hp.m_Hp;
+
 
     g_Hp2.col = { 1.0f, 1.0f, 1.0f, 1.0f };
     g_Hp2.pos = { 500, 1006 };
@@ -154,7 +264,34 @@ void Hp_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
     g_Timer.size = XMFLOAT2(1648*0.5, 117*0.5);
     g_Timer.col = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
     g_Timer.time = 60.0f;
-    g_Timer.frame = 1 / 58.0f;
+    g_Timer.frame = 1 / 59.0f;
+
+	g_Status1.pos[0] = XMFLOAT2(620, 100);
+    g_Status1.pos[1] = XMFLOAT2(712, 87);
+    g_Status1.pos[2] = XMFLOAT2(800, 100);
+	g_Status1.size[0] = XMFLOAT2(300 * 0.55, 300 * 0.55); //今の状態
+    g_Status1.size[1] = XMFLOAT2(300 * 0.5, 300 * 0.5); //今の状態じゃない
+	g_Status1.col = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+    g_Status1.nowType = 5;
+    for (int i = 0; i < 2; i++)
+    {
+        g_Status1.nextType[i] = 5;
+    }
+
+
+    g_Status2.pos[0] = XMFLOAT2(1110, 100);
+    g_Status2.pos[1] = XMFLOAT2(1198, 87);
+    g_Status2.pos[2] = XMFLOAT2(1290, 100);
+    g_Status2.size[0] = XMFLOAT2(300 * 0.55, 300 * 0.55); //今の状態
+    g_Status2.size[1] = XMFLOAT2(300 * 0.5, 300 * 0.5); //今の状態じゃない
+    g_Status2.col = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+    g_Status2.nowType = 5;
+    for (int i = 0; i < 2; i++)
+    {
+        g_Status2.nextType[i] = 5;
+    }
+    g_UITr1P.inited = false;
+    g_UITr2P.inited = false;
 }
 void Hp_Finalize()
 {
@@ -169,6 +306,14 @@ void Hp_Finalize()
         SAFE_RELEASE(g_TextureHp_2P[i]);
 
     }
+    for (int i = 0; i < 6; i++)
+    {
+        SAFE_RELEASE(g_TextureTransform_1P[i]);
+        SAFE_RELEASE(g_TextureTransform_2P[i]);
+        SAFE_RELEASE(g_TextureTransformNow_1P[i]);
+        SAFE_RELEASE(g_TextureTransformNow_2P[i]);
+
+    }
 
 }
 void Hp_Update()
@@ -176,12 +321,9 @@ void Hp_Update()
     // いまのHP（前フレームとの差分でダメージ/回復を判定する）
     float hpPrev1 = g_Hp.prevHp;
     float hpPrev2 = g_Hp2.prevHp;
-
     g_Hp.m_Hp = Player_GetHp();
     g_Hp2.m_Hp = Player2_GetHp();
-
     g_Timer.time -= g_Timer.frame;
-
     const float DAMAGE_DELAY = 2.0f;      // ダメージ後、赤HPが動き出すまで待つ秒数
     const float RED_SHRINK_PER_FRAME = 0.4f; // 赤HPが減る量（1フレームあたり）※元と同じ
 
@@ -229,10 +371,114 @@ void Hp_Update()
             }
         }
     }
+    {
+        int nowType = (int)g_Player.TransformType;
 
-    //========================
-    // 2P 赤HP制御
-    //========================
+        if (!g_UITr1P.inited)
+        {
+            g_UITr1P.left = WTToUIIndex(GetTransform_P1(0));
+            g_UITr1P.cur = 5; // ★中央は最初デフォルト
+            g_UITr1P.right = WTToUIIndex(GetTransform_P1(1));
+            g_UITr1P.prevType = nowType;
+            g_UITr1P.inited = true;
+        }
+
+        // ① まず「状態変化（変身/解除）」が起きた瞬間だけswap
+        if (g_UITr1P.prevType != nowType)
+        {
+            // NONE -> A（変身：左↔中央）
+            if (g_UITr1P.prevType == (int)TRANSFORM_TYPE::TRANSFORM_TYPE_NONE &&
+                nowType == (int)TRANSFORM_TYPE::TRANSFORM_TYPE_A)
+            {
+                std::swap(g_UITr1P.left, g_UITr1P.cur);
+            }
+            // NONE -> B（変身：右↔中央）
+            else if (g_UITr1P.prevType == (int)TRANSFORM_TYPE::TRANSFORM_TYPE_NONE &&
+                nowType == (int)TRANSFORM_TYPE::TRANSFORM_TYPE_B)
+            {
+                std::swap(g_UITr1P.right, g_UITr1P.cur);
+            }
+            // A -> NONE（解除：左↔中央を戻す）
+            else if (g_UITr1P.prevType == (int)TRANSFORM_TYPE::TRANSFORM_TYPE_A &&
+                nowType == (int)TRANSFORM_TYPE::TRANSFORM_TYPE_NONE)
+            {
+                std::swap(g_UITr1P.left, g_UITr1P.cur);
+            }
+            // B -> NONE（解除：右↔中央を戻す）
+            else if (g_UITr1P.prevType == (int)TRANSFORM_TYPE::TRANSFORM_TYPE_B &&
+                nowType == (int)TRANSFORM_TYPE::TRANSFORM_TYPE_NONE)
+            {
+                std::swap(g_UITr1P.right, g_UITr1P.cur);
+            }
+
+            g_UITr1P.prevType = nowType;
+        }
+
+        // ② その後で、NONE状態なら「中央=default固定」「左右=候補同期」
+        //    （解除した瞬間でも確実に中央がdefaultに戻る）
+        if (nowType == (int)TRANSFORM_TYPE::TRANSFORM_TYPE_NONE)
+        {
+            g_UITr1P.cur = 5; // ★ここが超重要：解除されたら必ず中央はdefault
+            g_UITr1P.left = WTToUIIndex(GetTransform_P1(0));
+            g_UITr1P.right = WTToUIIndex(GetTransform_P1(1));
+        }
+
+        // ③ 描画用に反映
+        g_Status1.nextType[0] = g_UITr1P.left;
+        g_Status1.nowType = g_UITr1P.cur;
+        g_Status1.nextType[1] = g_UITr1P.right;
+    }
+    // --- 2P ---
+    {
+        int nowType = (int)g_Player2.TransformType;
+
+        if (!g_UITr2P.inited)
+        {
+            g_UITr2P.left = WTToUIIndex(GetTransform_P2(0));
+            g_UITr2P.cur = 5;
+            g_UITr2P.right = WTToUIIndex(GetTransform_P2(1));
+            g_UITr2P.prevType = nowType;
+            g_UITr2P.inited = true;
+        }
+
+        if (g_UITr2P.prevType != nowType)
+        {
+            if (g_UITr2P.prevType == (int)TRANSFORM_TYPE2::TRANSFORM_TYPE_NONE &&
+                nowType == (int)TRANSFORM_TYPE2::TRANSFORM_TYPE_A)
+            {
+                std::swap(g_UITr2P.left, g_UITr2P.cur);
+            }
+            else if (g_UITr2P.prevType == (int)TRANSFORM_TYPE2::TRANSFORM_TYPE_NONE &&
+                nowType == (int)TRANSFORM_TYPE2::TRANSFORM_TYPE_B)
+            {
+                std::swap(g_UITr2P.right, g_UITr2P.cur);
+            }
+            else if (g_UITr2P.prevType == (int)TRANSFORM_TYPE2::TRANSFORM_TYPE_A &&
+                nowType == (int)TRANSFORM_TYPE2::TRANSFORM_TYPE_NONE)
+            {
+                std::swap(g_UITr2P.left, g_UITr2P.cur);
+            }
+            else if (g_UITr2P.prevType == (int)TRANSFORM_TYPE2::TRANSFORM_TYPE_B &&
+                nowType == (int)TRANSFORM_TYPE2::TRANSFORM_TYPE_NONE)
+            {
+                std::swap(g_UITr2P.right, g_UITr2P.cur);
+            }
+
+            g_UITr2P.prevType = nowType;
+        }
+
+        if (nowType == (int)TRANSFORM_TYPE2::TRANSFORM_TYPE_NONE)
+        {
+            g_UITr2P.cur = 5; // ★解除されたら中央default固定
+            g_UITr2P.left = WTToUIIndex(GetTransform_P2(0));
+            g_UITr2P.right = WTToUIIndex(GetTransform_P2(1));
+        }
+
+        g_Status2.nextType[0] = g_UITr2P.left;
+        g_Status2.nowType = g_UITr2P.cur;
+        g_Status2.nextType[1] = g_UITr2P.right;
+    }
+
     {
         float hpNow = g_Hp2.m_Hp;
 
@@ -403,6 +649,34 @@ void Hp_Draw()
     g_pContext->PSSetShaderResources(0, 1, &g_TextureGuide);
     SetBlendState(BLENDSTATE_ALFA);
     DrawSprite(XMFLOAT2(200, SCREEN_HEIGHT - 150), XMFLOAT2(452 * 0.5, 261 * 0.5), g_Hp2.col);
+
+ 
+    g_pContext->PSSetShaderResources(0, 1, &g_TextureTransform_1P[g_Status1.nextType[0]]);
+    SetBlendState(BLENDSTATE_ALFA);
+    DrawSprite(g_Status1.pos[0], g_Status1.size[1], g_Hp.col);
+
+    g_pContext->PSSetShaderResources(0, 1, &g_TextureTransform_1P[g_Status1.nextType[1]]);
+    SetBlendState(BLENDSTATE_ALFA);
+    DrawSprite(g_Status1.pos[2], g_Status1.size[1], g_Hp.col);
+
+    g_pContext->PSSetShaderResources(0, 1, &g_TextureTransformNow_1P[g_Status1.nowType]);
+    SetBlendState(BLENDSTATE_ALFA);
+    DrawSprite(g_Status1.pos[1], g_Status1.size[0], g_Hp.col);
+
+
+ 
+
+    g_pContext->PSSetShaderResources(0, 1, &g_TextureTransform_2P[g_Status2.nextType[0]]);
+    SetBlendState(BLENDSTATE_ALFA);
+    DrawSprite(g_Status2.pos[0], g_Status2.size[1], g_Hp.col);
+
+    g_pContext->PSSetShaderResources(0, 1, &g_TextureTransform_2P[g_Status2.nextType[1]]);
+    SetBlendState(BLENDSTATE_ALFA);
+    DrawSprite(g_Status2.pos[2], g_Status2.size[1], g_Hp.col);
+
+    g_pContext->PSSetShaderResources(0, 1, &g_TextureTransformNow_2P[g_Status2.nowType]);
+    SetBlendState(BLENDSTATE_ALFA);
+    DrawSprite(g_Status2.pos[1], g_Status2.size[0], g_Hp.col);
 }
 
 float Hp_GetTime()
