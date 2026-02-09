@@ -111,6 +111,7 @@ void ApplyTransformationP1(PLAYER* p, WeaponTerrain wt, bool isTransform)
         break;
     case WeaponTerrain::BOW_HILL:
         p->EquipWeapon(std::make_unique<Arrow>(p, FALSE)); // ‹|ƒNƒ‰ƒX
+       
         break;
     case WeaponTerrain::HAMMER_:
         p->EquipWeapon(std::make_unique<Hammer>(p, FALSE));
@@ -232,16 +233,18 @@ void TransformPlayer()
             g_Player.TransformType = TRANSFORM_TYPE::TRANSFORM_TYPE_A;
             targetWT = g_TransformA_P1;
             g_IsUsedA_P1 = true;
+            g_Player.m_isTransformed = true;
         }
         else if ((Keyboard_IsKeyDownTrigger(KK_D0) || g_Controller[0].IsButtonPushed(ControllerButton::R_SHOULDER)) && !g_IsUsedB_P1)
         {
             g_Player.TransformType = TRANSFORM_TYPE::TRANSFORM_TYPE_B;
             targetWT = g_TransformB_P1;
             g_IsUsedB_P1 = true;
+            g_Player.m_isTransformed = true;
         }
         if (targetWT != WeaponTerrain::NONE) {
             ApplyTransformationP1(&g_Player, targetWT, true);
-            g_Player.m_isTransformed = true;
+            
             g_Player.TransformTimer = TRANSFORM_LIMIT_FRAME;
         }
     }

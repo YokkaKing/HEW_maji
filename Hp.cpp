@@ -28,8 +28,15 @@ static	ID3D11ShaderResourceView* g_TextureTimer =  NULL ;
 static	ID3D11ShaderResourceView* g_TextureNumber = NULL;
 static	ID3D11ShaderResourceView* g_TextureHp_1P[4] = { NULL };
 static	ID3D11ShaderResourceView* g_TextureHp_2P[4] = { NULL };
-static	ID3D11ShaderResourceView* g_TextureGuide = NULL;
+static	ID3D11ShaderResourceView* g_TextureGuide = NULL;   
+static	ID3D11ShaderResourceView* g_TextureTranformA_1P[5] = { NULL };
+static	ID3D11ShaderResourceView* g_TextureTranformB_1P[5] = { NULL };
+static	ID3D11ShaderResourceView* g_TextureTranformA_2P[5] = { NULL };
+static	ID3D11ShaderResourceView* g_TextureTranformB_2P[5] = { NULL };
+static	ID3D11ShaderResourceView* g_TextureTranformNow_1P[5] = { NULL };
+static	ID3D11ShaderResourceView* g_TextureTranformNow_2P[5] = { NULL };
 
+const float RED_SHRINK_PER_FRAME = 0.4f;
 static ID3D11Device* g_pDevice = nullptr;
 static ID3D11DeviceContext* g_pContext = nullptr;
 HP g_Hp;
@@ -45,6 +52,7 @@ void Hp_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
     std::random_device rd;
     g_Rng.seed(rd());
 
+#pragma region hp/timer/number
     TexMetadata		metadata;
     ScratchImage	image;
     LoadFromWICFile(L"asset\\texture\\timer.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
@@ -96,6 +104,27 @@ void Hp_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
     LoadFromWICFile(L"asset\\texture\\button_Ui.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
     CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureGuide);
     assert(&g_TextureHp_2P[3]);
+
+#pragma endregion
+
+#pragma region status
+    LoadFromWICFile(L"asset\\texture\\sword_select.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureTranformNow_1P[0]);
+    assert(&g_TextureTranformNow_1P[0]);
+    LoadFromWICFile(L"asset\\texture\\spear_select.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureTranformNow_1P[0]);
+    assert(&g_TextureTranformNow_1P[0]);
+    LoadFromWICFile(L"asset\\texture\\bow_select.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureTranformNow_1P[0]);
+    LoadFromWICFile(L"asset\\texture\\hammer_select.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureTranformNow_1P[0]);
+    LoadFromWICFile(L"asset\\texture\\shuriken_select.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureTranformNow_1P[0]);
+    assert(&g_TextureTranformNow_1P[0]);
+    assert(&g_TextureTranformNow_1P[0]);
+    assert(&g_TextureTranformNow_1P[0]);
+
+#pragma endregion
 	//フェードインのセット
     g_Hp.col = { 1.0f, 1.0f, 1.0f, 1.0f };
     g_Hp.pos = { 500, 1006 };
@@ -124,8 +153,8 @@ void Hp_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
     g_Timer.pos = XMFLOAT2(0, 0);
     g_Timer.size = XMFLOAT2(1648*0.5, 117*0.5);
     g_Timer.col = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-    g_Timer.time = 10.0f;
-    g_Timer.frame = 1 / 60.0f;
+    g_Timer.time = 60.0f;
+    g_Timer.frame = 1 / 58.0f;
 }
 void Hp_Finalize()
 {
@@ -143,59 +172,110 @@ void Hp_Finalize()
 
 }
 void Hp_Update()
-{ 
-    float prevHp1 = g_Hp.m_Hp;
-    float prevHp2 = g_Hp2.m_Hp;
+{
+    // いまのHP（前フレームとの差分でダメージ/回復を判定する）
+    float hpPrev1 = g_Hp.prevHp;
+    float hpPrev2 = g_Hp2.prevHp;
 
-    g_Hp.m_Hp=Player_GetHp();  // get体力
-    g_Hp2.m_Hp=Player2_GetHp();  // get体力
+    g_Hp.m_Hp = Player_GetHp();
+    g_Hp2.m_Hp = Player2_GetHp();
+
     g_Timer.time -= g_Timer.frame;
 
-    if (GetPlayer_IsAttacked())
+    const float DAMAGE_DELAY = 2.0f;      // ダメージ後、赤HPが動き出すまで待つ秒数
+    const float RED_SHRINK_PER_FRAME = 0.4f; // 赤HPが減る量（1フレームあたり）※元と同じ
+
+    //========================
+    // 1P 赤HP制御
+    //========================
     {
-        if (g_Hp.hpTimer <= 0)
+        float hpNow = g_Hp.m_Hp;
+
+        // ダメージを受けた瞬間：タイマー更新（2秒に戻す）
+        if (hpNow < hpPrev1)
         {
-            g_Hp.redHpLen -= 0.4f;
-            if (g_Hp.redHpLen < g_Hp.m_Hp)
-            {
-                g_Hp.redHpLen = g_Hp.m_Hp;
-                SetPlayer_IsAttacked(false);
-				g_Hp.hpTimer = 2.0f;
-            }
+            g_Hp.hpTimer = DAMAGE_DELAY;
+
+            // 赤HPは「ダメージ前のHP」まで残しておきたい
+            // std::maxの代わり：大きい方に合わせる
+            if (g_Hp.redHpLen < hpPrev1) g_Hp.redHpLen = hpPrev1;
+
+            // attackedフラグを使ってるなら、ここで戻してOK（放置すると挙動が変になりがち）
+            SetPlayer_IsAttacked(false);
         }
-        else
+        // 回復した瞬間：赤HPが取り残されないよう即追従
+        else if (hpNow > hpPrev1)
+        {
+            if (g_Hp.redHpLen < hpNow) g_Hp.redHpLen = hpNow;
+        }
+
+        // 2秒間ダメージが無ければ、赤HPを少しずつ現在HPへ減らす
+        if (g_Hp.hpTimer > 0.0f)
         {
             g_Hp.hpTimer -= g_Timer.frame;
-        }
-
-    }
-    if (GetPlayer2_IsAttacked())
-    {
-        if (g_Hp2.hpTimer <= 0)
-        {
-            g_Hp2.redHpLen -= 0.4f;
-            if (g_Hp2.redHpLen < g_Hp2.m_Hp)
-            {
-                g_Hp2.redHpLen = g_Hp2.m_Hp;
-                SetPlayer2_IsAttacked(false);
-                g_Hp2.hpTimer = 2.0f;
-            }
+            if (g_Hp.hpTimer < 0.0f) g_Hp.hpTimer = 0.0f;
         }
         else
         {
-            g_Hp2.hpTimer -= g_Timer.frame;
+            if (g_Hp.redHpLen > hpNow)
+            {
+                g_Hp.redHpLen -= RED_SHRINK_PER_FRAME;
+                if (g_Hp.redHpLen < hpNow) g_Hp.redHpLen = hpNow;
+            }
+            else
+            {
+                // 念のため（回復などで逆転したら揃える）
+                g_Hp.redHpLen = hpNow;
+            }
+        }
+    }
+
+    //========================
+    // 2P 赤HP制御
+    //========================
+    {
+        float hpNow = g_Hp2.m_Hp;
+
+        if (hpNow < hpPrev2)
+        {
+            g_Hp2.hpTimer = DAMAGE_DELAY;
+            if (g_Hp2.redHpLen < hpPrev2) g_Hp2.redHpLen = hpPrev2;
+            SetPlayer2_IsAttacked(false);
+        }
+        else if (hpNow > hpPrev2)
+        {
+            if (g_Hp2.redHpLen < hpNow) g_Hp2.redHpLen = hpNow;
         }
 
+        if (g_Hp2.hpTimer > 0.0f)
+        {
+            g_Hp2.hpTimer -= g_Timer.frame;
+            if (g_Hp2.hpTimer < 0.0f) g_Hp2.hpTimer = 0.0f;
+        }
+        else
+        {
+            if (g_Hp2.redHpLen > hpNow)
+            {
+                g_Hp2.redHpLen -= RED_SHRINK_PER_FRAME;
+                if (g_Hp2.redHpLen < hpNow) g_Hp2.redHpLen = hpNow;
+            }
+            else
+            {
+                g_Hp2.redHpLen = hpNow;
+            }
+        }
     }
+
+    //========================
+    // 揺れ（元コードのまま）
+    //========================
     if (g_Hp.prevHp > g_Hp.m_Hp)
     {
-        // ダメージを計算
         float damage = g_Hp.prevHp - g_Hp.m_Hp;
-        //ダメージをもとに揺れる強さを変える
         float mag = damage * 1.0f;
         mag = fmaxf(3.0f, fminf(mag, 14.0f));
         g_Hp.shakeMagnitude = mag;
-        g_Hp.shakeDuration = 0.6f; // seconds
+        g_Hp.shakeDuration = 0.6f;
         g_Hp.shakeTimer = g_Hp.shakeDuration;
     }
 
@@ -208,13 +288,14 @@ void Hp_Update()
         g_Hp2.shakeDuration = 0.6f;
         g_Hp2.shakeTimer = g_Hp2.shakeDuration;
     }
+
     if (g_Hp.shakeTimer > 0.0f)
     {
-        float t = g_Hp.shakeTimer / g_Hp.shakeDuration; 
-        float amp = g_Hp.shakeMagnitude * t; 
+        float t = g_Hp.shakeTimer / g_Hp.shakeDuration;
+        float amp = g_Hp.shakeMagnitude * t;
         float angle = g_Dist01(g_Rng) * 6.28318530718f;
         g_Hp.shakeOffset.x = cosf(angle) * amp;
-        g_Hp.shakeOffset.y = sinf(angle) * amp * 0.5f; 
+        g_Hp.shakeOffset.y = sinf(angle) * amp * 0.5f;
         g_Hp.shakeTimer -= g_Timer.frame;
         if (g_Hp.shakeTimer <= 0.0f)
         {
@@ -222,6 +303,7 @@ void Hp_Update()
             g_Hp.shakeOffset = { 0.0f, 0.0f };
         }
     }
+
     if (g_Hp2.shakeTimer > 0.0f)
     {
         float t = g_Hp2.shakeTimer / g_Hp2.shakeDuration;
@@ -236,11 +318,12 @@ void Hp_Update()
             g_Hp2.shakeOffset = { 0.0f, 0.0f };
         }
     }
+
+    // 最後にprevHp更新
     g_Hp.prevHp = g_Hp.m_Hp;
     g_Hp2.prevHp = g_Hp2.m_Hp;
-
-   
 }
+
 void Hp_Draw()
 {
     Shader_Begin();
