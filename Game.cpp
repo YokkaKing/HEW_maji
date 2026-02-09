@@ -139,9 +139,7 @@ void Game_Finalize()
 }
 
 void Game_Update()
-
 {
-
 	const float dt = 1.0f / 60.0f;
 	CountdownUI_Update(dt);
 	//少しの秒がアップデート時間を上げる
@@ -149,6 +147,9 @@ void Game_Update()
 	{
 		frame -= 1;
 	}
+
+	TerrainUpdate();
+
 	if (g_transformMngr.IsActive()&&frame <= 0)
 	{
 		g_transformMngr.Update(dt);
@@ -214,8 +215,6 @@ void Game_Update()
 		PlayerUpdate();
 		Player2Update();
 		Field_Update();
-		TerrainUpdate();
-
 		g_sponer.Update();
 
 		//=======UI===========
