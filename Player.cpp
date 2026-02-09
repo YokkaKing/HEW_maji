@@ -105,7 +105,7 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 	// のちのちセレクト画面から分岐できるようにする
 	// 自分をownerとして武器を生成
 
-	g_changeP1 = 0;
+	g_changeP1 = 3;
 	g_setWTP1 = setWTp1;
 	if (g_setWTP1 == WeaponTerrain::SWORD_WALL)
 	{
@@ -179,7 +179,7 @@ void	PlayerUpdate()
 				break;
 			case WeaponTerrain::BOW_HILL:   
 				g_changeP1 = 3;
-				g_Player.m_model = ModelLoad("asset\\model\\char_bow_motion.fbx");
+				g_Player.m_model = ModelLoad("asset\\model\\bow.fbx");
 				g_Player.EquipWeapon(std::make_unique<Arrow>(&g_Player, FALSE));
 				break;
 			case WeaponTerrain::HAMMER_:   

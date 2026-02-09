@@ -29,7 +29,7 @@ MODEL* g_modelShuriken[2] = { NULL, NULL };
 PLAYER* g_PlayerShuriken1;
 PLAYER2* g_PlayerShuriken2;
 
-XMFLOAT3 g_moveShuriken[2]; // �ȈՃA�j���[�V����
+XMFLOAT3 g_moveShuriken[2];
 extern Controller g_Controller[2];
 
 Shuriken::Shuriken(GameObject* player, bool select) : IWeapon(player)

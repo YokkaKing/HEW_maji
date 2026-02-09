@@ -138,6 +138,14 @@ void	SetFade(int fadeframe, XMFLOAT4 color, FADE_STATE state, SCENE scene)
 	else
 	{
 		g_Fade.frame = 0.0f;	//“§–¾‚É‚·‚é
+		if (GetRoundCount() == 0)
+		{
+			StopAudio(g_round1);
+		}
+		else
+		{
+			StopAudio(g_round2);
+		}
 		PlayAudio(g_fade);
 	}
 

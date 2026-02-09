@@ -232,3 +232,7 @@ void SetScene(SCENE scene) //ƒV[ƒ“‚ğØ‚è‘Ö‚¦‚é
 	}
 
 }
+int GetRoundCount()
+{
+	return g_RoundCount;
+}
