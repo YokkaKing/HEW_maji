@@ -33,6 +33,7 @@
 #include<memory>
 #include"generateWT.h"
 #include"selectWeaponTerrain.h"
+#include"Item.h"
 //================================================================
 //	グローバル変数
 //================================================================
@@ -48,6 +49,7 @@ static bool g_Player1AttackPlaying = false; // 攻撃ワンショット再生中
 static bool g_Player1JumpPlaying = false; // ジャンプワンショット再生中フラグ
 static int g_Player1CurrentAnim = 0; // 0: idle, 1: move, 2: attack 3:jump
 WeaponTerrain m_baseWT;
+ITEM_SPONER gp_itemSponer;
 
 void PlayerDie()
 {
@@ -973,6 +975,8 @@ void PLAYER::RoundReset(XMFLOAT3 startPos)
 	g_Player1AttackPlaying = false;
 	g_Player.SetReservedWT(0, WeaponTerrain::NONE);
 	g_Player.SetReservedWT(1, WeaponTerrain::NONE);
+
+	gp_itemSponer.ResetItem();
 }
 
 WeaponTerrain GetSetWTP1()

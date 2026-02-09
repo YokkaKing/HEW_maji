@@ -60,7 +60,7 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, const
 	//Controller_Initialize();
 	Field_Initialize(pDevice, pContext); // フィールドの初期化
 	g_stage.Initialize(pDevice, pContext);
-
+	g_sponer.ResetItem();
 	g_sponer.Initialize();
 
 	PlayerInitialize(pDevice, pContext, select.player1); //
@@ -124,6 +124,7 @@ void Game_Finalize()
 	Player2Finalize();
 	Camera_Finalize();	//カメラ終了処理
 	Camera2_Finalize();	//カメラ終了処理
+	g_sponer.ResetItem();
 	//=======UI===========
 
 	Timer_Finalize();
