@@ -13,6 +13,7 @@
 #include"sprite.h"
 #include"Game.h"
 #include"keyboard.h"
+#include"Controller.h"
 #include"field.h"
 #include"Effect.h"
 #include"Audio.h"
@@ -50,6 +51,7 @@ static int g_selectionPhase = 0;
 static bool  g_roundEndWait = false;
 static float g_roundEndWaitTimer = 0.0f;
 ITEM_SPONER g_sponer;
+extern Controller g_Controller[2];
 
 STAGE g_stage;
 
@@ -257,7 +259,7 @@ void Game_Update()
 		//キー入力チェック
 		//スタートボタンが押されたらシーンを切り替え
 		//フェード処理中はキーを受け付けない
-		if (Keyboard_IsKeyDownTrigger(KK_ENTER) && (GetFadeState() == FADE_NONE))
+		if ((Keyboard_IsKeyDownTrigger(KK_ENTER))&& (GetFadeState() == FADE_NONE))
 		{
 			//フェードアウトさせてシーンを切り替える
 			XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
