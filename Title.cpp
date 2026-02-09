@@ -41,7 +41,7 @@ void Title_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	//フェードインのセット
 	XMFLOAT4	color = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
 	SetFade(60.0f, color, FADE_IN, SCENE_SELECT_WT);
-
+    PlayAudio(g_title, true);
 }
 void Title_Finalize()
 {

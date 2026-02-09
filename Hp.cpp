@@ -17,6 +17,7 @@
 #include"shader.h"
 #include "player.h"
 #include "player2.h"
+#include "Audio.h"
 #include <random>
 #include <cmath>
 #include <algorithm>
@@ -123,7 +124,7 @@ void Hp_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
     g_Timer.pos = XMFLOAT2(0, 0);
     g_Timer.size = XMFLOAT2(1648*0.5, 117*0.5);
     g_Timer.col = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-    g_Timer.time = 60.0f;
+    g_Timer.time = 10.0f;
     g_Timer.frame = 1 / 60.0f;
 }
 void Hp_Finalize()
@@ -143,7 +144,6 @@ void Hp_Finalize()
 }
 void Hp_Update()
 { 
-
     float prevHp1 = g_Hp.m_Hp;
     float prevHp2 = g_Hp2.m_Hp;
 

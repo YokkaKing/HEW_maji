@@ -139,17 +139,17 @@ void	Player2Update()
 //================================================================
 //	武器変更処理(一旦)
 //================================================================
+	/*
 	int slotToUse = -1;
-	if (Keyboard_IsKeyDownTrigger(KK_D2))
+	if (Keyboard_IsKeyDownTrigger(KK_D2) && !GetIsUsedA_P2())
 	{
 		slotToUse = 0;
 		g_Player2.m_isTransformed = true;
 	}
-	if (Keyboard_IsKeyDownTrigger(KK_D9))
+	if (Keyboard_IsKeyDownTrigger(KK_D9) && !GetIsUsedB_P2())
 	{
 		slotToUse = 1;
 		g_Player2.m_isTransformed = true;
-
 	}
 
 	if (slotToUse != -1)
@@ -160,39 +160,37 @@ void	Player2Update()
 		// 選択（予約）済みであり、かつ現在変身中でない（または NONE でない）場合
 		if (reserved != WeaponTerrain::NONE)
 		{
-			inGameWTselect data;
-			data.player1 = WeaponTerrain::NONE; // P1は変更しない
-			data.player2 = reserved;            // P2に予約分を適用
-
-			// 武器の適用
-			//generateWT_Apply(data, &g_Player, &g_Player2, g_pDevice2, g_pContext2);
-
 			// 地形の生成（P2用なので第二引数はTRUE）
 			TerrainSet(reserved, TRUE);
 
 			//下にある攻撃処理のアニメーションの順と合わせる
 			switch (reserved) {
 			case WeaponTerrain::SWORD_WALL:
-				g_Player2.m_model = ModelLoad("asset\\model\\char_sword_motion_FX.fbx"); 
+				g_changeP2 = 1;
+				g_Player2.EquipWeapon(std::make_unique<Sword>(&g_Player2, TRUE));
 				break;
 			case WeaponTerrain::SPEAR_HILL:
-				g_Player2.m_model = ModelLoad("asset\\model\\spear.fbx"); 
+				g_changeP2 = 2;
+				g_Player2.EquipWeapon(std::make_unique<Spear>(&g_Player2, TRUE));
 				break;
 			case WeaponTerrain::BOW_HILL:
-				g_Player2.m_model = ModelLoad("asset\\model\\char_bow_motion.fbx");
+				g_changeP2 = 3;
+				g_Player2.EquipWeapon(std::make_unique<Arrow>(&g_Player2, TRUE));
 				break;
 			case WeaponTerrain::HAMMER_:
-				g_Player2.m_model = ModelLoad("asset\\model\\hammer.fbx");
+				g_changeP2 = 4;
+				g_Player2.EquipWeapon(std::make_unique<Hammer>(&g_Player2, TRUE));
 				break;
 			case WeaponTerrain::SHURIKEN_:
-				g_Player2.m_model = ModelLoad("asset\\model\\char_shuriken_motion.fbx");
+				g_changeP2 = 5;
+				g_Player2.EquipWeapon(std::make_unique<Shuriken>(&g_Player2, TRUE));
 				break;
 			}
-
-			g_Player2.SetCurrentWT(reserved);
-			g_Player2.SetReservedWT(slotToUse, WeaponTerrain::NONE); // 予約をクリア
+			g_setWTP2 = reserved;
+			// g_Player2.SetCurrentWT(reserved);
 		}
 	}
+	*/
 
 //================================================================
 //	攻撃処理
@@ -507,6 +505,11 @@ void	Player2Update()
 	{
 		g_Player2.m_isDead = true;
 		Player2Die();
+	}
+
+	if (Keyboard_IsKeyDownTrigger(KK_D2) || Keyboard_IsKeyDownTrigger(KK_D9))
+	{
+		g_Player2CurrentAnim = 0;
 	}
 }
 
@@ -901,6 +904,8 @@ void PLAYER2::RoundReset(XMFLOAT3 startPos)
 	EquipBaseWeapon();
 
 	g_Player2AttackPlaying = false;
+	g_Player2.SetReservedWT(0, WeaponTerrain::NONE);
+	g_Player2.SetReservedWT(1, WeaponTerrain::NONE);
 }
 
 void PLAYER2::EquipBaseWeapon()
@@ -938,6 +943,10 @@ void PLAYER2::EquipBaseWeapon()
 WeaponTerrain GetSetWTP2()
 {
 	return g_setWTP2;
+}
+void SetWTP2(WeaponTerrain wt)
+{
+	g_setWTP2 = wt;
 }
 
 bool GetPlayer2_IsAttacked()

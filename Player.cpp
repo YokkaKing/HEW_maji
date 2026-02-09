@@ -33,6 +33,7 @@
 #include<memory>
 #include"generateWT.h"
 #include"selectWeaponTerrain.h"
+#include"Item.h"
 //================================================================
 //	グローバル変数
 //================================================================
@@ -48,6 +49,7 @@ static bool g_Player1AttackPlaying = false; // 攻撃ワンショット再生中
 static bool g_Player1JumpPlaying = false; // ジャンプワンショット再生中フラグ
 static int g_Player1CurrentAnim = 0; // 0: idle, 1: move, 2: attack 3:jump
 WeaponTerrain m_baseWT;
+ITEM_SPONER gp_itemSponer;
 
 void PlayerDie()
 {
@@ -144,15 +146,15 @@ void	PlayerUpdate()
 //================================================================
 //	武器変更処理(一旦)
 //================================================================
-
+	/*
 	int slotToUse = -1; 
 
-	if (Keyboard_IsKeyDownTrigger(KK_D1))
+	if (Keyboard_IsKeyDownTrigger(KK_D1) && !GetIsUsedA_P1())
 	{
 		slotToUse = 0;
 		g_Player.m_isTransformed = true;
 	}
-	if (Keyboard_IsKeyDownTrigger(KK_D0))
+	if (Keyboard_IsKeyDownTrigger(KK_D0) && !GetIsUsedB_P1())
 	{
 		slotToUse = 1;
 		g_Player.m_isTransformed = true;
@@ -164,13 +166,8 @@ void	PlayerUpdate()
 		WeaponTerrain reserved = g_Player.GetReservedWT(slotToUse);
 		if (reserved != WeaponTerrain::NONE)
 		{
-			inGameWTselect data;
-			data.player1 = reserved;       
-			data.player2 = g_Player2.GetCurrentWT();
-
-			// generateWT_Apply
-			//generateWT_Apply(data, &g_Player, &g_Player2, g_pDevice, g_pContext);
 			TerrainSet(reserved, FALSE);
+
 			switch (reserved) {
 			case WeaponTerrain::SWORD_WALL: 
 				g_changeP1 = 1;
@@ -198,10 +195,11 @@ void	PlayerUpdate()
 				g_Player.EquipWeapon(std::make_unique<Shuriken>(&g_Player, FALSE));
 				break;
 			}
-			g_Player.SetCurrentWT(reserved);
-			g_Player.SetReservedWT(slotToUse, WeaponTerrain::NONE);
+			g_setWTP1 = reserved;
+			//g_Player.SetCurrentWT(reserved);
 		}
 	}
+	*/
 
 //================================================================
 //	攻撃処理(変身前)
@@ -516,6 +514,11 @@ void	PlayerUpdate()
 	{
 		g_Player.m_isDead = true;
 		PlayerDie();
+	}
+
+	if (Keyboard_IsKeyDownTrigger(KK_D1) || Keyboard_IsKeyDownTrigger(KK_D0))
+	{
+		g_Player1CurrentAnim = 0;
 	}
 }
 
@@ -970,9 +973,17 @@ void PLAYER::RoundReset(XMFLOAT3 startPos)
     EquipBaseWeapon();
 
 	g_Player1AttackPlaying = false;
+	g_Player.SetReservedWT(0, WeaponTerrain::NONE);
+	g_Player.SetReservedWT(1, WeaponTerrain::NONE);
+
+	gp_itemSponer.ResetItem();
 }
 
 WeaponTerrain GetSetWTP1()
 {
 	return g_setWTP1;
+}
+void SetWTP1(WeaponTerrain wt)
+{
+	g_setWTP1 = wt;
 }

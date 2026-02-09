@@ -94,14 +94,13 @@ void TransformFinalize()
     // 終了処理
 }
 
-void ApplyTransformation(PLAYER* p, WeaponTerrain wt, bool isTransform)
+void ApplyTransformationP1(PLAYER* p, WeaponTerrain wt, bool isTransform)
 {
     if (wt == WeaponTerrain::NONE) return;
 
     //地形と武器の適用
     TerrainSet(wt, FALSE);
     p->SetCurrentWT(wt);
-    //generateWT_Apply(p, wt, FALSE);
 
     switch (wt) {
     case WeaponTerrain::SWORD_WALL:
@@ -120,12 +119,75 @@ void ApplyTransformation(PLAYER* p, WeaponTerrain wt, bool isTransform)
         p->EquipWeapon(std::make_unique<Shuriken>(p, FALSE)); // 手裏剣クラス
         break;
     }
+    SetWTP1(wt);
 
     //モデルの決定
     const char* path = nullptr;
     if (!isTransform) {
         // 通常時（m_baseWTに戻す時など）は初期設定パスを使用
-        path = (p == (PLAYER*)&g_Player) ? INITIAL_MODEL_PATH_P1 : INITIAL_MODEL_PATH_P2;
+        path = INITIAL_MODEL_PATH_P1;
+    }
+    else {
+        // 変身時
+        switch (wt) {
+        case WeaponTerrain::SWORD_WALL:   path = "asset\\model\\sword.fbx"; break;
+        case WeaponTerrain::SPEAR_HILL:   path = "asset\\model\\spear.fbx"; break;
+        case WeaponTerrain::BOW_HILL:     path = "asset\\model\\bow.fbx"; break;
+        case WeaponTerrain::HAMMER_:      path = "asset\\model\\hammer.fbx"; break;
+        case WeaponTerrain::SHURIKEN_:    path = "asset\\model\\shuriken.fbx"; break;
+        default:                          path = "asset\\model\\ball.fbx"; break;
+        }
+    }
+
+    // 3. モデルのリロード
+    if (path) {
+        MODEL* newModel = ModelLoad(path);
+        if (newModel != nullptr) {
+            // 新しいモデルのロードに成功した場合のみ、古いモデルを解放して入れ替える
+            if (p->m_model != nullptr) {
+                ModelRelease(p->m_model);
+                p->m_model = nullptr;
+            }
+            p->m_model = newModel;
+        }
+        else {
+            // ロード失敗時にログを出す
+            printf("Failed to load model: %s\n", path);
+        }
+    }
+}
+void ApplyTransformationP2(PLAYER2* p, WeaponTerrain wt, bool isTransform)
+{
+    if (wt == WeaponTerrain::NONE) return;
+
+    //地形と武器の適用
+    TerrainSet(wt, TRUE);
+    p->SetCurrentWT(wt);
+
+    switch (wt) {
+    case WeaponTerrain::SWORD_WALL:
+        p->EquipWeapon(std::make_unique<Sword>(p, TRUE));
+        break;
+    case WeaponTerrain::SPEAR_HILL:
+        p->EquipWeapon(std::make_unique<Spear>(p, TRUE));
+        break;
+    case WeaponTerrain::BOW_HILL:
+        p->EquipWeapon(std::make_unique<Arrow>(p, TRUE)); // 弓クラス
+        break;
+    case WeaponTerrain::HAMMER_:
+        p->EquipWeapon(std::make_unique<Hammer>(p, TRUE));
+        break;
+    case WeaponTerrain::SHURIKEN_:
+        p->EquipWeapon(std::make_unique<Shuriken>(p, TRUE)); // 手裏剣クラス
+        break;
+    }
+    SetWTP2(wt);
+
+    //モデルの決定
+    const char* path = nullptr;
+    if (!isTransform) {
+        // 通常時（m_baseWTに戻す時など）は初期設定パスを使用
+        path = INITIAL_MODEL_PATH_P2;
     }
     else {
         // 変身時
@@ -157,7 +219,6 @@ void ApplyTransformation(PLAYER* p, WeaponTerrain wt, bool isTransform)
     }
 }
 
-
 void TransformPlayer()
 {
     const char* newModelPath = nullptr;
@@ -172,28 +233,29 @@ void TransformPlayer()
             targetWT = g_TransformA_P1;
             g_IsUsedA_P1 = true;
         }
-        else if ((Keyboard_IsKeyDownTrigger(KK_D2) || g_Controller[0].IsButtonPushed(ControllerButton::R_SHOULDER)) && !g_IsUsedB_P1)
+        else if ((Keyboard_IsKeyDownTrigger(KK_D0) || g_Controller[0].IsButtonPushed(ControllerButton::R_SHOULDER)) && !g_IsUsedB_P1)
         {
             g_Player.TransformType = TRANSFORM_TYPE::TRANSFORM_TYPE_B;
             targetWT = g_TransformB_P1;
             g_IsUsedB_P1 = true;
         }
         if (targetWT != WeaponTerrain::NONE) {
-            ApplyTransformation(&g_Player, targetWT, true);
+            ApplyTransformationP1(&g_Player, targetWT, true);
             g_Player.m_isTransformed = true;
             g_Player.TransformTimer = TRANSFORM_LIMIT_FRAME;
         }
     }
     else {
         // 解除判定
-        bool unevolve = (g_Player.TransformTimer-- <= 0) || Keyboard_IsKeyDownTrigger(KK_D0);
+        bool unevolve = (g_Player.TransformTimer-- <= 0) || Keyboard_IsKeyDownTrigger(KK_D8);
         if (g_Player.TransformType == TRANSFORM_TYPE::TRANSFORM_TYPE_A && g_Controller[0].GetLeftTrigger() >= 0.9f) unevolve = true;
         if (g_Player.TransformType == TRANSFORM_TYPE::TRANSFORM_TYPE_B && g_Controller[0].GetRightTrigger() >= 0.9f) unevolve = true;
 
         if (unevolve) {
             g_Player.TransformType = TRANSFORM_TYPE::TRANSFORM_TYPE_NONE;
             g_Player.m_isTransformed = false;
-            ApplyTransformation(&g_Player, g_Player.m_baseWT, false); // 元の武器に戻す
+            ApplyTransformationP1(&g_Player, g_Player.m_baseWT, false); // 元の武器に戻す
+            SetWTP1(g_Player.m_baseWT);
             g_Player.m_scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
         }
     }
@@ -242,8 +304,6 @@ void ApplyTransformEffect()
     }
 }
 
-
-
 void TransformPlayer2()
 {
     const char* newModelPath = nullptr;
@@ -252,7 +312,7 @@ void TransformPlayer2()
     {
         WeaponTerrain targetWT = WeaponTerrain::NONE;
 
-        if ((Keyboard_IsKeyDownTrigger(KK_D8) || g_Controller[1].IsButtonPushed(ControllerButton::L_SHOULDER)) && !g_IsUsedA_P2)
+        if ((Keyboard_IsKeyDownTrigger(KK_D2) || g_Controller[1].IsButtonPushed(ControllerButton::L_SHOULDER)) && !g_IsUsedA_P2)
         {
             g_Player2.TransformType = TRANSFORM_TYPE2::TRANSFORM_TYPE_A;
             targetWT = g_TransformA_P2;
@@ -265,21 +325,22 @@ void TransformPlayer2()
             g_IsUsedB_P2 = true;
         }
         if (targetWT != WeaponTerrain::NONE) {
-            ApplyTransformation((PLAYER*)&g_Player2, targetWT, true);
+            ApplyTransformationP2(&g_Player2, targetWT, true);
             g_Player2.m_isTransformed = true;
             g_Player2.TransformTimer = TRANSFORM_LIMIT_FRAME;
         }
     }
     else {
         // 解除判定
-        bool unevolve = (g_Player2.TransformTimer-- <= 0) || Keyboard_IsKeyDownTrigger(KK_D0);
+        bool unevolve = (g_Player2.TransformTimer-- <= 0) || Keyboard_IsKeyDownTrigger(KK_D8);
         if (g_Player2.TransformType == TRANSFORM_TYPE2::TRANSFORM_TYPE_A && g_Controller[1].GetLeftTrigger() >= 0.9f) unevolve = true;
         if (g_Player2.TransformType == TRANSFORM_TYPE2::TRANSFORM_TYPE_B && g_Controller[1].GetRightTrigger() >= 0.9f) unevolve = true;
 
         if (unevolve) {
             g_Player2.TransformType = TRANSFORM_TYPE2::TRANSFORM_TYPE_NONE;
             g_Player2.m_isTransformed = false;
-            ApplyTransformation((PLAYER*)&g_Player2, g_Player2.m_baseWT, false); // 元の武器に戻す
+            ApplyTransformationP2(&g_Player2, g_Player2.m_baseWT, false); // 元の武器に戻す
+            SetWTP2(g_Player2.m_baseWT);
             g_Player2.m_scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
         }
     }
@@ -326,4 +387,41 @@ void ApplyTransformEffect2()
     }
 }
 
-
+bool GetIsUsedA_P1()
+{
+    return g_IsUsedA_P1;
+}
+bool GetIsUsedB_P1()
+{
+    return g_IsUsedB_P1;
+}
+bool GetIsUsedA_P2()
+{
+    return g_IsUsedA_P2;
+}
+bool GetIsUsedB_P2()
+{
+    return g_IsUsedB_P2;
+}
+void SetIsUsed_P1(int no, bool flag)
+{
+    if (no == 0)
+    {
+        g_IsUsedA_P1 = flag;
+    }
+    else
+    {
+        g_IsUsedB_P1 = flag;
+    }
+}
+void SetIsUsed_P2(int no, bool flag)
+{
+    if (no == 0)
+    {
+        g_IsUsedA_P2 = flag;
+    }
+    else
+    {
+        g_IsUsedB_P2 = flag;
+    }
+}

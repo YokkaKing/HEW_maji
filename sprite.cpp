@@ -234,7 +234,85 @@ void DrawSpriteEx(XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 col, float hp,bool isPla
 	// draw
 	g_pContext->Draw(4, 0);
 }
+void DrawSpriteEx(XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 col, int bno, int wc, int hc,float angle)
+{
+	g_pDevice = Direct3D_GetDevice();
+	g_pContext = Direct3D_GetDeviceContext();
 
+
+	float w = 1.0f / wc;
+	float h = 1.0f / hc;
+	float texX = (bno % wc) * w;
+	float texY = (bno / wc) * h;
+
+
+	bool flipX = (size.x < 0.0f);
+	bool flipY = (size.y < 0.0f);
+
+
+	float halfW = fabsf(size.x) * 0.5f;
+	float halfH = fabsf(size.y) * 0.5f;
+
+
+	float u0 = texX;
+	float u1 = texX + w;
+	float v0 = texY;
+	float v1 = texY + h;
+
+
+	if (flipX) std::swap(u0, u1);
+	if (flipY) std::swap(v0, v1);
+
+	const float deg = angle;
+	const float rad = deg * (3.14159265f / 180.0f);
+	const float c = cosf(rad);
+	const float s = sinf(rad);
+
+	auto Rotate = [&](float x, float y) -> XMFLOAT2
+		{
+			
+			return XMFLOAT2(x * c - y * s, x * s + y * c);
+		};
+
+
+	XMFLOAT2 p0 = Rotate(-halfW, -halfH);
+	XMFLOAT2 p1 = Rotate(+halfW, -halfH);
+	XMFLOAT2 p2 = Rotate(-halfW, +halfH);
+	XMFLOAT2 p3 = Rotate(+halfW, +halfH);
+
+	// vertex buffer lock
+	D3D11_MAPPED_SUBRESOURCE msr;
+	g_pContext->Map(g_pVertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &msr);
+	Vertex3D* v = (Vertex3D*)msr.pData;
+
+	v[0].position = { pos.x + p0.x, pos.y + p0.y, 0.0f };
+	v[0].color = col;
+	v[0].texCoord = { u0, v0 };
+
+	v[1].position = { pos.x + p1.x, pos.y + p1.y, 0.0f };
+	v[1].color = col;
+	v[1].texCoord = { u1, v0 };
+
+	v[2].position = { pos.x + p2.x, pos.y + p2.y, 0.0f };
+	v[2].color = col;
+	v[2].texCoord = { u0, v1 };
+
+	v[3].position = { pos.x + p3.x, pos.y + p3.y, 0.0f };
+	v[3].color = col;
+	v[3].texCoord = { u1, v1 };
+
+	// unlock
+	g_pContext->Unmap(g_pVertexBuffer, 0);
+
+	// set vertex buffer
+	UINT stride = sizeof(Vertex3D);
+	UINT offset = 0;
+	g_pContext->IASetVertexBuffers(0, 1, &g_pVertexBuffer, &stride, &offset);
+	g_pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+
+	// draw
+	g_pContext->Draw(4, 0);
+}
 
 void DrawSpriteScroll(XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 col,
 	XMFLOAT2 texcoord)
@@ -284,6 +362,52 @@ void DrawSpriteScroll(XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 col,
 }
 
 
+void DrawSpriteAnimation(XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 col,
+	XMFLOAT2 texcoord)
+{
+
+	g_pDevice = Direct3D_GetDevice();
+	g_pContext = Direct3D_GetDeviceContext();
+
+	// 頂点バッファをロックする
+	D3D11_MAPPED_SUBRESOURCE msr;
+	g_pContext->Map(g_pVertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &msr);
+
+	// 頂点バッファへの仮想ポインタを取得
+	Vertex3D* v = (Vertex3D*)msr.pData;
+
+	// 指定の位置に指定のサイズ、色の四角形を描画する /////////テクスチャ追加
+	v[0].position = { pos.x - (size.x / 2), pos.y - (size.y / 2), 0.0f };
+	v[0].color = col;
+	v[0].texCoord = { 0, 0 };
+
+	v[1].position = { pos.x + (size.x / 2), pos.y - (size.y / 2), 0.0f };
+	v[1].color = col;
+	v[1].texCoord = { texcoord.x, 0 };
+
+	v[2].position = { pos.x - (size.x / 2), pos.y + (size.y / 2), 0.0f };
+	v[2].color = col;
+	v[2].texCoord = { 0, texcoord.y };
+
+	v[3].position = { pos.x + (size.x / 2), pos.y + (size.y / 2), 0.0f };
+	v[3].color = col;
+	v[3].texCoord = { texcoord.x, texcoord.y };
+
+
+	// 頂点バッファのロックを解除
+	g_pContext->Unmap(g_pVertexBuffer, 0);
+
+	// 頂点バッファを描画パイプラインに設定
+	UINT stride = sizeof(Vertex3D);//頂点１つあたりのサイズを指定
+	UINT offset = 0;
+	g_pContext->IASetVertexBuffers(0, 1, &g_pVertexBuffer, &stride, &offset);
+
+	// プリミティブトポロジ設定　ポリゴンの描画ルール的なもの
+	g_pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+
+	// ポリゴン描画命令発行
+	g_pContext->Draw(4, 0);//表示に使用する頂点数を指定}
+}
 void DrawSpriteExRotation(XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 col, int bno, int wc, int hc, float radian)
 {
 

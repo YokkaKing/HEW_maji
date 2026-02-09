@@ -41,7 +41,7 @@ void Manager_Initialize()
 	//本来の形
 	Fade_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
 	SetScene(SCENE_TITLE);	//最初に動かすシーンに切り替える
-	PlayAudio(g_title, true);
+
 }
 
 void Manager_Finalize()

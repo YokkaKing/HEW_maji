@@ -26,11 +26,17 @@ void TransformPlayer();
 // 進化タイプに応じたパラメーター補正を適用
 void ApplyTransformEffect();
 
-
 //================================
 void TransformPlayer2();
 void ApplyTransformEffect2();
 //===============================
+
+bool GetIsUsedA_P1();
+bool GetIsUsedB_P1();
+bool GetIsUsedA_P2();
+bool GetIsUsedB_P2();
+void SetIsUsed_P1(int no, bool flag);
+void SetIsUsed_P2(int no, bool flag);
 
 extern WeaponTerrain g_TransformA_P1; // P1の2回目選択
 extern WeaponTerrain g_TransformB_P1; // P1の3回目選択
