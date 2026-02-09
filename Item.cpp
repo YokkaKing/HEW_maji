@@ -20,7 +20,7 @@
 //================================================================
 //	マクロ定義
 //================================================================
-#define SPONE_TIME (5.0f)
+#define SPONE_TIME (30.0f)
 
 //================================================================
 //	グローバル変数
@@ -77,6 +77,12 @@ void ITEM_SPONER::Spwan()
 	g_gameObjects.push_back(item); // アイテムを登録
 
 	item->Set(); // アイテムのセットを呼び出し
+}
+// ラウンドごとの初期化
+void ITEM_SPONER::ResetItem()
+{
+	ClearAllItems();    // 既存アイテム消去
+	m_count = 0; // スポーンタイマーをリセット
 }
 // どこにスポナーを作ればいいかを判断する
 XMFLOAT3 ITEM_SPONER::WherePosition()
@@ -341,6 +347,23 @@ void ITEM::OnCollision(const CollisionInfo& info)
 
 				m_isDead = true; // 消滅するだけ
 			}
+		}
+	}
+}
+
+// 全アイテムを削除する関数
+void ClearAllItems()
+{
+	extern std::vector<GameObject*> g_gameObjects;
+
+	for (auto& obj : g_gameObjects)
+	{
+		// オブジェクトがnullでなく、タグが"Item"であれば
+		if (obj != nullptr && obj->m_tag == "Item")
+		{
+			// 削除フラグを立てる
+			// 次のフレームの更新処理等で安全に削除・メモリ解放が行われます。
+			obj->m_isDead = true;
 		}
 	}
 }

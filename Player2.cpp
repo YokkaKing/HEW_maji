@@ -139,6 +139,7 @@ void	Player2Update()
 //================================================================
 //	武器変更処理(一旦)
 //================================================================
+	/*
 	int slotToUse = -1;
 	if (Keyboard_IsKeyDownTrigger(KK_D2) && !GetIsUsedA_P2())
 	{
@@ -166,33 +167,30 @@ void	Player2Update()
 			switch (reserved) {
 			case WeaponTerrain::SWORD_WALL:
 				g_changeP2 = 1;
-				g_Player2.m_model = ModelLoad("asset\\model\\char_sword_motion_FX.fbx");
 				g_Player2.EquipWeapon(std::make_unique<Sword>(&g_Player2, TRUE));
 				break;
 			case WeaponTerrain::SPEAR_HILL:
 				g_changeP2 = 2;
-				g_Player2.m_model = ModelLoad("asset\\model\\spear.fbx");
 				g_Player2.EquipWeapon(std::make_unique<Spear>(&g_Player2, TRUE));
 				break;
 			case WeaponTerrain::BOW_HILL:
 				g_changeP2 = 3;
-				g_Player2.m_model = ModelLoad("asset\\model\\char_bow_motion.fbx");
 				g_Player2.EquipWeapon(std::make_unique<Arrow>(&g_Player2, TRUE));
 				break;
 			case WeaponTerrain::HAMMER_:
 				g_changeP2 = 4;
-				g_Player2.m_model = ModelLoad("asset\\model\\hammer.fbx");
 				g_Player2.EquipWeapon(std::make_unique<Hammer>(&g_Player2, TRUE));
 				break;
 			case WeaponTerrain::SHURIKEN_:
 				g_changeP2 = 5;
-				g_Player2.m_model = ModelLoad("asset\\model\\char_shuriken_motion.fbx");
 				g_Player2.EquipWeapon(std::make_unique<Shuriken>(&g_Player2, TRUE));
 				break;
 			}
+			g_setWTP2 = reserved;
 			// g_Player2.SetCurrentWT(reserved);
 		}
 	}
+	*/
 
 //================================================================
 //	攻撃処理
@@ -508,13 +506,18 @@ void	Player2Update()
 		g_Player2.m_isDead = true;
 		Player2Die();
 	}
+
+	if (Keyboard_IsKeyDownTrigger(KK_D2) || Keyboard_IsKeyDownTrigger(KK_D9))
+	{
+		g_Player2CurrentAnim = 0;
+	}
 }
 
 void Player2_ManualMove()
 {
 	// カメラの前方向ベクトル
-	float forwardX = GetCamera2Position().x - GetCamera2AtPosition().x;
-	float forwardZ = GetCamera2Position().z - GetCamera2AtPosition().z;
+	float forwardX = GetCamera2AtPosition().x - GetCamera2Position().x;
+	float forwardZ = GetCamera2AtPosition().z - GetCamera2Position().z;
 
 	if (!g_Player2.m_isGround) // 地面についてないときに重力発動
 	{

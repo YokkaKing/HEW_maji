@@ -1,31 +1,32 @@
 //============================================
 // transformManager.cpp
 // 
-// •Ïgæ‚Ì•ŠíE’nŒ`‘I‘ğ—pƒtƒ@ƒCƒ‹
-// ì¬“ú:2026/1/27
-// ÅIXV“ú:2026/1/28
+// å¤‰èº«å…ˆã®æ­¦å™¨ãƒ»åœ°å½¢é¸æŠç”¨ãƒ•ã‚¡ã‚¤ãƒ«
+// ä½œæˆæ—¥:2026/1/27
+// æœ€çµ‚æ›´æ–°æ—¥:2026/1/28
 //============================================
 #include "transformManager.h"
 #include <algorithm>
 #include <random>
 #include "keyboard.h"
+#include"Controller.h"
 #include "shader.h"
 #include "Select_Transform_Ui.h"
 #include "Audio.h"
-//”wŒi‚ğˆÃ‚­‚·‚éƒeƒNƒXƒ`ƒƒ
+//èƒŒæ™¯ã‚’æš—ãã™ã‚‹ãƒ†ã‚¯ã‚¹ãƒãƒ£
 static	ID3D11ShaderResourceView* g_TextureBg = NULL;
 
 //================================================================
-//	‰Šú‰»
+//	åˆæœŸåŒ–
 //================================================================
 static ID3D11Device* g_pDevice = nullptr;
 static ID3D11DeviceContext* g_pContext = nullptr;
+extern Controller g_Controller[2];
 
-
-//ƒRƒ“ƒXƒgƒ‰ƒNƒ^
+//ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
 TransformManager::TransformManager()
 {
-	// ‘S‚Ä‚Ìƒ|ƒCƒ“ƒ^‚ğ nullptr ‚ÅˆÀ‘S‚É‰Šú‰»
+	// å…¨ã¦ã®ãƒã‚¤ãƒ³ã‚¿ã‚’ nullptr ã§å®‰å…¨ã«åˆæœŸåŒ–
 	m_pContext = nullptr;
 	for (int i = 0; i < (int)WeaponTerrain::MAX; i++)
 	{
@@ -35,14 +36,14 @@ TransformManager::TransformManager()
 		}
 	}
 
-	// ó‘Ô‚Ì‰Šú‰»
+	// çŠ¶æ…‹ã®åˆæœŸåŒ–
 	m_isActive = false;
 	m_timer = 20.0f;
-	//ƒJ[ƒhƒAƒjƒ[ƒVƒ‡ƒ“‚ÌƒŠƒZƒbƒg
+	//ã‚«ãƒ¼ãƒ‰ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ã®ãƒªã‚»ãƒƒãƒˆ
 	SelectTransformUi_CardAnim_Reset(0);
 	SelectTransformUi_CardAnim_Reset(1);
 
-	// ƒvƒŒƒCƒ„[ó‘Ô‚Ì‰Šú‰»
+	// ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼çŠ¶æ…‹ã®åˆæœŸåŒ–
 	m_p1.isReady = false;
 	m_p1.selectedIndex = 0;
 	m_p1.selectedWT = WeaponTerrain::NONE;
@@ -52,7 +53,7 @@ TransformManager::TransformManager()
 	m_p2.selectedWT = WeaponTerrain::NONE;
 }
 
-//ƒfƒXƒgƒ‰ƒNƒ^
+//ãƒ‡ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
 TransformManager::~TransformManager()
 {
 	Finalize();
@@ -68,7 +69,7 @@ void TransformManager::Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pC
 	LoadFromWICFile(L"asset\\texture\\selectBg2.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
 	CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureBg);
 	assert(&g_TextureBg);
-	//•ÏgæƒeƒNƒXƒ`ƒƒ‚Ìƒ[ƒh ‘I‘ğ’†‚Æ”ñ‘I‘ğ’†‚Å‘S10í
+	//å¤‰èº«å…ˆãƒ†ã‚¯ã‚¹ãƒãƒ£ã®ãƒ­ãƒ¼ãƒ‰ é¸æŠä¸­ã¨éé¸æŠä¸­ã§å…¨10ç¨®
 	const char* paths[6][2] = {
 		"", "", 
 		"asset\\texture\\Sword_Active.png", "asset\\texture\\Sword_Inactive.png",
@@ -77,10 +78,10 @@ void TransformManager::Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pC
 		"asset\\texture\\Hammer_Active.png", "asset\\texture\\Hammer_Inactive.png",
 		"asset\\texture\\Shuriken_Active.png", "asset\\texture\\Shuriken_Inactive.png",
 	};
-	for (int i = 1; i < (int)WeaponTerrain::MAX; i++) //0”Ô(NONE)‚ğ”ò‚Î‚·
+	for (int i = 1; i < (int)WeaponTerrain::MAX; i++) //0ç•ª(NONE)ã‚’é£›ã°ã™
 	{
-		m_pWeaponTextures[i][0] = CreateSRV(pDevice, paths[i][0]); //‘I‘ğ’†(–¾‚é‚¢)
-		m_pWeaponTextures[i][1] = CreateSRV(pDevice, paths[i][1]); //”ñ‘I‘ğ’†(ˆÃ‚¢)
+		m_pWeaponTextures[i][0] = CreateSRV(pDevice, paths[i][0]); //é¸æŠä¸­(æ˜ã‚‹ã„)
+		m_pWeaponTextures[i][1] = CreateSRV(pDevice, paths[i][1]); //éé¸æŠä¸­(æš—ã„)
 	}
 }
 
@@ -106,76 +107,94 @@ bool TransformManager::Update(float deltaTime)
 	{
 		return false;
 	}
-	
-	//ƒ^ƒCƒ}[XV
+
+	static bool lastLeftP1 = false;
+	static bool lastRightP1 = false;
+	static bool lastLeftP2 = false;
+	static bool lastRightP2 = false;
+	const float THRESHOLD = 0.5f;
+
+	// ç¾åœ¨ã®ã‚¹ãƒ†ã‚£ãƒƒã‚¯å…¥åŠ›ã‚’å–å¾—
+	bool curLeftP1 = g_Controller[0].GetLeftStickX() < -THRESHOLD;
+	bool curRightP1 = g_Controller[0].GetLeftStickX() > THRESHOLD;
+	bool curLeftP2 = g_Controller[1].GetLeftStickX() < -THRESHOLD;
+	bool curRightP2 = g_Controller[1].GetLeftStickX() > THRESHOLD;
+
+	SetTransformUi_IsUsed(m_isActive);
+	//ã‚¿ã‚¤ãƒãƒ¼æ›´æ–°
 	m_timer -= deltaTime;
 	SetTransformUi_time(m_timer);
 	if (m_timer <= 0.0f)
 	{
 		m_timer = 0.0f;
-		//ŠÔØ‚ê‚Ì‚½‚ß‹­§“I‚ÉReady‚É‚·‚é
+		//æ™‚é–“åˆ‡ã‚Œã®ãŸã‚å¼·åˆ¶çš„ã«Readyã«ã™ã‚‹
 		m_p1.isReady = true;
-		m_p1.selectedWT = m_p1.choices[m_p1.selectedIndex]; //Œˆ’è
+		m_p1.selectedWT = m_p1.choices[m_p1.selectedIndex]; //æ±ºå®š
 
 		m_p2.isReady = true;
-		m_p2.selectedWT = m_p2.choices[m_p2.selectedIndex]; //Œˆ’è
+		m_p2.selectedWT = m_p2.choices[m_p2.selectedIndex]; //æ±ºå®š
 	}
 
-	//P1‚Ì“ü—Íˆ—
+	//P1ã®å…¥åŠ›å‡¦ç†
 	if (!m_p1.isReady)
 	{
-		if (Keyboard_IsKeyDownTrigger(KK_LEFT))
+		if (Keyboard_IsKeyDownTrigger(KK_LEFT) || (curLeftP1 && !lastLeftP1))
 		{
-			m_p1.selectedIndex = 0; //¶‚ğ‘I‘ğ
+			m_p1.selectedIndex = 0; //å·¦ã‚’é¸æŠ
 			PlayAudio(g_cursorMove, false);
 		}
-		if (Keyboard_IsKeyDownTrigger(KK_RIGHT))
+		if (Keyboard_IsKeyDownTrigger(KK_RIGHT) || (curRightP1 && !lastRightP1))
 		{
-			m_p1.selectedIndex = 1; //‰E‚ğ‘I‘ğ
+			m_p1.selectedIndex = 1; //å³ã‚’é¸æŠ
 			PlayAudio(g_cursorMove, false);
 		}
-		if (Keyboard_IsKeyDownTrigger(KK_LEFTCONTROL))
+		if (Keyboard_IsKeyDownTrigger(KK_LEFTCONTROL) || g_Controller[0].IsButtonPushed(ControllerButton::A_BUTTON))
 		{
 			m_p1.isReady = true;
-			m_p1.selectedWT = m_p1.choices[m_p1.selectedIndex]; //Œˆ’è
+			m_p1.selectedWT = m_p1.choices[m_p1.selectedIndex]; //æ±ºå®š
 			PlayAudio(g_button, false);
 		}
 	}
-	//P2‚Ì“ü—Íˆ—
+	//P2ã®å…¥åŠ›å‡¦ç†
 	if (!m_p2.isReady)
 	{
-		if (Keyboard_IsKeyDownTrigger(KK_D3))
+		if (Keyboard_IsKeyDownTrigger(KK_D3) || (curLeftP2 && !lastLeftP2))
 		{
-			m_p2.selectedIndex = 0; //¶‚ğ‘I‘ğ
+			m_p2.selectedIndex = 0; //å·¦ã‚’é¸æŠ
 			PlayAudio(g_cursorMove, false);
 		}
-		if (Keyboard_IsKeyDownTrigger(KK_D4))
+		if (Keyboard_IsKeyDownTrigger(KK_D4) || (curRightP2 && !lastRightP2))
 		{
-			m_p2.selectedIndex = 1; //‰E‚ğ‘I‘ğ
+			m_p2.selectedIndex = 1; //å³ã‚’é¸æŠ
 			PlayAudio(g_cursorMove, false);
 		}
-		if (Keyboard_IsKeyDownTrigger(KK_D5))
+		if (Keyboard_IsKeyDownTrigger(KK_D5) || g_Controller[1].IsButtonPushed(ControllerButton::A_BUTTON))
 		{
 			m_p2.isReady = true;
-			m_p2.selectedWT = m_p2.choices[m_p2.selectedIndex]; //Œˆ’è
+			m_p2.selectedWT = m_p2.choices[m_p2.selectedIndex]; //æ±ºå®š
 			PlayAudio(g_button, false);
 		}
 	}
-	//ƒJ[ƒhƒAƒjƒ[ƒVƒ‡ƒ“XV
+	//ã‚«ãƒ¼ãƒ‰ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³æ›´æ–°
 	if (m_isActive)
 	{
 		SelectTransformUi_CardAnim_Update(0, m_p1.selectedIndex, m_p1.isReady, deltaTime);
 		SelectTransformUi_CardAnim_Update(1, m_p2.selectedIndex, m_p2.isReady, deltaTime);
 	}
 
-	//—¼Ò‚ª€”õŠ®—¹‚µ‚½‚©‚Ìƒ`ƒFƒbƒN
+		lastLeftP1 = curLeftP1;
+		lastRightP1 = curRightP1;
+		lastLeftP2 = curLeftP2;
+		lastRightP2 = curRightP2;
+
+	//ä¸¡è€…ãŒæº–å‚™å®Œäº†ã—ãŸã‹ã®ãƒã‚§ãƒƒã‚¯
 	if (m_p1.isReady && m_p2.isReady)
 	{
-		//­‚µŠÔ‚ğ’u‚¢‚Ä‚©‚çI—¹
+		//å°‘ã—é–“ã‚’ç½®ã„ã¦ã‹ã‚‰çµ‚äº†
 		static float finishTimer = 0.0f;
 		finishTimer += deltaTime;
-		if (finishTimer > 1.0f) { //1•b‘Ò‚Á‚Ä‚©‚ç
-			m_isActive = false;   //‘I‘ğ‰æ–ÊI—¹
+		if (finishTimer > 1.0f) { //1ç§’å¾…ã£ã¦ã‹ã‚‰
+			m_isActive = false;   //é¸æŠç”»é¢çµ‚äº†
 			finishTimer = 0.0f;
 			return true;
 		}
@@ -193,45 +212,45 @@ void TransformManager::StartSelection(WeaponTerrain excludeP1, WeaponTerrain exc
 	m_p1.selectedIndex = 0;
 	m_p2.selectedIndex = 0;
 
-	//ƒJ[ƒhƒAƒjƒ[ƒVƒ‡ƒ“ƒŠƒZƒbƒg
+	//ã‚«ãƒ¼ãƒ‰ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ãƒªã‚»ãƒƒãƒˆ
 	SelectTransformUi_CardAnim_Reset(0);
 	SelectTransformUi_CardAnim_Reset(1);
 
 	//ShuffleChoices(m_p1);
 	//ShuffleChoices(m_p2);
 
-	// NONE(0)‚ğœ‚¢‚½•Ší‚Ì” (MAX=6‚È‚ç5í—Ş)
+	// NONE(0)ã‚’é™¤ã„ãŸæ­¦å™¨ã®æ•° (MAX=6ãªã‚‰5ç¨®é¡)
 	int weaponCount = (int)WeaponTerrain::MAX - 1;
 
 	// ------------
-	// P1 ‚Ì’Š‘I
+	// P1 ã®æŠ½é¸
 	// ------------
 	for (int i = 0; i < 2; i++)
 	{
 		WeaponTerrain candidate;
 		bool isValid = false;
 
-		// —LŒø‚È•Ší‚ªo‚é‚Ü‚Å‰ñ‚·
+		// æœ‰åŠ¹ãªæ­¦å™¨ãŒå‡ºã‚‹ã¾ã§å›ã™
 		while (!isValid)
 		{
-			// 1 ` weaponCount ‚Ìƒ‰ƒ“ƒ_ƒ€’l
+			// 1 ï½ weaponCount ã®ãƒ©ãƒ³ãƒ€ãƒ å€¤
 			int r = (rand() % weaponCount) + 1;
 			candidate = (WeaponTerrain)r;
 
-			// ƒ`ƒFƒbƒN1: ˆø”‚Åw’è‚³‚ê‚½uœŠO•Ší(1‰ñ–Ú‚É‘I‚ñ‚¾‚â‚Â)v‚È‚çNG
+			// ãƒã‚§ãƒƒã‚¯1: å¼•æ•°ã§æŒ‡å®šã•ã‚ŒãŸã€Œé™¤å¤–æ­¦å™¨(1å›ç›®ã«é¸ã‚“ã ã‚„ã¤)ã€ãªã‚‰NG
 			if (candidate == excludeP1) continue;
 
-			// ƒ`ƒFƒbƒN2: ¡‰ñ‚Ì2‘ğ‚Ì’†‚Åd•¡‚µ‚Ä‚¢‚½‚çNG (choices[0]‚Æ“¯‚¶‚È‚ç’e‚­)
+			// ãƒã‚§ãƒƒã‚¯2: ä»Šå›ã®2æŠã®ä¸­ã§é‡è¤‡ã—ã¦ã„ãŸã‚‰NG (choices[0]ã¨åŒã˜ãªã‚‰å¼¾ã)
 			if (i == 1 && candidate == m_p1.choices[0]) continue;
 
-			// ‚±‚±‚Ü‚Å—ˆ‚ê‚ÎOK
+			// ã“ã“ã¾ã§æ¥ã‚Œã°OK
 			isValid = true;
 		}
 		m_p1.choices[i] = candidate;
 	}
 
 	// ----------
-	// P2 ‚Ì’Š‘I 
+	// P2 ã®æŠ½é¸ 
 	// ----------
 	for (int i = 0; i < 2; i++)
 	{
@@ -262,13 +281,13 @@ void TransformManager::ShuffleChoices(PlayerState& state)
 		WeaponTerrain::SHURIKEN_
 	};
 
-	//•Ší‚Æ’nŒ`‚ÌƒZƒbƒg‚ğƒ‰ƒ“ƒ_ƒ€‚Å•\¦‚·‚é‚½‚ß‚Ìˆ—
+	//æ­¦å™¨ã¨åœ°å½¢ã®ã‚»ãƒƒãƒˆã‚’ãƒ©ãƒ³ãƒ€ãƒ ã§è¡¨ç¤ºã™ã‚‹ãŸã‚ã®å‡¦ç†
 	std::random_device random;
 	std::mt19937 g(random());
 
 	std::shuffle(pool.begin(), pool.end(), g);
 
-	//ƒVƒƒƒbƒtƒ‹‚³‚ê‚½•Ší‚Æ’nŒ`‚ÌƒZƒbƒg‚ğƒvƒŒƒCƒ„[‚Ì‘I‘ğˆ‚ÉŠ„‚è“–‚Ä‚é
+	//ã‚·ãƒ£ãƒƒãƒ•ãƒ«ã•ã‚ŒãŸæ­¦å™¨ã¨åœ°å½¢ã®ã‚»ãƒƒãƒˆã‚’ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®é¸æŠè‚¢ã«å‰²ã‚Šå½“ã¦ã‚‹
 	state.choices[0] = pool[0];
 	state.choices[1] = pool[1];
 	state.selectedIndex = 0;
@@ -282,23 +301,23 @@ void TransformManager::Draw(int windowID)
 		return;
 	}
 
-	//ƒVƒF[ƒ_[ƒŠƒZƒbƒg
+	//ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ãƒªã‚»ãƒƒãƒˆ
 	Shader_Begin();
 
-	//‰æ–ÊƒTƒCƒY‚ğæ“¾
+	//ç”»é¢ã‚µã‚¤ã‚ºã‚’å–å¾—
 	float sw = (float)Direct3D_GetBackBufferWidth();
 	float sh = (float)Direct3D_GetBackBufferHeight();
 
 	XMMATRIX matProj = XMMatrixOrthographicOffCenterLH(0.0f, sw, sh, 0.0f, 0.0f, 1.0f);
 	Shader_SetMatrix(matProj);
 
-	//ƒ[ƒ‹ƒhs—ñƒŠƒZƒbƒg
+	//ãƒ¯ãƒ¼ãƒ«ãƒ‰è¡Œåˆ—ãƒªã‚»ãƒƒãƒˆ
 	Shader_SetWorldMatrix(XMMatrixIdentity());
 
-	//ƒuƒŒƒ“ƒh—LŒø‰»
+	//ãƒ–ãƒ¬ãƒ³ãƒ‰æœ‰åŠ¹åŒ–
 	SetBlendState(BLENDSTATE_ALFA);
 
-	//•`‰æÀ•W—p•Ï”s
+	//æç”»åº§æ¨™ç”¨å¤‰æ•°s
 	float centerX = sw * 0.5f;
 	float centerY = sh * 0.5f;
 
@@ -312,13 +331,13 @@ void TransformManager::Draw(int windowID)
 	}
 }
 
-//•Ïgæ‘I‘ğ—pŠÖ”
+//å¤‰èº«å…ˆé¸æŠç”¨é–¢æ•°
 void TransformManager::DrawPlayerUI(int playerIndex,const PlayerState& state, XMFLOAT2 basePos)
 {
 	g_pContext->PSSetShaderResources(0, 1, &g_TextureBg);
 	SetBlendState(BLENDSTATE_ALFA);
 	DrawSprite(XMFLOAT2(1920 / 2, 1080 / 2 - 25), XMFLOAT2(1920, 1130), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f));
-	float cardSpacing = 300.0f; //•ÏgæUI‚ÌŠÔŠu
+	float cardSpacing = 300.0f; //å¤‰èº«å…ˆUIã®é–“éš”
 
 	for (int i = 0; i < 2; i++)
 	{
@@ -328,7 +347,7 @@ void TransformManager::DrawPlayerUI(int playerIndex,const PlayerState& state, XM
 		XMFLOAT2 sizeFocus = XMFLOAT2(649.0f * 0.90f, 762.0f * 0.90f);
 		SELECT_TRANSFORM_CARD param = SelectTransformUi_GetCardParam(playerIndex, i, basePos, cardSpacing, sizeUnfocus, sizeFocus);
 
-		//‘I‘ğ’†‚È‚çƒCƒ“ƒfƒbƒNƒX[0](–¾‚é‚¢)A‚»‚¤‚Å‚È‚¯‚ê‚Î[1](ˆÃ‚¢)‚ğg—p
+		//é¸æŠä¸­ãªã‚‰ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹[0](æ˜ã‚‹ã„)ã€ãã†ã§ãªã‘ã‚Œã°[1](æš—ã„)ã‚’ä½¿ç”¨
 		int textureState = (state.selectedIndex == i) ? 0 : 1;
 		ID3D11ShaderResourceView* pTex = m_pWeaponTextures[(int)type][textureState];
 
@@ -341,29 +360,29 @@ void TransformManager::DrawPlayerUI(int playerIndex,const PlayerState& state, XM
 
 }
 
-//“à•”—pƒeƒNƒXƒ`ƒƒ“Ç‚İ‚İ•â•
+//å†…éƒ¨ç”¨ãƒ†ã‚¯ã‚¹ãƒãƒ£èª­ã¿è¾¼ã¿è£œåŠ©
 ID3D11ShaderResourceView* TransformManager::CreateSRV(ID3D11Device* pDevice, const char* fileName) {
-	//char* ‚©‚ç wchar_t* (ƒƒCƒh•¶š—ñ) ‚Ö‚Ì•ÏŠ·
+	//char* ã‹ã‚‰ wchar_t* (ãƒ¯ã‚¤ãƒ‰æ–‡å­—åˆ—) ã¸ã®å¤‰æ›
 	wchar_t wFileName[MAX_PATH];
 	size_t convertedChars = 0;
 	mbstowcs_s(&convertedChars, wFileName, fileName, _TRUNCATE);
 
-	//DirectXTex ‚ğg—p‚µ‚½ƒ[ƒhˆ—
+	//DirectXTex ã‚’ä½¿ç”¨ã—ãŸãƒ­ãƒ¼ãƒ‰å‡¦ç†
 	TexMetadata metadata;
 	ScratchImage image;
 
-	//WICƒtƒ@ƒCƒ‹iPNG“™j‚©‚çƒ[ƒh
+	//WICãƒ•ã‚¡ã‚¤ãƒ«ï¼ˆPNGç­‰ï¼‰ã‹ã‚‰ãƒ­ãƒ¼ãƒ‰
 	HRESULT hr = LoadFromWICFile(wFileName, WIC_FLAGS_FORCE_SRGB, &metadata, image);
 	if (FAILED(hr)) {
-		//ƒ[ƒh¸”s‚ÌƒfƒoƒbƒOo—Í‚È‚Çi•K—v‚É‰‚¶‚Äj
+		//ãƒ­ãƒ¼ãƒ‰å¤±æ•—æ™‚ã®ãƒ‡ãƒãƒƒã‚°å‡ºåŠ›ãªã©ï¼ˆå¿…è¦ã«å¿œã˜ã¦ï¼‰
 		char buf[512];
-		sprintf_s(buf, "yTexture Errorzƒ[ƒh¸”s: %s (Error Code: 0x%08X)\n", fileName, hr);
-		OutputDebugStringA(buf); // Visual Studio‚Ìo—ÍƒEƒBƒ“ƒhƒE‚É•\¦
+		sprintf_s(buf, "ã€Texture Errorã€‘ãƒ­ãƒ¼ãƒ‰å¤±æ•—: %s (Error Code: 0x%08X)\n", fileName, hr);
+		OutputDebugStringA(buf); // Visual Studioã®å‡ºåŠ›ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã«è¡¨ç¤º
 		return nullptr;
 	}
-	OutputDebugStringA("yTexture Successzƒ[ƒhŠ®—¹\n");
+	OutputDebugStringA("ã€Texture Successã€‘ãƒ­ãƒ¼ãƒ‰å®Œäº†\n");
 
-	//ƒVƒF[ƒ_[ƒŠƒ\[ƒXƒrƒ…[‚Ìì¬
+	//ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ãƒªã‚½ãƒ¼ã‚¹ãƒ“ãƒ¥ãƒ¼ã®ä½œæˆ
 	ID3D11ShaderResourceView* pSRV = nullptr;
 	hr = DirectX::CreateShaderResourceView(
 		pDevice,
@@ -377,7 +396,7 @@ ID3D11ShaderResourceView* TransformManager::CreateSRV(ID3D11Device* pDevice, con
 		return nullptr;
 	}
 
-	//¬Œ÷Šm”F‚ÌƒeƒXƒg
+	//æˆåŠŸç¢ºèªã®ãƒ†ã‚¹ãƒˆ
 	assert(pSRV);
 
 	return pSRV;

@@ -23,6 +23,7 @@
 #include"Camera.h"
 #include"Player.h"
 #include"Player2.h"
+#include"Transform.h"
 #include<string>
 
 //================================================================
@@ -35,8 +36,6 @@ static ID3D11Device* g_pDevice;
 static ID3D11DeviceContext* g_pContext;
 
 MODEL* blockModel = nullptr;
-
-WeaponTerrain g_WT[2]; // どの組み合わせを選んだか
 
 //================================================================
 //	一文字0.25立法メートルとする
@@ -599,8 +598,8 @@ void TerrainInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 	g_Terrain.m_terrainRotation[0] = { 0.0f,0.0f,0.0f };
 	g_Terrain.m_terrainRotation[1] = { 0.0f,0.0f,0.0f };
 
-	g_Terrain.m_terrainScaling[0] = { 10.0f, 6.5f, 10.0f };
-	g_Terrain.m_terrainScaling[1] = { 5.0f, 5.0f, 5.0f };
+	g_Terrain.m_terrainScaling[0] = { 5.0f, 5.0f, 5.0f };
+	g_Terrain.m_terrainScaling[1] = { 10.0f, 6.5f, 10.0f };
 	g_Terrain.m_terrainScaling[2] = { 5.0f, 5.0f, 5.0f };
 	g_Terrain.m_terrainScaling[3] = { 10.0f, 6.5f, 10.0f };
 
@@ -609,9 +608,6 @@ void TerrainInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 
 	g_Terrain.m_coolTime[0] = 0.0f;
 	g_Terrain.m_coolTime[1] = 0.0f;
-
-	g_WT[0] = p1Set;
-	g_WT[1] = p2Set;
 
 	//g_Terrain.PixelObjects(Hill, TERRAIN_TYPE::HILL, g_Terrain.m_motherPosition);
 
@@ -646,10 +642,10 @@ void TerrainInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 		//g_Terrain.PixelObjects(Hills, TERRAIN_TYPE::HILL, initPosHill);
 		break;
 	case WeaponTerrain::HAMMER_:
-		g_Terrain.SimpleObjects(Walls, { 0.25f, 0.25f, 0.25f }, TERRAIN_TYPE::HILL, g_Terrain.m_motherPosition[1], 1);
+		g_Terrain.SimpleObjects(Walls, { 1.0f, 1.0f, 1.0f }, TERRAIN_TYPE::WALL, g_Terrain.m_motherPosition[0], 0);
 		break;
 	case WeaponTerrain::SHURIKEN_:
-
+		g_Terrain.SimpleObjects(Walls, { 1.0f, 1.0f, 1.0f }, TERRAIN_TYPE::WALL, g_Terrain.m_motherPosition[0], 0);
 		break;
 
 	default:
@@ -671,12 +667,11 @@ void TerrainInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 		//g_Terrain.PixelObjects(Hills, TERRAIN_TYPE::HILL, initPosHill);
 		break;
 	case WeaponTerrain::HAMMER_:
-		g_Terrain.SimpleObjects(Walls, { 0.25f, 0.25f, 0.25f }, TERRAIN_TYPE::HILL, g_Terrain.m_motherPosition[1], 1);
+		g_Terrain.SimpleObjects(Walls, { 1.0f, 1.0f, 1.0f }, TERRAIN_TYPE::WALL, g_Terrain.m_motherPosition[1], 1);
 		break;
 	case WeaponTerrain::SHURIKEN_:
-
+		g_Terrain.SimpleObjects(Walls, { 1.0f, 1.0f, 1.0f }, TERRAIN_TYPE::WALL, g_Terrain.m_motherPosition[1], 1);
 		break;
-
 	default:
 		break;
 	}
@@ -703,23 +698,27 @@ void TerrainFinalize()
 }
 void TerrainUpdate()
 {
-	if (Keyboard_IsKeyDown(KK_O))
+	if ((Keyboard_IsKeyDown(KK_D1) || Keyboard_IsKeyDown(KK_D0)) &&
+		(!GetIsUsedA_P1() || !GetIsUsedB_P1()))
 	{
+		TerrainSet(GetSetWTP1(), FALSE);
 		// クールタイムがあれば発動できない
 		if (g_Terrain.m_coolTime[0] <= 0)
 		{
 			g_Terrain.m_isChange[0] = true; // 1Pの変身を確認
-			g_Terrain.m_coolTime[0] = 60.0f;
+			g_Terrain.m_coolTime[0] = 20.0f;
 		}
 	}
 
-	if (Keyboard_IsKeyDown(KK_L))
+	if ((Keyboard_IsKeyDown(KK_D2) || Keyboard_IsKeyDown(KK_D9)) &&
+		(!GetIsUsedA_P2() || !GetIsUsedB_P2()))
 	{
+		TerrainSet(GetSetWTP2(), TRUE);
 		// クールタイムがあれば発動できない
 		if (g_Terrain.m_coolTime[1] <= 0)
 		{
 			g_Terrain.m_isChange[1] = true; // 2Pの変身を確認
-			g_Terrain.m_coolTime[1] = 60.0f;
+			g_Terrain.m_coolTime[1] = 20.0f;
 		}
 	}
 
@@ -729,7 +728,7 @@ void TerrainUpdate()
 		// クールタイムあったら-する
 		if (g_Terrain.m_coolTime[0] > 0.0f)
 		{
-			g_Terrain.m_coolTime[0] -= 1.0f / 10.0f;
+			g_Terrain.m_coolTime[0] -= 1.0f / 60.0f;
 		}
 		else // 無かったら
 		{
@@ -743,7 +742,7 @@ void TerrainUpdate()
 		// クールタイムあったら-する
 		if (g_Terrain.m_coolTime[1] > 0.0f)
 		{
-			g_Terrain.m_coolTime[1] -= 1.0f / 10.0f;
+			g_Terrain.m_coolTime[1] -= 1.0f / 60.0f;
 		}
 		else // 無かったら
 		{
@@ -769,10 +768,10 @@ void TerrainUpdate()
 			g_Terrain.UpdateObject(g_Terrain.hills[0], g_Terrain.m_motherPosition[0], FALSE); // P1の地形の当たり判定
 			break;
 		case WeaponTerrain::HAMMER_:
-
+			g_Terrain.UpdateObject(g_Terrain.walls[0], g_Terrain.m_motherPosition[0], FALSE); // P1の地形の当たり判定
 			break;
 		case WeaponTerrain::SHURIKEN_:
-
+			g_Terrain.UpdateObject(g_Terrain.walls[0], g_Terrain.m_motherPosition[0], FALSE); // P1の地形の当たり判定
 			break;
 		}
 	}
@@ -780,7 +779,7 @@ void TerrainUpdate()
 	{
 		float posY = 0.0f;
 
-		switch (g_WT[0])
+		switch (GetSetWTP1())
 		{
 		case WeaponTerrain::SWORD_WALL:
 			posY = 0.7f;
@@ -795,6 +794,7 @@ void TerrainUpdate()
 			posY = 0.7f;
 			break;
 		case WeaponTerrain::SHURIKEN_:
+			posY = 0.7f;
 			break;
 		default:
 			break;
@@ -816,10 +816,10 @@ void TerrainUpdate()
 				g_Terrain.UpdateObject(g_Terrain.hills[0], g_Terrain.m_motherPosition[0], TRUE); // P1の地形の当たり判定
 				break;
 			case WeaponTerrain::HAMMER_:
-
+				g_Terrain.UpdateObject(g_Terrain.walls[0], g_Terrain.m_motherPosition[0], TRUE); // P1の地形の当たり判定
 				break;
 			case WeaponTerrain::SHURIKEN_:
-
+				g_Terrain.UpdateObject(g_Terrain.walls[0], g_Terrain.m_motherPosition[0], TRUE); // P1の地形の当たり判定
 				break;
 			}
 		}
@@ -842,10 +842,10 @@ void TerrainUpdate()
 			g_Terrain.UpdateObject(g_Terrain.hills[1], g_Terrain.m_motherPosition[1], FALSE); // P1の地形の当たり判定
 			break;
 		case WeaponTerrain::HAMMER_:
-
+			g_Terrain.UpdateObject(g_Terrain.walls[1], g_Terrain.m_motherPosition[1], FALSE); // P1の地形の当たり判定
 			break;
 		case WeaponTerrain::SHURIKEN_:
-
+			g_Terrain.UpdateObject(g_Terrain.walls[1], g_Terrain.m_motherPosition[1], FALSE); // P1の地形の当たり判定
 			break;
 		}
 	}
@@ -853,7 +853,7 @@ void TerrainUpdate()
 	{
 		float posY = 0.0f;
 
-		switch (g_WT[1])
+		switch (GetSetWTP2())
 		{
 		case WeaponTerrain::SWORD_WALL:
 			posY = 0.7f;
@@ -868,6 +868,7 @@ void TerrainUpdate()
 			posY = 0.7f;
 			break;
 		case WeaponTerrain::SHURIKEN_:
+			posY = 0.7f;
 			break;
 		default:
 			break;
@@ -889,10 +890,10 @@ void TerrainUpdate()
 				g_Terrain.UpdateObject(g_Terrain.hills[1], g_Terrain.m_motherPosition[1], TRUE); // P1の地形の当たり判定
 				break;
 			case WeaponTerrain::HAMMER_:
-
+				g_Terrain.UpdateObject(g_Terrain.walls[1], g_Terrain.m_motherPosition[1], TRUE); // P1の地形の当たり判定
 				break;
 			case WeaponTerrain::SHURIKEN_:
-
+				g_Terrain.UpdateObject(g_Terrain.walls[1], g_Terrain.m_motherPosition[1], TRUE); // P1の地形の当たり判定
 				break;
 			}
 		}
@@ -905,21 +906,22 @@ void TerrainDraw()
 	{
 		int no = 0;
 
-		switch (g_WT[0])
+		switch (GetSetWTP1())
 		{
 		case WeaponTerrain::SWORD_WALL:
-			no = 0;
-			break;
-		case WeaponTerrain::SPEAR_HILL:
 			no = 1;
 			break;
+		case WeaponTerrain::SPEAR_HILL:
+			no = 0;
+			break;
 		case WeaponTerrain::BOW_HILL:
-			no = 2;
+			no = 0;
 			break;
 		case WeaponTerrain::HAMMER_:
-			no = 3;
+			no = 1;
 			break;
 		case WeaponTerrain::SHURIKEN_:
+			no = 1;
 			break;
 		default:
 			break;
@@ -943,7 +945,7 @@ void TerrainDraw()
 		//シェーダーへ行列をセット
 		Shader_SetWorldMatrix(world);
 
-		switch (g_WT[0])
+		switch (GetSetWTP1())
 		{
 		case WeaponTerrain::SWORD_WALL:
 			ModelDraw(g_Terrain.m_moveTerrain[1]);
@@ -958,6 +960,7 @@ void TerrainDraw()
 			ModelDraw(g_Terrain.m_moveTerrain[1]);
 			break;
 		case WeaponTerrain::SHURIKEN_:
+			ModelDraw(g_Terrain.m_moveTerrain[1]);
 			break;
 		default:
 			break;
@@ -968,21 +971,22 @@ void TerrainDraw()
 	{
 		int no = 0;
 
-		switch (g_WT[1])
+		switch (GetSetWTP2())
 		{
 		case WeaponTerrain::SWORD_WALL:
-			no = 0;
-			break;
-		case WeaponTerrain::SPEAR_HILL:
 			no = 1;
 			break;
+		case WeaponTerrain::SPEAR_HILL:
+			no = 0;
+			break;
 		case WeaponTerrain::BOW_HILL:
-			no = 2;
+			no = 0;
 			break;
 		case WeaponTerrain::HAMMER_:
-			no = 3;
+			no = 1;
 			break;
 		case WeaponTerrain::SHURIKEN_:
+			no = 1;
 			break;
 		default:
 			break;
@@ -1006,7 +1010,7 @@ void TerrainDraw()
 		//シェーダーへ行列をセット
 		Shader_SetWorldMatrix(world);
 
-		switch (g_WT[1])
+		switch (GetSetWTP2())
 		{
 		case WeaponTerrain::SWORD_WALL:
 			ModelDraw(g_Terrain.m_moveTerrain[1]);
@@ -1021,6 +1025,7 @@ void TerrainDraw()
 			ModelDraw(g_Terrain.m_moveTerrain[1]);
 			break;
 		case WeaponTerrain::SHURIKEN_:
+			ModelDraw(g_Terrain.m_moveTerrain[1]);
 			break;
 		default:
 			break;
@@ -1258,8 +1263,10 @@ void TerrainSet(WeaponTerrain set, bool playerSelect)
 		g_Terrain.SimpleObjects(Hills, { 0.25f, 0.25f, 0.25f }, TERRAIN_TYPE::HILL, g_Terrain.m_motherPosition[select], select);
 		break;
 	case WeaponTerrain::HAMMER_:
+		g_Terrain.SimpleObjects(Walls, { 1.0f, 1.0f, 1.0f }, TERRAIN_TYPE::WALL, g_Terrain.m_motherPosition[select], select);
 		break;
 	case WeaponTerrain::SHURIKEN_:
+		g_Terrain.SimpleObjects(Walls, { 1.0f, 1.0f, 1.0f }, TERRAIN_TYPE::WALL, g_Terrain.m_motherPosition[select], select);
 		break;
 	default:
 		break;
@@ -1288,8 +1295,10 @@ void TERRAIN::ClearPlayerObjects(WeaponTerrain set, int select)
 		targetList = &hills[select];
 		break;
 	case WeaponTerrain::HAMMER_:
+		targetList = &walls[select];
 		break;
 	case WeaponTerrain::SHURIKEN_:
+		targetList = &walls[select];
 		break;
 	default:
 		break;
@@ -1660,9 +1669,9 @@ void TERRAIN::CreateHit(std::vector<TERRAIN_OBJECT> terrain, XMFLOAT3 motherPosi
 
 		case TERRAIN_TYPE::TREE:
 			SetObject(pos, terrain[i].m_size, "TREE", 0, select);
-			walls[select][i]->m_position = pos;	// 座標を格納
-			walls[select][i]->m_velocity = terrain[i].m_distance;
-			walls[select][i]->m_scale = terrain[i].m_size;
+			trees[select][i]->m_position = pos;	// 座標を格納
+			trees[select][i]->m_velocity = terrain[i].m_distance;
+			trees[select][i]->m_scale = terrain[i].m_size;
 			break;
 
 		case TERRAIN_TYPE::MAX:
