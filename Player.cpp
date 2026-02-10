@@ -129,7 +129,7 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 	}
 	else if (g_setWTP1 == WeaponTerrain::SHURIKEN_)
 	{
-		g_Player.m_model = ModelLoad("asset\\model\\char_shuriken_motion.fbx");
+		g_Player.m_model = ModelLoad("asset\\model\\default_shuriken.fbx");
 	}
 
 	g_Player.EquipBaseWeapon(); //���E���h�����p�ɏ���������đ���

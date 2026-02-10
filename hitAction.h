@@ -24,6 +24,16 @@ public:
 	void Update(XMFLOAT3& position);
 	//ヒットストップ中かの判定
 	bool IsStopping()const { return m_stopTimer > 0.0f; }
+	//bool IsStopping()const { 
+	//	if (m_stopTimer > 0.0f)
+	//	{
+	//		return true;
+	//	}
+	//	else
+	//	{
+	//		return false;
+	//	}
+	//}
 };
 
 
