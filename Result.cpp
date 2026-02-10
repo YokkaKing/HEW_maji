@@ -1,96 +1,84 @@
 /*
-* ファイル名	Resule.cpp
-* タイトル	リザルト
-* 作成者		久保木幹太
-* 作成日		12月02日
-* 更新日		12月02日
+* ファイル名    Result.cpp
+* タイトル      Result（リザルト画面）
+*
+* 仕様:
+*  - ステージ + 初期武器モデル + 変身先モデル2つ を同時に描画
+*  - UI/地形/アイテム/当たり判定/プレイヤー処理などは一切なし
 */
 
-//================================================================
-//	インクルード
-//================================================================
-#include"Manager.h"
-#include"sprite.h"
-#include"keyboard.h"
-#include"Result.h"
-#include"fade.h"
-#include"shader.h"
+#include "Result.h"
 
-//================================================================
-//	グローバル変数
-//================================================================
-static	ID3D11ShaderResourceView* g_Texture = NULL;	//テクスチャ１枚を表すオブジェクト
-static ID3D11Device* g_pDevice = nullptr;
-static ID3D11DeviceContext* g_pContext = nullptr;
+#include "direct3d.h" // LIGHTOBJECT
+#include "keyboard.h"
+#include "fade.h"
+#include "Camera.h"
+#include "shader.h"
+
+#include "Stage.h"
+#include "Winner.h"
+
+static LIGHTOBJECT s_Light;
+static STAGE s_stage;
 
 void Result_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
-	g_pDevice = pDevice;
-	g_pContext = pContext;
+    Camera_Initialize();
 
-	//テクスチャ読み込みなど
-	TexMetadata		metadata;
-	ScratchImage	image;
-	LoadFromWICFile(L"asset\\texture\\Result.png", WIC_FLAGS_NONE, &metadata, image);
-	CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_Texture);
-	assert(g_Texture);//読み込み失敗時にダイアログを表示
+    s_stage.Initialize(pDevice, pContext);
+    WinnerInitialize(pDevice, pContext);
 
-	//フェードインのセット
-	XMFLOAT4	color = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
-	SetFade(60.0f, color, FADE_IN, SCENE_GAME);
+    // ライト（暗すぎ防止）
+    XMFLOAT4 para;
+    para = XMFLOAT4(0.4f, 0.4f, 0.4f, 1.0f);
+    s_Light.SetAmbient(para);
+    para = XMFLOAT4(0.6f, 0.6f, 0.6f, 1.0f);
+    s_Light.SetDiffuse(para);
 
+    para = XMFLOAT4(0.5f, -1.0f, 0.0f, 1.0f);
+    float len = sqrtf(para.x * para.x + para.y * para.y + para.z * para.z);
+    if (len > 0.0f)
+    {
+        para.x /= len;
+        para.y /= len;
+        para.z /= len;
+    }
+    s_Light.SetDirection(para);
 }
+
 void Result_Finalize()
 {
-	//テクスチャの解放など
-	SAFE_RELEASE(g_Texture);
-
+    WinnerFinalize();
+    s_stage.Finalize();
+    Camera_Finalize();
 }
+
 void Result_Update()
-{ 
-	//キー入力チェック
-	//スタートボタンが押されたらシーンを切り替え
-	//フェード処理中はキーを受け付けない
-	if (Keyboard_IsKeyDownTrigger(KK_ENTER) && (GetFadeState() == FADE_NONE))
-	{
-		//フェードアウトさせてシーンを切り替える
-		XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
-		SetFade(40.0f, color, FADE_OUT, SCENE_TITLE);
-	}
+{
+    WinnerUpdate();
 
+    if ((Keyboard_IsKeyDownTrigger(KK_ENTER)) && (GetFadeState() == FADE_NONE))
+    {
+        XMFLOAT4 color(0.0f, 0.0f, 0.0f, 1.0f);
+        SetFade(40.0f, color, FADE_OUT, SCENE_TITLE);
+    }
+
+    Camera_Update();
 }
+
 void Result_Draw()
 {
-	// シェーダーを描画パイプラインに設定
-	Shader_Begin();
+    s_Light.SetEnable(TRUE);
+    Shader_SetLight(s_Light.Light);
+    SetDepthTest(TRUE);
 
-	// 画面サイズ取得
-	const float SCREEN_WIDTH = (float)Direct3D_GetBackBufferWidth();
-	const float SCREEN_HEIGHT = (float)Direct3D_GetBackBufferHeight();
+    Camera_Draw();
+    Shader_SetMatrix(GetViewMatrix() * GetProjectionMatrix());
 
-	// 頂点シェーダーに変換行列を設定
-	Shader_SetMatrix(XMMatrixOrthographicOffCenterLH(
-		0.0f,
-		SCREEN_WIDTH,
-		SCREEN_HEIGHT,
-		0.0f,
-		0.0f,
-		1.0f));
-	//---------------------------------------------------
+    s_stage.Draw();
+    WinnerDraw();
 
-
-		//テクスチャをセット
-	g_pContext->PSSetShaderResources(0, 1, &g_Texture);//g_Textureを使うように設定する
-
-	static XMFLOAT2 texcoord = { 0.0f, 0.0f };
-
-	//スプライト描画
-	SetBlendState(BLENDSTATE_NONE);//ブレンド無し
-	XMFLOAT4 col = { 1.0f, 1.0f, 1.0f, 1.0f };	//スプライトの色
-	XMFLOAT2 pos = { SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 };
-	XMFLOAT2 size = { SCREEN_WIDTH, SCREEN_HEIGHT };
-	DrawSprite(pos, size, col);//1枚絵を表示
-
+    s_Light.SetEnable(FALSE);
+    Shader_SetLight(s_Light.Light);
+    SetDepthTest(FALSE);
 }
-
-

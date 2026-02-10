@@ -102,7 +102,7 @@ void Hammer::Attack()
 			float mv = sqrtf(player->m_velocity.x * player->m_velocity.x +
 				player->m_velocity.z * player->m_velocity.z);
 			isMoving = (mv > 0.001f);
-			ModelPlayClip(model, 440, 539, 60.0f, false, 2.0f);
+			ModelPlayClip(model, 280, 420, 60.0f, false, 2.0f);
 		}
 	}
 	else
@@ -115,7 +115,7 @@ void Hammer::Attack()
 			float mv = sqrtf(player->m_velocity.x * player->m_velocity.x +
 				player->m_velocity.z * player->m_velocity.z);
 			isMoving = (mv > 0.001f);
-			ModelPlayClip(model, 440, 539, 60.0f, false, 2.0f);
+			ModelPlayClip(model, 280, 420, 60.0f, false, 2.0f);
 		}
 	}
 
@@ -198,7 +198,7 @@ void Hammer::Update()
 	{
 		
 		if (model) {
-			ModelPlayClip(model, 370, 440, 60.0f, false, 1.0f);
+			ModelPlayClip(model, 241, 280, 60.0f, false, 1.0f);
 		}
 		m_chargeState = CHARGE_IN;
 	}
@@ -207,7 +207,7 @@ void Hammer::Update()
 		if (m_chargeState != CHARGE_MOVE_LOOP)
 		{
 			if (model) {
-				ModelPlayClip(model, 540, 660, 60.0f, true, 2.0f);
+				ModelPlayClip(model, 421, 540, 60.0f, true, 2.0f);
 			}
 			m_chargeState = CHARGE_MOVE_LOOP;
 		}
@@ -218,7 +218,7 @@ void Hammer::Update()
 		{
 			
 			if (model) {
-				ModelPlayClip(model, 440, 440, 60.0f, true, 1.0f);
+				ModelPlayClip(model, 280, 280, 60.0f, true, 1.0f);
 			}
 			m_chargeState = CHARGE_HOLD;
 		}
@@ -228,7 +228,7 @@ void Hammer::Update()
 			if (model && ModelConsumeClipFinished(model))
 			{
 				
-				ModelPlayClip(model, 440, 440, 60.0f, true, 1.0f);
+				ModelPlayClip(model, 280, 280, 60.0f, true, 1.0f);
 				m_chargeState = CHARGE_HOLD;
 			}
 		}

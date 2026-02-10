@@ -17,6 +17,9 @@
 #include"Game.h"
 #include"Title.h"
 #include"Result.h"
+#include "Winner.h"
+#include "Player.h"
+#include "Player2.h"
 #include"fade.h"
 #include"selectWeaponTerrain.h"
 //================================================================
@@ -94,7 +97,7 @@ void Manager_Update()
 					// 全試合終了 -> リザルトへ
 					// ここで初めてGameシーンを破棄する
 					//Game_Finalize();
-					SetScene(SCENE_TITLE);
+					SetScene(SCENE_RESULT);
 					//複数回のゲームプレイを想定してゲームループ用変数を初期化
 					g_RoundCount = 0;
 					g_P1Wins = 0;
