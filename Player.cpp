@@ -33,6 +33,7 @@
 #include<memory>
 #include"generateWT.h"
 #include"selectWeaponTerrain.h"
+#include"Item.h"
 //================================================================
 //	グローバル変数
 //================================================================
@@ -48,6 +49,7 @@ static bool g_Player1AttackPlaying = false; // 攻撃ワンショット再生中
 static bool g_Player1JumpPlaying = false; // ジャンプワンショット再生中フラグ
 static int g_Player1CurrentAnim = 0; // 0: idle, 1: move, 2: attack 3:jump
 WeaponTerrain m_baseWT;
+ITEM_SPONER gp_itemSponer;
 
 void PlayerDie()
 {
@@ -62,9 +64,11 @@ void PlayerDie()
 
 	// 例: 入力を受け付けないようにする（状態をIDLEにするなど）
 	g_Player.State = PLAYER_STATE::PLAYER_STATE_IDLE;
-
+	g_Player.m_isDeadFlag = true;
 	XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
 	SetFade(40.0f, color, FADE_OUT, SCENE_GAME);
+
+	
 
 }
 
@@ -87,7 +91,7 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 	g_Player.m_scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
 	g_Player.m_tag = "Player";
 	g_Player.m_layer = 0;
-
+	g_Player1AttackPlaying = false;
 	g_Player.State = PLAYER_STATE::PLAYER_STATE_MOVE;
 
 	g_Player.m_acceleration = XMFLOAT3(0.0f, -9.8f / 600.0f * 0.5f, 0.0f);
@@ -98,14 +102,14 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 	g_Player.m_baseWT = setWTp1;
 	g_Player.m_isAttacked = false;
 	g_Player.m_isTransformed = false;
-
+	g_Player.m_isDeadFlag = false;
 	auto collider = g_Player.AddComponent<BoxCollider>(&g_Player, g_Player.m_scale);
 	ManagerCollider::AddCollider(collider);
 
 	// のちのちセレクト画面から分岐できるようにする
 	// 自分をownerとして武器を生成
 
-	g_changeP1 = 0;
+	g_changeP1 = 3;
 	g_setWTP1 = setWTp1;
 	if (g_setWTP1 == WeaponTerrain::SWORD_WALL)
 	{
@@ -152,7 +156,7 @@ void	PlayerUpdate()
 //================================================================
 //	武器変更処理(一旦)
 //================================================================
-
+	/*
 	int slotToUse = -1; 
 
 	if (Keyboard_IsKeyDownTrigger(KK_D1) && !GetIsUsedA_P1())
@@ -187,7 +191,7 @@ void	PlayerUpdate()
 				break;
 			case WeaponTerrain::BOW_HILL:   
 				g_changeP1 = 3;
-				g_Player.m_model = ModelLoad("asset\\model\\char_bow_motion.fbx");
+				g_Player.m_model = ModelLoad("asset\\model\\bow.fbx");
 				g_Player.EquipWeapon(std::make_unique<Arrow>(&g_Player, FALSE));
 				break;
 			case WeaponTerrain::HAMMER_:   
@@ -201,9 +205,11 @@ void	PlayerUpdate()
 				g_Player.EquipWeapon(std::make_unique<Shuriken>(&g_Player, FALSE));
 				break;
 			}
+			g_setWTP1 = reserved;
 			//g_Player.SetCurrentWT(reserved);
 		}
 	}
+	*/
 
 //================================================================
 //	攻撃処理(変身前)
@@ -217,21 +223,21 @@ void	PlayerUpdate()
 			g_Player.m_currentWeapon->Attack();
 			if (g_Player.m_isTransformed)
 			{		
-				switch (g_changeP1)
+				switch (g_Player.m_currentWT)
 				{
-				case 1: // Sword
+				case WeaponTerrain::SWORD_WALL: // Sword
 					ModelPlayClip(g_Player.m_model, 167, 227, 60.0f, false, 2.0f);
 					break;
-				case 2: // spear
+				case WeaponTerrain::SPEAR_HILL: // spear
 					ModelPlayClip(g_Player.m_model, 500, 600, 60.0f, false, 4.0f);
 					break;
-				case 3: // arrow
-					ModelPlayClip(g_Player.m_model, 460, 580, 60.0f, false, 4.0f);
+				case WeaponTerrain::BOW_HILL: // arrow
+					ModelPlayClip(g_Player.m_model, 240, 360, 60.0f, false, 4.0f);
 					break;
-				case 4: // hammer
+				case WeaponTerrain::HAMMER_: // hammer
 					ModelPlayClip(g_Player.m_model, 360, 539, 60.0f, false, 2.0f);
 					break;
-				case 5: //shuriken
+				case WeaponTerrain::SHURIKEN_: //shuriken
 					ModelPlayClip(g_Player.m_model, 151, 210, 60.0f, false, 4.0f);
 					break;
 				}
@@ -306,21 +312,21 @@ void	PlayerUpdate()
 				{
 					if (g_Player.m_isTransformed)
 					{
-						switch (g_changeP1) //移動
+						switch (g_Player.m_currentWT)
 						{
-						case 1:
+						case WeaponTerrain::SWORD_WALL:
 							ModelPlayClip(g_Player.m_model, 120, 165, 60.0f, true, 1.0f);
 							break;
-						case 2:
+						case WeaponTerrain::SPEAR_HILL:
 							ModelPlayClip(g_Player.m_model, 240, 360, 60.0f, true, 1.0f);
 							break;
-						case 3:
+						case WeaponTerrain::BOW_HILL:
 							ModelPlayClip(g_Player.m_model, 181, 240, 60.0f, true, 1.0f);
 							break;
-						case 4:
+						case WeaponTerrain::HAMMER_:
 							ModelPlayClip(g_Player.m_model, 180, 240, 60.0f, true, 1.0f);
 							break;
-						case 5:
+						case WeaponTerrain::SHURIKEN_:
 							ModelPlayClip(g_Player.m_model, 121, 150, 60.0f, true, 1.0f);
 							break;
 						}
@@ -358,21 +364,21 @@ void	PlayerUpdate()
 				{
 					if (g_Player.m_isTransformed)
 					{
-						switch (g_changeP1)
+						switch (g_Player.m_currentWT)
 						{
-						case 1:
+						case WeaponTerrain::SWORD_WALL:
 							ModelPlayClip(g_Player.m_model, 0, 60, 60.0f, true);
 							break;
-						case 2:
+						case WeaponTerrain::SPEAR_HILL:
 							ModelPlayClip(g_Player.m_model, 0, 120, 60.0f, true);
 							break;
-						case 3:
+						case WeaponTerrain::BOW_HILL:
 							ModelPlayClip(g_Player.m_model, 0, 120, 60.0f, true);
 							break;
-						case 4:
+						case WeaponTerrain::HAMMER_:
 							ModelPlayClip(g_Player.m_model, 0, 120, 60.0f, true);
 							break;
-						case 5:
+						case WeaponTerrain::SHURIKEN_:
 							ModelPlayClip(g_Player.m_model, 0, 60, 60.0f, true);
 							break;
 						}
@@ -414,21 +420,21 @@ void	PlayerUpdate()
 			{
 				if (g_Player.m_isTransformed)
 				{
-					switch (g_changeP1) //移動
+					switch (g_Player.m_currentWT)
 					{
-					case 1:
+					case WeaponTerrain::SWORD_WALL:
 						ModelPlayClip(g_Player.m_model, 120, 165, 60.0f, true, 1.5f);
 						break;
-					case 2: // spear
+					case WeaponTerrain::SPEAR_HILL: // spear
 						ModelPlayClip(g_Player.m_model, 240, 360, 60.0f, true, 1.5f);
 						break;
-					case 3: // hammer
+					case WeaponTerrain::BOW_HILL: // hammer
 						ModelPlayClip(g_Player.m_model, 181, 240, 60.0f, true, 1.0f);
 						break;
-					case 4: // arrow
+					case WeaponTerrain::HAMMER_: // arrow
 						ModelPlayClip(g_Player.m_model, 180, 240, 60.0f, true, 1.0f);
 						break;
-					case 5:
+					case WeaponTerrain::SHURIKEN_:
 						ModelPlayClip(g_Player.m_model, 121, 150, 60.0f, true, 1.0f);
 						break;
 					}
@@ -464,21 +470,21 @@ void	PlayerUpdate()
 			{
 				if (g_Player.m_isTransformed)
 				{
-					switch (g_changeP1) //待機
+					switch (g_Player.m_currentWT)
 					{
-					case 1:
+					case WeaponTerrain::SWORD_WALL:
 						ModelPlayClip(g_Player.m_model, 0, 60, 60.0f, true);
 						break;
-					case 2: // spear
+					case WeaponTerrain::SPEAR_HILL: // spear
 						ModelPlayClip(g_Player.m_model, 0, 120, 60.0f, true);
 						break;
-					case 3: // hammer
+					case WeaponTerrain::BOW_HILL: // hammer
 						ModelPlayClip(g_Player.m_model, 0, 120, 60.0f, true);
 						break;
-					case 4: // arrow
+					case WeaponTerrain::HAMMER_: // arrow
 						ModelPlayClip(g_Player.m_model, 0, 120, 60.0f, true);
 						break;
-					case 5:
+					case WeaponTerrain::SHURIKEN_:
 						ModelPlayClip(g_Player.m_model, 0, 60, 60.0f, true);
 						break;
 					}
@@ -518,6 +524,11 @@ void	PlayerUpdate()
 	{
 		g_Player.m_isDead = true;
 		PlayerDie();
+	}
+
+	if (Keyboard_IsKeyDownTrigger(KK_D1) || Keyboard_IsKeyDownTrigger(KK_D0))
+	{
+		g_Player1CurrentAnim = 0;
 	}
 }
 
@@ -629,22 +640,23 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 		g_Player.m_koyoteTime = 0.0f;
 		if(g_Player.m_isTransformed)
 		{
-			switch (g_changeP1)
+			switch (g_Player.m_currentWT)
 			{
-			case 1: // Sword
+			case WeaponTerrain::SWORD_WALL: // Sword
 				ModelPlayClip(g_Player.m_model, 300, 334, 60.0f, false, 1.0f);
 				break;
-			case 2: // spear
+			case WeaponTerrain::SPEAR_HILL: // spear
 				ModelPlayClip(g_Player.m_model, 361, 420, 60.0f, false, 2.0f);
 				break;
-			case 3: // arrow
+			case WeaponTerrain::BOW_HILL: // arrow
+				ModelPlayClip(g_Player.m_model, 400, 450, 60.0f, false, 1.0f);
+				break;
+			case WeaponTerrain::HAMMER_: // hammer
 				ModelPlayClip(g_Player.m_model, 240, 300, 60.0f, false, 1.0f);
 				break;
-			case 4: // hammer
-				ModelPlayClip(g_Player.m_model, 240, 300, 60.0f, false, 1.0f);
-				break;
-			case 5: //shuriken
-				ModelPlayClip(g_Player.m_model, 280, 320, 60.0f, false, 1.0f);
+
+			case WeaponTerrain::SHURIKEN_: //shuriken
+				ModelPlayClip(g_Player.m_model, 280, 350, 60.0f, false, 1.0f);
 				break;
 			}
 		}
@@ -696,14 +708,22 @@ void PlayerDraw()
 		g_Player.m_rotation.z);
 	XMMATRIX	translation = XMMatrixTranslation(
 		g_Player.m_position.x,
-		g_Player.m_position.y - 0.8f,
+		g_Player.m_position.y - 1.0f,
 		g_Player.m_position.z);
-	if (g_setWTP1 == WeaponTerrain::SPEAR_HILL||g_changeP1 == 2) //移動
+	if (g_Player.m_position.y < g_Player.m_position.y - 1.0f)
+	{
+		g_Player.m_position.y = g_Player.m_position.y - 0.99f;
+	}
+	if (g_setWTP1 == WeaponTerrain::SPEAR_HILL) //移動
 	{
 		    translation = XMMatrixTranslation(
 			g_Player.m_position.x,
-			g_Player.m_position.y - 0.3f,
+			g_Player.m_position.y - 0.5f,
 			g_Player.m_position.z);
+			if (g_Player.m_position.y < g_Player.m_position.y - 0.5f)
+			{
+				g_Player.m_position.y = g_Player.m_position.y - 0.49f;
+			}
 	}
 
 	XMMATRIX	world = scale * rotation * translation;
@@ -936,11 +956,11 @@ void PLAYER::EquipBaseWeapon()
 	{
 	case WeaponTerrain::SWORD_WALL:
 		EquipWeapon(std::make_unique<Sword>(this, FALSE));
-		g_changeP1 = 0;
+		g_changeP1 = 1;
 		break;
 	case WeaponTerrain::SPEAR_HILL:
 		EquipWeapon(std::make_unique<Spear>(this, FALSE));
-		g_changeP1 = 1;
+		g_changeP1 = 2;
 		break;
 	case WeaponTerrain::BOW_HILL:
 		EquipWeapon(std::make_unique<Arrow>(this, FALSE));
@@ -948,11 +968,11 @@ void PLAYER::EquipBaseWeapon()
 		break;
 	case WeaponTerrain::HAMMER_:
 		EquipWeapon(std::make_unique<Hammer>(this, FALSE));
-		g_changeP1 = 2;
+		g_changeP1 = 4;
 		break;
 	case WeaponTerrain::SHURIKEN_:
 		EquipWeapon(std::make_unique<Shuriken>(this, FALSE));
-		g_changeP1 = 4;
+		g_changeP1 = 5;
 		break;
 	}
 }
@@ -974,6 +994,8 @@ void PLAYER::RoundReset(XMFLOAT3 startPos)
 	g_Player1AttackPlaying = false;
 	g_Player.SetReservedWT(0, WeaponTerrain::NONE);
 	g_Player.SetReservedWT(1, WeaponTerrain::NONE);
+
+	gp_itemSponer.ResetItem();
 }
 
 WeaponTerrain GetSetWTP1()
@@ -983,4 +1005,12 @@ WeaponTerrain GetSetWTP1()
 void SetWTP1(WeaponTerrain wt)
 {
 	g_setWTP1 = wt;
+}
+WeaponTerrain GetPlayerCurrentWT()
+{
+	return g_Player.m_currentWT;
+}
+void SetPlayer_IsTransformed(bool isTransformed)
+{
+	g_Player.m_isTransformed = isTransformed;
 }

@@ -56,6 +56,7 @@ public:
 	float m_moveSpeed; // 移動速度
 	float m_jumpForce; // 移動速度
 	bool m_isAttacked = false; // 攻撃中フラグ
+	bool m_isDeadFlag = false; // 死亡フラグ
 	float m_moveMul = 1.0f;
 	bool m_isTransformed = false; // 変身中フラグ
 	HitAction m_hitAction;
@@ -104,5 +105,6 @@ void SetPlayer_IsAttacked(bool isAttacked);
 PLAYER* GetPlayer();
 WeaponTerrain GetSetWTP1();
 void SetWTP1(WeaponTerrain wt);
-
+WeaponTerrain GetPlayerCurrentWT();
+void SetPlayer_IsTransformed(bool isTransformed);
 #endif // PLAYER_H

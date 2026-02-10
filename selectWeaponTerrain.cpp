@@ -10,12 +10,16 @@
 #include "selectWeaponTerrain.h"
 #include "Manager.h"
 #include "keyboard.h"
+#include"Controller.h"
 #include "fade.h"
 #include "shader.h"
 #include "Camera.h"
 #include "model.h"
 #include <cmath>
 
+
+static bool g_oldStickLeft[2] = { false, false };
+static bool g_oldStickRight[2] = { false, false };
 // 選択スロット数
 static const int selectCount = 5;
 #pragma region UI関連定数
@@ -26,6 +30,7 @@ static ID3D11ShaderResourceView* g_TextureUi_Button[2] = { NULL };
 static ID3D11ShaderResourceView* g_TextureUI[selectCount] = { NULL };
 static ID3D11Device* g_pDevice = nullptr;
 static ID3D11DeviceContext* g_pContext = nullptr;
+extern Controller g_Controller[2];
 
 static inGameWTselect g_selectData;
 static int g_cursorP1 = 0;
@@ -574,7 +579,7 @@ void selectWT_Update()
             if (g_swordIdleAnim[0].playing) g_swordIdleAnim[0].Stop();
 
             // Selection for any weapon: start cursor scale anim and mark ready
-            if (Keyboard_IsKeyDownTrigger(KK_LEFTCONTROL)&& !g_isP1Ready)
+            if (Keyboard_IsKeyDownTrigger(KK_LEFTCONTROL)|| g_Controller[0].IsButtonPushed(ControllerButton::A_BUTTON) && !g_isP1Ready)
             {
                 PlayAudio(g_button, false);
                 // start cursor animation
@@ -642,7 +647,7 @@ void selectWT_Update()
             // Non-sword slot for player2
             if (g_swordIdleAnim[1].playing) g_swordIdleAnim[1].Stop();
 
-            if (Keyboard_IsKeyDownTrigger(KK_D5) && !g_isP2Ready)
+            if (Keyboard_IsKeyDownTrigger(KK_D5)|| g_Controller[1].IsButtonPushed(ControllerButton::A_BUTTON) && !g_isP2Ready)
             {
                 PlayAudio(g_button, false);
                 // start cursor anim and mark ready for any weapon
@@ -766,8 +771,12 @@ void selectWT_Update()
     // P1 操作
     if (!g_isP1Ready)
     {
+        // スティックの状態を取得
+        float stickX = g_Controller[0].GetLeftStickX();
+        bool nowStickLeft = (stickX < -0.5f);
+        bool nowStickRight = (stickX > 0.5f);
 
-        if (Keyboard_IsKeyDownTrigger(KK_LEFT))
+        if (Keyboard_IsKeyDownTrigger(KK_LEFT)|| (nowStickLeft && !g_oldStickLeft[0]))
         {
             PlayAudio(g_cursorMove, false);
             int oldIndex = g_cursorP1;
@@ -784,7 +793,7 @@ void selectWT_Update()
             StartSlotScaleAnim(oldIndex, false);
             StartSlotScaleAnim(g_cursorP1, true);
         }
-        if (Keyboard_IsKeyDownTrigger(KK_RIGHT))
+        if (Keyboard_IsKeyDownTrigger(KK_RIGHT)||(nowStickRight && !g_oldStickRight[0]))
         {
             PlayAudio(g_cursorMove, false);
             int oldIndex = g_cursorP1;
@@ -800,7 +809,11 @@ void selectWT_Update()
             StartSlotScaleAnim(g_cursorP1, true);
         }
 
-        if (Keyboard_IsKeyDownTrigger(KK_LEFTCONTROL))
+        // 次のフレームのために現在の状態を保存
+        g_oldStickLeft[0] = nowStickLeft;
+        g_oldStickRight[0] = nowStickRight;
+
+        if (Keyboard_IsKeyDownTrigger(KK_LEFTCONTROL) || g_Controller[0].IsButtonPushed(ControllerButton::A_BUTTON))
         {
             PlayAudio(g_button, false);
             g_isP1Ready = true;
@@ -815,7 +828,11 @@ void selectWT_Update()
     // P2 操作
     if (!g_isP2Ready)
     {
-        if (Keyboard_IsKeyDownTrigger(KK_D3))
+        float stickX = g_Controller[1].GetLeftStickX();
+        bool nowStickLeft = (stickX < -0.5f);
+        bool nowStickRight = (stickX > 0.5f);
+
+        if (Keyboard_IsKeyDownTrigger(KK_D3)|| (nowStickLeft && !g_oldStickLeft[1]))
         {
             PlayAudio(g_cursorMove, false);
             int oldIndex = g_cursorP2;
@@ -830,7 +847,7 @@ void selectWT_Update()
             StartSlotScaleAnim(oldIndex, false);
             StartSlotScaleAnim(g_cursorP2, true);
         }
-        if (Keyboard_IsKeyDownTrigger(KK_D4))
+        if (Keyboard_IsKeyDownTrigger(KK_D4)|| (nowStickRight && !g_oldStickRight[1]))
         {
             PlayAudio(g_cursorMove, false);
             int oldIndex = g_cursorP2;
@@ -846,7 +863,11 @@ void selectWT_Update()
             StartSlotScaleAnim(g_cursorP2, true);
         }
 
-        if (Keyboard_IsKeyDownTrigger(KK_D5))
+        // 次のフレームのために現在の状態を保存
+        g_oldStickLeft[1] = nowStickLeft;
+        g_oldStickRight[1] = nowStickRight;
+
+        if (Keyboard_IsKeyDownTrigger(KK_D5) || g_Controller[1].IsButtonPushed(ControllerButton::A_BUTTON))
         {
             PlayAudio(g_button, false);
             g_isP2Ready = true;
@@ -901,7 +922,7 @@ void selectWT_Update()
     else if (g_goState == GO_WAIT_FOR_A)
     {
    
-        if (Keyboard_IsKeyDownTrigger(KK_A))
+        if (Keyboard_IsKeyDownTrigger(KK_A)|| (g_Controller[0].IsButtonPushed(ControllerButton::A_BUTTON)))
         {
             PlayAudio(g_gameStart, false);
             XMFLOAT4 fadeColor(0.0f, 0.0f, 0.0f, 1.0f);

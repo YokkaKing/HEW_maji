@@ -50,6 +50,9 @@ int g_winner = -1;
 int g_select_transform = -1;
 int g_countdown = -1;
 int g_go = -1;
+int g_round1 = -1;
+int g_round2 = -1;
+
 
 void InitAudio()
 {
@@ -84,6 +87,9 @@ void InitAudio()
 	g_select_transform = LoadAudio("asset\\Audio\\select_transform.wav");
 	g_countdown = LoadAudio("asset\\Audio\\countdown.wav");
 	g_go = LoadAudio("asset\\Audio\\go.wav");
+	g_round1 = LoadAudio("asset\\Audio\\round_1.wav");
+	g_round2 = LoadAudio("asset\\Audio\\round_2.wav");
+
 }
 
 void UninitAudio()

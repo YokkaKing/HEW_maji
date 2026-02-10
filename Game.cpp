@@ -13,6 +13,7 @@
 #include"sprite.h"
 #include"Game.h"
 #include"keyboard.h"
+#include"Controller.h"
 #include"field.h"
 #include"Effect.h"
 #include"Audio.h"
@@ -50,6 +51,7 @@ static int g_selectionPhase = 0;
 static bool  g_roundEndWait = false;
 static float g_roundEndWaitTimer = 0.0f;
 ITEM_SPONER g_sponer;
+extern Controller g_Controller[2];
 
 STAGE g_stage;
 
@@ -60,7 +62,7 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, const
 	//Controller_Initialize();
 	Field_Initialize(pDevice, pContext); // フィールドの初期化
 	g_stage.Initialize(pDevice, pContext);
-
+	g_sponer.ResetItem();
 	g_sponer.Initialize();
 
 	PlayerInitialize(pDevice, pContext, select.player1); //
@@ -124,6 +126,7 @@ void Game_Finalize()
 	Player2Finalize();
 	Camera_Finalize();	//カメラ終了処理
 	Camera2_Finalize();	//カメラ終了処理
+	g_sponer.ResetItem();
 	//=======UI===========
 
 	Timer_Finalize();
@@ -139,9 +142,7 @@ void Game_Finalize()
 }
 
 void Game_Update()
-
 {
-
 	const float dt = 1.0f / 60.0f;
 	CountdownUI_Update(dt);
 	//少しの秒がアップデート時間を上げる
@@ -149,6 +150,9 @@ void Game_Update()
 	{
 		frame -= 1;
 	}
+
+	TerrainUpdate();
+
 	if (g_transformMngr.IsActive()&&frame <= 0)
 	{
 		g_transformMngr.Update(dt);
@@ -214,8 +218,6 @@ void Game_Update()
 		PlayerUpdate();
 		Player2Update();
 		Field_Update();
-		TerrainUpdate();
-
 		g_sponer.Update();
 
 		//=======UI===========
@@ -257,7 +259,7 @@ void Game_Update()
 		//キー入力チェック
 		//スタートボタンが押されたらシーンを切り替え
 		//フェード処理中はキーを受け付けない
-		if (Keyboard_IsKeyDownTrigger(KK_ENTER) && (GetFadeState() == FADE_NONE))
+		if ((Keyboard_IsKeyDownTrigger(KK_ENTER))&& (GetFadeState() == FADE_NONE))
 		{
 			//フェードアウトさせてシーンを切り替える
 			XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
@@ -308,7 +310,11 @@ void Game_Draw_Player1()
 	Shader_SetLight(Light.Light);	//ライト構造体をシェーダーへセット
 	SetDepthTest(FALSE);
 	//===UI描画========
-	Hp_Draw();
+	if (!g_transformMngr.IsActive()&&!CountdownUI_IsBlockingGameplay())
+	{
+		Hp_Draw();
+	}
+
 	if (g_transformMngr.IsActive())
 	{
 		g_transformMngr.Draw(0);
@@ -329,16 +335,16 @@ void Game_Draw_Player1()
 		}
 	}
 
-	//================
-	Light.SetEnable(TRUE);			//ライティングON
-	Shader_SetLight(Light.Light);	//ライト構造体をシェーダーへセット
-	SetDepthTest(TRUE);
-	//============lightをまたtrueにして、camera2に影響がないように================
+
 }
 void Game_Draw_Player2()
 {
 	//g_pContext->RSSetViewports(1, &g_RightViewPort);
-
+		//================
+	Light.SetEnable(TRUE);			//ライティングON
+	Shader_SetLight(Light.Light);	//ライト構造体をシェーダーへセット
+	SetDepthTest(TRUE);
+	//============lightをまたtrueにして、camera2に影響がないように================
 	Camera2_Draw();
 	Shader_SetMatrix(GetViewMatrix2() * GetProjectionMatrix2());
 	//Field_Draw();
@@ -357,7 +363,12 @@ void Game_Draw_Player2()
 	Shader_SetLight(Light.Light);	//ライト構造体をシェーダーへセット
 	SetDepthTest(FALSE);
 
-	Hp2_Draw();
+	if (!g_transformMngr.IsActive() && !CountdownUI_IsBlockingGameplay())
+	{
+		Hp2_Draw();
+	}
+
+
 	if (g_transformMngr.IsActive())
 	{
 		g_transformMngr.Draw(1);

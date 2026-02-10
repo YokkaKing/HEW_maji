@@ -55,94 +55,89 @@ void Fade_Finalize()
 
 void Fade_Update()
 {
-}
+	if (g_Fade.state == FADE_STATE::FADE_NONE)
+		return;
 
-void Fade_Draw()
-{ 
-	//現在の状況
+	// フェード速度（いま Draw でやってた 1/4 をここへ）
+	const float STEP = (1.0f / 2.0f);
+
 	switch (g_Fade.state)
 	{
-		case FADE_STATE::FADE_NONE:
-			return;
-		case FADE_STATE::FADE_IN:
-			if (g_Fade.frame < 0.0f)
-			{//フェードイン終了
-				g_Fade.frame = 0.0f;
-				g_Fade.state = FADE_STATE::FADE_NONE;
-			}
-			break;
-		case FADE_STATE::FADE_OUT:
-			if (g_Fade.frame >= 29.0f)
-			{//フェードアウト終了
-				g_Fade.fadecolor.w = 29.0f;
-				//フェードイン初期化
-				SetFade(g_Fade.frame, g_Fade.fadecolor, FADE_STATE::FADE_IN, g_Fade.scene);
-				//シーン切り替え
-				SetScene(g_Fade.scene);
-			}
-			break;
+	case FADE_STATE::FADE_IN:
+		g_Fade.frame -= STEP;  // 透明へ向かう
+		if (g_Fade.frame <= 0.0f)
+		{
+			g_Fade.frame = 0.0f;
+			g_Fade.state = FADE_STATE::FADE_NONE;
+		}
+		break;
+
+	case FADE_STATE::FADE_OUT:
+		g_Fade.frame += STEP;  // 黒へ向かう
+		if (g_Fade.frame >= 29.0f)
+		{
+			// フェードアウト完了
+			g_Fade.frame = 29.0f;
+
+			// ここでシーン切り替え（Draw内でやると1Pだけ変になる）
+			SetScene(g_Fade.scene);
+
+			// すぐフェードイン開始
+			g_Fade.state = FADE_STATE::FADE_IN;
+			g_Fade.frame = 28.0f;
+		}
+		break;
+
+	default:
+		break;
 	}
+}
 
-	//スプライト表示
 
-//---------------------------------------------------
-	// シェーダーを描画パイプラインに設定
+void Fade_Draw()
+{
+	if (g_Fade.state == FADE_STATE::FADE_NONE)
+		return;
+
 	Shader_Begin();
 
-	// 画面サイズ取得
 	const float SCREEN_WIDTH = (float)Direct3D_GetBackBufferWidth();
 	const float SCREEN_HEIGHT = (float)Direct3D_GetBackBufferHeight();
 
-	// 頂点シェーダーに変換行列を設定
 	Shader_SetMatrix(XMMatrixOrthographicOffCenterLH(
-		0.0f,
-		SCREEN_WIDTH,
-		SCREEN_HEIGHT,
-		0.0f,
-		0.0f,
-		1.0f));
-	//---------------------------------------------------
+		0.0f, SCREEN_WIDTH,
+		SCREEN_HEIGHT, 0.0f,
+		0.0f, 1.0f));
 
-	//テクスチャをセット
 	g_pContext->PSSetShaderResources(0, 1, &g_Texture);
+	SetBlendState(BLENDSTATE_ALFA);
 
-	//スプライト描画
-	SetBlendState(BLENDSTATE_ALFA);//αブレンド
 	XMFLOAT2 pos = { SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 };
-	XMFLOAT2 size = { SCREEN_WIDTH*1.8f, SCREEN_HEIGHT*1.8f };
-	DrawSpriteEx(pos, size, g_Fade.fadecolor,g_Fade.frame,fADE_WIDTH,fADE_HEIGHT,-25.0f);
+	XMFLOAT2 size = { SCREEN_WIDTH * 1.8f, SCREEN_HEIGHT * 1.8f };
 
-	//フェード処理
-	switch (g_Fade.state)
-	{
-		case FADE_STATE::FADE_IN:
-			g_Fade.frame -= (1.0f/4.0f);//透明にしていく
-			break;
-		case FADE_STATE::FADE_OUT:
-			g_Fade.frame += (1.0f / 4.0f);//不透明にしていく
-			break;
-	}
-
+	DrawSpriteEx(pos, size, g_Fade.fadecolor, g_Fade.frame, fADE_WIDTH, fADE_HEIGHT, -25.0f);
 }
 
-void	SetFade(int fadeframe, XMFLOAT4 color, FADE_STATE state, SCENE scene)
-{ 
+
+void SetFade(int fadeframe, XMFLOAT4 color, FADE_STATE state, SCENE scene)
+{
 	g_Fade.state = state;
 	g_Fade.scene = scene;
-
 	if (g_Fade.state == FADE_IN)
 	{
-		g_Fade.frame = 28.0f;	//不透明にする
-
+		g_Fade.frame = 28.0f; // 黒→透明
 	}
-	else
+	else if (g_Fade.state == FADE_OUT)
 	{
-		g_Fade.frame = 0.0f;	//透明にする
+		g_Fade.frame = 0.0f;  // 透明→黒
+
+		if (GetRoundCount() == 0) StopAudio(g_round1);
+		else                      StopAudio(g_round2);
+
 		PlayAudio(g_fade);
 	}
-
-
 }
+
 
 FADE_STATE	GetFadeState()
 {
