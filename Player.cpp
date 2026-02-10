@@ -128,7 +128,7 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 	}
 	else if (g_setWTP1 == WeaponTerrain::SHURIKEN_)
 	{
-		g_Player.m_model = ModelLoad("asset\\model\\char_shuriken_motion.fbx");
+		g_Player.m_model = ModelLoad("asset\\model\\default_shuriken.fbx");
 	}
 
 	g_Player.EquipBaseWeapon(); //���E���h�����p�ɏ���������đ���
@@ -146,6 +146,14 @@ void	PlayerUpdate()
 	ApplyTransformEffect();   // 進化タイプに応じたパラメータを適用
 	if (g_Player.m_isDead)return;	//死亡している場合は更新処理をスキップ
 
+	//ヒットアクション
+	g_Player.m_hitAction.Update(g_Player.m_position);
+	//ヒットストップ中ならこの関数自体を抜けるため今後の処理がすべてスキップされる
+	if (g_Player.m_hitAction.IsStopping())
+	{
+		return;
+	}
+	
 //================================================================
 //	武器変更処理(一旦)
 //================================================================

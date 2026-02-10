@@ -312,6 +312,12 @@ void ArrowShot::OnCollision(const CollisionInfo& info)
 	m_velocity = { 0.0f, 0.0f, 0.0f };
 	m_isStuck = true;
 
+	//ヒットストップ用
+	float stopTime1 = 0.1f;
+	float stopTime2 = 0.2f;
+	float stopTime3 = 0.3f;
+	float stopTime4 = 0.5f;
+
 	// 1Pか2Pか
 	switch (m_selectPlayer)
 	{
@@ -322,18 +328,63 @@ void ArrowShot::OnCollision(const CollisionInfo& info)
 			if (m_chargePower < 0.5f)
 			{
 				info.other->TakeDamage(5.0f);
+
+				//ヒットバック計算式
+				XMFLOAT3 dir = {
+					info.other->m_position.x - this->m_position.x,
+					0.1f,
+					info.other->m_position.z - this->m_position.z
+				};
+
+				//P2に対してヒットアクションを発動
+				//引数:方向vec, HS時間, KB距離
+				g_Player2.m_hitAction.triggerHA(dir, stopTime1, 0.05f);
+
 			}
 			else if (m_chargePower < 1.0f)
 			{
 				info.other->TakeDamage(10.0f);
+
+				//ヒットバック計算式
+				XMFLOAT3 dir = {
+					info.other->m_position.x - this->m_position.x,
+					0.1f,
+					info.other->m_position.z - this->m_position.z
+				};
+
+				//P2に対してヒットアクションを発動
+				//引数:方向vec, HS時間, KB距離
+				g_Player2.m_hitAction.triggerHA(dir, stopTime2, 0.07f);
 			}
 			else if (m_chargePower < 2.0f)
 			{
 				info.other->TakeDamage(20.0f);
+
+				//ヒットバック計算式
+				XMFLOAT3 dir = {
+					info.other->m_position.x - this->m_position.x,
+					0.1f,
+					info.other->m_position.z - this->m_position.z
+				};
+
+				//P2に対してヒットアクションを発動
+				//引数:方向vec, HS時間, KB距離
+				g_Player2.m_hitAction.triggerHA(dir, stopTime3, 0.09f);
 			}
 			else if (m_chargePower > 2.0f)
 			{
 				info.other->TakeDamage(30.0f);
+
+				//ヒットバック計算式
+				XMFLOAT3 dir = {
+					info.other->m_position.x - this->m_position.x,
+					0.1f,
+					info.other->m_position.z - this->m_position.z
+				};
+
+				//P2に対してヒットアクションを発動
+				//引数:方向vec, HS時間, KB距離
+				g_Player2.m_hitAction.triggerHA(dir, stopTime4, 0.1f);
 			}
 			m_isDead = true;
 			g_Player2.m_isAttacked = true;
@@ -348,18 +399,62 @@ void ArrowShot::OnCollision(const CollisionInfo& info)
 			if (m_chargePower < 0.5f)
 			{
 				info.other->TakeDamage(5.0f);
+
+				//ヒットバック計算式
+				XMFLOAT3 dir = {
+					info.other->m_position.x - this->m_position.x,
+					0.1f,
+					info.other->m_position.z - this->m_position.z
+				};
+
+				//P2に対してヒットアクションを発動
+				//引数:方向vec, HS時間, KB距離
+				g_Player.m_hitAction.triggerHA(dir, stopTime1, 0.05f);
 			}
 			else if (m_chargePower < 1.0f)
 			{
 				info.other->TakeDamage(10.0f);
+
+				//ヒットバック計算式
+				XMFLOAT3 dir = {
+					info.other->m_position.x - this->m_position.x,
+					0.1f,
+					info.other->m_position.z - this->m_position.z
+				};
+
+				//P2に対してヒットアクションを発動
+				//引数:方向vec, HS時間, KB距離
+				g_Player.m_hitAction.triggerHA(dir, stopTime2, 0.07f);
 			}
 			else if (m_chargePower < 2.0f)
 			{
 				info.other->TakeDamage(20.0f);
+
+				//ヒットバック計算式
+				XMFLOAT3 dir = {
+					info.other->m_position.x - this->m_position.x,
+					0.1f,
+					info.other->m_position.z - this->m_position.z
+				};
+
+				//P2に対してヒットアクションを発動
+				//引数:方向vec, HS時間, KB距離
+				g_Player.m_hitAction.triggerHA(dir, stopTime3, 0.09f);
 			}
 			else if (m_chargePower > 2.0f)
 			{
 				info.other->TakeDamage(30.0f);
+
+				//ヒットバック計算式
+				XMFLOAT3 dir = {
+					info.other->m_position.x - this->m_position.x,
+					0.1f,
+					info.other->m_position.z - this->m_position.z
+				};
+
+				//P2に対してヒットアクションを発動
+				//引数:方向vec, HS時間, KB距離
+				g_Player.m_hitAction.triggerHA(dir, stopTime4, 0.1f);
 			}
 			m_isDead = true;
 			g_Player.m_isAttacked = true;

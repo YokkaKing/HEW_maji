@@ -335,22 +335,52 @@ void Spear::OnWeaponCollision(GameObject* target)
 
 	if (m_isAttacking)
 	{
+		//ヒットストップ用P1,P2共通変数
+		float stopTime = 0.5f;
 		// 1Pか2Pか
 		switch (m_selectPlayer)
 		{
-		case FALSE: // 1Pだったら
+		case FALSE: // 攻撃者が1Pだったら
 			if (target->m_tag == "Player2") // 相手がPlayer2の時のみ
 			{
 				m_hitTargets.insert(target);
 				target->TakeDamage(15.0f); // 仮に20ダメージ
+
+				//ヒットバック計算式
+				XMFLOAT3 dir = {
+					target->m_position.x - owner->m_position.x,
+					0.1f,
+					target->m_position.z - owner->m_position.z
+				};
+
+				//P2に対してヒットアクションを発動
+				//引数:方向vec, HS時間, KB距離
+				g_Player2.m_hitAction.triggerHA(dir, stopTime, 0.1);
+				//攻撃時に攻撃者側にもヒットストップを入れる
+				//時間だけを止めたいため、方向ベクトルとパワーの値は0に
+				g_Player.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime, 0.0f);
 			}
 			break;
 
-		case TRUE: // 2Pだったら
+		case TRUE: // 攻撃者が2Pだったら
 			if (target->m_tag == "Player") // 相手がPlayerの時のみ
 			{
 				m_hitTargets.insert(target);
 				target->TakeDamage(15.0f);
+
+				//ヒットバック計算式
+				XMFLOAT3 dir = {
+					target->m_position.x - owner->m_position.x,
+					0.1f,
+					target->m_position.z - owner->m_position.z
+				};
+
+				//P1に対してヒットアクションを発動
+				//引数:方向vec, HS時間, KB距離
+				g_Player.m_hitAction.triggerHA(dir, stopTime, 0.1f);
+				//攻撃時に攻撃者側にもヒットストップを入れる
+				//時間だけを止めたいため、方向ベクトルとパワーの値は0に
+				g_Player2.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime, 0.0f);
 			}
 			break;
 		}
@@ -461,6 +491,9 @@ void SpearShot::OnCollision(const CollisionInfo& info)
 	m_velocity = { 0.0f, 0.0f, 0.0f };
 	m_isStuck = true;
 
+	//ヒットストップ時間
+	float stopTime = 0.2f;
+
 	// 1Pか2Pか
 	switch (m_selectPlayer)
 	{
@@ -470,6 +503,17 @@ void SpearShot::OnCollision(const CollisionInfo& info)
 			PlayAudio(g_damageSharp, false);
 			info.other->TakeDamage(15.0f); // 仮に20ダメージ
 			m_isDead = true;
+
+			//ヒットバック計算式
+			XMFLOAT3 dir = {
+				info.other->m_position.x - this->m_position.x,
+				0.1f,
+				info.other->m_position.z - this->m_position.z
+			};
+
+			//P2に対してヒットアクションを発動
+			//引数:方向vec, HS時間, KB距離
+			g_Player2.m_hitAction.triggerHA(dir, stopTime, 0.1f);
 		}
 		break;
 
@@ -479,6 +523,17 @@ void SpearShot::OnCollision(const CollisionInfo& info)
 			PlayAudio(g_damageSharp, false);
 			info.other->TakeDamage(15.0f);
 			m_isDead = true;
+
+			//ヒットバック計算式
+			XMFLOAT3 dir = {
+				info.other->m_position.x - this->m_position.x,
+				0.1f,
+				info.other->m_position.z - this->m_position.z
+			};
+
+			//P1に対してヒットアクションを発動
+			//引数:方向vec, HS時間, KB距離
+			g_Player.m_hitAction.triggerHA(dir, stopTime, 0.1f);
 		}
 		break;
 	}
