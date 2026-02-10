@@ -46,6 +46,7 @@ unsigned int g_changeP2;
 static bool g_Player2AttackPlaying = false; // 攻撃ワンショット再生中フラグ
 static bool g_Player2JumpPlaying = false; // ジャンプワンショット再生中フラグ
 static int g_Player2CurrentAnim = 0; // 0: idle, 1: move, 2: attack 3:jump
+bool g_isChangeP2;
 
 void Player2Die()
 {
@@ -124,7 +125,7 @@ void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 		g_Player2.m_model = ModelLoad("asset\\model\\default_shuriken.fbx");
 	}
 
-	g_Player2.EquipBaseWeapon();
+	g_isChangeP2 = false;
 }
 void Player2Finalize()
 {
@@ -136,6 +137,14 @@ void	Player2Update()
 	ApplyTransformEffect2();   // 進化タイプに応じたパラメータを適用
 	if (g_Player2.m_isDead)return;	//死亡している場合は更新処理をスキップ
 	
+	//ヒットアクション
+	g_Player2.m_hitAction.Update(g_Player2.m_position);
+	//ヒットストップ中ならこの関数自体を抜けるため今後の処理がすべてスキップされる
+	if (g_Player2.m_hitAction.IsStopping())
+	{
+		return;
+	}
+
 //================================================================
 //	武器変更処理(一旦)
 //================================================================
@@ -144,12 +153,12 @@ void	Player2Update()
 	if (Keyboard_IsKeyDownTrigger(KK_D2) && !GetIsUsedA_P2())
 	{
 		slotToUse = 0;
-		g_Player2.m_isTransformed = true;
+		g_isChangeP2 = true;
 	}
 	if (Keyboard_IsKeyDownTrigger(KK_D9) && !GetIsUsedB_P2())
 	{
 		slotToUse = 1;
-		g_Player2.m_isTransformed = true;
+		g_isChangeP2 = true;
 	}
 
 	if (slotToUse != -1)
@@ -160,6 +169,13 @@ void	Player2Update()
 		// 選択（予約）済みであり、かつ現在変身中でない（または NONE でない）場合
 		if (reserved != WeaponTerrain::NONE)
 		{
+			inGameWTselect data;
+			data.player1 = WeaponTerrain::NONE; // P1は変更しない
+			data.player2 = reserved;            // P2に予約分を適用
+
+			// 武器の適用
+			//generateWT_Apply(data, &g_Player, &g_Player2, g_pDevice2, g_pContext2);
+
 			// 地形の生成（P2用なので第二引数はTRUE）
 			TerrainSet(reserved, TRUE);
 
@@ -953,7 +969,21 @@ WeaponTerrain GetSetWTP2()
 {
 	return g_setWTP2;
 }
-void SetWTP2(WeaponTerrain wt)
+
+bool GetChangeP2()
+{
+	return g_isChangeP2;
+}
+
+
+//デバッグコード
+/*
+g_changeP2++;
+if (g_changeP2 >= 5)
+{
+	g_changeP2 = 0;
+}
+switch (g_changeP2)
 {
 	g_setWTP2 = wt;
 }

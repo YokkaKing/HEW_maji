@@ -17,6 +17,7 @@
 #include"Camera.h"
 #include"Player.h"
 #include"Player2.h"
+#include"hitAction.h"
 
 //================================================================
 //	グローバル変数
@@ -231,6 +232,8 @@ void Sword::OnWeaponCollision(GameObject* target)
 
 	if (m_isAttacking)
 	{
+		//ヒットストップ用P1,P2共通変数
+		float stopTime = 0.3f;
 		// 1Pか2Pか
 		switch (m_selectPlayer)
 		{
@@ -240,6 +243,20 @@ void Sword::OnWeaponCollision(GameObject* target)
 				PlayAudio(g_damageSharp, false);
 				m_hitTargets.insert(target);
 				target->TakeDamage(10.0f); // 仮に20ダメージ
+
+				//ヒットバック計算式
+				XMFLOAT3 dir = {
+					target->m_position.x - owner->m_position.x,
+					0.1f,
+					target->m_position.z - owner->m_position.z
+				};
+
+				//P2に対してヒットアクションを発動
+				//引数:方向vec, HS時間, KB距離
+				g_Player2.m_hitAction.triggerHA(dir, stopTime, 0.1);
+				//攻撃時に攻撃者側にもヒットストップを入れる
+				//時間だけを止めたいため、方向ベクトルとパワーの値は0に
+				g_Player.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime, 0.0f);
 			}
 			break;
 
@@ -249,6 +266,20 @@ void Sword::OnWeaponCollision(GameObject* target)
 				PlayAudio(g_damageSharp, false);
 				m_hitTargets.insert(target);
 				target->TakeDamage(10.0f);
+
+				//ヒットバック計算式
+				XMFLOAT3 dir = {
+					target->m_position.x - owner->m_position.x,
+					0.1f,
+					target->m_position.z - owner->m_position.z
+				};
+
+				//P1に対してヒットアクションを発動
+				//引数:方向vec, HS時間, KB距離
+				g_Player.m_hitAction.triggerHA(dir, stopTime, 0.1f);
+				//攻撃時に攻撃者側にもヒットストップを入れる
+				//時間だけを止めたいため、方向ベクトルとパワーの値は0に
+				g_Player2.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime, 0.0f);
 			}
 			break;
 		}
