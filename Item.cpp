@@ -9,16 +9,18 @@
 //================================================================
 //	インクルード
 //================================================================
+#include"Audio.h"
 #include"Item.h"
 #include"model.h"
 #include"Player.h"
 #include"Player2.h"
 #include"managerCollider.h"
+#include"Transform.h"
 
 //================================================================
 //	マクロ定義
 //================================================================
-#define SPONE_TIME (10.0f)
+#define SPONE_TIME (30.0f)
 
 //================================================================
 //	グローバル変数
@@ -76,6 +78,12 @@ void ITEM_SPONER::Spwan()
 
 	item->Set(); // アイテムのセットを呼び出し
 }
+// ラウンドごとの初期化
+void ITEM_SPONER::ResetItem()
+{
+	ClearAllItems();    // 既存アイテム消去
+	m_count = 0; // スポーンタイマーをリセット
+}
 // どこにスポナーを作ればいいかを判断する
 XMFLOAT3 ITEM_SPONER::WherePosition()
 {
@@ -125,7 +133,7 @@ void ITEM::Set()
 	m_isScale = false;
 	m_isDead = false;
 
-	XMFLOAT3 scale = { 0.4f, 0.4f, 0.4f };
+	XMFLOAT3 scale = { 0.1f, 0.1f, 0.1f };
 	m_scale = scale;
 	m_collider = AddComponent<BoxCollider>(this, scale);
 	ManagerCollider::AddCollider(m_collider);
@@ -138,7 +146,7 @@ void ITEM::Update()
 	}
 	m_rotation.y += 0.1f;
 
-	float scaleStep = 0.01f;
+	float scaleStep = 0.0025f;
 
 	if (m_isScale) 
 	{
@@ -150,11 +158,11 @@ void ITEM::Update()
 	}
 
 	// 0.65を超えたら小さくする(false)、0.15を下回ったら大きくする(true)
-	if (m_scale.x > 0.65f)
+	if (m_scale.x > 0.15f)
 	{
 		m_isScale = false;
 	}
-	else if (m_scale.x < 0.15f) 
+	else if (m_scale.x < 0.05f) 
 	{
 		m_isScale = true;
 	}
@@ -239,6 +247,8 @@ void ITEM::OnCollision(const CollisionInfo& info)
 		{
 			if (m_itemType == ITEM_TYPE::HEALTH_RECOVERY)
 			{
+				PlayAudio(g_item, false);
+
 				float health = 100.0f - Player_GetHp();
 
 				// Player1が体力マックス-30.0f以下だったら30.0f回復
@@ -254,12 +264,44 @@ void ITEM::OnCollision(const CollisionInfo& info)
 
 				m_isDead = true; // 消滅
 			}
+			else
+			{
+				PlayAudio(g_item, false);
+
+				bool flag[2];
+
+				flag[0] = GetIsUsedA_P1();
+				flag[1] = GetIsUsedB_P1();
+
+				// どちらも変身していなければ
+				if (!flag[0] && !flag[1])
+				{
+					// 何もしない
+				}
+				else if (flag[0] && !flag[1]) // 変身を一回していたら
+				{
+					SetIsUsed_P1(0, false); // 変身を回復
+				}
+				else if (!flag[0] && flag[1]) // 変身を一回していたら
+				{
+					SetIsUsed_P1(1, false); // 変身を回復
+				}
+				else if (flag[0] && flag[1]) // 二回変身していたら
+				{
+					int r = rand() % 2;
+					SetIsUsed_P1(r, false); // どちらかの変身を回復
+				}
+
+				m_isDead = true; // 消滅するだけ
+			}
 		}
 
 		if (info.other->m_tag == "Player2")
 		{
 			if (m_itemType == ITEM_TYPE::HEALTH_RECOVERY)
 			{
+				PlayAudio(g_item, false);
+
 				float health = 100.0f - Player2_GetHp();
 
 				// Player1が体力マックス-30.0f以下だったら30.0f回復
@@ -275,6 +317,53 @@ void ITEM::OnCollision(const CollisionInfo& info)
 
 				m_isDead = true; // 消滅
 			}
+			else
+			{
+				PlayAudio(g_item, false);
+
+				bool flag[2];
+
+				flag[0] = GetIsUsedA_P2();
+				flag[1] = GetIsUsedB_P2();
+
+				// どちらも変身していなければ
+				if (!flag[0] && !flag[1])
+				{
+					// 何もしない
+				}
+				else if (flag[0] && !flag[1]) // 変身を一回していたら
+				{
+					SetIsUsed_P2(0, false); // 変身を回復
+				}
+				else if (!flag[0] && flag[1]) // 変身を一回していたら
+				{
+					SetIsUsed_P2(1, false); // 変身を回復
+				}
+				else if (flag[0] && flag[1]) // 二回変身していたら
+				{
+					int r = rand() % 2;
+					SetIsUsed_P2(r, false); // どちらかの変身を回復
+				}
+
+				m_isDead = true; // 消滅するだけ
+			}
+		}
+	}
+}
+
+// 全アイテムを削除する関数
+void ClearAllItems()
+{
+	extern std::vector<GameObject*> g_gameObjects;
+
+	for (auto& obj : g_gameObjects)
+	{
+		// オブジェクトがnullでなく、タグが"Item"であれば
+		if (obj != nullptr && obj->m_tag == "Item")
+		{
+			// 削除フラグを立てる
+			// 次のフレームの更新処理等で安全に削除・メモリ解放が行われます。
+			obj->m_isDead = true;
 		}
 	}
 }

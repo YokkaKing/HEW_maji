@@ -13,6 +13,7 @@
 #include"sprite.h"
 #include"Game.h"
 #include"keyboard.h"
+#include"Controller.h"
 #include"field.h"
 #include"Effect.h"
 #include"Audio.h"
@@ -22,7 +23,7 @@
 #include"managerCollider.h"
 #include"terrain.h"
 #include"Player2.h"
-#include"Evolution.h"
+#include"Transform.h"
 #include"Viewport.h"
 #include"direct3d.h"
 #include "HpBar.h"
@@ -35,6 +36,8 @@
 #include "transformManager.h"
 #include"Stage.h"
 #include"Item.h"
+#include "Select_Transform_Ui.h"
+#include "countdown.h"
 //================================================================
 //	グローバル変数
 //================================================================
@@ -45,7 +48,10 @@ static	int		g_BgmID = NULL;	//サウンド管理ID
 static int frame;
 static TransformManager g_transformMngr;
 static int g_selectionPhase = 0;
+static bool  g_roundEndWait = false;
+static float g_roundEndWaitTimer = 0.0f;
 ITEM_SPONER g_sponer;
+extern Controller g_Controller[2];
 
 STAGE g_stage;
 
@@ -56,10 +62,8 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, const
 	//Controller_Initialize();
 	Field_Initialize(pDevice, pContext); // フィールドの初期化
 	g_stage.Initialize(pDevice, pContext);
-
+	g_sponer.ResetItem();
 	g_sponer.Initialize();
-
-	EvolutionInitialize(select.player1, select.player2);
 
 	PlayerInitialize(pDevice, pContext, select.player1); //
 	Player2Initialize(pDevice, pContext, select.player2);
@@ -72,7 +76,7 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, const
 
 	Camera_Initialize();	//カメラ初期化
 	Camera2_Initialize();	//カメラ初期化
-
+	SelectTransformUi_Initialize(pDevice, pContext);
 	g_transformMngr.Initialize(pDevice, pContext); //変身先選択の初期化
 	g_selectionPhase = 0;
 	g_transformMngr.StartSelection(WeaponTerrain::NONE, WeaponTerrain::NONE);
@@ -84,7 +88,7 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, const
 	Number_Initialize(pDevice, pContext);
 	Hp_Initialize(pDevice, pContext);
 	Hp2_Initialize(pDevice, pContext);
-
+	CountdownUI_Initialize(pDevice);
 	//========================
 	//ビューポートの初期化
 	//Viewport_Initialize(Direct3D_GetWindowHandle());
@@ -109,30 +113,29 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, const
 	para.y /= len;
 	para.z /= len;
 	Light.SetDirection(para);//光の方向（正規化済）
+	g_roundEndWait = false;
+	g_roundEndWaitTimer = 0.0f;
 }
 
 void Game_Finalize()
 {
 	Field_Finalize();	// フィールドの終了処理
 	TerrainFinalize();
-
 	g_sponer.Finalize();
-
 	PlayerFinalize();	// ボールの終了処理
 	Player2Finalize();
 	Camera_Finalize();	//カメラ終了処理
 	Camera2_Finalize();	//カメラ終了処理
-
-
-
+	g_sponer.ResetItem();
 	//=======UI===========
-	Hpbar_Finalize();
-	HpBar2_Finalize();
+
 	Timer_Finalize();
 	Number_Finalize();
 	Hp_Finalize();
 	Hp2_Finalize();
 	g_transformMngr.Finalize();
+	SelectTransformUi_Finalize();
+	CountdownUI_Finalize();
 	//=====================
 	ManagerCollider::ClearCollider();
 	//UnloadAudio(g_BgmID);//サウンドの解放
@@ -140,19 +143,28 @@ void Game_Finalize()
 
 void Game_Update()
 {
+	const float dt = 1.0f / 60.0f;
+	CountdownUI_Update(dt);
 	//少しの秒がアップデート時間を上げる
 	if (frame > 0) 
 	{
 		frame -= 1;
 	}
+
+	TerrainUpdate();
+
 	if (g_transformMngr.IsActive()&&frame <= 0)
 	{
-		g_transformMngr.Update(1.0f / 60.0f);
-
+		g_transformMngr.Update(dt);
+		SelectTransformUi_Update();
+		if (g_selectionPhase == 0)
+		{
+			SetTransformUi_IsUsed(true, g_selectionPhase);
+		}
 		if (!g_transformMngr.IsActive())
 		{
 			inGameWTselect selectionData = g_transformMngr.GetPlayerSelectionWT();
-
+			
 			if (g_selectionPhase == 0)
 			{//１回目の変身先選択完了時
 				//P1,P2のスロット0に保存
@@ -161,7 +173,9 @@ void Game_Update()
 
 				//変身先選択(2回目)に移る
 				g_selectionPhase = 1;
-
+				SetTransformUi_SelectNum(g_selectionPhase);
+				SetTransformUi_IsUsed(false, g_selectionPhase - 1);
+				SetTransformUi_IsUsed(true, g_selectionPhase);
 				g_transformMngr.StartSelection(selectionData.player1, selectionData.player2);
 			}
 			else if (g_selectionPhase == 1)
@@ -170,15 +184,32 @@ void Game_Update()
 				g_Player.SetReservedWT(1, selectionData.player1);
 				g_Player2.SetReservedWT(1, selectionData.player2);
 
+				TransformInitialize(
+					g_Player.GetReservedWT(0),  // P1 変身先A
+					g_Player.GetReservedWT(1),  // P1 変身先B
+					g_Player2.GetReservedWT(0), // P2 変身先A
+					g_Player2.GetReservedWT(1)  // P2 変身先B
+				);
 				//変身先選択を終了してゲームへ移行
 				g_selectionPhase = 2;
+				SetTransformUi_IsUsed(false, g_selectionPhase);
+				SetTransformUi_IsUsed(false, g_selectionPhase-1);
+				CountdownUI_Start(4.0f);
 			}
 		}
-		
+		Camera_Update();
+		Camera2_Update();
 		return;
 	}
-	else
+	if (CountdownUI_IsBlockingGameplay())
 	{
+		Camera_Update();
+		Camera2_Update();
+		return;
+	}
+
+		
+		
 		//更新処理
 		for (auto obj : g_gameObjects)
 		{
@@ -187,8 +218,6 @@ void Game_Update()
 		PlayerUpdate();
 		Player2Update();
 		Field_Update();
-		TerrainUpdate();
-
 		g_sponer.Update();
 
 		//=======UI===========
@@ -197,7 +226,9 @@ void Game_Update()
 		Timer_Update();
 		Number_Update();
 		Hp_Update();
+	
 		Hp2_Update();
+
 		//=====================
 
 		//======当たり判定======
@@ -228,15 +259,18 @@ void Game_Update()
 		//キー入力チェック
 		//スタートボタンが押されたらシーンを切り替え
 		//フェード処理中はキーを受け付けない
-		if (Keyboard_IsKeyDownTrigger(KK_ENTER) && (GetFadeState() == FADE_NONE))
+		if ((Keyboard_IsKeyDownTrigger(KK_ENTER))&& (GetFadeState() == FADE_NONE))
 		{
 			//フェードアウトさせてシーンを切り替える
 			XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
 			SetFade(40.0f, color, FADE_OUT, SCENE_RESULT);
 		}
-	}
-	Camera_Update();	//カメラ更新処理
-	Camera2_Update();   //カメラ2更新処理
+	
+
+
+		Camera_Update();
+		Camera2_Update();
+
 }
 
 void Game_Draw_Player1()
@@ -276,27 +310,41 @@ void Game_Draw_Player1()
 	Shader_SetLight(Light.Light);	//ライト構造体をシェーダーへセット
 	SetDepthTest(FALSE);
 	//===UI描画========
+	if (!g_transformMngr.IsActive()&&!CountdownUI_IsBlockingGameplay())
+	{
+		Hp_Draw();
+	}
+
 	if (g_transformMngr.IsActive())
 	{
 		g_transformMngr.Draw(0);
 	}
+	SelectTransformUi_Draw();
 
-	//Hpbar_Draw(); //<--HpBar描画
-	//Timer_Draw();
-	//Number_Draw();
+	if (CountdownUI_IsBlockingGameplay())
+	{
+		CountdownUI_DrawStart();
+	}
+	else
+	{
+		// 終了前の5..1（無音で表示したいならDrawEnd）
+		float remain = Hp_GetTime();
+		if (remain > 0.0f && remain <= 5.999f)
+		{
+			CountdownUI_DrawEnd(remain);
+		}
+	}
 
-	Hp_Draw();
 
-	//================
-	Light.SetEnable(TRUE);			//ライティングON
-	Shader_SetLight(Light.Light);	//ライト構造体をシェーダーへセット
-	SetDepthTest(TRUE);
-	//============lightをまたtrueにして、camera2に影響がないように================
 }
 void Game_Draw_Player2()
 {
 	//g_pContext->RSSetViewports(1, &g_RightViewPort);
-
+		//================
+	Light.SetEnable(TRUE);			//ライティングON
+	Shader_SetLight(Light.Light);	//ライト構造体をシェーダーへセット
+	SetDepthTest(TRUE);
+	//============lightをまたtrueにして、camera2に影響がないように================
 	Camera2_Draw();
 	Shader_SetMatrix(GetViewMatrix2() * GetProjectionMatrix2());
 	//Field_Draw();
@@ -315,13 +363,31 @@ void Game_Draw_Player2()
 	Shader_SetLight(Light.Light);	//ライト構造体をシェーダーへセット
 	SetDepthTest(FALSE);
 
+	if (!g_transformMngr.IsActive() && !CountdownUI_IsBlockingGameplay())
+	{
+		Hp2_Draw();
+	}
+
+
 	if (g_transformMngr.IsActive())
 	{
 		g_transformMngr.Draw(1);
 	}
-
-	Hp2_Draw();
-
+	SelectTransformUi_Draw();
+	
+	if (CountdownUI_IsBlockingGameplay())
+	{
+		CountdownUI_DrawStart();
+	}
+	else
+	{
+		// 終了前の5..1（無音で表示したいならDrawEnd）
+		float remain = Hp_GetTime();
+		if (remain > 0.0f && remain <= 5.999f)
+		{
+			CountdownUI_DrawEnd(remain);
+		}
+	}
 	//Timer_Draw();
 	//Number_Draw();
 	//Hp2_Draw();
@@ -330,12 +396,50 @@ void Game_Draw_Player2()
 int Game_GetRoundResult()
 {
 	// プレイヤーの死亡判定関数をここで使用
+	// プレイヤーの死亡判定で勝敗を判別
 	bool p1Dead = g_Player.isDead();
 	bool p2Dead = g_Player2.isDead();
 
 	if (p1Dead && p2Dead) return 3; // 引き分け（同時死亡）
 	if (p2Dead) return 1;           // P1の勝ち
 	if (p1Dead) return 2;           // P2の勝ち
+
+	// 時間切れ判定の勝敗判別も追加 (0秒になった瞬間に終わるように) 
+	if (Hp_GetTime() <= 1.0f)
+	{//時間切れ時、残りHPで勝敗を判定
+		float P1_hp = Player_GetHp();
+		float P2_hp = Player2_GetHp();
+		PlayAudio(g_roundEnd, false);
+
+		if (P1_hp > P2_hp)
+		{
+			XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
+			SetFade(40.0f, color, FADE_OUT, SCENE_GAME);
+			P1_hp = Player_GetMaxHp();
+			P2_hp = Player2_GetMaxHp();
+
+			Hp_SetTime(60);
+			return 1; //P1の判定勝ち
+		}
+		if (P2_hp > P1_hp)
+		{
+			XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
+			SetFade(40.0f, color, FADE_OUT, SCENE_GAME);
+			P1_hp = Player_GetMaxHp();
+			P2_hp = Player2_GetMaxHp();
+			Hp_SetTime(60);
+			return 2; //P2の判定勝ち
+		}
+		if (P1_hp == P2_hp)                    
+		{
+			XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
+			SetFade(40.0f, color, FADE_OUT, SCENE_GAME);
+			P1_hp = Player_GetMaxHp();
+			P2_hp = Player2_GetMaxHp();
+			Hp_SetTime(60);
+			return 3; //完全な引き分け
+		}
+	}
 
 	return 0; // 戦闘継続中
 }
@@ -347,6 +451,7 @@ void Game_ResetRound()
 	g_Player2.RoundReset(XMFLOAT3(2.0f, 0.5f, 2.0f));
 
 	g_selectionPhase = 0;
-	// 変身選択マネージャだけ再開（Initializeはしない）
-	g_transformMngr.StartSelection(WeaponTerrain::NONE, WeaponTerrain::NONE);
+	frame = 10;
+	//ここで StartSelection しない（フェード中に変身UIが一瞬出る原因になる）
+	//g_transformMngr.StartSelection(WeaponTerrain::NONE, WeaponTerrain::NONE);
 }

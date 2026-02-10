@@ -1,18 +1,18 @@
 /*
-* ƒtƒ@ƒCƒ‹–¼	terrain.cpp
-* ƒ^ƒCƒgƒ‹	’nŒ`
-* ì¬Ò		‹v•Û–ØŠ²‘¾
-* ì¬“ú		11Œ25“ú
-* XV“ú		12Œ02“ú
+* ãƒ•ã‚¡ã‚¤ãƒ«å	terrain.cpp
+* ã‚¿ã‚¤ãƒˆãƒ«	åœ°å½¢
+* ä½œæˆè€…		ä¹…ä¿æœ¨å¹¹å¤ª
+* ä½œæˆæ—¥		11æœˆ25æ—¥
+* æ›´æ–°æ—¥		12æœˆ02æ—¥
 */
 
 //================================================================
-//	ƒ}ƒNƒ’è‹`
+//	ãƒã‚¯ãƒ­å®šç¾©
 //================================================================
 #define TERRAIN_SIZE (0.25f)
 
 //================================================================
-//	ƒCƒ“ƒNƒ‹[ƒh
+//	ã‚¤ãƒ³ã‚¯ãƒ«ãƒ¼ãƒ‰
 //================================================================
 #include"terrain.h"
 #include"keyboard.h"
@@ -23,12 +23,13 @@
 #include"Camera.h"
 #include"Player.h"
 #include"Player2.h"
+#include"Transform.h"
 #include<string>
 
 //================================================================
-//	ƒOƒ[ƒoƒ‹•Ï”
+//	ã‚°ãƒ­ãƒ¼ãƒãƒ«å¤‰æ•°
 //================================================================
-// ’nŒ`ƒIƒuƒWƒFƒNƒg
+// åœ°å½¢ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆ
 TERRAIN g_Terrain;
 
 static ID3D11Device* g_pDevice;
@@ -36,17 +37,15 @@ static ID3D11DeviceContext* g_pContext;
 
 MODEL* blockModel = nullptr;
 
-WeaponTerrain g_WT[2]; // ‚Ç‚Ì‘g‚İ‡‚í‚¹‚ğ‘I‚ñ‚¾‚©
-
 //================================================================
-//	ˆê•¶š0.25—§–@ƒ[ƒgƒ‹‚Æ‚·‚é
-//	n -> ‰½‚à‚È‚µ
-//	a -> “–‚½‚è”»’è
+//	ä¸€æ–‡å­—0.25ç«‹æ³•ãƒ¡ãƒ¼ãƒˆãƒ«ã¨ã™ã‚‹
+//	n -> ä½•ã‚‚ãªã—
+//	a -> å½“ãŸã‚Šåˆ¤å®š
 //================================================================
-// ’nŒ`::‹u ‚ÌÀ•Wƒf[ƒ^
+// åœ°å½¢::ä¸˜ ã®åº§æ¨™ãƒ‡ãƒ¼ã‚¿
 const std::vector<std::vector<std::vector<std::string>>> Hill =
 {
-	{ // Y = 0 // Z->+ // X«+
+	{ // Y = 0 // Z->+ // Xâ†“+
 		{"anananananan"},
 		{"nnnnnnnnnnna"},
 		{"annnnnnnnnnn"},
@@ -133,14 +132,14 @@ const std::vector<std::vector<std::vector<std::string>>> Hill =
 };
 
 //================================================================
-//	“¯‚¶•¶š‚Íâ‘Î‚É4•¶š“ü—Í‚·‚é‚±‚Æ
-//	Še•¶š‚ğ’¸“_‚Æ‚µA‚»‚ê‚¼‚ê‚ğŒ‹‚ñ‚¾lŠpŒ`‚ğ“–‚½‚è”»’è‚Æ‚·‚é
-//	n -> ‰½‚à‚È‚µ
-//	•¶š‚Í•ª‚©‚è‚â‚·‚¢‚â‚Â‚Åa,b,c‚Æ‚©
+//	åŒã˜æ–‡å­—ã¯çµ¶å¯¾ã«4æ–‡å­—å…¥åŠ›ã™ã‚‹ã“ã¨
+//	å„æ–‡å­—ã‚’é ‚ç‚¹ã¨ã—ã€ãã‚Œãã‚Œã‚’çµã‚“ã å››è§’å½¢ã‚’å½“ãŸã‚Šåˆ¤å®šã¨ã™ã‚‹
+//	n -> ä½•ã‚‚ãªã—
+//	æ–‡å­—ã¯åˆ†ã‹ã‚Šã‚„ã™ã„ã‚„ã¤ã§a,b,cã¨ã‹
 //================================================================
 const std::vector<std::vector<std::vector<std::string>>> Hills =
-{// -> ƒvƒŒƒCƒ„[‚Ì‰Šú‹“_
-	// 16ŒÂ
+{// -> ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®åˆæœŸè¦–ç‚¹
+	// 16å€‹
 	{
 		{"nnnnnnnnnnnnnnnnnnnn"},
 		{"nnnnnnnnnnnnnnnnnnnn"},
@@ -495,7 +494,7 @@ const std::vector<std::vector<std::vector<std::string>>> Hills =
 	},
 };
 
-// •Ç‚Ì“–‚½‚è”»’è
+// å£ã®å½“ãŸã‚Šåˆ¤å®š
 const std::vector<std::vector<std::vector<std::string>>> Walls =
 {
 	{
@@ -536,7 +535,7 @@ const std::vector<std::vector<std::vector<std::string>>> Walls =
 	},
 };
 
-// –Ø‚Ì“–‚½‚è”»’è
+// æœ¨ã®å½“ãŸã‚Šåˆ¤å®š
 const std::vector<std::vector<std::vector<std::string>>> Trees =
 {
 	{
@@ -580,9 +579,9 @@ const std::vector<std::vector<std::vector<std::string>>> Trees =
 void TerrainInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, WeaponTerrain p1Set, WeaponTerrain p2Set)
 {
 	//============================================
-	//	V‚µ‚¢ˆø”‚Ìp1,2Set‚ÍƒvƒŒƒCƒ„[‚ª‘I‘ğ‚µ‚½ 
-	//	•Ší‚Æ’nŒ`‚É‰‚¶‚ÄğŒ®‚Åƒ‚ƒfƒ‹‚ğƒ[ƒh‚·‚é
-	//	‚½‚ß‚Ìƒf[ƒ^•Û—pˆø”B
+	//	æ–°ã—ã„å¼•æ•°ã®p1,2Setã¯ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ãŒé¸æŠã—ãŸ 
+	//	æ­¦å™¨ã¨åœ°å½¢ã«å¿œã˜ã¦æ¡ä»¶å¼ã§ãƒ¢ãƒ‡ãƒ«ã‚’ãƒ­ãƒ¼ãƒ‰ã™ã‚‹
+	//	ãŸã‚ã®ãƒ‡ãƒ¼ã‚¿ä¿æŒç”¨å¼•æ•°ã€‚
 	//============================================
 
 	g_pDevice = pDevice;
@@ -599,8 +598,8 @@ void TerrainInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 	g_Terrain.m_terrainRotation[0] = { 0.0f,0.0f,0.0f };
 	g_Terrain.m_terrainRotation[1] = { 0.0f,0.0f,0.0f };
 
-	g_Terrain.m_terrainScaling[0] = { 10.0f, 6.5f, 10.0f };
-	g_Terrain.m_terrainScaling[1] = { 5.0f, 5.0f, 5.0f };
+	g_Terrain.m_terrainScaling[0] = { 5.0f, 5.0f, 5.0f };
+	g_Terrain.m_terrainScaling[1] = { 10.0f, 6.5f, 10.0f };
 	g_Terrain.m_terrainScaling[2] = { 5.0f, 5.0f, 5.0f };
 	g_Terrain.m_terrainScaling[3] = { 10.0f, 6.5f, 10.0f };
 
@@ -610,27 +609,24 @@ void TerrainInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 	g_Terrain.m_coolTime[0] = 0.0f;
 	g_Terrain.m_coolTime[1] = 0.0f;
 
-	g_WT[0] = p1Set;
-	g_WT[1] = p2Set;
-
 	//g_Terrain.PixelObjects(Hill, TERRAIN_TYPE::HILL, g_Terrain.m_motherPosition);
 
-	// ‹u‚Ì“–‚½‚è”»’è
+	// ä¸˜ã®å½“ãŸã‚Šåˆ¤å®š
 	//g_Terrain.SimpleObjects(Hills, { 0.25f, 0.25f, 0.25f }, TERRAIN_TYPE::HILL, g_Terrain.m_motherPosition[0]);
 	//g_Terrain.SimpleObjects(Walls, { 1.0f, 1.0f, 1.0f }, TERRAIN_TYPE::WALL, g_Terrain.m_motherPosition[1]);
-	//hal::dout << "À•W : (" << g_Terrain.slopes[0]->m_position.x << "," << g_Terrain.slopes[0]->m_position.y << "," << g_Terrain.slopes[0]->m_position.z << ")\n";
+	//hal::dout << "åº§æ¨™ : (" << g_Terrain.slopes[0]->m_position.x << "," << g_Terrain.slopes[0]->m_position.y << "," << g_Terrain.slopes[0]->m_position.z << ")\n";
 
 	XMFLOAT3 initPosWall = g_Terrain.m_motherPosition[1];
 	XMFLOAT3 initPosHill = g_Terrain.m_motherPosition[0];
 
 	//======================================================
-	//	ŠeƒvƒŒƒCƒ„[‚ÉŒÅ’è‚³‚ê‚½À•W‚Å’nŒ`‚ğƒZƒbƒg‚µ‚Ä‚¢‚éŒ»ó
-	//	—é–Ø‚ª‚Å‚«‚é‚Ì‚Í‚±‚±‚Ü‚Å‚Å‚·B
-	//	‚ ‚Æ‚Í’nŒ`ƒVƒXƒeƒ€‚ğì‚Á‚½‹v•Û–Ø‚É”C‚¹‚Ü‚·B
-	//	‰º‚ÌƒXƒCƒbƒ`•¶‚Í‚»‚ê‚Á‚Û‚¢‚Ì‚ÅŠˆ—p‚µ‚Ä‚à‚¢‚¢‚æ
+	//	å„ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã«å›ºå®šã•ã‚ŒãŸåº§æ¨™ã§åœ°å½¢ã‚’ã‚»ãƒƒãƒˆã—ã¦ã„ã‚‹ç¾çŠ¶
+	//	éˆ´æœ¨ãŒã§ãã‚‹ã®ã¯ã“ã“ã¾ã§ã§ã™ã€‚
+	//	ã‚ã¨ã¯åœ°å½¢ã‚·ã‚¹ãƒ†ãƒ ã‚’ä½œã£ãŸä¹…ä¿æœ¨ã«ä»»ã›ã¾ã™ã€‚
+	//	ä¸‹ã®ã‚¹ã‚¤ãƒƒãƒæ–‡ã¯ãã‚Œã£ã½ã„ã®ã§æ´»ç”¨ã—ã¦ã‚‚ã„ã„ã‚ˆ
 	//======================================================
 
-	//‘I‘ğ‚³‚ê‚½•ŠíE’nŒ`ƒf[ƒ^‚É‰‚¶‚Ä’nŒ`‚ğ¶¬
+	//é¸æŠã•ã‚ŒãŸæ­¦å™¨ãƒ»åœ°å½¢ãƒ‡ãƒ¼ã‚¿ã«å¿œã˜ã¦åœ°å½¢ã‚’ç”Ÿæˆ
 	switch (p1Set)
 	{
 	case WeaponTerrain::SWORD_WALL:
@@ -649,13 +645,13 @@ void TerrainInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 		g_Terrain.SimpleObjects(Walls, { 1.0f, 1.0f, 1.0f }, TERRAIN_TYPE::HILL, g_Terrain.m_motherPosition[1], 1);
 		break;
 	case WeaponTerrain::SHURIKEN_:
-
+		g_Terrain.SimpleObjects(Walls, { 1.0f, 1.0f, 1.0f }, TERRAIN_TYPE::WALL, g_Terrain.m_motherPosition[0], 0);
 		break;
 
 	default:
 		break;
 	}
-	//ƒvƒŒƒCƒ„[2
+	//ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼2
 	switch (p2Set)
 	{
 	case WeaponTerrain::SWORD_WALL:
@@ -674,9 +670,8 @@ void TerrainInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 		g_Terrain.SimpleObjects(Walls, { 1.0f, 1.0f, 1.0f }, TERRAIN_TYPE::HILL, g_Terrain.m_motherPosition[1], 1);
 		break;
 	case WeaponTerrain::SHURIKEN_:
-
+		g_Terrain.SimpleObjects(Walls, { 1.0f, 1.0f, 1.0f }, TERRAIN_TYPE::WALL, g_Terrain.m_motherPosition[1], 1);
 		break;
-
 	default:
 		break;
 	}
@@ -705,74 +700,76 @@ void TerrainUpdate()
 {
 	if (GetChangeP1())
 	{
-		// ƒN[ƒ‹ƒ^ƒCƒ€‚ª‚ ‚ê‚Î”­“®‚Å‚«‚È‚¢
+		TerrainSet(GetSetWTP1(), FALSE);
+		// ã‚¯ãƒ¼ãƒ«ã‚¿ã‚¤ãƒ ãŒã‚ã‚Œã°ç™ºå‹•ã§ããªã„
 		if (g_Terrain.m_coolTime[0] <= 0)
 		{
-			g_Terrain.m_isChange[0] = true; // 1P‚Ì•Ïg‚ğŠm”F
-			g_Terrain.m_coolTime[0] = 60.0f;
+			g_Terrain.m_isChange[0] = true; // 1Pã®å¤‰èº«ã‚’ç¢ºèª
+			g_Terrain.m_coolTime[0] = 20.0f;
 		}
 	}
 
 	if (GetChangeP2())
 	{
-		// ƒN[ƒ‹ƒ^ƒCƒ€‚ª‚ ‚ê‚Î”­“®‚Å‚«‚È‚¢
+		TerrainSet(GetSetWTP2(), TRUE);
+		// ã‚¯ãƒ¼ãƒ«ã‚¿ã‚¤ãƒ ãŒã‚ã‚Œã°ç™ºå‹•ã§ããªã„
 		if (g_Terrain.m_coolTime[1] <= 0)
 		{
-			g_Terrain.m_isChange[1] = true; // 2P‚Ì•Ïg‚ğŠm”F
-			g_Terrain.m_coolTime[1] = 60.0f;
+			g_Terrain.m_isChange[1] = true; // 2Pã®å¤‰èº«ã‚’ç¢ºèª
+			g_Terrain.m_coolTime[1] = 20.0f;
 		}
 	}
 
-	// •Ïg‚µ‚½‚ç-‚·‚é
+	// å¤‰èº«ã—ãŸã‚‰-ã™ã‚‹
 	if (g_Terrain.m_isChange[0])
 	{
-		// ƒN[ƒ‹ƒ^ƒCƒ€‚ ‚Á‚½‚ç-‚·‚é
+		// ã‚¯ãƒ¼ãƒ«ã‚¿ã‚¤ãƒ ã‚ã£ãŸã‚‰-ã™ã‚‹
 		if (g_Terrain.m_coolTime[0] > 0.0f)
 		{
-			g_Terrain.m_coolTime[0] -= 1.0f / 10.0f;
+			g_Terrain.m_coolTime[0] -= 1.0f / 60.0f;
 		}
-		else // –³‚©‚Á‚½‚ç
+		else // ç„¡ã‹ã£ãŸã‚‰
 		{
-			g_Terrain.m_coolTime[0] = 0.0f;	// ƒN[ƒ‹ƒ^ƒCƒ€‚ğ‚È‚­‚·
-			g_Terrain.m_isChange[0] = false; // •Ïg‚ğ‰ğ‚­
+			g_Terrain.m_coolTime[0] = 0.0f;	// ã‚¯ãƒ¼ãƒ«ã‚¿ã‚¤ãƒ ã‚’ãªãã™
+			g_Terrain.m_isChange[0] = false; // å¤‰èº«ã‚’è§£ã
 		}
 	}
-	// •Ïg‚µ‚½‚ç-‚·‚é
+	// å¤‰èº«ã—ãŸã‚‰-ã™ã‚‹
 	if (g_Terrain.m_isChange[1])
 	{
-		// ƒN[ƒ‹ƒ^ƒCƒ€‚ ‚Á‚½‚ç-‚·‚é
+		// ã‚¯ãƒ¼ãƒ«ã‚¿ã‚¤ãƒ ã‚ã£ãŸã‚‰-ã™ã‚‹
 		if (g_Terrain.m_coolTime[1] > 0.0f)
 		{
-			g_Terrain.m_coolTime[1] -= 1.0f / 10.0f;
+			g_Terrain.m_coolTime[1] -= 1.0f / 60.0f;
 		}
-		else // –³‚©‚Á‚½‚ç
+		else // ç„¡ã‹ã£ãŸã‚‰
 		{
-			g_Terrain.m_coolTime[1] = 0.0f;	// ƒN[ƒ‹ƒ^ƒCƒ€‚ğ‚È‚­‚·
-			g_Terrain.m_isChange[1] = false; // •Ïg‚ğ‰ğ‚­
+			g_Terrain.m_coolTime[1] = 0.0f;	// ã‚¯ãƒ¼ãƒ«ã‚¿ã‚¤ãƒ ã‚’ãªãã™
+			g_Terrain.m_isChange[1] = false; // å¤‰èº«ã‚’è§£ã
 		}
 	}
 
-	// •Ïg‚µ‚Ä‚È‚¯‚ê‚Î’Ç]P1
+	// å¤‰èº«ã—ã¦ãªã‘ã‚Œã°è¿½å¾“P1
 	if (!g_Terrain.m_isChange[0])
 	{
 		g_Terrain.m_motherPosition[0] = GetPlayerPosition();
-		g_Terrain.m_motherPosition[0].y -= 5.0f; // ‰º‚Éİ’è
+		g_Terrain.m_motherPosition[0].y -= 5.0f; // ä¸‹ã«è¨­å®š
 		switch (GetSetWTP1())
 		{
 		case WeaponTerrain::SWORD_WALL:
-			g_Terrain.UpdateObject(g_Terrain.walls[0], g_Terrain.m_motherPosition[0], FALSE); // P1‚Ì’nŒ`‚Ì“–‚½‚è”»’è
+			g_Terrain.UpdateObject(g_Terrain.walls[0], g_Terrain.m_motherPosition[0], FALSE); // P1ã®åœ°å½¢ã®å½“ãŸã‚Šåˆ¤å®š
 			break;
 		case WeaponTerrain::SPEAR_HILL:
-			g_Terrain.UpdateObject(g_Terrain.hills[0], g_Terrain.m_motherPosition[0], FALSE); // P1‚Ì’nŒ`‚Ì“–‚½‚è”»’è
+			g_Terrain.UpdateObject(g_Terrain.hills[0], g_Terrain.m_motherPosition[0], FALSE); // P1ã®åœ°å½¢ã®å½“ãŸã‚Šåˆ¤å®š
 			break;
 		case WeaponTerrain::BOW_HILL:
-			g_Terrain.UpdateObject(g_Terrain.hills[0], g_Terrain.m_motherPosition[0], FALSE); // P1‚Ì’nŒ`‚Ì“–‚½‚è”»’è
+			g_Terrain.UpdateObject(g_Terrain.hills[0], g_Terrain.m_motherPosition[0], FALSE); // P1ã®åœ°å½¢ã®å½“ãŸã‚Šåˆ¤å®š
 			break;
 		case WeaponTerrain::HAMMER_:
-			g_Terrain.UpdateObject(g_Terrain.walls[0], g_Terrain.m_motherPosition[1], TRUE); // P1‚Ì’nŒ`‚Ì“–‚½‚è”»’è
+			g_Terrain.UpdateObject(g_Terrain.walls[0], g_Terrain.m_motherPosition[1], TRUE); // P1ã®åœ°å½¢ã®å½“ãŸã‚Šåˆ¤å®š
 			break;
 		case WeaponTerrain::SHURIKEN_:
-
+			g_Terrain.UpdateObject(g_Terrain.walls[0], g_Terrain.m_motherPosition[0], FALSE); // P1ã®åœ°å½¢ã®å½“ãŸã‚Šåˆ¤å®š
 			break;
 		}
 	}
@@ -780,7 +777,7 @@ void TerrainUpdate()
 	{
 		float posY = 0.0f;
 
-		switch (g_WT[0])
+		switch (GetSetWTP1())
 		{
 		case WeaponTerrain::SWORD_WALL:
 			posY = 0.7f;
@@ -795,57 +792,58 @@ void TerrainUpdate()
 			posY = 0.7f;
 			break;
 		case WeaponTerrain::SHURIKEN_:
+			posY = 0.7f;
 			break;
 		default:
 			break;
 		}
 
-		// •Ïg‚µ‚½‚çã¸
+		// å¤‰èº«ã—ãŸã‚‰ä¸Šæ˜‡
 		if (g_Terrain.m_motherPosition[0].y < posY)
 		{
 			g_Terrain.m_motherPosition[0].y += 0.1f;
 			switch (GetSetWTP1())
 			{
 			case WeaponTerrain::SWORD_WALL:
-				g_Terrain.UpdateObject(g_Terrain.walls[0], g_Terrain.m_motherPosition[0], TRUE); // P1‚Ì’nŒ`‚Ì“–‚½‚è”»’è
+				g_Terrain.UpdateObject(g_Terrain.walls[0], g_Terrain.m_motherPosition[0], TRUE); // P1ã®åœ°å½¢ã®å½“ãŸã‚Šåˆ¤å®š
 				break;
 			case WeaponTerrain::SPEAR_HILL:
-				g_Terrain.UpdateObject(g_Terrain.hills[0], g_Terrain.m_motherPosition[0], TRUE); // P1‚Ì’nŒ`‚Ì“–‚½‚è”»’è
+				g_Terrain.UpdateObject(g_Terrain.hills[0], g_Terrain.m_motherPosition[0], TRUE); // P1ã®åœ°å½¢ã®å½“ãŸã‚Šåˆ¤å®š
 				break;
 			case WeaponTerrain::BOW_HILL:
-				g_Terrain.UpdateObject(g_Terrain.hills[0], g_Terrain.m_motherPosition[0], TRUE); // P1‚Ì’nŒ`‚Ì“–‚½‚è”»’è
+				g_Terrain.UpdateObject(g_Terrain.hills[0], g_Terrain.m_motherPosition[0], TRUE); // P1ã®åœ°å½¢ã®å½“ãŸã‚Šåˆ¤å®š
 				break;
 			case WeaponTerrain::HAMMER_:
-				g_Terrain.UpdateObject(g_Terrain.walls[0], g_Terrain.m_motherPosition[1], TRUE); // P1‚Ì’nŒ`‚Ì“–‚½‚è”»’è
+				g_Terrain.UpdateObject(g_Terrain.walls[0], g_Terrain.m_motherPosition[1], TRUE); // P1ã®åœ°å½¢ã®å½“ãŸã‚Šåˆ¤å®š
 				break;
 			case WeaponTerrain::SHURIKEN_:
-
+				g_Terrain.UpdateObject(g_Terrain.walls[0], g_Terrain.m_motherPosition[0], TRUE); // P1ã®åœ°å½¢ã®å½“ãŸã‚Šåˆ¤å®š
 				break;
 			}
 		}
 	}
 
-	// •Ïg‚µ‚Ä‚È‚¯‚ê‚Î’Ç]P2
+	// å¤‰èº«ã—ã¦ãªã‘ã‚Œã°è¿½å¾“P2
 	if (!g_Terrain.m_isChange[1])
 	{
 		g_Terrain.m_motherPosition[1] = GetPlayer2Position();
-		g_Terrain.m_motherPosition[1].y -= 5.0f; // ‰º‚Éİ’è
+		g_Terrain.m_motherPosition[1].y -= 5.0f; // ä¸‹ã«è¨­å®š
 		switch (GetSetWTP2())
 		{
 		case WeaponTerrain::SWORD_WALL:
-			g_Terrain.UpdateObject(g_Terrain.walls[1], g_Terrain.m_motherPosition[1], FALSE); // P1‚Ì’nŒ`‚Ì“–‚½‚è”»’è
+			g_Terrain.UpdateObject(g_Terrain.walls[1], g_Terrain.m_motherPosition[1], FALSE); // P1ã®åœ°å½¢ã®å½“ãŸã‚Šåˆ¤å®š
 			break;
 		case WeaponTerrain::SPEAR_HILL:
-			g_Terrain.UpdateObject(g_Terrain.hills[1], g_Terrain.m_motherPosition[1], FALSE); // P1‚Ì’nŒ`‚Ì“–‚½‚è”»’è
+			g_Terrain.UpdateObject(g_Terrain.hills[1], g_Terrain.m_motherPosition[1], FALSE); // P1ã®åœ°å½¢ã®å½“ãŸã‚Šåˆ¤å®š
 			break;
 		case WeaponTerrain::BOW_HILL:
-			g_Terrain.UpdateObject(g_Terrain.hills[1], g_Terrain.m_motherPosition[1], FALSE); // P1‚Ì’nŒ`‚Ì“–‚½‚è”»’è
+			g_Terrain.UpdateObject(g_Terrain.hills[1], g_Terrain.m_motherPosition[1], FALSE); // P1ã®åœ°å½¢ã®å½“ãŸã‚Šåˆ¤å®š
 			break;
 		case WeaponTerrain::HAMMER_:
-			g_Terrain.UpdateObject(g_Terrain.walls[1], g_Terrain.m_motherPosition[1], TRUE); // P1‚Ì’nŒ`‚Ì“–‚½‚è”»’è
+			g_Terrain.UpdateObject(g_Terrain.walls[1], g_Terrain.m_motherPosition[1], TRUE); // P1ã®åœ°å½¢ã®å½“ãŸã‚Šåˆ¤å®š
 			break;
 		case WeaponTerrain::SHURIKEN_:
-
+			g_Terrain.UpdateObject(g_Terrain.walls[1], g_Terrain.m_motherPosition[1], FALSE); // P1ã®åœ°å½¢ã®å½“ãŸã‚Šåˆ¤å®š
 			break;
 		}
 	}
@@ -853,7 +851,7 @@ void TerrainUpdate()
 	{
 		float posY = 0.0f;
 
-		switch (g_WT[1])
+		switch (GetSetWTP2())
 		{
 		case WeaponTerrain::SWORD_WALL:
 			posY = 0.7f;
@@ -868,31 +866,32 @@ void TerrainUpdate()
 			posY = 0.7f;
 			break;
 		case WeaponTerrain::SHURIKEN_:
+			posY = 0.7f;
 			break;
 		default:
 			break;
 		}
 
-		// •Ïg‚µ‚½‚çã¸
+		// å¤‰èº«ã—ãŸã‚‰ä¸Šæ˜‡
 		if (g_Terrain.m_motherPosition[1].y < posY)
 		{
 			g_Terrain.m_motherPosition[1].y += 0.1f;
 			switch (GetSetWTP2())
 			{
 			case WeaponTerrain::SWORD_WALL:
-				g_Terrain.UpdateObject(g_Terrain.walls[1], g_Terrain.m_motherPosition[1], TRUE); // P1‚Ì’nŒ`‚Ì“–‚½‚è”»’è
+				g_Terrain.UpdateObject(g_Terrain.walls[1], g_Terrain.m_motherPosition[1], TRUE); // P1ã®åœ°å½¢ã®å½“ãŸã‚Šåˆ¤å®š
 				break;
 			case WeaponTerrain::SPEAR_HILL:
-				g_Terrain.UpdateObject(g_Terrain.hills[1], g_Terrain.m_motherPosition[1], TRUE); // P1‚Ì’nŒ`‚Ì“–‚½‚è”»’è
+				g_Terrain.UpdateObject(g_Terrain.hills[1], g_Terrain.m_motherPosition[1], TRUE); // P1ã®åœ°å½¢ã®å½“ãŸã‚Šåˆ¤å®š
 				break;
 			case WeaponTerrain::BOW_HILL:
-				g_Terrain.UpdateObject(g_Terrain.hills[1], g_Terrain.m_motherPosition[1], TRUE); // P1‚Ì’nŒ`‚Ì“–‚½‚è”»’è
+				g_Terrain.UpdateObject(g_Terrain.hills[1], g_Terrain.m_motherPosition[1], TRUE); // P1ã®åœ°å½¢ã®å½“ãŸã‚Šåˆ¤å®š
 				break;
 			case WeaponTerrain::HAMMER_:
-				g_Terrain.UpdateObject(g_Terrain.walls[1], g_Terrain.m_motherPosition[1], TRUE); // P1‚Ì’nŒ`‚Ì“–‚½‚è”»’è
+				g_Terrain.UpdateObject(g_Terrain.walls[1], g_Terrain.m_motherPosition[1], TRUE); // P1ã®åœ°å½¢ã®å½“ãŸã‚Šåˆ¤å®š
 				break;
 			case WeaponTerrain::SHURIKEN_:
-
+				g_Terrain.UpdateObject(g_Terrain.walls[1], g_Terrain.m_motherPosition[1], TRUE); // P1ã®åœ°å½¢ã®å½“ãŸã‚Šåˆ¤å®š
 				break;
 			}
 		}
@@ -900,32 +899,33 @@ void TerrainUpdate()
 }
 void TerrainDraw()
 {
-	// 1P‚ª•Ïg‚µ‚Ä‚È‚¢‚Æ‚«‚Í•`‰æ‚µ‚È‚¢
+	// 1PãŒå¤‰èº«ã—ã¦ãªã„ã¨ãã¯æç”»ã—ãªã„
 	if (g_Terrain.m_isChange[0])
 	{
 		int no = 0;
 
-		switch (g_WT[0])
+		switch (GetSetWTP1())
 		{
 		case WeaponTerrain::SWORD_WALL:
-			no = 0;
-			break;
-		case WeaponTerrain::SPEAR_HILL:
 			no = 1;
 			break;
+		case WeaponTerrain::SPEAR_HILL:
+			no = 0;
+			break;
 		case WeaponTerrain::BOW_HILL:
-			no = 2;
+			no = 0;
 			break;
 		case WeaponTerrain::HAMMER_:
-			no = 3;
+			no = 1;
 			break;
 		case WeaponTerrain::SHURIKEN_:
+			no = 1;
 			break;
 		default:
 			break;
 		}
 
-		//ƒ[ƒ‹ƒhs—ñì¬
+		//ãƒ¯ãƒ¼ãƒ«ãƒ‰è¡Œåˆ—ä½œæˆ
 		XMMATRIX	scale = XMMatrixScaling(
 			g_Terrain.m_terrainScaling[no].x,
 			g_Terrain.m_terrainScaling[no].y,
@@ -940,10 +940,10 @@ void TerrainDraw()
 			g_Terrain.m_motherPosition[0].z);
 		XMMATRIX	world = scale * rotation * translation;
 
-		//ƒVƒF[ƒ_[‚Ös—ñ‚ğƒZƒbƒg
+		//ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã¸è¡Œåˆ—ã‚’ã‚»ãƒƒãƒˆ
 		Shader_SetWorldMatrix(world);
 
-		switch (g_WT[0])
+		switch (GetSetWTP1())
 		{
 		case WeaponTerrain::SWORD_WALL:
 			ModelDraw(g_Terrain.m_moveTerrain[1]);
@@ -958,37 +958,39 @@ void TerrainDraw()
 			ModelDraw(g_Terrain.m_moveTerrain[1]);
 			break;
 		case WeaponTerrain::SHURIKEN_:
+			ModelDraw(g_Terrain.m_moveTerrain[1]);
 			break;
 		default:
 			break;
 		}
 	}
-	// 2P‚ª•Ïg‚µ‚Ä‚È‚¢‚Æ‚«‚Í•`‰æ‚µ‚È‚¢
+	// 2PãŒå¤‰èº«ã—ã¦ãªã„ã¨ãã¯æç”»ã—ãªã„
 	if (g_Terrain.m_isChange[1])
 	{
 		int no = 0;
 
-		switch (g_WT[1])
+		switch (GetSetWTP2())
 		{
 		case WeaponTerrain::SWORD_WALL:
-			no = 0;
-			break;
-		case WeaponTerrain::SPEAR_HILL:
 			no = 1;
 			break;
+		case WeaponTerrain::SPEAR_HILL:
+			no = 0;
+			break;
 		case WeaponTerrain::BOW_HILL:
-			no = 2;
+			no = 0;
 			break;
 		case WeaponTerrain::HAMMER_:
-			no = 3;
+			no = 1;
 			break;
 		case WeaponTerrain::SHURIKEN_:
+			no = 1;
 			break;
 		default:
 			break;
 		}
 
-		//ƒ[ƒ‹ƒhs—ñì¬
+		//ãƒ¯ãƒ¼ãƒ«ãƒ‰è¡Œåˆ—ä½œæˆ
 		XMMATRIX	scale = XMMatrixScaling(
 			g_Terrain.m_terrainScaling[no].x,
 			g_Terrain.m_terrainScaling[no].y,
@@ -1003,10 +1005,10 @@ void TerrainDraw()
 			g_Terrain.m_motherPosition[1].z);
 		XMMATRIX	world = scale * rotation * translation;
 
-		//ƒVƒF[ƒ_[‚Ös—ñ‚ğƒZƒbƒg
+		//ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã¸è¡Œåˆ—ã‚’ã‚»ãƒƒãƒˆ
 		Shader_SetWorldMatrix(world);
 
-		switch (g_WT[1])
+		switch (GetSetWTP2())
 		{
 		case WeaponTerrain::SWORD_WALL:
 			ModelDraw(g_Terrain.m_moveTerrain[1]);
@@ -1021,6 +1023,7 @@ void TerrainDraw()
 			ModelDraw(g_Terrain.m_moveTerrain[1]);
 			break;
 		case WeaponTerrain::SHURIKEN_:
+			ModelDraw(g_Terrain.m_moveTerrain[1]);
 			break;
 		default:
 			break;
@@ -1033,7 +1036,7 @@ void TerrainDraw()
 	case WeaponTerrain::SWORD_WALL:
 		for (int i = 0; i < g_Terrain.walls[0].size(); i++)
 		{
-			//ƒ[ƒ‹ƒhs—ñì¬
+			//ãƒ¯ãƒ¼ãƒ«ãƒ‰è¡Œåˆ—ä½œæˆ
 			XMMATRIX	scale = XMMatrixScaling(
 				g_Terrain.walls[0][i]->m_scale.x,
 				g_Terrain.walls[0][i]->m_scale.y,
@@ -1048,15 +1051,15 @@ void TerrainDraw()
 				g_Terrain.walls[0][i]->m_position.z);
 			XMMATRIX	world = scale * rotation * translation;
 
-			//•ÏŠ·s—ñì¬
+			//å¤‰æ›è¡Œåˆ—ä½œæˆ
 			XMMATRIX	view = GetViewMatrix();
 			XMMATRIX	projection = GetProjectionMatrix();
 			XMMATRIX	wvp = world * view * projection;
 
-			//ƒVƒF[ƒ_[‚Ös—ñ‚ğƒZƒbƒg
+			//ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã¸è¡Œåˆ—ã‚’ã‚»ãƒƒãƒˆ
 			Shader_SetWorldMatrix(world);
 
-			//ƒ‚ƒfƒ‹‚Ì•`‰æƒŠƒNƒGƒXƒg
+			//ãƒ¢ãƒ‡ãƒ«ã®æç”»ãƒªã‚¯ã‚¨ã‚¹ãƒˆ
 			ModelDraw(blockModel);
 		}
 		break;
@@ -1064,7 +1067,7 @@ void TerrainDraw()
 	case WeaponTerrain::SPEAR_HILL:
 		for (int i = 0; i < g_Terrain.hills[0].size(); i++)
 		{
-			//ƒ[ƒ‹ƒhs—ñì¬
+			//ãƒ¯ãƒ¼ãƒ«ãƒ‰è¡Œåˆ—ä½œæˆ
 			XMMATRIX	scale = XMMatrixScaling(
 				g_Terrain.hills[0][i]->m_scale.x,
 				g_Terrain.hills[0][i]->m_scale.y,
@@ -1079,16 +1082,16 @@ void TerrainDraw()
 				g_Terrain.hills[0][i]->m_position.z);
 			XMMATRIX	world = scale * rotation * translation;
 
-			//•ÏŠ·s—ñì¬
+			//å¤‰æ›è¡Œåˆ—ä½œæˆ
 			XMMATRIX	view = GetViewMatrix();
 			XMMATRIX	projection = GetProjectionMatrix();
 			XMMATRIX	wvp = world * view * projection;
 
-			//ƒVƒF[ƒ_[‚Ös—ñ‚ğƒZƒbƒg
+			//ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã¸è¡Œåˆ—ã‚’ã‚»ãƒƒãƒˆ
 			Shader_SetWorldMatrix(world);
 			// Shader_SetMatrix(wvp);
 
-			//ƒ‚ƒfƒ‹‚Ì•`‰æƒŠƒNƒGƒXƒg
+			//ãƒ¢ãƒ‡ãƒ«ã®æç”»ãƒªã‚¯ã‚¨ã‚¹ãƒˆ
 			ModelDraw(blockModel);
 		}
 		break;
@@ -1096,7 +1099,7 @@ void TerrainDraw()
 	case WeaponTerrain::BOW_HILL:
 		for (int i = 0; i < g_Terrain.hills[0].size(); i++)
 		{
-			//ƒ[ƒ‹ƒhs—ñì¬
+			//ãƒ¯ãƒ¼ãƒ«ãƒ‰è¡Œåˆ—ä½œæˆ
 			XMMATRIX	scale = XMMatrixScaling(
 				g_Terrain.hills[0][i]->m_scale.x,
 				g_Terrain.hills[0][i]->m_scale.y,
@@ -1111,16 +1114,16 @@ void TerrainDraw()
 				g_Terrain.hills[0][i]->m_position.z);
 			XMMATRIX	world = scale * rotation * translation;
 
-			//•ÏŠ·s—ñì¬
+			//å¤‰æ›è¡Œåˆ—ä½œæˆ
 			XMMATRIX	view = GetViewMatrix();
 			XMMATRIX	projection = GetProjectionMatrix();
 			XMMATRIX	wvp = world * view * projection;
 
-			//ƒVƒF[ƒ_[‚Ös—ñ‚ğƒZƒbƒg
+			//ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã¸è¡Œåˆ—ã‚’ã‚»ãƒƒãƒˆ
 			Shader_SetWorldMatrix(world);
 			// Shader_SetMatrix(wvp);
 
-			//ƒ‚ƒfƒ‹‚Ì•`‰æƒŠƒNƒGƒXƒg
+			//ãƒ¢ãƒ‡ãƒ«ã®æç”»ãƒªã‚¯ã‚¨ã‚¹ãƒˆ
 			ModelDraw(blockModel);
 		}
 		break;
@@ -1131,7 +1134,7 @@ void TerrainDraw()
 	case WeaponTerrain::SWORD_WALL:
 		for (int i = 1; i < g_Terrain.walls[1].size(); i++)
 		{
-			//ƒ[ƒ‹ƒhs—ñì¬
+			//ãƒ¯ãƒ¼ãƒ«ãƒ‰è¡Œåˆ—ä½œæˆ
 			XMMATRIX	scale = XMMatrixScaling(
 				g_Terrain.walls[1][i]->m_scale.x,
 				g_Terrain.walls[1][i]->m_scale.y,
@@ -1146,16 +1149,16 @@ void TerrainDraw()
 				g_Terrain.walls[1][i]->m_position.z);
 			XMMATRIX	world = scale * rotation * translation;
 
-			//•ÏŠ·s—ñì¬
+			//å¤‰æ›è¡Œåˆ—ä½œæˆ
 			XMMATRIX	view = GetViewMatrix();
 			XMMATRIX	projection = GetProjectionMatrix();
 			XMMATRIX	wvp = world * view * projection;
 
-			//ƒVƒF[ƒ_[‚Ös—ñ‚ğƒZƒbƒg
+			//ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã¸è¡Œåˆ—ã‚’ã‚»ãƒƒãƒˆ
 			Shader_SetWorldMatrix(world);
 			// Shader_SetMatrix(wvp);
 
-			//ƒ‚ƒfƒ‹‚Ì•`‰æƒŠƒNƒGƒXƒg
+			//ãƒ¢ãƒ‡ãƒ«ã®æç”»ãƒªã‚¯ã‚¨ã‚¹ãƒˆ
 			ModelDraw(blockModel);
 		}
 		break;
@@ -1163,7 +1166,7 @@ void TerrainDraw()
 	case WeaponTerrain::SPEAR_HILL:
 		for (int i = 1; i < g_Terrain.hills[1].size(); i++)
 		{
-			//ƒ[ƒ‹ƒhs—ñì¬
+			//ãƒ¯ãƒ¼ãƒ«ãƒ‰è¡Œåˆ—ä½œæˆ
 			XMMATRIX	scale = XMMatrixScaling(
 				g_Terrain.hills[1][i]->m_scale.x,
 				g_Terrain.hills[1][i]->m_scale.y,
@@ -1178,16 +1181,16 @@ void TerrainDraw()
 				g_Terrain.hills[1][i]->m_position.z);
 			XMMATRIX	world = scale * rotation * translation;
 
-			//•ÏŠ·s—ñì¬
+			//å¤‰æ›è¡Œåˆ—ä½œæˆ
 			XMMATRIX	view = GetViewMatrix();
 			XMMATRIX	projection = GetProjectionMatrix();
 			XMMATRIX	wvp = world * view * projection;
 
-			//ƒVƒF[ƒ_[‚Ös—ñ‚ğƒZƒbƒg
+			//ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã¸è¡Œåˆ—ã‚’ã‚»ãƒƒãƒˆ
 			Shader_SetWorldMatrix(world);
 			// Shader_SetMatrix(wvp);
 
-			//ƒ‚ƒfƒ‹‚Ì•`‰æƒŠƒNƒGƒXƒg
+			//ãƒ¢ãƒ‡ãƒ«ã®æç”»ãƒªã‚¯ã‚¨ã‚¹ãƒˆ
 			ModelDraw(blockModel);
 		}
 		break;
@@ -1195,7 +1198,7 @@ void TerrainDraw()
 	case WeaponTerrain::BOW_HILL:
 		for (int i = 1; i < g_Terrain.hills[1].size(); i++)
 		{
-			//ƒ[ƒ‹ƒhs—ñì¬
+			//ãƒ¯ãƒ¼ãƒ«ãƒ‰è¡Œåˆ—ä½œæˆ
 			XMMATRIX	scale = XMMatrixScaling(
 				g_Terrain.hills[1][i]->m_scale.x,
 				g_Terrain.hills[1][i]->m_scale.y,
@@ -1210,16 +1213,16 @@ void TerrainDraw()
 				g_Terrain.hills[1][i]->m_position.z);
 			XMMATRIX	world = scale * rotation * translation;
 
-			//•ÏŠ·s—ñì¬
+			//å¤‰æ›è¡Œåˆ—ä½œæˆ
 			XMMATRIX	view = GetViewMatrix();
 			XMMATRIX	projection = GetProjectionMatrix();
 			XMMATRIX	wvp = world * view * projection;
 
-			//ƒVƒF[ƒ_[‚Ös—ñ‚ğƒZƒbƒg
+			//ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã¸è¡Œåˆ—ã‚’ã‚»ãƒƒãƒˆ
 			Shader_SetWorldMatrix(world);
 			// Shader_SetMatrix(wvp);
 
-			//ƒ‚ƒfƒ‹‚Ì•`‰æƒŠƒNƒGƒXƒg
+			//ãƒ¢ãƒ‡ãƒ«ã®æç”»ãƒªã‚¯ã‚¨ã‚¹ãƒˆ
 			ModelDraw(blockModel);
 		}
 		break;
@@ -1238,11 +1241,11 @@ void TerrainSet(WeaponTerrain set, bool playerSelect)
 	switch (select)
 	{
 	case 0:
-		g_Terrain.ClearPlayerObjects(GetSetWTP1(), select); // ŒÃ‚¢’nŒ`‚ğ‰ğ•ú‚·‚é
+		g_Terrain.ClearPlayerObjects(GetSetWTP1(), select); // å¤ã„åœ°å½¢ã‚’è§£æ”¾ã™ã‚‹
 		break;
 
 	case 1:
-		g_Terrain.ClearPlayerObjects(GetSetWTP2(), select); // ŒÃ‚¢’nŒ`‚ğ‰ğ•ú‚·‚é
+		g_Terrain.ClearPlayerObjects(GetSetWTP2(), select); // å¤ã„åœ°å½¢ã‚’è§£æ”¾ã™ã‚‹
 		break;
 	}
 
@@ -1261,15 +1264,16 @@ void TerrainSet(WeaponTerrain set, bool playerSelect)
 		g_Terrain.SimpleObjects(Walls, { 1.0f, 1.0f, 1.0f }, TERRAIN_TYPE::WALL, g_Terrain.m_motherPosition[select], select);
 		break;
 	case WeaponTerrain::SHURIKEN_:
+		g_Terrain.SimpleObjects(Walls, { 1.0f, 1.0f, 1.0f }, TERRAIN_TYPE::WALL, g_Terrain.m_motherPosition[select], select);
 		break;
 	default:
 		break;
 	}
 }
-// ƒvƒŒƒCƒ„[‚É’Ç]‚µ‚Ä‚¢‚½’nŒ`‚ğ‰ğ•ú‚·‚é
+// ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã«è¿½å¾“ã—ã¦ã„ãŸåœ°å½¢ã‚’è§£æ”¾ã™ã‚‹
 void TERRAIN::ClearPlayerObjects(WeaponTerrain set, int select)
 {
-	// ”ÍˆÍŠO‚È‚çƒXƒLƒbƒv
+	// ç¯„å›²å¤–ãªã‚‰ã‚¹ã‚­ãƒƒãƒ—
 	if (select < 0 || select >= 2)
 	{
 		return;
@@ -1292,12 +1296,13 @@ void TERRAIN::ClearPlayerObjects(WeaponTerrain set, int select)
 		targetList = &walls[select];
 		break;
 	case WeaponTerrain::SHURIKEN_:
+		targetList = &walls[select];
 		break;
 	default:
 		break;
 	}
 
-	// ƒŠƒŠ[ƒX‚·‚é‚à‚Ì‚ª‚È‚¯‚ê‚ÎƒXƒLƒbƒv
+	// ãƒªãƒªãƒ¼ã‚¹ã™ã‚‹ã‚‚ã®ãŒãªã‘ã‚Œã°ã‚¹ã‚­ãƒƒãƒ—
 	if (targetList == nullptr || targetList->empty()) return;
 
 	for (auto* rawPtr : *targetList)
@@ -1306,11 +1311,11 @@ void TERRAIN::ClearPlayerObjects(WeaponTerrain set, int select)
 		{
 			if (rawPtr == nullptr) continue;
 
-			// GameObject‚Ì€–Sƒtƒ‰ƒO‚ğ—§‚Ä‚é
+			// GameObjectã®æ­»äº¡ãƒ•ãƒ©ã‚°ã‚’ç«‹ã¦ã‚‹
 			rawPtr->m_isDead = true;
 
-			// ColliderƒRƒ“ƒ|[ƒlƒ“ƒg‚ğæ“¾‚µ‚Ä–³Œø‰»‚·‚é
-			// gameObject.h ‚É‚ ‚é GetColliders ƒeƒ“ƒvƒŒ[ƒgŠÖ”‚ğ—˜—p
+			// Colliderã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆã‚’å–å¾—ã—ã¦ç„¡åŠ¹åŒ–ã™ã‚‹
+			// gameObject.h ã«ã‚ã‚‹ GetColliders ãƒ†ãƒ³ãƒ—ãƒ¬ãƒ¼ãƒˆé–¢æ•°ã‚’åˆ©ç”¨
 			auto colliders = rawPtr->GetColliders();
 			for (auto& col : colliders)
 			{
@@ -1322,7 +1327,7 @@ void TERRAIN::ClearPlayerObjects(WeaponTerrain set, int select)
 			}
 		}
 
-		// À‘Ìiunique_ptrj‚ÌƒŠƒXƒg‚©‚çíœ‚µ‚Äƒƒ‚ƒŠ‚ğ‰ğ•ú
+		// å®Ÿä½“ï¼ˆunique_ptrï¼‰ã®ãƒªã‚¹ãƒˆã‹ã‚‰å‰Šé™¤ã—ã¦ãƒ¡ãƒ¢ãƒªã‚’è§£æ”¾
 		auto it = std::remove_if(terrainObjects.begin(), terrainObjects.end(),
 			[rawPtr](const std::unique_ptr<GameObject>& obj) {
 				return obj.get() == rawPtr;
@@ -1333,18 +1338,18 @@ void TERRAIN::ClearPlayerObjects(WeaponTerrain set, int select)
 		}
 	}
 
-	// ŠÇ—ƒŠƒXƒg‚ğƒNƒŠƒA
+	// ç®¡ç†ãƒªã‚¹ãƒˆã‚’ã‚¯ãƒªã‚¢
 	targetList->clear();
 }
-// ŠÈ’P‚ÈlŠpŒ`‚Ì“–‚½‚è”»’è‚ğì‚éê‡
+// ç°¡å˜ãªå››è§’å½¢ã®å½“ãŸã‚Šåˆ¤å®šã‚’ä½œã‚‹å ´åˆ
 void TERRAIN::SetObject(XMFLOAT3 pos, XMFLOAT3 scl, std::string tag, int lay, int select)
 {
-	// ƒtƒ@ƒNƒgƒŠ‚Ì–ß‚è’l (¶‚Ìƒ|ƒCƒ“ƒ^) ‚ğ unique_ptr ‚Åó‚¯æ‚èAŠ—LŒ ‚ğŠm•Û
+	// ãƒ•ã‚¡ã‚¯ãƒˆãƒªã®æˆ»ã‚Šå€¤ (ç”Ÿã®ãƒã‚¤ãƒ³ã‚¿) ã‚’ unique_ptr ã§å—ã‘å–ã‚Šã€æ‰€æœ‰æ¨©ã‚’ç¢ºä¿
 	std::unique_ptr<GameObject> obj_owner(
 		ColliderFactory::CreateBoxObject(pos, scl, tag, lay)
 	);
 
-	GameObject* raw_ptr = obj_owner.get(); // ¶‚Ìƒ|ƒCƒ“ƒ^‚ğæ“¾iQÆ—pj
+	GameObject* raw_ptr = obj_owner.get(); // ç”Ÿã®ãƒã‚¤ãƒ³ã‚¿ã‚’å–å¾—ï¼ˆå‚ç…§ç”¨ï¼‰
 
 	if (raw_ptr != nullptr)
 	{
@@ -1355,22 +1360,22 @@ void TERRAIN::SetObject(XMFLOAT3 pos, XMFLOAT3 scl, std::string tag, int lay, in
 		terrainObjects.push_back(std::move(obj_owner));
 	}
 }
-// stringŒ^‚Å‘‚¢‚½ƒIƒuƒWƒFƒNƒg‚Ì“–‚½‚è”»’è‚ğcharŒ^‚É‚µ‚ÄŒø—¦‚æ‚­‚·‚é
+// stringå‹ã§æ›¸ã„ãŸã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®å½“ãŸã‚Šåˆ¤å®šã‚’charå‹ã«ã—ã¦åŠ¹ç‡ã‚ˆãã™ã‚‹
 std::vector<std::vector<std::vector<char>>> TERRAIN::ConvertTerrain(std::vector<std::vector<std::vector<std::string>>> terrain)
 {
 	std::vector<std::vector<std::vector<char>>> obj;
 
-	obj.reserve(terrain.size()); // –‘O‚ÉY²•ª‚Ì—e—Ê‚ğŠm•Û
+	obj.reserve(terrain.size()); // äº‹å‰ã«Yè»¸åˆ†ã®å®¹é‡ã‚’ç¢ºä¿
 
-	for (const auto& layer : terrain) // Y²•ûŒü
+	for (const auto& layer : terrain) // Yè»¸æ–¹å‘
 	{
-		obj.emplace_back();					// V‚µ‚­˜g‚ğì‚é(ŸŒ³‚Ì’Ç‰Á)
-		obj.back().reserve(layer.size());	// Z²•ª‚Ì—e—Ê‚ğŠm•Û
+		obj.emplace_back();					// æ–°ã—ãæ ã‚’ä½œã‚‹(æ¬¡å…ƒã®è¿½åŠ )
+		obj.back().reserve(layer.size());	// Zè»¸åˆ†ã®å®¹é‡ã‚’ç¢ºä¿
 
-		for (const auto& row : layer) // row‚Ístd::vector<std::string>
+		for (const auto& row : layer) // rowã¯std::vector<std::string>
 		{
 			std::vector<char> rowChars;
-			for (const auto& str : row) // str‚Ístd::string
+			for (const auto& str : row) // strã¯std::string
 			{
 				rowChars.insert(rowChars.end(), str.begin(), str.end());
 			}
@@ -1381,7 +1386,7 @@ std::vector<std::vector<std::vector<char>>> TERRAIN::ConvertTerrain(std::vector<
 
 	return obj;
 }
-// charŒ^‚É‚È‚Á‚½ƒIƒuƒWƒFƒNƒg‚Ì“–‚½‚è”»’è‚ª‚¢‚­‚Â‚ ‚é‚Ì‚©”‚¦‚é
+// charå‹ã«ãªã£ãŸã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®å½“ãŸã‚Šåˆ¤å®šãŒã„ãã¤ã‚ã‚‹ã®ã‹æ•°ãˆã‚‹
 size_t TERRAIN::CountObjects(const std::vector<std::vector<std::vector<char>>>& obj)
 {
 	size_t count = 0;
@@ -1402,31 +1407,31 @@ size_t TERRAIN::CountObjects(const std::vector<std::vector<std::vector<char>>>& 
 
 	return count;
 }
-// ó‚¯æ‚Á‚½‘—Ê‚ÌƒIƒuƒWƒFƒNƒg‚Ì“–‚½‚è”»’è‚ğƒf[ƒ^‚Æ‚µ‚ÄŠi”[‚·‚é
+// å—ã‘å–ã£ãŸç·é‡ã®ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®å½“ãŸã‚Šåˆ¤å®šã‚’ãƒ‡ãƒ¼ã‚¿ã¨ã—ã¦æ ¼ç´ã™ã‚‹
 std::vector<TERRAIN_OBJECT> TERRAIN::InitializeObject(const std::vector<std::vector<std::vector<char>>>& terrainChip, TERRAIN_TYPE type)
 {
 	std::vector<TERRAIN_OBJECT> terrain;
 
-	size_t objects = 0;	// ‰½ŒÂƒIƒuƒWƒFƒNƒg‚ª‚ ‚é‚©
+	size_t objects = 0;	// ä½•å€‹ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆãŒã‚ã‚‹ã‹
 
-	objects = CountObjects(terrainChip); // ƒIƒuƒWƒFƒNƒg‚Ì”‚ğŠi”[
+	objects = CountObjects(terrainChip); // ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®æ•°ã‚’æ ¼ç´
 
 	terrain.clear();
-	terrain.reserve(objects);	// ƒIƒuƒWƒFƒNƒg‚Ì”‚Ì•ª‚¾‚¯–‘O‚É—e—Ê‚ğŠm•Û
+	terrain.reserve(objects);	// ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®æ•°ã®åˆ†ã ã‘äº‹å‰ã«å®¹é‡ã‚’ç¢ºä¿
 
 	for (size_t i = 0; i < objects; i++)
 	{
-		terrain.push_back(TERRAIN_OBJECT{}); // ‹ó‚ÌTERRAIN_OBJECT‚ğ’Ç‰Á
+		terrain.push_back(TERRAIN_OBJECT{}); // ç©ºã®TERRAIN_OBJECTã‚’è¿½åŠ 
 	}
 
-	int loop = 0;	// ‰½‰ñƒ‹[ƒv‚µ‚½‚©
-	char c;			// •¶š‚ğæ‚èo‚·
+	int loop = 0;	// ä½•å›ãƒ«ãƒ¼ãƒ—ã—ãŸã‹
+	char c;			// æ–‡å­—ã‚’å–ã‚Šå‡ºã™
 
-	XMFLOAT3 centerNo; // ^‚ñ’†‚Ì”Ô†
-	centerNo.y = (terrainChip.size() / 2);							// Y‘w‚Ì”¼•ª
-	centerNo.x = (terrainChip[centerNo.y].size() / 2);				// X‘w‚Ì”¼•ª
-	centerNo.z = (terrainChip[centerNo.y][centerNo.x].size() / 2);	// Z‘w‚Ì”¼•ª
-	XMFLOAT3 distance;	// Œ»İ‚ÌÀ•W‚ªA‚Ç‚ê‚¾‚¯’†S‚Æ·‚ª‚ ‚é‚©
+	XMFLOAT3 centerNo; // çœŸã‚“ä¸­ã®ç•ªå·
+	centerNo.y = (terrainChip.size() / 2);							// Yå±¤ã®åŠåˆ†
+	centerNo.x = (terrainChip[centerNo.y].size() / 2);				// Xå±¤ã®åŠåˆ†
+	centerNo.z = (terrainChip[centerNo.y][centerNo.x].size() / 2);	// Zå±¤ã®åŠåˆ†
+	XMFLOAT3 distance;	// ç¾åœ¨ã®åº§æ¨™ãŒã€ã©ã‚Œã ã‘ä¸­å¿ƒã¨å·®ãŒã‚ã‚‹ã‹
 
 	for (int y = 0; y < terrainChip.size(); y++)
 	{
@@ -1434,18 +1439,18 @@ std::vector<TERRAIN_OBJECT> TERRAIN::InitializeObject(const std::vector<std::vec
 		{
 			for (int z = 0; z < terrainChip[y][x].size(); z++)
 			{
-				c = terrainChip[y][x][z]; // •¶š‚ğæ‚èo‚·
+				c = terrainChip[y][x][z]; // æ–‡å­—ã‚’å–ã‚Šå‡ºã™
 
-				distance.x = (x - centerNo.x) * TERRAIN_SIZE;	// X‚ª’†S‚©‚ç‚Ç‚ê‚¾‚¯—£‚ê‚Ä‚¢‚é‚©
-				distance.y = (y - centerNo.y) * TERRAIN_SIZE;	// Y‚ª’†S‚©‚ç‚Ç‚ê‚¾‚¯—£‚ê‚Ä‚¢‚é‚©
-				distance.z = (z - centerNo.z) * TERRAIN_SIZE;	// Z‚ª’†S‚©‚ç‚Ç‚ê‚¾‚¯—£‚ê‚Ä‚¢‚é‚©
+				distance.x = (x - centerNo.x) * TERRAIN_SIZE;	// XãŒä¸­å¿ƒã‹ã‚‰ã©ã‚Œã ã‘é›¢ã‚Œã¦ã„ã‚‹ã‹
+				distance.y = (y - centerNo.y) * TERRAIN_SIZE;	// YãŒä¸­å¿ƒã‹ã‚‰ã©ã‚Œã ã‘é›¢ã‚Œã¦ã„ã‚‹ã‹
+				distance.z = (z - centerNo.z) * TERRAIN_SIZE;	// ZãŒä¸­å¿ƒã‹ã‚‰ã©ã‚Œã ã‘é›¢ã‚Œã¦ã„ã‚‹ã‹
 
 				switch (c)
 				{
 				case 'a':
-					terrain[loop].m_distance = distance;	// ’†S‚©‚ç‚Ç‚ê‚¾‚¯—£‚ê‚Ä‚¢‚é‚©“n‚·
+					terrain[loop].m_distance = distance;	// ä¸­å¿ƒã‹ã‚‰ã©ã‚Œã ã‘é›¢ã‚Œã¦ã„ã‚‹ã‹æ¸¡ã™
 					terrain[loop].m_size = { TERRAIN_SIZE, TERRAIN_SIZE, TERRAIN_SIZE };
-					terrain[loop].m_type = type;			// í—Ş‚ğŠi”[
+					terrain[loop].m_type = type;			// ç¨®é¡ã‚’æ ¼ç´
 					loop++;
 					break;
 
@@ -1458,7 +1463,7 @@ std::vector<TERRAIN_OBJECT> TERRAIN::InitializeObject(const std::vector<std::vec
 
 	return terrain;
 }
-// charŒ^‚É‚È‚Á‚½ƒIƒuƒWƒFƒNƒg‚Ìí—Ş‚ª‚¢‚­‚Â‚ ‚é‚©”‚¦‚é
+// charå‹ã«ãªã£ãŸã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®ç¨®é¡ãŒã„ãã¤ã‚ã‚‹ã‹æ•°ãˆã‚‹
 size_t TERRAIN::CountObjectType(const std::vector<std::vector<std::vector<char>>>& obj)
 {
 	size_t count = 0;
@@ -1469,7 +1474,7 @@ size_t TERRAIN::CountObjectType(const std::vector<std::vector<std::vector<char>>
 		{
 			for (char c : row)
 			{
-				if (c != 'n') // n‚¶‚á‚È‚©‚Á‚½‚ç”‚¦‚é
+				if (c != 'n') // nã˜ã‚ƒãªã‹ã£ãŸã‚‰æ•°ãˆã‚‹
 				{
 					count++;
 				}
@@ -1477,37 +1482,37 @@ size_t TERRAIN::CountObjectType(const std::vector<std::vector<std::vector<char>>
 		}
 	}
 
-	count /= 4; // •¶š‚Í‚»‚ê‚¼‚ê4•¶š‚¸‚Â‚ ‚é‚©‚ç4‚ÅŠ„‚é
+	count /= 4; // æ–‡å­—ã¯ãã‚Œãã‚Œ4æ–‡å­—ãšã¤ã‚ã‚‹ã‹ã‚‰4ã§å‰²ã‚‹
 
 	return count;
 }
-// charŒ^‚É‚È‚Á‚½ƒIƒuƒWƒFƒNƒg‚Ì’¸“_‚ğ‹‚ß‚ÄA1‚Â‚ÌƒIƒuƒWƒFƒNƒg‚Æ‚µ‚Ä”F¯‚·‚é
+// charå‹ã«ãªã£ãŸã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®é ‚ç‚¹ã‚’æ±‚ã‚ã¦ã€1ã¤ã®ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã¨ã—ã¦èªè­˜ã™ã‚‹
 std::vector<XMFLOAT6> TERRAIN::VolumeObject(const std::vector<std::vector<std::vector<char>>>& terrainChip, const size_t objectType, XMFLOAT3 size)
 {
-	// ƒTƒCƒYƒ`ƒFƒbƒN
+	// ã‚µã‚¤ã‚ºãƒã‚§ãƒƒã‚¯
 	if (objectType == 0 || terrainChip.empty()) {
 		return std::vector<XMFLOAT6>();
 	}
 
 	std::vector<XMFLOAT6> MIX_VALUE(objectType);
-	std::vector<std::vector<XMFLOAT3>> vertexGroups(objectType); // Šeƒ^ƒCƒv‚Ì’¸“_ƒŠƒXƒg
+	std::vector<std::vector<XMFLOAT3>> vertexGroups(objectType); // å„ã‚¿ã‚¤ãƒ—ã®é ‚ç‚¹ãƒªã‚¹ãƒˆ
 	std::vector<char> moji(objectType);
 
 	int typeCount = 0;
 	char c;
 
-	// ”z—ñƒTƒCƒY‚ğæ“¾
+	// é…åˆ—ã‚µã‚¤ã‚ºã‚’å–å¾—
 	int sizeY = terrainChip.size();
 	int sizeZ = terrainChip[0].size();
 	int sizeX = terrainChip[0][0].size();
 
-	// ^‚ñ’†‚ÌÀ•W‚ğŒvZ
+	// çœŸã‚“ä¸­ã®åº§æ¨™ã‚’è¨ˆç®—
 	XMFLOAT3 centerPos;
 	centerPos.x = (sizeX * size.x) / 2.0f;
 	centerPos.y = (sizeY * size.y) / 2.0f;
 	centerPos.z = (sizeZ * size.z) / 2.0f;
 
-	// Y ¨ Z ¨ X ‚Ì‡‚Åƒ‹[ƒv
+	// Y â†’ Z â†’ X ã®é †ã§ãƒ«ãƒ¼ãƒ—
 	for (int y = 0; y < sizeY; y++)
 	{
 		for (int z = 0; z < sizeZ; z++)
@@ -1516,15 +1521,15 @@ std::vector<XMFLOAT6> TERRAIN::VolumeObject(const std::vector<std::vector<std::v
 			{
 				c = terrainChip[y][z][x];
 
-				if (c == 'n') continue; // ƒXƒLƒbƒv
+				if (c == 'n') continue; // ã‚¹ã‚­ãƒƒãƒ—
 
-				// ƒZƒ‹‚ÌŠJnˆÊ’uiŠpj‚ğŒvZ
+				// ã‚»ãƒ«ã®é–‹å§‹ä½ç½®ï¼ˆè§’ï¼‰ã‚’è¨ˆç®—
 				XMFLOAT3 worldPos;
 				worldPos.x = x * size.x;
 				worldPos.y = y * size.y;
 				worldPos.z = z * size.z;
 
-				// Šù‘¶‚Ì•¶šƒ^ƒCƒv‚ğŒŸõ
+				// æ—¢å­˜ã®æ–‡å­—ã‚¿ã‚¤ãƒ—ã‚’æ¤œç´¢
 				int foundIndex = -1;
 				for (int i = 0; i < typeCount; i++)
 				{
@@ -1535,15 +1540,15 @@ std::vector<XMFLOAT6> TERRAIN::VolumeObject(const std::vector<std::vector<std::v
 					}
 				}
 
-				if (foundIndex == -1) // V‚µ‚¢•¶šƒ^ƒCƒv
+				if (foundIndex == -1) // æ–°ã—ã„æ–‡å­—ã‚¿ã‚¤ãƒ—
 				{
-					if (typeCount >= objectType) continue; // ”ÍˆÍƒ`ƒFƒbƒN
+					if (typeCount >= objectType) continue; // ç¯„å›²ãƒã‚§ãƒƒã‚¯
 
 					moji[typeCount] = c;
 					vertexGroups[typeCount].push_back(worldPos);
 					typeCount++;
 				}
-				else // Šù‘¶‚Ì•¶šƒ^ƒCƒv
+				else // æ—¢å­˜ã®æ–‡å­—ã‚¿ã‚¤ãƒ—
 				{
 					vertexGroups[foundIndex].push_back(worldPos);
 				}
@@ -1551,18 +1556,18 @@ std::vector<XMFLOAT6> TERRAIN::VolumeObject(const std::vector<std::vector<std::v
 		}
 	}
 
-	// Šeƒ^ƒCƒv‚ÌƒoƒEƒ“ƒfƒBƒ“ƒOƒ{ƒbƒNƒX‚ğŒvZ
+	// å„ã‚¿ã‚¤ãƒ—ã®ãƒã‚¦ãƒ³ãƒ‡ã‚£ãƒ³ã‚°ãƒœãƒƒã‚¯ã‚¹ã‚’è¨ˆç®—
 	for (int i = 0; i < typeCount; i++)
 	{
 		if (vertexGroups[i].empty()) continue;
 
-		// 4’¸“_‚¾‚¯g‚¤iÅ‰‚Ì4‚Âj
+		// 4é ‚ç‚¹ã ã‘ä½¿ã†ï¼ˆæœ€åˆã®4ã¤ï¼‰
 		int vertexCount = (std::min)(4, (int)vertexGroups[i].size());
 
 		XMFLOAT3 min = vertexGroups[i][0];
 		XMFLOAT3 max = vertexGroups[i][0];
 
-		// 4’¸“_•ª‚¾‚¯ƒ`ƒFƒbƒN
+		// 4é ‚ç‚¹åˆ†ã ã‘ãƒã‚§ãƒƒã‚¯
 		for (int j = 0; j < vertexCount; j++)
 		{
 			min.x = (std::min)(min.x, vertexGroups[i][j].x);
@@ -1574,18 +1579,18 @@ std::vector<XMFLOAT6> TERRAIN::VolumeObject(const std::vector<std::vector<std::v
 			max.z = (std::max)(max.z, vertexGroups[i][j].z);
 		}
 
-		// ƒoƒEƒ“ƒfƒBƒ“ƒOƒ{ƒbƒNƒX‚ÌƒTƒCƒY‚ğŒvZ
+		// ãƒã‚¦ãƒ³ãƒ‡ã‚£ãƒ³ã‚°ãƒœãƒƒã‚¯ã‚¹ã®ã‚µã‚¤ã‚ºã‚’è¨ˆç®—
 		MIX_VALUE[i].size.x = (max.x - min.x) + size.x;
 		MIX_VALUE[i].size.y = (max.y - min.y) + size.y;
 		MIX_VALUE[i].size.z = (max.z - min.z) + size.z;
 
-		// ƒoƒEƒ“ƒfƒBƒ“ƒOƒ{ƒbƒNƒX‚Ì’†S‚ğŒvZ
+		// ãƒã‚¦ãƒ³ãƒ‡ã‚£ãƒ³ã‚°ãƒœãƒƒã‚¯ã‚¹ã®ä¸­å¿ƒã‚’è¨ˆç®—
 		XMFLOAT3 boxCenter;
 		boxCenter.x = (min.x + max.x + size.x) / 2.0f;
 		boxCenter.y = (min.y + max.y + size.y) / 2.0f;
 		boxCenter.z = (min.z + max.z + size.z) / 2.0f;
 
-		// ƒ}ƒU[ƒ|ƒWƒVƒ‡ƒ“‚©‚ç‚Ì‘Š‘ÎÀ•W‚ğŒvZ
+		// ãƒã‚¶ãƒ¼ãƒã‚¸ã‚·ãƒ§ãƒ³ã‹ã‚‰ã®ç›¸å¯¾åº§æ¨™ã‚’è¨ˆç®—
 		MIX_VALUE[i].pos.x = boxCenter.x - centerPos.x;
 		MIX_VALUE[i].pos.y = boxCenter.y - centerPos.y;
 		MIX_VALUE[i].pos.z = boxCenter.z - centerPos.z;
@@ -1593,12 +1598,12 @@ std::vector<XMFLOAT6> TERRAIN::VolumeObject(const std::vector<std::vector<std::v
 
 	return MIX_VALUE;
 }
-// ó‚¯æ‚Á‚½‘—Ê‚ÌƒIƒuƒWƒFƒNƒg‚Ì“–‚½‚è”»’è‚ğƒf[ƒ^‚Æ‚µ‚ÄŠi”[‚·‚é
+// å—ã‘å–ã£ãŸç·é‡ã®ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®å½“ãŸã‚Šåˆ¤å®šã‚’ãƒ‡ãƒ¼ã‚¿ã¨ã—ã¦æ ¼ç´ã™ã‚‹
 std::vector<TERRAIN_OBJECT> TERRAIN::InitializeObject(const std::vector<std::vector<std::vector<char>>>& terrainChip, std::vector<XMFLOAT6> mixVal, const size_t objectType, TERRAIN_TYPE type)
 {
-	std::vector<TERRAIN_OBJECT> terrain(objectType); // ƒTƒCƒY‚ğw’è
+	std::vector<TERRAIN_OBJECT> terrain(objectType); // ã‚µã‚¤ã‚ºã‚’æŒ‡å®š
 
-	for (size_t i = 0; i < objectType && i < mixVal.size(); i++) // ”ÍˆÍƒ`ƒFƒbƒN
+	for (size_t i = 0; i < objectType && i < mixVal.size(); i++) // ç¯„å›²ãƒã‚§ãƒƒã‚¯
 	{
 		terrain[i].m_distance = mixVal[i].pos;
 		terrain[i].m_size = mixVal[i].size;
@@ -1607,13 +1612,13 @@ std::vector<TERRAIN_OBJECT> TERRAIN::InitializeObject(const std::vector<std::vec
 
 	return terrain;
 }
-// “–‚½‚è”»’è‚ÌÀ•W‚ğXV‚·‚é
+// å½“ãŸã‚Šåˆ¤å®šã®åº§æ¨™ã‚’æ›´æ–°ã™ã‚‹
 void TERRAIN::UpdateObject(std::vector<GameObject*> terrain, XMFLOAT3 motherPosition, bool move)
 {
 	if (!move)
 	{
 		XMFLOAT3 pos;
-		// •Ïg‚µ‚Ä‚È‚¯‚ê‚ÎƒvƒŒƒCƒ„[‚Æ“¯‚¶“®‚«‚ğ‚·‚é
+		// å¤‰èº«ã—ã¦ãªã‘ã‚Œã°ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã¨åŒã˜å‹•ãã‚’ã™ã‚‹
 		for (int i = 0; i < terrain.size(); i++)
 		{
 			pos.x = motherPosition.x + terrain[i]->m_velocity.x;
@@ -1631,15 +1636,15 @@ void TERRAIN::UpdateObject(std::vector<GameObject*> terrain, XMFLOAT3 motherPosi
 		}
 	}
 }
-// “–‚½‚è”»’è‚ğì‚é
+// å½“ãŸã‚Šåˆ¤å®šã‚’ä½œã‚‹
 void TERRAIN::CreateHit(std::vector<TERRAIN_OBJECT> terrain, XMFLOAT3 motherPosition, int select)
 {
 	XMFLOAT3 pos;
 
-	// terrain‚Ì”‚¾‚¯ŒJ‚è•Ô‚·
+	// terrainã®æ•°ã ã‘ç¹°ã‚Šè¿”ã™
 	for (int i = 0; i < terrain.size(); i++)
 	{
-		// distance‚ğg‚Á‚ÄÀ•W‚ğ‹‚ß‚é
+		// distanceã‚’ä½¿ã£ã¦åº§æ¨™ã‚’æ±‚ã‚ã‚‹
 		pos.x = motherPosition.x + terrain[i].m_distance.x;
 		pos.y = motherPosition.y + terrain[i].m_distance.y;
 		pos.z = motherPosition.z + terrain[i].m_distance.z;
@@ -1648,23 +1653,23 @@ void TERRAIN::CreateHit(std::vector<TERRAIN_OBJECT> terrain, XMFLOAT3 motherPosi
 		{
 		case TERRAIN_TYPE::HILL:
 			SetObject(pos, terrain[i].m_size, "HILL", 0, select);
-			hills[select][i]->m_position = pos;	// À•W‚ğŠi”[
+			hills[select][i]->m_position = pos;	// åº§æ¨™ã‚’æ ¼ç´
 			hills[select][i]->m_velocity = terrain[i].m_distance;
 			hills[select][i]->m_scale = terrain[i].m_size;
 			break;
 
 		case TERRAIN_TYPE::WALL:
 			SetObject(pos, terrain[i].m_size, "WALL", 0, select);
-			walls[select][i]->m_position = pos;	// À•W‚ğŠi”[
+			walls[select][i]->m_position = pos;	// åº§æ¨™ã‚’æ ¼ç´
 			walls[select][i]->m_velocity = terrain[i].m_distance;
 			walls[select][i]->m_scale = terrain[i].m_size;
 			break;
 
 		case TERRAIN_TYPE::TREE:
 			SetObject(pos, terrain[i].m_size, "TREE", 0, select);
-			walls[select][i]->m_position = pos;	// À•W‚ğŠi”[
-			walls[select][i]->m_velocity = terrain[i].m_distance;
-			walls[select][i]->m_scale = terrain[i].m_size;
+			trees[select][i]->m_position = pos;	// åº§æ¨™ã‚’æ ¼ç´
+			trees[select][i]->m_velocity = terrain[i].m_distance;
+			trees[select][i]->m_scale = terrain[i].m_size;
 			break;
 
 		case TERRAIN_TYPE::MAX:
@@ -1675,17 +1680,17 @@ void TERRAIN::CreateHit(std::vector<TERRAIN_OBJECT> terrain, XMFLOAT3 motherPosi
 		}
 	}
 }
-// ƒuƒƒbƒN’PˆÊ‚Å“–‚½‚è”»’è‚ğİ’u‚Å‚«‚é
+// ãƒ–ãƒ­ãƒƒã‚¯å˜ä½ã§å½“ãŸã‚Šåˆ¤å®šã‚’è¨­ç½®ã§ãã‚‹
 void TERRAIN::PixelObjects(const std::vector<std::vector<std::vector<std::string>>> terrain, TERRAIN_TYPE type, XMFLOAT3 motherPosition, int select)
 {
-	// “–‚½‚è”»’è‚ğ’Ç‰Á‚·‚é
+	// å½“ãŸã‚Šåˆ¤å®šã‚’è¿½åŠ ã™ã‚‹
 	CreateHit(InitializeObject(ConvertTerrain(terrain), type), motherPosition, select);
 }
-// ’¼•û‘Ì‚â—§•û‘Ì‚È‚ÇA‘å‚Ü‚©‚È”ÍˆÍ‚Å“–‚½‚è”»’è‚ğİ’u‚Å‚«‚é
+// ç›´æ–¹ä½“ã‚„ç«‹æ–¹ä½“ãªã©ã€å¤§ã¾ã‹ãªç¯„å›²ã§å½“ãŸã‚Šåˆ¤å®šã‚’è¨­ç½®ã§ãã‚‹
 void TERRAIN::SimpleObjects(const std::vector<std::vector<std::vector<std::string>>> terrain, XMFLOAT3 size, TERRAIN_TYPE type, XMFLOAT3 motherPosition, int select)
 {
 	auto conTerrain = ConvertTerrain(terrain);
 	auto countType = CountObjectType(conTerrain);
-	// “–‚½‚è”»’è‚ğ’Ç‰Á‚·‚é
+	// å½“ãŸã‚Šåˆ¤å®šã‚’è¿½åŠ ã™ã‚‹
 	CreateHit(InitializeObject(conTerrain, VolumeObject(conTerrain, countType, size), countType, type), motherPosition, select);
 }

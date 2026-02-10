@@ -41,7 +41,8 @@ public:
 
 	//描画処理：用意されているテクスチャを描画
 	void Draw(int windowID);
-	void DrawPlayerUI(const PlayerState& state, XMFLOAT2 basePos);
+	void DrawPlayerUI(int playerIndex, const PlayerState& state, XMFLOAT2 basePos);
+	float GetTransformTimer();
 
 	//決定したデータを取得
 	inGameWTselect GetPlayerSelectionWT() const {
@@ -59,3 +60,4 @@ private:
 	//SRV = ShaderResourceView
 	ID3D11ShaderResourceView* CreateSRV(ID3D11Device* pDevice, const char* fileName);
 };
+

@@ -29,7 +29,7 @@ void	Manager_Draw_Player2();
 
 inGameWTselect Manager_GetWTselect();
 void	Manager_SetWTselect(const inGameWTselect& select);
-
+int GetRoundCount();
 void	SetScene(SCENE scene);
 
 #endif // MANAGER_H

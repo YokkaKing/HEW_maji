@@ -9,6 +9,7 @@
 //================================================================
 //	インクルード
 //================================================================
+#include"Audio.h"
 #include"direct3d.h"
 #include"Manager.h"
 #include"keyboard.h"
@@ -38,11 +39,7 @@ void Manager_Initialize()
 	//SetScene(SCENE_GAME);	//最初に動かすシーンに切り替える
 
 
-	//本来の形
-	Fade_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
 	SetScene(SCENE_TITLE);	//最初に動かすシーンに切り替える
-
-
 
 }
 
@@ -96,8 +93,13 @@ void Manager_Update()
 				{
 					// 全試合終了 -> リザルトへ
 					// ここで初めてGameシーンを破棄する
-					Game_Finalize();
-					SetScene(SCENE_RESULT);
+					//Game_Finalize();
+					SetScene(SCENE_TITLE);
+					//複数回のゲームプレイを想定してゲームループ用変数を初期化
+					g_RoundCount = 0;
+					g_P1Wins = 0;
+					g_P2Wins = 0;
+					isMatchOver = false;
 				}
 				else
 				{
@@ -215,6 +217,7 @@ void SetScene(SCENE scene) //シーンを切り替える
 			Title_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
 			break;
 		case SCENE_GAME:
+			StopAudio(g_title);
 			Game_Initialize( Direct3D_GetDevice(), Direct3D_GetDeviceContext(), g_currentWTselect);
 			break;
 		case SCENE_SELECT_WT:
@@ -227,4 +230,8 @@ void SetScene(SCENE scene) //シーンを切り替える
 			break;
 	}
 
+}
+int GetRoundCount()
+{
+	return g_RoundCount;
 }

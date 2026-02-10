@@ -52,10 +52,31 @@ public:
     float time;
     float frame;
 };
+class STATUS_1P_2
+{
+public:
+    XMFLOAT2 pos[3];
+    XMFLOAT2 size[2];
+    XMFLOAT4 col;
+    int nowType;
+    int nextType[2];
 
+};
+class STATUS_2P_2
+{
+public:
+    XMFLOAT2 pos[3];
+    XMFLOAT2 size[2];
+    XMFLOAT4 col;
+    int nowType;
+    int nextType[2];
+};
 void Hp2_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
 void Hp2_Finalize();
 void Hp2_Update();
 void Hp2_Draw();
+
+float Hp_GetTime(); //時間制限用の関数
+void Hp_SetTime(float time); //時間制限のリセット用
 
 #endif // HP2_H

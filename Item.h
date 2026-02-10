@@ -35,6 +35,8 @@ public:
 	void Finalize();
 	void Update();
 	void Spwan();
+	// ラウンドごとの初期化
+	void ResetItem();
 	XMFLOAT3 WherePosition();
 };
 
@@ -51,5 +53,8 @@ public:
 	void Draw() override;
 	void OnCollision(const CollisionInfo& info) override;
 };
+
+// 全アイテムを削除する関数
+void ClearAllItems();
 
 #endif // ITEM_H

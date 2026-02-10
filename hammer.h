@@ -16,18 +16,23 @@
 #include"IWeapon.h"
 #include"model.h"
 #include"managerCollider.h"
+#include "keyboard.h"
+#include "controller.h"
 using namespace DirectX;
 
 class Hammer : public IWeapon
 {
 private:
     int m_playerIndex = 0;      // 0 = P1, 1 = P2
-    int m_chargeKey = 0;        // P1: KK_C, P2: KK_P
+   // int m_chargeKey = 0;        // P1: KK_C, P2: KK_P
+    Keyboard_Keys m_chargeKey;
+    ControllerButton::Button m_chargeButton; // コントローラー用 (X_BUTTON)
     XMFLOAT3 m_move = { 0,0,0 };  // g_moveHammer
 public:
     std::shared_ptr<Collider> m_collider; // コライダーへの参照を保持
 
     bool m_isAttacking = false;
+    bool m_isAttack = false;
     float m_attackTimer = 0.0f;
     const float ATTACK_DURATION = 0.5f;   // 攻撃の有効時間
     

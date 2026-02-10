@@ -9,9 +9,11 @@
 //================================================================
 //	インクルード
 //================================================================
+#include"Audio.h"
 #include"Manager.h"
 #include"sprite.h"
 #include"keyboard.h"
+#include"Controller.h"
 #include"Title.h"
 #include"fade.h"
 #include"shader.h"
@@ -22,6 +24,7 @@
 static	ID3D11ShaderResourceView* g_Texture = NULL;	//テクスチャ１枚を表すオブジェクト
 static ID3D11Device* g_pDevice = nullptr;
 static ID3D11DeviceContext* g_pContext = nullptr;
+extern Controller g_Controller[2];
 
 void Title_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
@@ -38,7 +41,7 @@ void Title_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	//フェードインのセット
 	XMFLOAT4	color = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
 	SetFade(60.0f, color, FADE_IN, SCENE_SELECT_WT);
-
+    PlayAudio(g_title, true);
 }
 void Title_Finalize()
 {
@@ -51,8 +54,9 @@ void Title_Update()
 	//キー入力チェック
 	//スタートボタンが押されたらシーンを切り替え
 	//フェード処理中はキーを受け付けない
-	if (Keyboard_IsKeyDownTrigger(KK_ENTER) && (GetFadeState() == FADE_NONE))
+    if ((Keyboard_IsKeyDownTrigger(KK_ENTER) || g_Controller[0].IsButtonPushed(ControllerButton::A_BUTTON)) && (GetFadeState() == FADE_NONE))
 	{
+        PlayAudio(g_fade, false);
 		//フェードアウトさせてシーンを切り替える
 		XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
 		SetFade(40.0f, color, FADE_OUT, SCENE_SELECT_WT);

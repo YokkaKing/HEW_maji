@@ -28,7 +28,7 @@ public:
     const float ATTACK_DURATION = 0.5f;   // 攻撃の有効時間
 
     // プレイヤーから見てどこに位置するか
-    XMFLOAT3 m_offset = { 0.2f, 0.4f, 0.2f };
+    XMFLOAT3 m_offset = { 0.0f, 0.0f, 0.0f };
     // 攻撃したときにどう動くか
     XMFLOAT3 m_animePosition = { 0.0f, 0.0f, 0.5f };
     XMFLOAT3 m_animeRotation = { 0.0f, 0.0f, 0.0f };

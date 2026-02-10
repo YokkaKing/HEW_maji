@@ -13,6 +13,10 @@
 //	インクルード
 //================================================================
 #include"direct3d.h"
+#include <utility> // std::swap
+
+
+
 class HP
 {
 public:
@@ -52,10 +56,31 @@ public:
     float time;
     float frame;
 };
+class STATUS_1P
+{
+public:
+    XMFLOAT2 pos[3];
+    XMFLOAT2 size[2];
+    XMFLOAT4 col;
+	int nowType;
+    int nextType[2];
 
+};
+class STATUS_2P
+{
+public:
+    XMFLOAT2 pos[3];
+    XMFLOAT2 size[2];
+    XMFLOAT4 col;
+    int nowType;
+    int nextType[2];
+};
 void Hp_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
 void Hp_Finalize();
 void Hp_Update();
 void Hp_Draw();
+
+float Hp_GetTime(); //時間制限用の関数
+void Hp_SetTime(float time); //時間制限のリセット用
 
 #endif // HP_H
