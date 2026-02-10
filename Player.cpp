@@ -48,8 +48,7 @@ unsigned int g_changeP1;
 static bool g_Player1AttackPlaying = false; // 攻撃ワンショット再生中フラグ
 static bool g_Player1JumpPlaying = false; // ジャンプワンショット再生中フラグ
 static int g_Player1CurrentAnim = 0; // 0: idle, 1: move, 2: attack 3:jump
-WeaponTerrain m_baseWT;
-ITEM_SPONER gp_itemSponer;
+bool g_isChangeP1;
 
 void PlayerDie()
 {
@@ -133,6 +132,8 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 	}
 
 	g_Player.EquipBaseWeapon(); //���E���h�����p�ɏ���������đ���
+	
+	g_isChangeP1 = false;
 }
 void PlayerFinalize()
 {
@@ -154,38 +155,42 @@ void	PlayerUpdate()
 	if (Keyboard_IsKeyDownTrigger(KK_D1) && !GetIsUsedA_P1())
 	{
 		slotToUse = 0;
-		g_Player.m_isTransformed = true;
+		g_isChangeP1 = true;
 	}
 	if (Keyboard_IsKeyDownTrigger(KK_D0) && !GetIsUsedB_P1())
 	{
 		slotToUse = 1;
-		g_Player.m_isTransformed = true;
+		g_isChangeP1 = true;
 	}
 
 
 	if (slotToUse != -1)
 	{
 		WeaponTerrain reserved = g_Player.GetReservedWT(slotToUse);
+
 		if (reserved != WeaponTerrain::NONE)
 		{
+			inGameWTselect data;
+			data.player1 = reserved;       
+			data.player2 = g_Player2.GetCurrentWT();
+
+			// generateWT_Apply
+			//generateWT_Apply(data, &g_Player, &g_Player2, g_pDevice, g_pContext);
 			TerrainSet(reserved, FALSE);
 
 			switch (reserved) {
 			case WeaponTerrain::SWORD_WALL: 
 				g_changeP1 = 1;
-				g_Player.m_model = ModelLoad("asset\\model\\char_sword_motion.fbx"); 
+				g_Player.m_model = ModelLoad("asset\\model\\sword.fbx"); break;
 				g_Player.EquipWeapon(std::make_unique<Sword>(&g_Player, FALSE));
-				break;
 			case WeaponTerrain::SPEAR_HILL:
 				g_changeP1 = 2;
-				g_Player.m_model = ModelLoad("asset\\model\\spear.fbx"); 
+				g_Player.m_model = ModelLoad("asset\\model\\spear.fbx"); break;
 				g_Player.EquipWeapon(std::make_unique<Spear>(&g_Player, FALSE));
-				break;
 			case WeaponTerrain::BOW_HILL:   
 				g_changeP1 = 3;
-				g_Player.m_model = ModelLoad("asset\\model\\bow.fbx");
+				g_Player.m_model = ModelLoad("asset\\model\\bow.fbx"); break;
 				g_Player.EquipWeapon(std::make_unique<Arrow>(&g_Player, FALSE));
-				break;
 			case WeaponTerrain::HAMMER_:   
 				g_changeP1 = 4;
 				g_Player.m_model = ModelLoad("asset\\model\\hammer.fbx");
@@ -516,11 +521,6 @@ void	PlayerUpdate()
 	{
 		g_Player.m_isDead = true;
 		PlayerDie();
-	}
-
-	if (Keyboard_IsKeyDownTrigger(KK_D1) || Keyboard_IsKeyDownTrigger(KK_D0))
-	{
-		g_Player1CurrentAnim = 0;
 	}
 }
 
@@ -994,7 +994,16 @@ WeaponTerrain GetSetWTP1()
 {
 	return g_setWTP1;
 }
-void SetWTP1(WeaponTerrain wt)
+
+bool GetChangeP1()
+{
+	return g_isChangeP1;
+}
+
+//�f�o�b�O�R�[�h
+/*
+g_changeP1++;
+if (g_changeP1 >= 5)
 {
 	g_setWTP1 = wt;
 }
