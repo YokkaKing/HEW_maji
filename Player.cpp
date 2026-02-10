@@ -141,6 +141,14 @@ void	PlayerUpdate()
 	ApplyTransformEffect();   // 進化タイプに応じたパラメータを適用
 	if (g_Player.m_isDead)return;	//死亡している場合は更新処理をスキップ
 
+	//ヒットアクション
+	g_Player.m_hitAction.Update(g_Player.m_position);
+	//ヒットストップ中ならこの関数自体を抜けるため今後の処理がすべてスキップされる
+	if (g_Player.m_hitAction.IsStopping())
+	{
+		return;
+	}
+	
 //================================================================
 //	武器変更処理(一旦)
 //================================================================
