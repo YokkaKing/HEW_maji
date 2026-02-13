@@ -68,6 +68,9 @@ Spear::Spear(GameObject* player, bool select) : IWeapon(player)
 	g_moveSpear[m_selectPlayer] = { 0.0f, 0.0f, 0.0f };
 	m_coolTime = 0.0f;
 
+	m_damageFCount = 0.0f; // ダメージの経過時間
+	m_damageFrame = { 0.2f, 0.35f }; // ダメージの有効フレーム
+
 	/*********** テストコード **********/
 	g_modelSpear[0] = ModelLoad("asset\\model\\FX_spear.fbx");
 	m_fxAnim.Bind(g_modelSpear[0]);
@@ -85,6 +88,7 @@ void Spear::Attack()
 	if (m_isAttacking) return; // 攻撃してたら終わり
 	if (m_coolTime > 0.0f) return;
 	if (!m_isAttack) return;
+	m_damageFCount = 0.0f; // ダメージ経過時間をリセット
 	PlayAudio(g_spear, false);
 	m_weapon->m_scale.x = 0.1f;
 	m_weapon->m_scale.y = 0.1f;
@@ -111,6 +115,31 @@ void Spear::Update()
 		}
 	}
 
+	if (m_isAttacking)
+	{
+		m_damageFCount += 1.0f / 60.0f;
+	}
+	else
+	{
+		m_damageFCount = 0.0f;
+	}
+
+	// ダメージ経過時間が範囲内なら攻撃できる
+	if (m_damageFCount > m_damageFrame.x &&
+		m_damageFCount < m_damageFrame.y)
+	{
+		if (!m_collider.get()->IsEnable())
+		{
+			m_collider.get()->SetEnable(true); // 攻撃有効	
+		}
+	}
+	else
+	{
+		if (m_collider.get()->IsEnable())
+		{
+			m_collider.get()->SetEnable(false); // 攻撃無効
+		}
+	}
 
 	bool inputCharge = false;
 

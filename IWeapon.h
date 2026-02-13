@@ -41,8 +41,9 @@ public:
     std::unordered_set<GameObject*> m_hitTargets;
 
     float m_damage = 10.0f; // 武器の基本ダメージ量
-
     bool m_selectPlayer = false; // 1Pか2Pか false=1P true=2P
+    float m_damageFCount = 0.0f; // ダメージの経過時間
+    XMFLOAT2 m_damageFrame = { 0.0f, 0.0f }; // 何フレームから何フレームが攻撃か
 
 public:
     IWeapon(GameObject* o) : owner(o) {}
