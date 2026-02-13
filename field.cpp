@@ -230,7 +230,7 @@ const std::vector<std::vector<std::string>> Stage =
 		{"nnnfnfnnfnnfnfnnn"},
 		{"nnntnnnnnnnnnjnnn"},
 		{"nnbnnnnnnnnnnncnn"},
-		{"isnnnnnnnnnnnnnkg"},
+		{"isnnnnnnnnnnlnnkg"},
 		{"nnnnnnnnnnnnnnnnn"},
 		{"innnnnnnnnnnnnnng"},
 		{"nnnnnnnnnnnnnnnnn"},
@@ -494,13 +494,20 @@ void Field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 			break;
 
 		case FIELD::FIELD_LIFT:
-			object = ColliderFactory::CreateBoxObject(
-				Map[i].pos,
-				{ 0.5f, 0.5f, 0.5f },
-				"Lift",
+			object = ColliderFactory::CreateTrapezoidSlopeObject(
+				{ 0.0f, 0.0f, 0.0f },
+				{ 0.0f, 2.0f, 3.0f },
+				1.0f,
+				1.0f,
+				0.3f,
+				"Slope",
 				0
 			);
-			object->m_isStatic = true;
+			object->m_position = { 3.0f, 1.5f, 1.0f };
+			Map[i].pos = { 3.0f, 1.5f, 1.0f };
+			Map[i].scale = { 2.0f, 4.0f, 6.0f };
+			hal::dout << "pos = (" << object->m_position.x << "," <<
+				object->m_position.y << "," << object->m_position.z << ")\n\n\n\n";
 			break;
 
 		case FIELD::FIELD_MAX:
@@ -525,7 +532,7 @@ void Field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 				break;
 
 			case FIELD_LIFT:
-				CreateBox();
+				Model[FIELD_LIFT] = ModelLoad("asset\\model\\block3.fbx");
 				break;
 		}
 	}
@@ -571,11 +578,6 @@ void Field_Draw(void)
 			Map[i].scale.z
 		);
 
-		if (Map[i].no == FIELD::FIELD_LIFT)
-		{
-			ScalingMatrix = XMMatrixScaling(0.5f, 0.5f, 0.5f);
-		}
-
 		//平行移動行列の作成
 		XMMATRIX	TranslationMatrix = XMMatrixTranslation
 		(
@@ -611,14 +613,15 @@ void Field_Draw(void)
 		//描画するポリゴンの種類をセット 3頂点でポリゴン１枚として表示
 		g_pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-		if (Map[i].no == FIELD_BOX || Map[i].no == FIELD_LIFT)
+		if (/*Map[i].no == FIELD_BOX || */Map[i].no == FIELD_LIFT)
 		{
 			////描画リクエスト
-			g_pContext->DrawIndexed(6 * 6, 0, 0);
+			//g_pContext->DrawIndexed(6 * 6, 0, 0);
+			ModelDraw(Model[FIELD_LIFT]);
 		}
 		else
 		{
-			ModelDraw(Model[Map[i].no]);
+			//ModelDraw(Model[Map[i].no]);
 		}
 
 		//ModelDraw(Test);//デバッグ

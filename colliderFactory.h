@@ -33,6 +33,16 @@ public:
         float radius = 1.0f,
         const std::string& tag = "Untagged",
         int layer = 0);
+
+    // SlopeColliderオブジェクトの作成
+    static GameObject* CreateTrapezoidSlopeObject(
+        XMFLOAT3 start,
+        XMFLOAT3 end,
+        float startWidth,
+        float endWidth,
+        float thickness,
+        const std::string& tag,
+        int layer = 0);
 };
 
 #endif // COLLIDER_FACTORY_H
