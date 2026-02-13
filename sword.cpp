@@ -54,6 +54,10 @@ Sword::Sword(GameObject* player, bool select) : IWeapon(player)
 	m_collider->SetEnable(false); // 最初は当たり判定を無効化
 
 	m_attackTimer = 0.0f;
+	m_coolTime = 0.0f;
+
+	m_damageFCount = 0.0f; // ダメージの経過時間
+	m_damageFrame = { 0.2f, 0.3f }; // ダメージの有効フレーム
 
 	g_moveSword[m_selectPlayer] = { 0.0f, 0.0f, 0.0f };
 
@@ -72,6 +76,7 @@ void Sword::Attack()
 	if (m_isAttacking) return; // 攻撃してたら終わり
 	if (m_coolTime > 0.0f) return;
 	PlayAudio(g_sword, false);
+	m_damageFCount = 0.0f;
 	m_isAttacking = true; // 攻撃している
 	m_attackTimer = 0.0f; // 攻撃タイマー初期化
 	g_moveSword[m_selectPlayer] = {0.0f, 0.0f, 0.0f}; // 簡易アニメーションの初期化
@@ -90,6 +95,33 @@ void Sword::Update()
 	{
 		m_coolTime -= 1.0f / 60.0f; 
 	}
+
+	if (m_isAttacking)
+	{
+		m_damageFCount += 1.0f / 60.0f;
+	}
+	else
+	{
+		m_damageFCount = 0.0f;
+	}
+
+	// ダメージ経過時間が範囲内なら攻撃できる
+	if (m_damageFCount > m_damageFrame.x &&
+		m_damageFCount < m_damageFrame.y)
+	{
+		if (!m_collider.get()->IsEnable())
+		{
+			m_collider.get()->SetEnable(true); // 攻撃有効	
+		}
+	}
+	else
+	{
+		if (m_collider.get()->IsEnable())
+		{
+			m_collider.get()->SetEnable(false); // 攻撃無効
+		}
+	}
+
 	if (m_attackTimer < (ATTACK_DURATION / 2) && m_isAttacking)
 	{
 		float progress = m_attackTimer / (ATTACK_DURATION / 2.0f);

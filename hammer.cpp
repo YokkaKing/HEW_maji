@@ -61,6 +61,10 @@ Hammer::Hammer(GameObject* player, bool select) : IWeapon(player)
 	m_collider->SetEnable(false); // 最初は当たり判定を無効化
 
 	m_attackTimer = 0.0f;
+	m_coolTime = 0.0f;
+
+	m_damageFCount = 0.0f; // ダメージの経過時間
+	m_damageFrame = { 0.03f, 0.1f }; // ダメージの有効フレーム
 
 	m_move = { 0.0f, 0.0f, 0.0f };
 	m_coolTime = 0.0f;
@@ -83,13 +87,13 @@ void Hammer::Attack()
 	if (m_isCharging) return;
 	if (!m_isAttack) return;
 
+	m_damageFCount = 0.0f;
 	m_isAttacking = true; // 攻撃している
 	m_attackTimer = 0.0f; // 攻撃タイマー初期化
 	m_move = { 0.0f, 0.0f, 0.0f };
 	m_coolTime = 1.5f;
 	m_isAttack = false;
 
-	m_collider->SetEnable(true); // 当たり判定の有効
 	MODEL* model = nullptr;
 	bool isMoving = false;
 
@@ -129,6 +133,32 @@ void Hammer::Update()
 	if (m_coolTime > 0.0f) {
 		m_coolTime -= 1.0f / 60.0f;
 		if (m_coolTime < 0.0f) m_coolTime = 0.0f;
+	}
+
+	if (m_isAttacking)
+	{
+		m_damageFCount += 1.0f / 60.0f;
+	}
+	else
+	{
+		m_damageFCount = 0.0f;
+	}
+
+	// ダメージ経過時間が範囲内なら攻撃できる
+	if (m_damageFCount > m_damageFrame.x &&
+		m_damageFCount < m_damageFrame.y)
+	{
+		if (!m_collider.get()->IsEnable())
+		{
+			m_collider.get()->SetEnable(true); // 攻撃有効	
+		}
+	}
+	else
+	{
+		if (m_collider.get()->IsEnable())
+		{
+			m_collider.get()->SetEnable(false); // 攻撃無効
+		}
 	}
 	
 	bool inputCharge = false;
