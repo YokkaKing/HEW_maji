@@ -106,4 +106,13 @@ PLAYER2* GetPlayer2();
 WeaponTerrain GetSetWTP2();
 bool GetChangeP2();
 
+int Player2_GetTransformCount();
+int Player2_GetItemCount();
+int Player2_GetLoseCount();
+void Player2_PlusTransformCount();
+void Player2_PlusGetItemCount();
+void Player2_PlusLoseCount();
+void Player2_AllCountReset();
+void Player2_PlusScore(int score);
+int Player2_GetScore();
 #endif // PLAYER2_H

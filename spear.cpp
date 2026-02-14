@@ -72,7 +72,7 @@ Spear::Spear(GameObject* player, bool select) : IWeapon(player)
 	m_damageFrame = { 0.2f, 0.35f }; // ダメージの有効フレーム
 
 	/*********** テストコード **********/
-	g_modelSpear[0] = ModelLoad("asset\\model\\FX_spear.fbx");
+	g_modelSpear[0] = ModelLoad("asset\\model\\weapon_spear.fbx");
 	m_fxAnim.Bind(g_modelSpear[0]);
 	g_modelSpear[1] = ModelLoad("asset\\model\\block2.fbx");
 	/*********************************/
@@ -326,9 +326,9 @@ void Spear::Draw()
 	if (m_isAttacking)
 	{
 		XMMATRIX	scale = XMMatrixScaling(
-			m_weapon->m_scale.x * 0.1f,
-			m_weapon->m_scale.y * 0.1f,
-			m_weapon->m_scale.z * 0.1f);
+			m_weapon->m_scale.x * 0.03f,
+			m_weapon->m_scale.y * 0.03f,
+			m_weapon->m_scale.z * 0.03f);
 		XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
 			m_weapon->m_rotation.x,
 			m_weapon->m_rotation.y + XM_PI,
@@ -446,7 +446,7 @@ void SpearShot::Start()
 {
 	m_tag = "Attack";
 
-	XMFLOAT3 scale = { 0.3f, 0.3f, 1.0f };
+	XMFLOAT3 scale = {1.0f,1.0f,1.0f };
 	m_scale = scale;
 	m_collider = AddComponent<BoxCollider>(this, scale);
 	ManagerCollider::AddCollider(m_collider);
@@ -489,12 +489,12 @@ void SpearShot::Draw()
 {
 	//ワールド行列作成
 	XMMATRIX	scale = XMMatrixScaling(
-		m_scale.x,
-		m_scale.y,
-		m_scale.z);
+		m_scale.x*0.01f,
+		m_scale.y * 0.01f,
+		m_scale.z * 0.01f);
 	XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
 		m_rotation.x,
-		m_rotation.y,
+		m_rotation.y + XM_PI,
 		m_rotation.z);
 	XMMATRIX	translation = XMMatrixTranslation(
 		m_position.x,
@@ -531,6 +531,7 @@ void SpearShot::OnCollision(const CollisionInfo& info)
 		{
 			PlayAudio(g_damageSharp, false);
 			info.other->TakeDamage(15.0f); // 仮に20ダメージ
+			Player_PlusScore(15.0f);
 			m_isDead = true;
 
 			//ヒットバック計算式
@@ -551,6 +552,8 @@ void SpearShot::OnCollision(const CollisionInfo& info)
 		{
 			PlayAudio(g_damageSharp, false);
 			info.other->TakeDamage(15.0f);
+			Player2_PlusScore(15.0f);
+
 			m_isDead = true;
 
 			//ヒットバック計算式

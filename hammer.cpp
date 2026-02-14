@@ -107,7 +107,7 @@ void Hammer::Attack()
 			float mv = sqrtf(player->m_velocity.x * player->m_velocity.x +
 				player->m_velocity.z * player->m_velocity.z);
 			isMoving = (mv > 0.001f);
-			ModelPlayClip(model, 440, 539, 60.0f, false, 2.0f);
+			ModelPlayClip(model, 280, 420, 60.0f, false, 2.0f);
 		}
 	}
 	else
@@ -120,7 +120,7 @@ void Hammer::Attack()
 			float mv = sqrtf(player->m_velocity.x * player->m_velocity.x +
 				player->m_velocity.z * player->m_velocity.z);
 			isMoving = (mv > 0.001f);
-			ModelPlayClip(model, 440, 539, 60.0f, false, 2.0f);
+			ModelPlayClip(model, 280, 420, 60.0f, false, 2.0f);
 		}
 	}
 
@@ -229,7 +229,7 @@ void Hammer::Update()
 	{
 		
 		if (model) {
-			ModelPlayClip(model, 370, 440, 60.0f, false, 1.0f);
+			ModelPlayClip(model, 241, 280, 60.0f, false, 1.0f);
 		}
 		m_chargeState = CHARGE_IN;
 	}
@@ -238,7 +238,7 @@ void Hammer::Update()
 		if (m_chargeState != CHARGE_MOVE_LOOP)
 		{
 			if (model) {
-				ModelPlayClip(model, 540, 660, 60.0f, true, 2.0f);
+				ModelPlayClip(model, 421, 540, 60.0f, true, 2.0f);
 			}
 			m_chargeState = CHARGE_MOVE_LOOP;
 		}
@@ -249,7 +249,7 @@ void Hammer::Update()
 		{
 			
 			if (model) {
-				ModelPlayClip(model, 440, 440, 60.0f, true, 1.0f);
+				ModelPlayClip(model, 280, 280, 60.0f, true, 1.0f);
 			}
 			m_chargeState = CHARGE_HOLD;
 		}
@@ -259,7 +259,7 @@ void Hammer::Update()
 			if (model && ModelConsumeClipFinished(model))
 			{
 				
-				ModelPlayClip(model, 440, 440, 60.0f, true, 1.0f);
+				ModelPlayClip(model, 280, 280, 60.0f, true, 1.0f);
 				m_chargeState = CHARGE_HOLD;
 			}
 		}
@@ -406,7 +406,6 @@ void Hammer::OnWeaponCollision(GameObject* target)
 				if (m_chargePower < 3.4f)
 				{
 					target->TakeDamage(10.0f);
-
 					//ヒットバック計算式
 					XMFLOAT3 dir = {
 						target->m_position.x - owner->m_position.x,
@@ -420,11 +419,11 @@ void Hammer::OnWeaponCollision(GameObject* target)
 					//攻撃時に攻撃者側にもヒットストップを入れる
 					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
 					g_Player.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime1, 0.0f);
+					Player_PlusScore(10.0f);
 				}
 				else if (m_chargePower < 3.5f)
 				{
 					target->TakeDamage(20.0f);
-
 					//ヒットバック計算式
 					XMFLOAT3 dir = {
 						target->m_position.x - owner->m_position.x,
@@ -438,11 +437,11 @@ void Hammer::OnWeaponCollision(GameObject* target)
 					//攻撃時に攻撃者側にもヒットストップを入れる
 					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
 					g_Player.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime2, 0.0f);
+					Player_PlusScore(20.0f);
 				}
 				else if (m_chargePower < 4.5f)
 				{
 					target->TakeDamage(30.0f);
-
 					//ヒットバック計算式
 					XMFLOAT3 dir = {
 						target->m_position.x - owner->m_position.x,
@@ -456,11 +455,11 @@ void Hammer::OnWeaponCollision(GameObject* target)
 					//攻撃時に攻撃者側にもヒットストップを入れる
 					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
 					g_Player.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime3, 0.0f);
+					Player_PlusScore(30.0f);
 				}
 				else if (m_chargePower < 5.5f)
 				{
 					target->TakeDamage(40.0f);
-
 					//ヒットバック計算式
 					XMFLOAT3 dir = {
 						target->m_position.x - owner->m_position.x,
@@ -474,24 +473,24 @@ void Hammer::OnWeaponCollision(GameObject* target)
 					//攻撃時に攻撃者側にもヒットストップを入れる
 					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
 					g_Player.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime3, 0.0f);
+					Player_PlusScore(40.0f);
 				}
 				else if (m_chargePower >= 5.5f)
 				{
 					target->TakeDamage(70.0f);
-
 					//ヒットバック計算式
 					XMFLOAT3 dir = {
 						target->m_position.x - owner->m_position.x,
 						0.1f,
 						target->m_position.z - owner->m_position.z
 					};
-
 					//P2に対してヒットアクションを発動
 					//引数:方向vec, HS時間, KB距離
 					g_Player2.m_hitAction.triggerHA(dir, stopTime4, 0.6f);
 					//攻撃時に攻撃者側にもヒットストップを入れる
 					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
 					g_Player.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime4, 0.0f);
+					Player_PlusScore(70.0f);
 				}
 			}
 			break;
@@ -506,7 +505,6 @@ void Hammer::OnWeaponCollision(GameObject* target)
 				if (m_chargePower < 3.4f)
 				{
 					target->TakeDamage(10.0f);
-
 					//ヒットバック計算式
 					XMFLOAT3 dir = {
 						target->m_position.x - owner->m_position.x,
@@ -520,11 +518,11 @@ void Hammer::OnWeaponCollision(GameObject* target)
 					//攻撃時に攻撃者側にもヒットストップを入れる
 					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
 					g_Player2.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime1, 0.0f);
+					Player2_PlusScore(10.0f);
 				}
 				else if (m_chargePower < 3.5f)
 				{
 					target->TakeDamage(20.0f);
-
 					//ヒットバック計算式
 					XMFLOAT3 dir = {
 						target->m_position.x - owner->m_position.x,
@@ -538,11 +536,11 @@ void Hammer::OnWeaponCollision(GameObject* target)
 					//攻撃時に攻撃者側にもヒットストップを入れる
 					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
 					g_Player2.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime2, 0.0f);
+					Player2_PlusScore(20.0f);
 				}
 				else if (m_chargePower < 4.5f)
 				{
 					target->TakeDamage(30.0f);
-
 					//ヒットバック計算式
 					XMFLOAT3 dir = {
 						target->m_position.x - owner->m_position.x,
@@ -556,11 +554,11 @@ void Hammer::OnWeaponCollision(GameObject* target)
 					//攻撃時に攻撃者側にもヒットストップを入れる
 					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
 					g_Player2.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime3, 0.0f);
+					Player2_PlusScore(30.0f);
 				}
 				else if (m_chargePower < 5.5f)
 				{
 					target->TakeDamage(40.0f);
-
 					//ヒットバック計算式
 					XMFLOAT3 dir = {
 						target->m_position.x - owner->m_position.x,
@@ -574,11 +572,11 @@ void Hammer::OnWeaponCollision(GameObject* target)
 					//攻撃時に攻撃者側にもヒットストップを入れる
 					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
 					g_Player2.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime3, 0.0f);
+					Player2_PlusScore(40.0f);
 				}
 				else if (m_chargePower >= 5.5f)
 				{
 					target->TakeDamage(70.0f);
-
 					//ヒットバック計算式
 					XMFLOAT3 dir = {
 						target->m_position.x - owner->m_position.x,
@@ -592,6 +590,7 @@ void Hammer::OnWeaponCollision(GameObject* target)
 					//攻撃時に攻撃者側にもヒットストップを入れる
 					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
 					g_Player2.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime4, 0.0f);
+					Player2_PlusScore(70.0f);
 				}
 			}
 			break;
