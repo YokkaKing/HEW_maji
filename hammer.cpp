@@ -19,6 +19,7 @@
 #include"keyboard.h"
 #include"controller.h"
 #include"Manager.h"
+#include"hitAction.h"
 
 //================================================================
 //	グローバル変数
@@ -60,6 +61,10 @@ Hammer::Hammer(GameObject* player, bool select) : IWeapon(player)
 	m_collider->SetEnable(false); // 最初は当たり判定を無効化
 
 	m_attackTimer = 0.0f;
+	m_coolTime = 0.0f;
+
+	m_damageFCount = 0.0f; // ダメージの経過時間
+	m_damageFrame = { 0.03f, 0.1f }; // ダメージの有効フレーム
 
 	m_move = { 0.0f, 0.0f, 0.0f };
 	m_coolTime = 0.0f;
@@ -82,13 +87,13 @@ void Hammer::Attack()
 	if (m_isCharging) return;
 	if (!m_isAttack) return;
 
+	m_damageFCount = 0.0f;
 	m_isAttacking = true; // 攻撃している
 	m_attackTimer = 0.0f; // 攻撃タイマー初期化
 	m_move = { 0.0f, 0.0f, 0.0f };
 	m_coolTime = 1.5f;
 	m_isAttack = false;
 
-	m_collider->SetEnable(true); // 当たり判定の有効
 	MODEL* model = nullptr;
 	bool isMoving = false;
 
@@ -128,6 +133,32 @@ void Hammer::Update()
 	if (m_coolTime > 0.0f) {
 		m_coolTime -= 1.0f / 60.0f;
 		if (m_coolTime < 0.0f) m_coolTime = 0.0f;
+	}
+
+	if (m_isAttacking)
+	{
+		m_damageFCount += 1.0f / 60.0f;
+	}
+	else
+	{
+		m_damageFCount = 0.0f;
+	}
+
+	// ダメージ経過時間が範囲内なら攻撃できる
+	if (m_damageFCount > m_damageFrame.x &&
+		m_damageFCount < m_damageFrame.y)
+	{
+		if (!m_collider.get()->IsEnable())
+		{
+			m_collider.get()->SetEnable(true); // 攻撃有効	
+		}
+	}
+	else
+	{
+		if (m_collider.get()->IsEnable())
+		{
+			m_collider.get()->SetEnable(false); // 攻撃無効
+		}
 	}
 	
 	bool inputCharge = false;
@@ -357,6 +388,11 @@ void Hammer::OnWeaponCollision(GameObject* target)
 
 	if (m_isAttacking)
 	{
+		//ヒットストップ用P1,P2共通変数
+		float stopTime1 = 0.3f;
+		float stopTime2 = 0.5f;
+		float stopTime3 = 0.8f;
+		float stopTime4 = 1.2f;
 		// 1Pか2Pか
 		switch (m_selectPlayer)
 		{
@@ -370,31 +406,91 @@ void Hammer::OnWeaponCollision(GameObject* target)
 				if (m_chargePower < 3.4f)
 				{
 					target->TakeDamage(10.0f);
+					//ヒットバック計算式
+					XMFLOAT3 dir = {
+						target->m_position.x - owner->m_position.x,
+						0.1f,
+						target->m_position.z - owner->m_position.z
+					};
+
+					//P2に対してヒットアクションを発動
+					//引数:方向vec, HS時間, KB距離
+					g_Player2.m_hitAction.triggerHA(dir, stopTime1, 0.1f);
+					//攻撃時に攻撃者側にもヒットストップを入れる
+					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
+					g_Player.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime1, 0.0f);
 					Player_PlusScore(10.0f);
 				}
 				else if (m_chargePower < 3.5f)
 				{
 					target->TakeDamage(20.0f);
-					Player_PlusScore(20.0f);
+					//ヒットバック計算式
+					XMFLOAT3 dir = {
+						target->m_position.x - owner->m_position.x,
+						0.1f,
+						target->m_position.z - owner->m_position.z
+					};
 
+					//P2に対してヒットアクションを発動
+					//引数:方向vec, HS時間, KB距離
+					g_Player2.m_hitAction.triggerHA(dir, stopTime2, 0.2f);
+					//攻撃時に攻撃者側にもヒットストップを入れる
+					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
+					g_Player.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime2, 0.0f);
+					Player_PlusScore(20.0f);
 				}
 				else if (m_chargePower < 4.5f)
 				{
 					target->TakeDamage(30.0f);
-					Player_PlusScore(30.0f);
+					//ヒットバック計算式
+					XMFLOAT3 dir = {
+						target->m_position.x - owner->m_position.x,
+						0.1f,
+						target->m_position.z - owner->m_position.z
+					};
 
+					//P2に対してヒットアクションを発動
+					//引数:方向vec, HS時間, KB距離
+					g_Player2.m_hitAction.triggerHA(dir, stopTime3, 0.3f);
+					//攻撃時に攻撃者側にもヒットストップを入れる
+					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
+					g_Player.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime3, 0.0f);
+					Player_PlusScore(30.0f);
 				}
 				else if (m_chargePower < 5.5f)
 				{
 					target->TakeDamage(40.0f);
-					Player_PlusScore(40.0f);
+					//ヒットバック計算式
+					XMFLOAT3 dir = {
+						target->m_position.x - owner->m_position.x,
+						0.1f,
+						target->m_position.z - owner->m_position.z
+					};
 
+					//P2に対してヒットアクションを発動
+					//引数:方向vec, HS時間, KB距離
+					g_Player2.m_hitAction.triggerHA(dir, stopTime3, 0.3f);
+					//攻撃時に攻撃者側にもヒットストップを入れる
+					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
+					g_Player.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime3, 0.0f);
+					Player_PlusScore(40.0f);
 				}
 				else if (m_chargePower >= 5.5f)
 				{
 					target->TakeDamage(70.0f);
+					//ヒットバック計算式
+					XMFLOAT3 dir = {
+						target->m_position.x - owner->m_position.x,
+						0.1f,
+						target->m_position.z - owner->m_position.z
+					};
+					//P2に対してヒットアクションを発動
+					//引数:方向vec, HS時間, KB距離
+					g_Player2.m_hitAction.triggerHA(dir, stopTime4, 0.6f);
+					//攻撃時に攻撃者側にもヒットストップを入れる
+					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
+					g_Player.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime4, 0.0f);
 					Player_PlusScore(70.0f);
-
 				}
 			}
 			break;
@@ -409,32 +505,92 @@ void Hammer::OnWeaponCollision(GameObject* target)
 				if (m_chargePower < 3.4f)
 				{
 					target->TakeDamage(10.0f);
-					Player2_PlusScore(10.0f);
+					//ヒットバック計算式
+					XMFLOAT3 dir = {
+						target->m_position.x - owner->m_position.x,
+						0.1f,
+						target->m_position.z - owner->m_position.z
+					};
 
+					//P2に対してヒットアクションを発動
+					//引数:方向vec, HS時間, KB距離
+					g_Player.m_hitAction.triggerHA(dir, stopTime1, 0.1f);
+					//攻撃時に攻撃者側にもヒットストップを入れる
+					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
+					g_Player2.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime1, 0.0f);
+					Player2_PlusScore(10.0f);
 				}
 				else if (m_chargePower < 3.5f)
 				{
 					target->TakeDamage(20.0f);
-					Player2_PlusScore(20.0f);
+					//ヒットバック計算式
+					XMFLOAT3 dir = {
+						target->m_position.x - owner->m_position.x,
+						0.1f,
+						target->m_position.z - owner->m_position.z
+					};
 
+					//P2に対してヒットアクションを発動
+					//引数:方向vec, HS時間, KB距離
+					g_Player.m_hitAction.triggerHA(dir, stopTime2, 0.2f);
+					//攻撃時に攻撃者側にもヒットストップを入れる
+					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
+					g_Player2.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime2, 0.0f);
+					Player2_PlusScore(20.0f);
 				}
 				else if (m_chargePower < 4.5f)
 				{
 					target->TakeDamage(30.0f);
-					Player2_PlusScore(30.0f);
+					//ヒットバック計算式
+					XMFLOAT3 dir = {
+						target->m_position.x - owner->m_position.x,
+						0.1f,
+						target->m_position.z - owner->m_position.z
+					};
 
+					//P2に対してヒットアクションを発動
+					//引数:方向vec, HS時間, KB距離
+					g_Player.m_hitAction.triggerHA(dir, stopTime3, 0.3f);
+					//攻撃時に攻撃者側にもヒットストップを入れる
+					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
+					g_Player2.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime3, 0.0f);
+					Player2_PlusScore(30.0f);
 				}
 				else if (m_chargePower < 5.5f)
 				{
 					target->TakeDamage(40.0f);
-					Player2_PlusScore(40.0f);
+					//ヒットバック計算式
+					XMFLOAT3 dir = {
+						target->m_position.x - owner->m_position.x,
+						0.1f,
+						target->m_position.z - owner->m_position.z
+					};
 
+					//P2に対してヒットアクションを発動
+					//引数:方向vec, HS時間, KB距離
+					g_Player.m_hitAction.triggerHA(dir, stopTime3, 0.3f);
+					//攻撃時に攻撃者側にもヒットストップを入れる
+					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
+					g_Player2.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime3, 0.0f);
+					Player2_PlusScore(40.0f);
 				}
 				else if (m_chargePower >= 5.5f)
 				{
 					target->TakeDamage(70.0f);
-					Player2_PlusScore(70.0f);
+					//ヒットバック計算式
+					XMFLOAT3 dir = {
+						target->m_position.x - owner->m_position.x,
+						0.1f,
+						target->m_position.z - owner->m_position.z
+					};
 
+					//P2に対してヒットアクションを発動
+					//引数:方向vec, HS時間, KB距離
+					g_Player.m_hitAction.triggerHA(dir, stopTime4, 0.6f);
+					//攻撃時に攻撃者側にもヒットストップを入れる
+					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
+					g_Player2.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime4, 0.0f);
+					Player2_PlusScore(70.0f);
 				}
 			}
 			break;
