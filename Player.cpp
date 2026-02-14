@@ -49,7 +49,7 @@ static bool g_Player1AttackPlaying = false; // 攻撃ワンショット再生中
 static bool g_Player1JumpPlaying = false; // ジャンプワンショット再生中フラグ
 static int g_Player1CurrentAnim = 0; // 0: idle, 1: move, 2: attack 3:jump
 bool g_isChangeP1;
-
+ITEM_SPONER gp_itemSponer;
 void PlayerDie()
 {
 	hal::dout << "Player died!" << std::endl;
@@ -988,6 +988,10 @@ void PLAYER::RoundReset(XMFLOAT3 startPos)
 	gp_itemSponer.ResetItem();
 }
 
+void SetWTP1(WeaponTerrain wt)
+{
+	g_setWTP1 = wt;
+}
 WeaponTerrain GetSetWTP1()
 {
 	return g_setWTP1;

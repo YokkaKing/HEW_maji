@@ -17,7 +17,7 @@
 #include"Game.h"
 #include"Title.h"
 #include"Result.h"
-#include "Winner.h"
+
 #include "Player.h"
 #include "Player2.h"
 #include"fade.h"

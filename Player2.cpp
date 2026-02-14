@@ -955,6 +955,11 @@ void PLAYER2::EquipBaseWeapon()
 	}
 }
 
+void SetWTP2(WeaponTerrain wt)
+{
+	g_setWTP2 = wt;
+}
+
 WeaponTerrain GetSetWTP2()
 {
 	return g_setWTP2;
