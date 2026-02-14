@@ -998,13 +998,8 @@ bool GetChangeP1()
 	return g_isChangeP1;
 }
 
-//�f�o�b�O�R�[�h
-/*
-g_changeP1++;
-if (g_changeP1 >= 5)
-{
-	g_setWTP1 = wt;
-}
+
+
 WeaponTerrain GetPlayerCurrentWT()
 {
 	return g_Player.m_currentWT;

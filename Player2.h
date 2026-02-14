@@ -114,5 +114,6 @@ void Player2_PlusGetItemCount();
 void Player2_PlusLoseCount();
 void Player2_AllCountReset();
 void Player2_PlusScore(int score);
+void SetPlayer2_IsTransformed(int flg);
 int Player2_GetScore();
 #endif // PLAYER2_H

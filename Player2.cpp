@@ -966,17 +966,6 @@ bool GetChangeP2()
 }
 
 
-//デバッグコード
-/*
-g_changeP2++;
-if (g_changeP2 >= 5)
-{
-	g_changeP2 = 0;
-}
-switch (g_changeP2)
-{
-	g_setWTP2 = wt;
-}
 
 bool GetPlayer2_IsAttacked()
 {
