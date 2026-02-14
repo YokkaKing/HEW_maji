@@ -16,6 +16,8 @@
 void Result_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
 void Result_Finalize();
 void Result_Update();
+void Result_Draw_Player1();
+void Result_Draw_Player2();
 void Result_Draw();
 
 #endif // RESULT_H

@@ -370,22 +370,31 @@ void Hammer::OnWeaponCollision(GameObject* target)
 				if (m_chargePower < 3.4f)
 				{
 					target->TakeDamage(10.0f);
+					Player_PlusScore(10.0f);
 				}
 				else if (m_chargePower < 3.5f)
 				{
 					target->TakeDamage(20.0f);
+					Player_PlusScore(20.0f);
+
 				}
 				else if (m_chargePower < 4.5f)
 				{
 					target->TakeDamage(30.0f);
+					Player_PlusScore(30.0f);
+
 				}
 				else if (m_chargePower < 5.5f)
 				{
 					target->TakeDamage(40.0f);
+					Player_PlusScore(40.0f);
+
 				}
 				else if (m_chargePower >= 5.5f)
 				{
 					target->TakeDamage(70.0f);
+					Player_PlusScore(70.0f);
+
 				}
 			}
 			break;
@@ -400,22 +409,32 @@ void Hammer::OnWeaponCollision(GameObject* target)
 				if (m_chargePower < 3.4f)
 				{
 					target->TakeDamage(10.0f);
+					Player2_PlusScore(10.0f);
+
 				}
 				else if (m_chargePower < 3.5f)
 				{
 					target->TakeDamage(20.0f);
+					Player2_PlusScore(20.0f);
+
 				}
 				else if (m_chargePower < 4.5f)
 				{
 					target->TakeDamage(30.0f);
+					Player2_PlusScore(30.0f);
+
 				}
 				else if (m_chargePower < 5.5f)
 				{
 					target->TakeDamage(40.0f);
+					Player2_PlusScore(40.0f);
+
 				}
 				else if (m_chargePower >= 5.5f)
 				{
 					target->TakeDamage(70.0f);
+					Player2_PlusScore(70.0f);
+
 				}
 			}
 			break;

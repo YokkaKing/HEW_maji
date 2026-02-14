@@ -68,8 +68,8 @@ Shuriken::Shuriken(GameObject* player, bool select) : IWeapon(player)
 	m_coolTime = 0.0f;
 
 	/*********** テストコード **********/
-	g_modelShuriken[0] = ModelLoad("asset\\model\\block.fbx");
-	g_modelShuriken[1] = ModelLoad("asset\\model\\block2.fbx");
+	g_modelShuriken[0] = ModelLoad("asset\\model\\weapon_shuriken.fbx");
+	g_modelShuriken[1] = ModelLoad("asset\\model\\block.fbx");
 	/*********************************/
 }
 
@@ -162,9 +162,9 @@ void Shuriken::Draw()
 {
 	//ワールド行列作成
 	XMMATRIX	scale = XMMatrixScaling(
-		m_weapon->m_scale.x,
-		m_weapon->m_scale.y,
-		m_weapon->m_scale.z);
+		m_weapon->m_scale.x*0.1f,
+		m_weapon->m_scale.y * 0.1f,
+		m_weapon->m_scale.z * 0.1f);
 	XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
 		m_weapon->m_rotation.x,
 		m_weapon->m_rotation.y,
@@ -268,9 +268,9 @@ void ShurikenShot::Draw()
 {
 	//ワールド行列作成
 	XMMATRIX	scale = XMMatrixScaling(
-		m_scale.x,
-		m_scale.y,
-		m_scale.z);
+		m_scale.x*0.1f,
+		m_scale.y*0.1f,
+		m_scale.z*0.1f);
 	XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
 		m_rotation.x,
 		m_rotation.y,
@@ -307,6 +307,7 @@ void ShurikenShot::OnCollision(const CollisionInfo& info)
 		if (info.other->m_tag == "Player2") // 相手がPlayer2の時のみ
 		{
 			PlayAudio(g_damageSharp, false);
+			Player_PlusScore(5.0f); // スコア加算
 
 			info.other->TakeDamage(5.0f);
 			m_isDead = true;
@@ -318,6 +319,7 @@ void ShurikenShot::OnCollision(const CollisionInfo& info)
 		if (info.other->m_tag == "Player") // 相手がPlayerの時のみ
 		{
 			PlayAudio(g_damageSharp, false);
+			Player2_PlusScore(5.0f); // スコア加算
 
 			info.other->TakeDamage(5.0f);
 			m_isDead = true;

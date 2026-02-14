@@ -46,6 +46,10 @@ public:
     std::string m_tag = "Untagged";
     int m_layer = 0;
 
+    int m_transformCount;
+    int m_itemCount;
+    int m_loseCount;
+	int m_score;
     MODEL* m_model = nullptr;
     bool m_isGround = false;
     FLOAT m_koyoteTime = 0.0f;

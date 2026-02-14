@@ -59,7 +59,7 @@ Arrow::Arrow(GameObject* player, bool select) : IWeapon(player)
 	m_coolTime = 0.0f;
 
 	/*********** テストコード **********/
-	g_modelArrow[0] = ModelLoad("asset\\model\\block.fbx");
+	g_modelArrow[0] = ModelLoad("asset\\model\\weapon_arrow.fbx");
 	g_modelArrow[1] = ModelLoad("asset\\model\\block2.fbx");
 	/*********************************/
 }
@@ -322,18 +322,25 @@ void ArrowShot::OnCollision(const CollisionInfo& info)
 			if (m_chargePower < 0.5f)
 			{
 				info.other->TakeDamage(5.0f);
+				Player_PlusScore(5.0f);
 			}
 			else if (m_chargePower < 1.0f)
 			{
 				info.other->TakeDamage(10.0f);
+				Player_PlusScore(10.0f);
+
 			}
 			else if (m_chargePower < 2.0f)
 			{
 				info.other->TakeDamage(20.0f);
+				Player_PlusScore(20.0f);
+
 			}
 			else if (m_chargePower > 2.0f)
 			{
 				info.other->TakeDamage(30.0f);
+				Player_PlusScore(30.0f);
+
 			}
 			m_isDead = true;
 			g_Player2.m_isAttacked = true;
@@ -348,18 +355,26 @@ void ArrowShot::OnCollision(const CollisionInfo& info)
 			if (m_chargePower < 0.5f)
 			{
 				info.other->TakeDamage(5.0f);
+				Player2_PlusScore(5.0f);
+
 			}
 			else if (m_chargePower < 1.0f)
 			{
 				info.other->TakeDamage(10.0f);
+				Player2_PlusScore(10.0f);
+
 			}
 			else if (m_chargePower < 2.0f)
 			{
 				info.other->TakeDamage(20.0f);
+				Player2_PlusScore(20.0f);
+
 			}
 			else if (m_chargePower > 2.0f)
 			{
 				info.other->TakeDamage(30.0f);
+				Player2_PlusScore(30.0f);
+
 			}
 			m_isDead = true;
 			g_Player.m_isAttacked = true;

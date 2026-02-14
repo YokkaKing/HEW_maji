@@ -129,7 +129,7 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 	}
 	else if (g_setWTP1 == WeaponTerrain::SHURIKEN_)
 	{
-		g_Player.m_model = ModelLoad("asset\\model\\char_shuriken_motion.fbx");
+		g_Player.m_model = ModelLoad("asset\\model\\default_shuriken.fbx");
 	}
 
 	g_Player.EquipBaseWeapon(); //���E���h�����p�ɏ���������đ���
@@ -706,17 +706,7 @@ void PlayerDraw()
 	{
 		g_Player.m_position.y = g_Player.m_position.y - 0.99f;
 	}
-	if (g_setWTP1 == WeaponTerrain::SPEAR_HILL) //移動
-	{
-		    translation = XMMatrixTranslation(
-			g_Player.m_position.x,
-			g_Player.m_position.y - 0.5f,
-			g_Player.m_position.z);
-			if (g_Player.m_position.y < g_Player.m_position.y - 0.5f)
-			{
-				g_Player.m_position.y = g_Player.m_position.y - 0.49f;
-			}
-	}
+	
 
 	XMMATRIX	world = scale * rotation * translation;
 
@@ -1005,4 +995,47 @@ WeaponTerrain GetPlayerCurrentWT()
 void SetPlayer_IsTransformed(bool isTransformed)
 {
 	g_Player.m_isTransformed = isTransformed;
+}
+int Player_GetTransformCount()
+{
+	return g_Player.m_transformCount;
+}
+int Player_GetItemCount()
+{
+	return g_Player.m_itemCount;
+
+}
+int Player_GetLoseCount()
+{
+	return g_Player.m_loseCount;
+
+}
+void Player_PlusTransformCount()
+{
+	g_Player.m_transformCount += 1;
+}
+void Player_PlusGetItemCount()
+{
+	g_Player.m_itemCount += 1;
+
+}
+void Player_PlusLoseCount()
+{
+	g_Player.m_loseCount += 1;
+
+}
+void Player_AllCountReset()
+{
+	g_Player.m_transformCount = 0;
+	g_Player.m_itemCount = 0;
+	g_Player.m_loseCount = 0;
+	g_Player.m_score = 0;
+}
+void Player_PlusScore(int score)
+{
+	g_Player.m_score += score;
+}
+int Player_GetScore()
+{
+	return g_Player.m_score;
 }

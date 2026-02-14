@@ -61,7 +61,10 @@ void	SetCameraUpVector(XMFLOAT3);
 void	SetCamera2Position(XMFLOAT3);
 void	SetCamera2AtPosition(XMFLOAT3);
 void	SetCamera2UpVector(XMFLOAT3);
+void Camera_ResultRequestTurn120(float durationSec = 0.6f);
 
+// Result用：回転中かどうか（Enter連打防止）
+bool Camera_IsResultMoving();
 XMMATRIX	GetViewMatrix();
 XMMATRIX	GetProjectionMatrix();
 

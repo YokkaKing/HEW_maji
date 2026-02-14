@@ -683,17 +683,7 @@ void	Player2Draw()
 	{
 		g_Player2.m_position.y = g_Player2.m_position.y - 0.99f;
 	}
-	if (g_setWTP2 == WeaponTerrain::SPEAR_HILL) //移動
-	{
-		translation = XMMatrixTranslation(
-			g_Player2.m_position.x,
-			g_Player2.m_position.y - 0.5f,
-			g_Player2.m_position.z);
-		if (g_Player2.m_position.y < g_Player2.m_position.y - 0.5f)
-		{
-			g_Player2.m_position.y = g_Player2.m_position.y - 0.49f;
-		}
-	}
+
 	
 
 	XMMATRIX	world = scale * rotation * translation;
@@ -969,4 +959,47 @@ void SetPlayer2_IsAttacked(bool isAttacked)
 void SetPlayer2_IsTransformed(bool isTransformed)
 {
 	g_Player2.m_isTransformed = isTransformed;
+}
+int Player2_GetTransformCount()
+{
+	return g_Player2.m_transformCount;
+}
+int Player2_GetItemCount()
+{
+	return g_Player2.m_itemCount;
+
+}
+int Player2_GetLoseCount()
+{
+	return g_Player2.m_loseCount;
+
+}
+void Player2_PlusTransformCount()
+{
+	g_Player2.m_transformCount += 1;
+}
+void Player2_PlusGetItemCount()
+{
+	g_Player2.m_itemCount += 1;
+
+}
+void Player2_PlusLoseCount()
+{
+	g_Player2.m_loseCount += 1;
+
+}
+void Player2_AllCountReset()
+{
+	g_Player2.m_transformCount = 0;
+	g_Player2.m_itemCount = 0;
+	g_Player2.m_loseCount = 0;
+	g_Player2.m_score = 0;
+}
+void Player2_PlusScore(int score)
+{
+	g_Player2.m_score += score;
+}
+int Player2_GetScore()
+{
+	return g_Player2.m_score;
 }

@@ -239,7 +239,8 @@ void Sword::OnWeaponCollision(GameObject* target)
 			{
 				PlayAudio(g_damageSharp, false);
 				m_hitTargets.insert(target);
-				target->TakeDamage(10.0f); // 仮に20ダメージ
+				target->TakeDamage(15.0f); // 仮に20ダメージ
+				Player_PlusScore(15); // スコア加算
 			}
 			break;
 
@@ -248,7 +249,9 @@ void Sword::OnWeaponCollision(GameObject* target)
 			{
 				PlayAudio(g_damageSharp, false);
 				m_hitTargets.insert(target);
-				target->TakeDamage(10.0f);
+				target->TakeDamage(15.0f);
+				Player2_PlusScore(15); // スコア加算
+
 			}
 			break;
 		}

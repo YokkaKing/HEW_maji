@@ -105,4 +105,13 @@ WeaponTerrain GetSetWTP2();
 void SetWTP2(WeaponTerrain wt);
 void SetPlayer2_IsTransformed(bool isTransformed);
 
+int Player2_GetTransformCount();
+int Player2_GetItemCount();
+int Player2_GetLoseCount();
+void Player2_PlusTransformCount();
+void Player2_PlusGetItemCount();
+void Player2_PlusLoseCount();
+void Player2_AllCountReset();
+void Player2_PlusScore(int score);
+int Player2_GetScore();
 #endif // PLAYER2_H
