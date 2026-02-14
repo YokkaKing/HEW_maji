@@ -16,7 +16,7 @@
 #include "shader.h"
 #include "Manager.h"
 #include "Stage.h"
-#include "Winner.h"
+
 #include "sprite.h"
 #include "Result_Ui.h"
 #include "Player.h"

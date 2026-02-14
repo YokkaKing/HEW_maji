@@ -955,6 +955,11 @@ void PLAYER2::EquipBaseWeapon()
 	}
 }
 
+void SetWTP2(WeaponTerrain wt)
+{
+	g_setWTP2 = wt;
+}
+
 WeaponTerrain GetSetWTP2()
 {
 	return g_setWTP2;
@@ -966,17 +971,6 @@ bool GetChangeP2()
 }
 
 
-//デバッグコード
-/*
-g_changeP2++;
-if (g_changeP2 >= 5)
-{
-	g_changeP2 = 0;
-}
-switch (g_changeP2)
-{
-	g_setWTP2 = wt;
-}
 
 bool GetPlayer2_IsAttacked()
 {
