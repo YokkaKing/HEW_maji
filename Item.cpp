@@ -248,7 +248,8 @@ void ITEM::OnCollision(const CollisionInfo& info)
 			if (m_itemType == ITEM_TYPE::HEALTH_RECOVERY)
 			{
 				PlayAudio(g_item, false);
-
+				Player_PlusGetItemCount();
+				Player_PlusScore(50);
 				float health = 100.0f - Player_GetHp();
 
 				// Player1が体力マックス-30.0f以下だったら30.0f回復
@@ -267,9 +268,10 @@ void ITEM::OnCollision(const CollisionInfo& info)
 			else
 			{
 				PlayAudio(g_item, false);
+				Player_PlusGetItemCount();
+				Player_PlusScore(50);
 
 				bool flag[2];
-
 				flag[0] = GetIsUsedA_P1();
 				flag[1] = GetIsUsedB_P1();
 
@@ -301,6 +303,8 @@ void ITEM::OnCollision(const CollisionInfo& info)
 			if (m_itemType == ITEM_TYPE::HEALTH_RECOVERY)
 			{
 				PlayAudio(g_item, false);
+				Player2_PlusGetItemCount();
+				Player2_PlusScore(50);
 
 				float health = 100.0f - Player2_GetHp();
 
@@ -320,6 +324,8 @@ void ITEM::OnCollision(const CollisionInfo& info)
 			else
 			{
 				PlayAudio(g_item, false);
+				Player2_PlusGetItemCount();
+				Player2_PlusScore(50);
 
 				bool flag[2];
 

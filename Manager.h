@@ -31,5 +31,7 @@ inGameWTselect Manager_GetWTselect();
 void	Manager_SetWTselect(const inGameWTselect& select);
 int GetRoundCount();
 void	SetScene(SCENE scene);
+void ResetWinCount();
+SCENE GetScene();
 
 #endif // MANAGER_H

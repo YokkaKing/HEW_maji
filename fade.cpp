@@ -122,6 +122,7 @@ void Fade_Draw()
 void SetFade(int fadeframe, XMFLOAT4 color, FADE_STATE state, SCENE scene)
 {
 	g_Fade.state = state;
+
 	g_Fade.scene = scene;
 	if (g_Fade.state == FADE_IN)
 	{

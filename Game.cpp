@@ -26,8 +26,6 @@
 #include"Transform.h"
 #include"Viewport.h"
 #include"direct3d.h"
-#include "HpBar.h"
-#include "HpBar2.h"
 #include "timer.h"
 #include "number.h"
 #include "Hp.h"
@@ -82,8 +80,7 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, const
 	g_transformMngr.StartSelection(WeaponTerrain::NONE, WeaponTerrain::NONE);
 
 	//===========UI===========
-	Hpbar_Initialize(pDevice, pContext);
-	HpBar2_Initialize(pDevice, pContext);
+
 	Timer_Initialize(pDevice, pContext);
 	Number_Initialize(pDevice, pContext);
 	Hp_Initialize(pDevice, pContext);
@@ -221,8 +218,7 @@ void Game_Update()
 		g_sponer.Update();
 
 		//=======UI===========
-		Hpbar_Update();
-		HpBar2_Update();
+
 		Timer_Update();
 		Number_Update();
 		Hp_Update();

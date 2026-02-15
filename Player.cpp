@@ -48,10 +48,8 @@ unsigned int g_changeP1;
 static bool g_Player1AttackPlaying = false; // 攻撃ワンショット再生中フラグ
 static bool g_Player1JumpPlaying = false; // ジャンプワンショット再生中フラグ
 static int g_Player1CurrentAnim = 0; // 0: idle, 1: move, 2: attack 3:jump
-WeaponTerrain m_baseWT;
+bool g_isChangeP1;
 ITEM_SPONER gp_itemSponer;
-XMFLOAT3 gp1_slopeSpeed;
-
 void PlayerDie()
 {
 	hal::dout << "Player died!" << std::endl;
@@ -130,12 +128,12 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 	}
 	else if (g_setWTP1 == WeaponTerrain::SHURIKEN_)
 	{
-		g_Player.m_model = ModelLoad("asset\\model\\char_shuriken_motion.fbx");
+		g_Player.m_model = ModelLoad("asset\\model\\default_shuriken.fbx");
 	}
 
-	gp1_slopeSpeed = { 0.0f, 0.0f, 0.0f };
-
 	g_Player.EquipBaseWeapon(); //���E���h�����p�ɏ���������đ���
+	
+	g_isChangeP1 = false;
 }
 void PlayerFinalize()
 {
@@ -148,6 +146,14 @@ void	PlayerUpdate()
 	ApplyTransformEffect();   // 進化タイプに応じたパラメータを適用
 	if (g_Player.m_isDead)return;	//死亡している場合は更新処理をスキップ
 
+	//ヒットアクション
+	g_Player.m_hitAction.Update(g_Player.m_position);
+	//ヒットストップ中ならこの関数自体を抜けるため今後の処理がすべてスキップされる
+	if (g_Player.m_hitAction.IsStopping())
+	{
+		return;
+	}
+	
 //================================================================
 //	武器変更処理(一旦)
 //================================================================
@@ -157,38 +163,42 @@ void	PlayerUpdate()
 	if (Keyboard_IsKeyDownTrigger(KK_D1) && !GetIsUsedA_P1())
 	{
 		slotToUse = 0;
-		g_Player.m_isTransformed = true;
+		g_isChangeP1 = true;
 	}
 	if (Keyboard_IsKeyDownTrigger(KK_D0) && !GetIsUsedB_P1())
 	{
 		slotToUse = 1;
-		g_Player.m_isTransformed = true;
+		g_isChangeP1 = true;
 	}
 
 
 	if (slotToUse != -1)
 	{
 		WeaponTerrain reserved = g_Player.GetReservedWT(slotToUse);
+
 		if (reserved != WeaponTerrain::NONE)
 		{
+			inGameWTselect data;
+			data.player1 = reserved;       
+			data.player2 = g_Player2.GetCurrentWT();
+
+			// generateWT_Apply
+			//generateWT_Apply(data, &g_Player, &g_Player2, g_pDevice, g_pContext);
 			TerrainSet(reserved, FALSE);
 
 			switch (reserved) {
 			case WeaponTerrain::SWORD_WALL: 
 				g_changeP1 = 1;
-				g_Player.m_model = ModelLoad("asset\\model\\char_sword_motion.fbx"); 
+				g_Player.m_model = ModelLoad("asset\\model\\sword.fbx"); break;
 				g_Player.EquipWeapon(std::make_unique<Sword>(&g_Player, FALSE));
-				break;
 			case WeaponTerrain::SPEAR_HILL:
 				g_changeP1 = 2;
-				g_Player.m_model = ModelLoad("asset\\model\\spear.fbx"); 
+				g_Player.m_model = ModelLoad("asset\\model\\spear.fbx"); break;
 				g_Player.EquipWeapon(std::make_unique<Spear>(&g_Player, FALSE));
-				break;
 			case WeaponTerrain::BOW_HILL:   
 				g_changeP1 = 3;
-				g_Player.m_model = ModelLoad("asset\\model\\bow.fbx");
+				g_Player.m_model = ModelLoad("asset\\model\\bow.fbx"); break;
 				g_Player.EquipWeapon(std::make_unique<Arrow>(&g_Player, FALSE));
-				break;
 			case WeaponTerrain::HAMMER_:   
 				g_changeP1 = 4;
 				g_Player.m_model = ModelLoad("asset\\model\\hammer.fbx");
@@ -520,11 +530,6 @@ void	PlayerUpdate()
 		g_Player.m_isDead = true;
 		PlayerDie();
 	}
-
-	if (Keyboard_IsKeyDownTrigger(KK_D1) || Keyboard_IsKeyDownTrigger(KK_D0))
-	{
-		g_Player1CurrentAnim = 0;
-	}
 }
 
 void Player_ManualMove() // 新しい手動移動関数として作成
@@ -613,48 +618,8 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 	moveZ += rightZ * strafe;
 
 	// 最終速度
-	if (g_Player.m_isGround)
-	{
-		// 地面にいるときは、入力方向へクイックに速度を合わせる
-		// ただし、完全に上書きせず、現在の速度（滑り成分など）に加算する形にするのがベターです
-
-		// 入力がないときは、今の速度を少しずつ減衰させる（摩擦の表現）
-		if (fabs(moveX) < 0.001f && fabs(moveZ) < 0.001f)
-		{
-			g_Player.m_velocity.x *= 0.45f; // 摩擦で止まる
-			g_Player.m_velocity.z *= 0.45f;
-		}
-		else
-		{
-			// 入力があるときは、入力方向に速度をセットする
-			// ただし、滑っている力を消さないために「加算」に近い形にする
-			g_Player.m_velocity.x += moveX * 0.3f; // 加速度的に足す
-			g_Player.m_velocity.z += moveZ * 0.3f;
-
-			// 最高速制限（これがないと無限に加速する）
-			float maxSpeed = 0.15f * g_Player.m_moveMul;
-			float currSpeed = sqrtf(g_Player.m_velocity.x * g_Player.m_velocity.x + g_Player.m_velocity.z * g_Player.m_velocity.z);
-			if (currSpeed > maxSpeed)
-			{
-				g_Player.m_velocity.x = (g_Player.m_velocity.x / currSpeed) * maxSpeed;
-				g_Player.m_velocity.z = (g_Player.m_velocity.z / currSpeed) * maxSpeed;
-			}
-		}
-	}
-	else
-	{
-		// 空中にいるときは制御を弱くする（または慣性を維持）
-		g_Player.m_velocity.x += moveX * 0.05f;
-		g_Player.m_velocity.z += moveZ * 0.05f;
-
-		float maxSpeed = 0.1f * g_Player.m_moveMul;
-		float currSpeed = sqrtf(g_Player.m_velocity.x * g_Player.m_velocity.x + g_Player.m_velocity.z * g_Player.m_velocity.z);
-		if (currSpeed > maxSpeed)
-		{
-			g_Player.m_velocity.x = (g_Player.m_velocity.x / currSpeed) * maxSpeed;
-			g_Player.m_velocity.z = (g_Player.m_velocity.z / currSpeed) * maxSpeed;
-		}
-	}
+	g_Player.m_velocity.x = moveX * g_Player.m_moveMul;
+	g_Player.m_velocity.z = moveZ * g_Player.m_moveMul;
 
 	// モデルの向きを移動方向に合わせる
 	XMFLOAT3 moveDir = { g_Player.m_velocity.x, 0.0f, g_Player.m_velocity.z };
@@ -725,22 +690,9 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 		g_Player.m_isGround = false;
 	}
 
-	if (!g_Player.m_isGround)
-	{
-		gp1_slopeSpeed.x *= 0.3f;
-		gp1_slopeSpeed.z *= 0.3f;
-		gp1_slopeSpeed.y *= 0.3f;
-	}
-	// 地面にいても、入力をしているときは少し滑りを抑えるなどの調整も可能
-	if (fabs(moveX) > 0.01f || fabs(moveZ) > 0.01f)
-	{
-		gp1_slopeSpeed.x *= 0.95f;
-		gp1_slopeSpeed.z *= 0.95f;
-	}
-
-	g_Player.m_position.x += (g_Player.m_velocity.x + gp1_slopeSpeed.x);
-	g_Player.m_position.z += (g_Player.m_velocity.z + gp1_slopeSpeed.y);
-	g_Player.m_position.y += (g_Player.m_velocity.y + gp1_slopeSpeed.z);
+	g_Player.m_position.x += g_Player.m_velocity.x;
+	g_Player.m_position.z += g_Player.m_velocity.z;
+	g_Player.m_position.y += g_Player.m_velocity.y;
 }
 
 void PlayerDraw() 
@@ -762,17 +714,7 @@ void PlayerDraw()
 	{
 		g_Player.m_position.y = g_Player.m_position.y - 0.99f;
 	}
-	if (g_setWTP1 == WeaponTerrain::SPEAR_HILL) //移動
-	{
-		    translation = XMMatrixTranslation(
-			g_Player.m_position.x,
-			g_Player.m_position.y - 0.5f,
-			g_Player.m_position.z);
-			if (g_Player.m_position.y < g_Player.m_position.y - 0.5f)
-			{
-				g_Player.m_position.y = g_Player.m_position.y - 0.49f;
-			}
-	}
+	
 
 	XMMATRIX	world = scale * rotation * translation;
 
@@ -987,47 +929,9 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 				m_velocity.y = CLIMB_SPEED;				
 			}
 		}
-		
-		if (info.other->m_tag == "Slope")
+		else
 		{
-			auto INFO = info;
-			// 法線が自分を押し出す方向に向くように反転
-			INFO.normal.x *= -1;
-			INFO.normal.y *= -1;
-			INFO.normal.z *= -1;
-
-			m_position.x += INFO.normal.x * INFO.penetration;
-			m_position.y += INFO.normal.y * INFO.penetration;
-			m_position.z += INFO.normal.z * INFO.penetration;
-
-			// 坂道なら normal.y が 0 より大きければ地面とみなす
-			if (INFO.normal.y > 0.1f)
-			{
-				m_isGround = true;
-				if (m_velocity.y < 0) m_velocity.y = 0.0f;
-
-				// --- gp_speed への計算 ---
-				const float slideFriction = 0.15f;
-				float slopeSeverity = 1.0f - INFO.normal.y;
-				float slidePower = slopeSeverity * slideFriction;
-				const float gravityEffect = 0.02f;
-
-				// m_velocity ではなく gp_speed に加算
-				gp1_slopeSpeed.x += INFO.normal.x * (slidePower + gravityEffect);
-				gp1_slopeSpeed.z += INFO.normal.z * (slidePower + gravityEffect);
-
-				// リミッター
-				float maxSlide = 0.08f;
-				float speedXZ = sqrtf(gp1_slopeSpeed.x * gp1_slopeSpeed.x + gp1_slopeSpeed.z * gp1_slopeSpeed.z);
-				if (speedXZ > maxSlide)
-				{
-					gp1_slopeSpeed.x = (gp1_slopeSpeed.x / speedXZ) * maxSlide;
-					gp1_slopeSpeed.z = (gp1_slopeSpeed.z / speedXZ) * maxSlide;
-				}
-
-				m_velocity.x *= 0.0f;
-				m_velocity.z *= 0.0f;
-			}
+			return; // 他は無視
 		}
 	}
 }
@@ -1084,14 +988,22 @@ void PLAYER::RoundReset(XMFLOAT3 startPos)
 	gp_itemSponer.ResetItem();
 }
 
-WeaponTerrain GetSetWTP1()
-{
-	return g_setWTP1;
-}
 void SetWTP1(WeaponTerrain wt)
 {
 	g_setWTP1 = wt;
 }
+WeaponTerrain GetSetWTP1()
+{
+	return g_setWTP1;
+}
+
+bool GetChangeP1()
+{
+	return g_isChangeP1;
+}
+
+
+
 WeaponTerrain GetPlayerCurrentWT()
 {
 	return g_Player.m_currentWT;
@@ -1099,4 +1011,47 @@ WeaponTerrain GetPlayerCurrentWT()
 void SetPlayer_IsTransformed(bool isTransformed)
 {
 	g_Player.m_isTransformed = isTransformed;
+}
+int Player_GetTransformCount()
+{
+	return g_Player.m_transformCount;
+}
+int Player_GetItemCount()
+{
+	return g_Player.m_itemCount;
+
+}
+int Player_GetLoseCount()
+{
+	return g_Player.m_loseCount;
+
+}
+void Player_PlusTransformCount()
+{
+	g_Player.m_transformCount += 1;
+}
+void Player_PlusGetItemCount()
+{
+	g_Player.m_itemCount += 1;
+
+}
+void Player_PlusLoseCount()
+{
+	g_Player.m_loseCount += 1;
+
+}
+void Player_AllCountReset()
+{
+	g_Player.m_transformCount = 0;
+	g_Player.m_itemCount = 0;
+	g_Player.m_loseCount = 0;
+	g_Player.m_score = 0;
+}
+void Player_PlusScore(int score)
+{
+	g_Player.m_score += score;
+}
+int Player_GetScore()
+{
+	return g_Player.m_score;
 }

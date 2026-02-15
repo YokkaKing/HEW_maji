@@ -46,7 +46,7 @@ unsigned int g_changeP2;
 static bool g_Player2AttackPlaying = false; // 攻撃ワンショット再生中フラグ
 static bool g_Player2JumpPlaying = false; // ジャンプワンショット再生中フラグ
 static int g_Player2CurrentAnim = 0; // 0: idle, 1: move, 2: attack 3:jump
-XMFLOAT3 gp2_slopeSpeed;
+bool g_isChangeP2;
 
 void Player2Die()
 {
@@ -125,9 +125,7 @@ void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 		g_Player2.m_model = ModelLoad("asset\\model\\default_shuriken.fbx");
 	}
 
-	gp2_slopeSpeed = { 0.0f, 0.0f, 0.0f };
-
-	g_Player2.EquipBaseWeapon();
+	g_isChangeP2 = false;
 }
 void Player2Finalize()
 {
@@ -139,6 +137,14 @@ void	Player2Update()
 	ApplyTransformEffect2();   // 進化タイプに応じたパラメータを適用
 	if (g_Player2.m_isDead)return;	//死亡している場合は更新処理をスキップ
 	
+	//ヒットアクション
+	g_Player2.m_hitAction.Update(g_Player2.m_position);
+	//ヒットストップ中ならこの関数自体を抜けるため今後の処理がすべてスキップされる
+	if (g_Player2.m_hitAction.IsStopping())
+	{
+		return;
+	}
+
 //================================================================
 //	武器変更処理(一旦)
 //================================================================
@@ -147,12 +153,12 @@ void	Player2Update()
 	if (Keyboard_IsKeyDownTrigger(KK_D2) && !GetIsUsedA_P2())
 	{
 		slotToUse = 0;
-		g_Player2.m_isTransformed = true;
+		g_isChangeP2 = true;
 	}
 	if (Keyboard_IsKeyDownTrigger(KK_D9) && !GetIsUsedB_P2())
 	{
 		slotToUse = 1;
-		g_Player2.m_isTransformed = true;
+		g_isChangeP2 = true;
 	}
 
 	if (slotToUse != -1)
@@ -163,6 +169,13 @@ void	Player2Update()
 		// 選択（予約）済みであり、かつ現在変身中でない（または NONE でない）場合
 		if (reserved != WeaponTerrain::NONE)
 		{
+			inGameWTselect data;
+			data.player1 = WeaponTerrain::NONE; // P1は変更しない
+			data.player2 = reserved;            // P2に予約分を適用
+
+			// 武器の適用
+			//generateWT_Apply(data, &g_Player, &g_Player2, g_pDevice2, g_pContext2);
+
 			// 地形の生成（P2用なので第二引数はTRUE）
 			TerrainSet(reserved, TRUE);
 
@@ -590,48 +603,8 @@ void Player2_ManualMove()
 	moveZ += rightZ * strafe;
 
 	// 最終速度
-	if (g_Player2.m_isGround)
-	{
-		// 地面にいるときは、入力方向へクイックに速度を合わせる
-		// ただし、完全に上書きせず、現在の速度（滑り成分など）に加算する形にするのがベターです
-
-		// 入力がないときは、今の速度を少しずつ減衰させる（摩擦の表現）
-		if (fabs(moveX) < 0.001f && fabs(moveZ) < 0.001f)
-		{
-			g_Player2.m_velocity.x *= 0.45f; // 摩擦で止まる
-			g_Player2.m_velocity.z *= 0.45f;
-		}
-		else
-		{
-			// 入力があるときは、入力方向に速度をセットする
-			// ただし、滑っている力を消さないために「加算」に近い形にする
-			g_Player2.m_velocity.x += moveX * 0.3f; // 加速度的に足す
-			g_Player2.m_velocity.z += moveZ * 0.3f;
-
-			// 最高速制限（これがないと無限に加速する）
-			float maxSpeed = 0.15f * g_Player2.m_moveMul;
-			float currSpeed = sqrtf(g_Player2.m_velocity.x * g_Player2.m_velocity.x + g_Player2.m_velocity.z * g_Player2.m_velocity.z);
-			if (currSpeed > maxSpeed)
-			{
-				g_Player2.m_velocity.x = (g_Player2.m_velocity.x / currSpeed) * maxSpeed;
-				g_Player2.m_velocity.z = (g_Player2.m_velocity.z / currSpeed) * maxSpeed;
-			}
-		}
-	}
-	else
-	{
-		// 空中にいるときは制御を弱くする（または慣性を維持）
-		g_Player2.m_velocity.x += moveX * 0.05f;
-		g_Player2.m_velocity.z += moveZ * 0.05f;
-
-		float maxSpeed = 0.1f * g_Player2.m_moveMul;
-		float currSpeed = sqrtf(g_Player2.m_velocity.x * g_Player2.m_velocity.x + g_Player2.m_velocity.z * g_Player2.m_velocity.z);
-		if (currSpeed > maxSpeed)
-		{
-			g_Player2.m_velocity.x = (g_Player2.m_velocity.x / currSpeed) * maxSpeed;
-			g_Player2.m_velocity.z = (g_Player2.m_velocity.z / currSpeed) * maxSpeed;
-		}
-	}
+	g_Player2.m_velocity.x = moveX*g_Player2.m_moveMul;
+	g_Player2.m_velocity.z = moveZ * g_Player2.m_moveMul;
 
 	// モデルの向きを移動方向に合わせる
 	XMFLOAT3 moveDir = { g_Player2.m_velocity.x, 0.0f, g_Player2.m_velocity.z };
@@ -701,22 +674,9 @@ void Player2_ManualMove()
 		g_Player2.m_isGround = false;
 	}
 
-	if (!g_Player.m_isGround)
-	{
-		gp2_slopeSpeed.x *= 0.3f;
-		gp2_slopeSpeed.z *= 0.3f;
-		gp2_slopeSpeed.y *= 0.3f;
-	}
-	// 地面にいても、入力をしているときは少し滑りを抑えるなどの調整も可能
-	if (fabs(moveX) > 0.01f || fabs(moveZ) > 0.01f)
-	{
-		gp2_slopeSpeed.x *= 0.95f;
-		gp2_slopeSpeed.z *= 0.95f;
-	}
-
-	g_Player2.m_position.x += (g_Player2.m_velocity.x + gp2_slopeSpeed.x);
-	g_Player2.m_position.z += (g_Player2.m_velocity.z + gp2_slopeSpeed.y);
-	g_Player2.m_position.y += (g_Player2.m_velocity.y + gp2_slopeSpeed.z);
+	g_Player2.m_position.x += g_Player2.m_velocity.x;
+	g_Player2.m_position.z += g_Player2.m_velocity.z;
+	g_Player2.m_position.y += g_Player2.m_velocity.y;
 }
 
 void	Player2Draw()
@@ -739,17 +699,7 @@ void	Player2Draw()
 	{
 		g_Player2.m_position.y = g_Player2.m_position.y - 0.99f;
 	}
-	if (g_setWTP2 == WeaponTerrain::SPEAR_HILL) //移動
-	{
-		translation = XMMatrixTranslation(
-			g_Player2.m_position.x,
-			g_Player2.m_position.y - 0.5f,
-			g_Player2.m_position.z);
-		if (g_Player2.m_position.y < g_Player2.m_position.y - 0.5f)
-		{
-			g_Player2.m_position.y = g_Player2.m_position.y - 0.49f;
-		}
-	}
+
 	
 
 	XMMATRIX	world = scale * rotation * translation;
@@ -946,47 +896,9 @@ void PLAYER2::OnCollision(const CollisionInfo& info)
 				m_velocity.y = CLIMB_SPEED;
 			}
 		}
-		
-		if (info.other->m_tag == "Slope")
+		else
 		{
-			auto INFO = info;
-			// 法線が自分を押し出す方向に向くように反転
-			INFO.normal.x *= -1;
-			INFO.normal.y *= -1;
-			INFO.normal.z *= -1;
-
-			m_position.x += INFO.normal.x * INFO.penetration;
-			m_position.y += INFO.normal.y * INFO.penetration;
-			m_position.z += INFO.normal.z * INFO.penetration;
-
-			// 坂道なら normal.y が 0 より大きければ地面とみなす
-			if (INFO.normal.y > 0.1f)
-			{
-				m_isGround = true;
-				if (m_velocity.y < 0) m_velocity.y = 0.0f;
-
-				// --- gp_speed への計算 ---
-				const float slideFriction = 0.15f;
-				float slopeSeverity = 1.0f - INFO.normal.y;
-				float slidePower = slopeSeverity * slideFriction;
-				const float gravityEffect = 0.02f;
-
-				// m_velocity ではなく gp_speed に加算
-				gp2_slopeSpeed.x += INFO.normal.x * (slidePower + gravityEffect);
-				gp2_slopeSpeed.z += INFO.normal.z * (slidePower + gravityEffect);
-
-				// リミッター
-				float maxSlide = 0.08f;
-				float speedXZ = sqrtf(gp2_slopeSpeed.x * gp2_slopeSpeed.x + gp2_slopeSpeed.z * gp2_slopeSpeed.z);
-				if (speedXZ > maxSlide)
-				{
-					gp2_slopeSpeed.x = (gp2_slopeSpeed.x / speedXZ) * maxSlide;
-					gp2_slopeSpeed.z = (gp2_slopeSpeed.z / speedXZ) * maxSlide;
-				}
-
-				m_velocity.x *= 0.0f;
-				m_velocity.z *= 0.0f;
-			}
+			return; // 他は無視
 		}
 	}
 }
@@ -1043,14 +955,22 @@ void PLAYER2::EquipBaseWeapon()
 	}
 }
 
-WeaponTerrain GetSetWTP2()
-{
-	return g_setWTP2;
-}
 void SetWTP2(WeaponTerrain wt)
 {
 	g_setWTP2 = wt;
 }
+
+WeaponTerrain GetSetWTP2()
+{
+	return g_setWTP2;
+}
+
+bool GetChangeP2()
+{
+	return g_isChangeP2;
+}
+
+
 
 bool GetPlayer2_IsAttacked()
 {
@@ -1063,4 +983,47 @@ void SetPlayer2_IsAttacked(bool isAttacked)
 void SetPlayer2_IsTransformed(bool isTransformed)
 {
 	g_Player2.m_isTransformed = isTransformed;
+}
+int Player2_GetTransformCount()
+{
+	return g_Player2.m_transformCount;
+}
+int Player2_GetItemCount()
+{
+	return g_Player2.m_itemCount;
+
+}
+int Player2_GetLoseCount()
+{
+	return g_Player2.m_loseCount;
+
+}
+void Player2_PlusTransformCount()
+{
+	g_Player2.m_transformCount += 1;
+}
+void Player2_PlusGetItemCount()
+{
+	g_Player2.m_itemCount += 1;
+
+}
+void Player2_PlusLoseCount()
+{
+	g_Player2.m_loseCount += 1;
+
+}
+void Player2_AllCountReset()
+{
+	g_Player2.m_transformCount = 0;
+	g_Player2.m_itemCount = 0;
+	g_Player2.m_loseCount = 0;
+	g_Player2.m_score = 0;
+}
+void Player2_PlusScore(int score)
+{
+	g_Player2.m_score += score;
+}
+int Player2_GetScore()
+{
+	return g_Player2.m_score;
 }
