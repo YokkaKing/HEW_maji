@@ -151,10 +151,19 @@ void Hammer::Update()
 			m_isCharging = true;
 			m_chargePower += (1.0f / 60.0f);
 			if (m_chargePower > MAX_CHARGE) m_chargePower = MAX_CHARGE;
+			if (g_Controller[m_playerIndex].IsConnected())
+			{
+				float intensity = m_chargePower / MAX_CHARGE;
+				g_Controller[m_playerIndex].SetVibration(intensity, intensity);
+			}
 		}
 	}
 	else if (m_isCharging)
 	{
+		if (g_Controller[m_playerIndex].IsConnected()) {
+			g_Controller[m_playerIndex].SetVibration(0.0f, 0.0f);
+		}
+
 		PlayAudio(g_hammer, false);
 		m_isAttack = true;
 		// キーを離した瞬間攻撃

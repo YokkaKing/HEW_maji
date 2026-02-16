@@ -248,15 +248,22 @@ void TransformPlayer()
             ApplyTransformationP1(&g_Player, targetWT, true);
             
             g_Player.TransformTimer = TRANSFORM_LIMIT_FRAME;
+            g_Controller[0].SetVibration(0.8f, 0.8f);
         }
     }
     else {
+        g_Player.TransformTimer--;
+
+        if (g_Player.TransformTimer <= TRANSFORM_LIMIT_FRAME - 60) {
+            g_Controller[0].SetVibration(0.0f, 0.0f);
+        }
         // âèúîªíË
-        bool unevolve = (g_Player.TransformTimer-- <= 0) || Keyboard_IsKeyDownTrigger(KK_D8);
+        bool unevolve = (g_Player.TransformTimer <= 0) || Keyboard_IsKeyDownTrigger(KK_D8);
         if (g_Player.TransformType == TRANSFORM_TYPE::TRANSFORM_TYPE_A && g_Controller[0].GetLeftTrigger() >= 0.9f) unevolve = true;
         if (g_Player.TransformType == TRANSFORM_TYPE::TRANSFORM_TYPE_B && g_Controller[0].GetRightTrigger() >= 0.9f) unevolve = true;
 
         if (unevolve) {
+            g_Controller[0].SetVibration(0.0f, 0.0f);
             g_Player.TransformType = TRANSFORM_TYPE::TRANSFORM_TYPE_NONE;
             SetPlayer_IsTransformed(false);
             ApplyTransformationP1(&g_Player, g_Player.m_baseWT, false); // å≥ÇÃïêäÌÇ…ñﬂÇ∑
@@ -337,7 +344,7 @@ void TransformPlayer2()
             g_Player2.m_isTransformed = true;
             g_Player2.TransformTimer = TRANSFORM_LIMIT_FRAME;
             
-
+            g_Controller[1].SetVibration(0.8f, 0.8f);
         }
     }
     else {
