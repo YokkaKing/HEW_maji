@@ -78,6 +78,9 @@ private:
     static CollisionInfo CheckBoxBox(const BoxCollider* box1, const BoxCollider* box2);
     static CollisionInfo CheckSphereSphere(const SphereCollider* sphere1, const SphereCollider* sphere2);
     static CollisionInfo CheckBoxSphere(const BoxCollider* box, const SphereCollider* sphere);
+    static CollisionInfo CheckTrapezoidSlopeSphere(const TrapezoidSlopeCollider* slope, const SphereCollider* sphere);
+    static CollisionInfo CheckBoxTrapezoidSlope(const BoxCollider* box, const TrapezoidSlopeCollider* slope);
+    static CollisionInfo CheckTrapezoidSlopeTrapezoidSlope(const TrapezoidSlopeCollider* slope1, const TrapezoidSlopeCollider* slope2);
 
     // è’ìÀîªíË(âÒì]ëŒâû)
     static CollisionInfo CheckBoxBoxOBB(const BoxCollider* box1, const BoxCollider* box2);

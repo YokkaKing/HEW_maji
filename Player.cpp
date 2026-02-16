@@ -50,6 +50,8 @@ static bool g_Player1JumpPlaying = false; // ジャンプワンショット再�
 static int g_Player1CurrentAnim = 0; // 0: idle, 1: move, 2: attack 3:jump
 bool g_isChangeP1;
 ITEM_SPONER gp_itemSponer;
+XMFLOAT3 gp1_slopeSpeed;
+
 void PlayerDie()
 {
 	hal::dout << "Player died!" << std::endl;
@@ -66,9 +68,6 @@ void PlayerDie()
 	g_Player.m_isDeadFlag = true;
 	XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
 	SetFade(40.0f, color, FADE_OUT, SCENE_GAME);
-
-	
-
 }
 
 void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, WeaponTerrain setWTp1)
@@ -133,6 +132,8 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 
 	g_Player.EquipBaseWeapon(); //���E���h�����p�ɏ���������đ���
 	
+	gp1_slopeSpeed = { 0.0f, 0.0f, 0.0f };
+
 	g_isChangeP1 = false;
 }
 void PlayerFinalize()
@@ -618,8 +619,48 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 	moveZ += rightZ * strafe;
 
 	// 最終速度
-	g_Player.m_velocity.x = moveX * g_Player.m_moveMul;
-	g_Player.m_velocity.z = moveZ * g_Player.m_moveMul;
+	if (g_Player.m_isGround)
+	{
+		// 地面にいるときは、入力方向へクイックに速度を合わせる
+		// ただし、完全に上書きせず、現在の速度（滑り成分など）に加算する形にするのがベターです
+
+		// 入力がないときは、今の速度を少しずつ減衰させる（摩擦の表現）
+		if (fabs(moveX) < 0.001f && fabs(moveZ) < 0.001f)
+		{
+			g_Player.m_velocity.x *= 0.45f; // 摩擦で止まる
+			g_Player.m_velocity.z *= 0.45f;
+		}
+		else
+		{
+			// 入力があるときは、入力方向に速度をセットする
+			// ただし、滑っている力を消さないために「加算」に近い形にする
+			g_Player.m_velocity.x += moveX * 0.3f; // 加速度的に足す
+			g_Player.m_velocity.z += moveZ * 0.3f;
+
+			// 最高速制限（これがないと無限に加速する）
+			float maxSpeed = 0.15f * g_Player.m_moveMul;
+			float currSpeed = sqrtf(g_Player.m_velocity.x * g_Player.m_velocity.x + g_Player.m_velocity.z * g_Player.m_velocity.z);
+			if (currSpeed > maxSpeed)
+			{
+				g_Player.m_velocity.x = (g_Player.m_velocity.x / currSpeed) * maxSpeed;
+				g_Player.m_velocity.z = (g_Player.m_velocity.z / currSpeed) * maxSpeed;
+			}
+		}
+	}
+	else
+	{
+		// 空中にいるときは制御を弱くする（または慣性を維持）
+		g_Player.m_velocity.x += moveX * 0.05f;
+		g_Player.m_velocity.z += moveZ * 0.05f;
+
+		float maxSpeed = 0.1f * g_Player.m_moveMul;
+		float currSpeed = sqrtf(g_Player.m_velocity.x * g_Player.m_velocity.x + g_Player.m_velocity.z * g_Player.m_velocity.z);
+		if (currSpeed > maxSpeed)
+		{
+			g_Player.m_velocity.x = (g_Player.m_velocity.x / currSpeed) * maxSpeed;
+			g_Player.m_velocity.z = (g_Player.m_velocity.z / currSpeed) * maxSpeed;
+		}
+	}
 
 	// モデルの向きを移動方向に合わせる
 	XMFLOAT3 moveDir = { g_Player.m_velocity.x, 0.0f, g_Player.m_velocity.z };
@@ -690,9 +731,22 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 		g_Player.m_isGround = false;
 	}
 
-	g_Player.m_position.x += g_Player.m_velocity.x;
-	g_Player.m_position.z += g_Player.m_velocity.z;
-	g_Player.m_position.y += g_Player.m_velocity.y;
+	if (!g_Player.m_isGround)
+	{
+		gp1_slopeSpeed.x *= 0.3f;
+		gp1_slopeSpeed.z *= 0.3f;
+		gp1_slopeSpeed.y *= 0.3f;
+	}
+	// 地面にいても、入力をしているときは少し滑りを抑えるなどの調整も可能
+	if (fabs(moveX) > 0.01f || fabs(moveZ) > 0.01f)
+	{
+		gp1_slopeSpeed.x *= 0.95f;
+		gp1_slopeSpeed.z *= 0.95f;
+	}
+
+	g_Player.m_position.x += (g_Player.m_velocity.x + gp1_slopeSpeed.x);
+	g_Player.m_position.z += (g_Player.m_velocity.z + gp1_slopeSpeed.y);
+	g_Player.m_position.y += (g_Player.m_velocity.y + gp1_slopeSpeed.z);
 }
 
 void PlayerDraw() 
@@ -929,9 +983,47 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 				m_velocity.y = CLIMB_SPEED;				
 			}
 		}
-		else
+		
+		if (info.other->m_tag == "Slope")
 		{
-			return; // 他は無視
+			auto INFO = info;
+			// 法線が自分を押し出す方向に向くように反転
+			INFO.normal.x *= -1;
+			INFO.normal.y *= -1;
+			INFO.normal.z *= -1;
+
+			m_position.x += INFO.normal.x * INFO.penetration;
+			m_position.y += INFO.normal.y * INFO.penetration;
+			m_position.z += INFO.normal.z * INFO.penetration;
+
+			// 坂道なら normal.y が 0 より大きければ地面とみなす
+			if (INFO.normal.y > 0.1f)
+			{
+				m_isGround = true;
+				if (m_velocity.y < 0) m_velocity.y = 0.0f;
+
+				// --- gp_speed への計算 ---
+				const float slideFriction = 0.15f;
+				float slopeSeverity = 1.0f - INFO.normal.y;
+				float slidePower = slopeSeverity * slideFriction;
+				const float gravityEffect = 0.02f;
+
+				// m_velocity ではなく gp_speed に加算
+				gp1_slopeSpeed.x += INFO.normal.x * (slidePower + gravityEffect);
+				gp1_slopeSpeed.z += INFO.normal.z * (slidePower + gravityEffect);
+
+				// リミッター
+				float maxSlide = 0.08f;
+				float speedXZ = sqrtf(gp1_slopeSpeed.x * gp1_slopeSpeed.x + gp1_slopeSpeed.z * gp1_slopeSpeed.z);
+				if (speedXZ > maxSlide)
+				{
+					gp1_slopeSpeed.x = (gp1_slopeSpeed.x / speedXZ) * maxSlide;
+					gp1_slopeSpeed.z = (gp1_slopeSpeed.z / speedXZ) * maxSlide;
+				}
+
+				m_velocity.x *= 0.0f;
+				m_velocity.z *= 0.0f;
+			}
 		}
 	}
 }

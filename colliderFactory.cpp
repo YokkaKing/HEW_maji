@@ -51,3 +51,26 @@ GameObject* ColliderFactory::CreateSphereObject(
 
     return obj;
 }
+
+// SlopeColliderオブジェクトの作成
+GameObject* ColliderFactory::CreateTrapezoidSlopeObject(
+    XMFLOAT3 start,
+    XMFLOAT3 end,
+    float startWidth,
+    float endWidth,
+    float thickness,
+    const std::string& tag,
+    int layer)
+{
+    GameObject* obj = new GameObject();
+
+    obj->m_position = XMFLOAT3(0.0f, 0.0f, 0.0f);
+
+    obj->m_tag = tag;
+    obj->m_layer = 0;
+    obj->m_isStatic = true;
+
+    auto col = obj->AddComponent<TrapezoidSlopeCollider>(obj, start, end, startWidth, endWidth, thickness);
+    ManagerCollider::AddCollider(col);
+    return obj;
+}
