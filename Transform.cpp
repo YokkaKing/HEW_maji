@@ -234,6 +234,8 @@ void TransformPlayer()
             g_Player.TransformType = TRANSFORM_TYPE::TRANSFORM_TYPE_A;
             targetWT = g_TransformA_P1;
             Player_PlusTransformCount();
+            Player_SetPlayerIsAttaking(false);
+            Player_ResetMoveMul();
             g_IsUsedA_P1 = true;
 			SetPlayer_IsTransformed(true);
         }
@@ -242,6 +244,8 @@ void TransformPlayer()
             g_Player.TransformType = TRANSFORM_TYPE::TRANSFORM_TYPE_B;
             targetWT = g_TransformB_P1;
             Player_PlusTransformCount();
+            Player_SetPlayerIsAttaking(false);
+            Player_ResetMoveMul();
 
             g_IsUsedB_P1 = true;
             SetPlayer_IsTransformed(true);
@@ -262,6 +266,9 @@ void TransformPlayer()
         if (unevolve) {
             g_Player.TransformType = TRANSFORM_TYPE::TRANSFORM_TYPE_NONE;
             SetPlayer_IsTransformed(false);
+            Player_SetPlayerIsAttaking(false);
+            Player_ResetMoveMul();
+
             ApplyTransformationP1(&g_Player, g_Player.m_baseWT, false); // å≥ÇÃïêäÌÇ…ñﬂÇ∑
             SetWTP1(g_Player.m_baseWT);
             g_Player.m_scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
@@ -325,7 +332,8 @@ void TransformPlayer2()
             g_Player2.TransformType = TRANSFORM_TYPE2::TRANSFORM_TYPE_A;
             targetWT = g_TransformA_P2;
             g_IsUsedA_P2 = true;
-
+            Player2_ResetMoveMul();
+            Player2_SetPlayerIsAttaking(false);
             Player2_PlusTransformCount();
             SetPlayer2_IsTransformed(true);
         }
@@ -336,7 +344,8 @@ void TransformPlayer2()
             g_IsUsedB_P2 = true;
             Player2_PlusTransformCount();
             SetPlayer2_IsTransformed(true);
-
+            Player2_ResetMoveMul();
+            Player2_SetPlayerIsAttaking(false);
         }
         if (targetWT != WeaponTerrain::NONE) {
             ApplyTransformationP2(&g_Player2, targetWT, true);
@@ -358,7 +367,8 @@ void TransformPlayer2()
             ApplyTransformationP2(&g_Player2, g_Player2.m_baseWT, false); // å≥ÇÃïêäÌÇ…ñﬂÇ∑
             SetWTP2(g_Player2.m_baseWT);
             SetPlayer2_IsTransformed(false);
-
+            Player2_ResetMoveMul();
+            Player2_SetPlayerIsAttaking(false);
             g_Player2.m_scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
         }
     }

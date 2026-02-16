@@ -92,6 +92,7 @@ void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 	g_Player2.m_baseWT = setWTp2;
 	g_Player2.m_isAttacked = false;
 	g_Player2.m_isTransformed = false;
+	g_Player2.m_moveMul = 1.0f;
 
 	// プレイヤーの当たり判定の追加
 	auto collider = g_Player2.AddComponent<BoxCollider>(&g_Player2, g_Player2.m_scale);
@@ -124,7 +125,7 @@ void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 	{
 		g_Player2.m_model = ModelLoad("asset\\model\\default_shuriken.fbx");
 	}
-
+	g_Player2.EquipBaseWeapon();
 	g_isChangeP2 = false;
 }
 void Player2Finalize()
@@ -603,7 +604,7 @@ void Player2_ManualMove()
 	moveZ += rightZ * strafe;
 
 	// 最終速度
-	g_Player2.m_velocity.x = moveX*g_Player2.m_moveMul;
+	g_Player2.m_velocity.x = moveX*  g_Player2.m_moveMul;
 	g_Player2.m_velocity.z = moveZ * g_Player2.m_moveMul;
 
 	// モデルの向きを移動方向に合わせる
@@ -1026,4 +1027,12 @@ void Player2_PlusScore(int score)
 int Player2_GetScore()
 {
 	return g_Player2.m_score;
+}
+void Player2_ResetMoveMul()
+{
+	g_Player2.m_moveMul = 1.0f;
+}
+void Player2_SetPlayerIsAttaking(int flg)
+{
+	g_Player2AttackPlaying = flg;
 }
