@@ -12,7 +12,7 @@
 //================================================================
 //	マクロ定義
 //================================================================
-#define MOVE_TERRAIN_TYPE (2)
+#define MOVE_TERRAIN_TYPE (3)
 #define CHANGE_FLAG (4)
  
 //================================================================
@@ -69,6 +69,7 @@ public:
 	std::vector<GameObject*> hills[2];	// 丘の当たり判定の全て
 	std::vector<GameObject*> walls[2];	// 壁の当たり判定の全て
 	std::vector<GameObject*> trees[2];	// 木の当たり判定の全て
+	std::vector<GameObject*> ants[2];	// 蟻地獄の当たり判定の全て
 
 	MODEL* m_moveTerrain[MOVE_TERRAIN_TYPE] = {}; // 地形で使うモデル
 	XMFLOAT3 m_terrainScale[MOVE_TERRAIN_TYPE] = {}; // 各地形の大きさ
@@ -110,8 +111,8 @@ public:
 	void SimpleObjects(const std::vector<std::vector<std::vector<std::string>>> terrain, XMFLOAT3 size, TERRAIN_TYPE type, XMFLOAT3 motherPosition, int select);
 
 public:
-	// 丘のオブジェクトを作る
-	void CreateHill(XMFLOAT3 motherPosition, int select);
+	// 蟻地獄のオブジェクトを作る
+	void CreateAnt(XMFLOAT3 motherPosition, int select);
 };
 
 #endif // TERRAIN_H
