@@ -118,5 +118,7 @@ void Player_PlusLoseCount();
 void Player_AllCountReset();
 void Player_PlusScore(int score);
 int Player_GetScore();
+void Player_SetPlayerIsAttaking(int flg);
+void Player_ResetMoveMul();
 
 #endif // PLAYER_H

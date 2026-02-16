@@ -124,6 +124,9 @@ static void StartSlotScaleAnim(int slotIndex, bool grow)
 static ID3D11ShaderResourceView* g_TextureSwordIdle = nullptr;
 static ID3D11ShaderResourceView* g_TextureSwordAttack = nullptr;
 const int SWORD_SLOT_INDEX = 0;
+
+static int g_vibrationTimerP1 = 0;
+static int g_vibrationTimerP2 = 0;
 // 単純なスプライトアニメ再生機構
 struct SpriteAnim
 {
@@ -535,6 +538,12 @@ void selectWT_Finalize()
 // ------------------ 更新処理 ------------------
 void selectWT_Update()
 {
+    if (g_vibrationTimerP1 > 0) {
+        if (--g_vibrationTimerP1 <= 0) g_Controller[0].SetVibration(0.0f, 0.0f);
+    }
+    if (g_vibrationTimerP2 > 0) {
+        if (--g_vibrationTimerP2 <= 0) g_Controller[1].SetVibration(0.0f, 0.0f);
+    }
 #pragma region カーソル移動アニメ更新(1P)
     float dt = FRAME_DT;
 
@@ -560,7 +569,7 @@ void selectWT_Update()
                     g_cursorScaleTime[0] = 0.0f;
                 }
             }
-            if (Keyboard_IsKeyDownTrigger(KK_Z))
+            if (Keyboard_IsKeyDownTrigger(KK_Z)|| g_Controller[0].IsButtonPushed(ControllerButton::B_BUTTON))
             {
                 g_p1AttackPlaying = false;
                 g_isP1Ready = false;
@@ -592,7 +601,7 @@ void selectWT_Update()
             }
 
     
-            if (Keyboard_IsKeyDownTrigger(KK_Z))
+            if (Keyboard_IsKeyDownTrigger(KK_Z) || g_Controller[0].IsButtonPushed(ControllerButton::B_BUTTON))
             {
                 if (g_isP1Ready)
                 {
@@ -629,7 +638,7 @@ void selectWT_Update()
                 }
             }
 
-            if (Keyboard_IsKeyDownTrigger(KK_D6))
+            if (Keyboard_IsKeyDownTrigger(KK_D6) || g_Controller[1].IsButtonPushed(ControllerButton::B_BUTTON))
             {
                 g_p2AttackPlaying = false;
                 g_isP2Ready = false;
@@ -658,8 +667,8 @@ void selectWT_Update()
                 g_selectData.player2 = static_cast<WeaponTerrain>(g_cursorP2 +1);
             }
 
-            // cancel for any weapon (D6 or DELETE)
-            if (Keyboard_IsKeyDownTrigger(KK_D6) || Keyboard_IsKeyDownTrigger(KK_DELETE))
+            // cancel for any weapon (D6)
+            if (Keyboard_IsKeyDownTrigger(KK_D6) || g_Controller[1].IsButtonPushed(ControllerButton::B_BUTTON))
             {
                 if (g_isP2Ready)
                 {
@@ -924,6 +933,9 @@ void selectWT_Update()
    
         if (Keyboard_IsKeyDownTrigger(KK_A)|| (g_Controller[0].IsButtonPushed(ControllerButton::A_BUTTON)))
         {
+            g_Controller[0].SetVibration(1.0f, 1.0f);
+            g_Controller[1].SetVibration(1.0f, 1.0f);
+            g_vibrationTimerP1 = 20;
             PlayAudio(g_gameStart, false);
             XMFLOAT4 fadeColor(0.0f, 0.0f, 0.0f, 1.0f);
             SetFade(40.0f, fadeColor, FADE_STATE::FADE_OUT, SCENE_GAME);

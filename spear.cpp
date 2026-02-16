@@ -157,7 +157,7 @@ void Spear::Update()
 	// ����p�t���O���g���ă`���[�W����
 	if (!m_selectPlayer)
 	{
-		if (Keyboard_IsKeyDown(KK_C) || g_Controller[0].IsButtonPushed(ControllerButton::X_BUTTON))
+		if (Keyboard_IsKeyDown(KK_C) || g_Controller[0].IsButtonDown(ControllerButton::X_BUTTON))
 		{
 			// 攻撃中じゃなければチャージできる
 			if (!m_isAttacking && m_coolTime <= 0.0f)
