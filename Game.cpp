@@ -289,7 +289,7 @@ void Game_Draw_Player1()
 
 	Camera_Draw();		//Drawの最初で呼ぶ！
 	Shader_SetMatrix(GetViewMatrix() * GetProjectionMatrix());
-	//Field_Draw();
+	Field_Draw();
 	g_stage.Draw();
 	TerrainDraw();
 	PlayerDraw();
@@ -343,7 +343,7 @@ void Game_Draw_Player2()
 	//============lightをまたtrueにして、camera2に影響がないように================
 	Camera2_Draw();
 	Shader_SetMatrix(GetViewMatrix2() * GetProjectionMatrix2());
-	//Field_Draw();
+	// Field_Draw();
 	g_stage.Draw();
 	TerrainDraw();
 	PlayerDraw();

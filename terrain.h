@@ -108,6 +108,10 @@ public:
 	void ClearPlayerObjects(WeaponTerrain set, int select); // プレイヤーに追従していた地形を解放する
 	void PixelObjects(const std::vector<std::vector<std::vector<std::string>>> terrain, TERRAIN_TYPE type, XMFLOAT3 motherPosition, int select);
 	void SimpleObjects(const std::vector<std::vector<std::vector<std::string>>> terrain, XMFLOAT3 size, TERRAIN_TYPE type, XMFLOAT3 motherPosition, int select);
+
+public:
+	// 丘のオブジェクトを作る
+	void CreateHill(XMFLOAT3 motherPosition, int select);
 };
 
 #endif // TERRAIN_H

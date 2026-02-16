@@ -26,10 +26,15 @@ static ID3D11Device* g_pDevice = nullptr;
 static ID3D11DeviceContext* g_pContext = nullptr;
 extern Controller g_Controller[2];
 
+static int g_titleVibTimerP1 = 0;
+static int g_titleVibTimerP2 = 0;
+
 void Title_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
 	g_pDevice = pDevice;
 	g_pContext = pContext;
+    g_titleVibTimerP1 = 0;
+    g_titleVibTimerP2 = 0;
 
 	//テクスチャ読み込みなど
 	TexMetadata		metadata;
@@ -45,17 +50,31 @@ void Title_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 }
 void Title_Finalize()
 {
+    g_Controller[0].SetVibration(0.0f, 0.0f);
+    g_Controller[1].SetVibration(0.0f, 0.0f);
 	//テクスチャの解放など
 	SAFE_RELEASE(g_Texture);
 
 }
 void Title_Update()
 { 
+    if (g_titleVibTimerP1 > 0) {
+        g_titleVibTimerP1--;
+        if (g_titleVibTimerP1 <= 0) g_Controller[0].SetVibration(0.0f, 0.0f);
+    }
+    if (g_titleVibTimerP2 > 0) {
+        g_titleVibTimerP2--;
+        if (g_titleVibTimerP2 <= 0) g_Controller[1].SetVibration(0.0f, 0.0f);
+    }
 	//キー入力チェック
 	//スタートボタンが押されたらシーンを切り替え
 	//フェード処理中はキーを受け付けない
     if ((Keyboard_IsKeyDownTrigger(KK_ENTER) || g_Controller[0].IsButtonPushed(ControllerButton::A_BUTTON)) && (GetFadeState() == FADE_NONE))
 	{
+        g_Controller[0].SetVibration(0.7f, 0.7f);
+        g_Controller[1].SetVibration(0.7f, 0.7f);
+        g_titleVibTimerP1 = 10;
+        g_titleVibTimerP2 = 10;
         PlayAudio(g_fade, false);
 		//フェードアウトさせてシーンを切り替える
 		XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);

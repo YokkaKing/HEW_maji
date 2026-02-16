@@ -80,12 +80,13 @@ void Arrow::Update()
 	{
 		{
 			m_coolTime -= 1.0f / 60.0f;
+			if (m_coolTime < 0.0f) m_coolTime = 0.0f;
 		}
 	}
 
 	if (!m_selectPlayer)
 	{
-		if (Keyboard_IsKeyDown(KK_C) || g_Controller[0].IsButtonPushed(ControllerButton::X_BUTTON))
+		if (Keyboard_IsKeyDown(KK_C) || g_Controller[0].IsButtonDown(ControllerButton::X_BUTTON))
 		{
 			// 攻撃中じゃなければチャージできる
 			if (!m_isAttacking && m_coolTime <= 0.0f)
@@ -93,10 +94,15 @@ void Arrow::Update()
 				m_isCharging = true;
 				m_chargePower += (1.0f / 60.0f);
 				if (m_chargePower > MAX_CHARGE) m_chargePower = MAX_CHARGE;
+				if (g_Controller[0].IsConnected()) {
+					float intensity = (m_chargePower / MAX_CHARGE) * 0.4f;
+					g_Controller[0].SetVibration(intensity, intensity);
+				}
 			}
 		}
 		else if (m_isCharging)
 		{
+			if (g_Controller[0].IsConnected()) g_Controller[0].SetVibration(0.0f, 0.0f);
 			// キーを離した瞬間に投げる
 			Throw(m_chargePower, m_selectPlayer);
 			m_isCharging = false;
@@ -109,7 +115,7 @@ void Arrow::Update()
 
 	if (m_selectPlayer)
 	{
-		if (Keyboard_IsKeyDown(KK_P) || g_Controller[1].IsButtonPushed(ControllerButton::X_BUTTON))
+		if (Keyboard_IsKeyDown(KK_P) || g_Controller[1].IsButtonDown(ControllerButton::X_BUTTON))
 		{
 			// 攻撃中じゃなければチャージできる
 			if (!m_isAttacking && m_coolTime <= 0.0f)
@@ -117,10 +123,15 @@ void Arrow::Update()
 				m_isCharging = true;
 				m_chargePower += (1.0f / 60.0f);
 				if (m_chargePower > MAX_CHARGE) m_chargePower = MAX_CHARGE;
+				if (g_Controller[1].IsConnected()) {
+					float intensity = (m_chargePower / MAX_CHARGE) * 0.4f;
+					g_Controller[1].SetVibration(intensity, intensity);
+				}
 			}
 		}
 		else if (m_isCharging)
 		{
+			if (g_Controller[1].IsConnected()) g_Controller[1].SetVibration(0.0f, 0.0f);
 			// キーを離した瞬間に投げる
 			Throw(m_chargePower, m_selectPlayer);
 			m_isCharging = false;
