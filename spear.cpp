@@ -68,8 +68,11 @@ Spear::Spear(GameObject* player, bool select) : IWeapon(player)
 	g_moveSpear[m_selectPlayer] = { 0.0f, 0.0f, 0.0f };
 	m_coolTime = 0.0f;
 
+	m_damageFCount = 0.0f; // ダメージの経過時間
+	m_damageFrame = { 0.2f, 0.35f }; // ダメージの有効フレーム
+
 	/*********** テストコード **********/
-	g_modelSpear[0] = ModelLoad("asset\\model\\FX_spear.fbx");
+	g_modelSpear[0] = ModelLoad("asset\\model\\weapon_spear.fbx");
 	m_fxAnim.Bind(g_modelSpear[0]);
 	g_modelSpear[1] = ModelLoad("asset\\model\\block2.fbx");
 	/*********************************/
@@ -85,6 +88,7 @@ void Spear::Attack()
 	if (m_isAttacking) return; // 攻撃してたら終わり
 	if (m_coolTime > 0.0f) return;
 	if (!m_isAttack) return;
+	m_damageFCount = 0.0f; // ダメージ経過時間をリセット
 	PlayAudio(g_spear, false);
 	m_weapon->m_scale.x = 0.1f;
 	m_weapon->m_scale.y = 0.1f;
@@ -111,6 +115,31 @@ void Spear::Update()
 		}
 	}
 
+	if (m_isAttacking)
+	{
+		m_damageFCount += 1.0f / 60.0f;
+	}
+	else
+	{
+		m_damageFCount = 0.0f;
+	}
+
+	// ダメージ経過時間が範囲内なら攻撃できる
+	if (m_damageFCount > m_damageFrame.x &&
+		m_damageFCount < m_damageFrame.y)
+	{
+		if (!m_collider.get()->IsEnable())
+		{
+			m_collider.get()->SetEnable(true); // 攻撃有効	
+		}
+	}
+	else
+	{
+		if (m_collider.get()->IsEnable())
+		{
+			m_collider.get()->SetEnable(false); // 攻撃無効
+		}
+	}
 
 	bool inputCharge = false;
 
@@ -297,9 +326,9 @@ void Spear::Draw()
 	if (m_isAttacking)
 	{
 		XMMATRIX	scale = XMMatrixScaling(
-			m_weapon->m_scale.x * 0.1f,
-			m_weapon->m_scale.y * 0.1f,
-			m_weapon->m_scale.z * 0.1f);
+			m_weapon->m_scale.x * 0.03f,
+			m_weapon->m_scale.y * 0.03f,
+			m_weapon->m_scale.z * 0.03f);
 		XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
 			m_weapon->m_rotation.x,
 			m_weapon->m_rotation.y + XM_PI,
@@ -335,22 +364,52 @@ void Spear::OnWeaponCollision(GameObject* target)
 
 	if (m_isAttacking)
 	{
+		//ヒットストップ用P1,P2共通変数
+		float stopTime = 0.5f;
 		// 1Pか2Pか
 		switch (m_selectPlayer)
 		{
-		case FALSE: // 1Pだったら
+		case FALSE: // 攻撃者が1Pだったら
 			if (target->m_tag == "Player2") // 相手がPlayer2の時のみ
 			{
 				m_hitTargets.insert(target);
 				target->TakeDamage(15.0f); // 仮に20ダメージ
+
+				//ヒットバック計算式
+				XMFLOAT3 dir = {
+					target->m_position.x - owner->m_position.x,
+					0.1f,
+					target->m_position.z - owner->m_position.z
+				};
+
+				//P2に対してヒットアクションを発動
+				//引数:方向vec, HS時間, KB距離
+				g_Player2.m_hitAction.triggerHA(dir, stopTime, 0.1);
+				//攻撃時に攻撃者側にもヒットストップを入れる
+				//時間だけを止めたいため、方向ベクトルとパワーの値は0に
+				g_Player.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime, 0.0f);
 			}
 			break;
 
-		case TRUE: // 2Pだったら
+		case TRUE: // 攻撃者が2Pだったら
 			if (target->m_tag == "Player") // 相手がPlayerの時のみ
 			{
 				m_hitTargets.insert(target);
 				target->TakeDamage(15.0f);
+
+				//ヒットバック計算式
+				XMFLOAT3 dir = {
+					target->m_position.x - owner->m_position.x,
+					0.1f,
+					target->m_position.z - owner->m_position.z
+				};
+
+				//P1に対してヒットアクションを発動
+				//引数:方向vec, HS時間, KB距離
+				g_Player.m_hitAction.triggerHA(dir, stopTime, 0.1f);
+				//攻撃時に攻撃者側にもヒットストップを入れる
+				//時間だけを止めたいため、方向ベクトルとパワーの値は0に
+				g_Player2.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime, 0.0f);
 			}
 			break;
 		}
@@ -387,7 +446,7 @@ void SpearShot::Start()
 {
 	m_tag = "Attack";
 
-	XMFLOAT3 scale = { 0.3f, 0.3f, 1.0f };
+	XMFLOAT3 scale = {1.0f,1.0f,1.0f };
 	m_scale = scale;
 	m_collider = AddComponent<BoxCollider>(this, scale);
 	ManagerCollider::AddCollider(m_collider);
@@ -430,12 +489,12 @@ void SpearShot::Draw()
 {
 	//ワールド行列作成
 	XMMATRIX	scale = XMMatrixScaling(
-		m_scale.x,
-		m_scale.y,
-		m_scale.z);
+		m_scale.x*0.01f,
+		m_scale.y * 0.01f,
+		m_scale.z * 0.01f);
 	XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
 		m_rotation.x,
-		m_rotation.y,
+		m_rotation.y + XM_PI,
 		m_rotation.z);
 	XMMATRIX	translation = XMMatrixTranslation(
 		m_position.x,
@@ -461,6 +520,9 @@ void SpearShot::OnCollision(const CollisionInfo& info)
 	m_velocity = { 0.0f, 0.0f, 0.0f };
 	m_isStuck = true;
 
+	//ヒットストップ時間
+	float stopTime = 0.2f;
+
 	// 1Pか2Pか
 	switch (m_selectPlayer)
 	{
@@ -469,7 +531,19 @@ void SpearShot::OnCollision(const CollisionInfo& info)
 		{
 			PlayAudio(g_damageSharp, false);
 			info.other->TakeDamage(15.0f); // 仮に20ダメージ
+			Player_PlusScore(15.0f);
 			m_isDead = true;
+
+			//ヒットバック計算式
+			XMFLOAT3 dir = {
+				info.other->m_position.x - this->m_position.x,
+				0.1f,
+				info.other->m_position.z - this->m_position.z
+			};
+
+			//P2に対してヒットアクションを発動
+			//引数:方向vec, HS時間, KB距離
+			g_Player2.m_hitAction.triggerHA(dir, stopTime, 0.1f);
 		}
 		break;
 
@@ -478,7 +552,20 @@ void SpearShot::OnCollision(const CollisionInfo& info)
 		{
 			PlayAudio(g_damageSharp, false);
 			info.other->TakeDamage(15.0f);
+			Player2_PlusScore(15.0f);
+
 			m_isDead = true;
+
+			//ヒットバック計算式
+			XMFLOAT3 dir = {
+				info.other->m_position.x - this->m_position.x,
+				0.1f,
+				info.other->m_position.z - this->m_position.z
+			};
+
+			//P1に対してヒットアクションを発動
+			//引数:方向vec, HS時間, KB距離
+			g_Player.m_hitAction.triggerHA(dir, stopTime, 0.1f);
 		}
 		break;
 	}

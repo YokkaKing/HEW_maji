@@ -233,6 +233,7 @@ void TransformPlayer()
         {
             g_Player.TransformType = TRANSFORM_TYPE::TRANSFORM_TYPE_A;
             targetWT = g_TransformA_P1;
+            Player_PlusTransformCount();
             g_IsUsedA_P1 = true;
 			SetPlayer_IsTransformed(true);
         }
@@ -240,6 +241,8 @@ void TransformPlayer()
         {
             g_Player.TransformType = TRANSFORM_TYPE::TRANSFORM_TYPE_B;
             targetWT = g_TransformB_P1;
+            Player_PlusTransformCount();
+
             g_IsUsedB_P1 = true;
             SetPlayer_IsTransformed(true);
 
@@ -329,6 +332,8 @@ void TransformPlayer2()
             g_Player2.TransformType = TRANSFORM_TYPE2::TRANSFORM_TYPE_A;
             targetWT = g_TransformA_P2;
             g_IsUsedA_P2 = true;
+
+            Player2_PlusTransformCount();
             SetPlayer2_IsTransformed(true);
         }
         else if ((Keyboard_IsKeyDownTrigger(KK_D9) || g_Controller[1].IsButtonPushed(ControllerButton::R_SHOULDER)) && !g_IsUsedB_P2)
@@ -336,6 +341,7 @@ void TransformPlayer2()
             g_Player2.TransformType = TRANSFORM_TYPE2::TRANSFORM_TYPE_B;
             targetWT = g_TransformB_P2;
             g_IsUsedB_P2 = true;
+            Player2_PlusTransformCount();
             SetPlayer2_IsTransformed(true);
 
         }

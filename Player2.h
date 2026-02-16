@@ -20,6 +20,7 @@ using namespace DirectX;
 #include"gameObject.h"
 #include"IWeapon.h"
 #include"selectWeaponTerrain.h"
+#include"hitAction.h"
 
 enum class TRANSFORM_TYPE2
 {
@@ -59,7 +60,7 @@ public:
 	float m_moveMul = 1.0f;
 	//武器操作関数
 	bool m_isTransformed = false; // 変身中フラグ
-
+	HitAction m_hitAction;
 public:
 	void EquipWeapon(std::unique_ptr<IWeapon> weapon); // 武器を装備する
 	void OnCollision(const CollisionInfo& info)override;
@@ -83,6 +84,7 @@ public:
 	bool isDead() const { return m_isDead; }
 	void RoundReset(XMFLOAT3 startPos);
 	void EquipBaseWeapon();
+	HitAction& GetHitAction() { return m_hitAction; }
 };
 
 extern PLAYER2 g_Player2;
@@ -102,7 +104,16 @@ bool GetPlayer2_IsAttacked();
 void SetPlayer2_IsAttacked(bool isAttacked);
 PLAYER2* GetPlayer2();
 WeaponTerrain GetSetWTP2();
+bool GetChangeP2();
 void SetWTP2(WeaponTerrain wt);
+int Player2_GetTransformCount();
+int Player2_GetItemCount();
+int Player2_GetLoseCount();
+void Player2_PlusTransformCount();
+void Player2_PlusGetItemCount();
+void Player2_PlusLoseCount();
+void Player2_AllCountReset();
+void Player2_PlusScore(int score);
 void SetPlayer2_IsTransformed(bool isTransformed);
-
+int Player2_GetScore();
 #endif // PLAYER2_H

@@ -33,6 +33,7 @@ struct inGameWTselect
 {
 	WeaponTerrain player1 = WeaponTerrain::SWORD_WALL;
 	WeaponTerrain player2 = WeaponTerrain::SWORD_WALL;
+	WeaponTerrain winner = WeaponTerrain::SWORD_WALL;
 };
 
 void selectWT_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);

@@ -17,8 +17,13 @@
 #include"Game.h"
 #include"Title.h"
 #include"Result.h"
+
+#include "Player.h"
+#include "Player2.h"
 #include"fade.h"
 #include"selectWeaponTerrain.h"
+#include "Result_Ui.h"
+#include "ResultSystem.h"
 //================================================================
 //	グローバル変数
 //================================================================
@@ -69,6 +74,10 @@ void Manager_Update()
 		{
 			Game_Update();
 
+			if (g_P1Wins >= 2 || g_P2Wins >= 2)
+			{
+				break;
+			}
 			// 勝敗判定を取得
 			int result = Game_GetRoundResult();
 
@@ -76,8 +85,19 @@ void Manager_Update()
 			if (result != 0)
 			{
 				// 勝利カウント加算
-				if (result == 1) g_P1Wins++;
-				if (result == 2) g_P2Wins++;
+				if (result == 1)
+				{
+					g_P1Wins++;
+					Player2_PlusLoseCount();
+					Player_PlusScore(200);
+				}
+				if (result == 2)
+				{
+					g_P2Wins++;
+					Player_PlusLoseCount();
+					Player2_PlusScore(200);
+
+				}
 				// 引き分けの場合は両者加算しない、あるいは再試合などの調整可能
 
 				g_RoundCount++; // ラウンドを進める
@@ -86,19 +106,41 @@ void Manager_Update()
 				bool isMatchOver = false;
 
 				// ここはどちらでも調整可能
-				//if (g_P1Wins >= 2 || g_P2Wins >= 2) isMatchOver = true; // 2勝したら終わり
-				if (g_RoundCount >= 3) isMatchOver = true;         // 3ラウンド終わったら終わり
+				if (g_P1Wins >= 2 || g_P2Wins >= 2) isMatchOver = true; // 2勝したら終わり
+				//if (g_RoundCount >= 3) isMatchOver = true;         // 3ラウンド終わったら終わり
 
 				if (isMatchOver)
 				{
-					// 全試合終了 -> リザルトへ
-					// ここで初めてGameシーンを破棄する
-					//Game_Finalize();
-					SetScene(SCENE_TITLE);
-					//複数回のゲームプレイを想定してゲームループ用変数を初期化
+					// ===== Resultへ渡すデータを保存 =====
+					int winnerId = 0;
+					if (g_P1Wins > g_P2Wins) winnerId = 1;
+					else if (g_P2Wins > g_P1Wins) winnerId = 2;
+					else winnerId = 1; // 引き分けの場合はとりあえず1P扱い（必要なら変えてOK）
+					SetupResultUi(true, winnerId);
+					RESULT_MATCH_INFO info;
+					info.winnerId = winnerId;
+					info.decidedRound = g_RoundCount;
+
+					if (PLAYER* p1 = GetPlayer())
+					{
+						info.p1.baseWT = p1->m_baseWT;
+						info.p1.t0 = p1->GetReservedWT(0);
+						info.p1.t1 = p1->GetReservedWT(1);
+					}
+					// P2 loadout
+					if (PLAYER2* p2 = GetPlayer2())
+					{
+						info.p2.baseWT = p2->m_baseWT;
+						info.p2.t0 = p2->GetReservedWT(0);
+						info.p2.t1 = p2->GetReservedWT(1);
+					}
+
+					ResultSystem_SetMatchInfo(info);
+
+					XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
+					SetFade(40.0f, color, FADE_OUT, SCENE_RESULT);
+
 					g_RoundCount = 0;
-					g_P1Wins = 0;
-					g_P2Wins = 0;
 					isMatchOver = false;
 				}
 				else
@@ -138,7 +180,7 @@ void Manager_Draw_Player1()
 			Game_Draw_Player1();
 			break;
 		case SCENE_RESULT:
-			Result_Draw();
+			Result_Draw_Player1();
 			break;
 		default:
 			break;
@@ -163,7 +205,7 @@ void Manager_Draw_Player2()
 		Game_Draw_Player2();
 		break;
 	case SCENE_RESULT:
-		Result_Draw();
+		Result_Draw_Player2();
 		break;
 	default:
 		break;
@@ -234,4 +276,13 @@ void SetScene(SCENE scene) //シーンを切り替える
 int GetRoundCount()
 {
 	return g_RoundCount;
+}
+SCENE GetScene()
+{
+	return g_Scene;
+}
+void ResetWinCount()
+{
+	g_P1Wins = 0;
+	g_P2Wins = 0;
 }
