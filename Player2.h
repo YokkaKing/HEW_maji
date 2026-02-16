@@ -116,4 +116,6 @@ void Player2_AllCountReset();
 void Player2_PlusScore(int score);
 void SetPlayer2_IsTransformed(bool isTransformed);
 int Player2_GetScore();
+void Player2_SetPlayerIsAttaking(int flg);
+void Player2_ResetMoveMul();
 #endif // PLAYER2_H

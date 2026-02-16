@@ -249,7 +249,7 @@ void ArrowShot::Start()
 {
 	m_tag = "Attack";
 
-	XMFLOAT3 scale = { 0.2f, 0.2f, 0.7f };
+	XMFLOAT3 scale = { 0.2f, 0.2f, 0.2f };
 	m_scale = scale;
 	m_collider = AddComponent<BoxCollider>(this, scale);
 	ManagerCollider::AddCollider(m_collider);
@@ -292,12 +292,12 @@ void ArrowShot::Draw()
 {
 	//ワールド行列作成
 	XMMATRIX	scale = XMMatrixScaling(
-		m_scale.x,
-		m_scale.y,
-		m_scale.z);
+		m_scale.x*0.08f,
+		m_scale.y*0.08f,
+		m_scale.z*0.08f);
 	XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
 		m_rotation.x,
-		m_rotation.y,
+		m_rotation.y * XM_PI,
 		m_rotation.z);
 	XMMATRIX	translation = XMMatrixTranslation(
 		m_position.x,

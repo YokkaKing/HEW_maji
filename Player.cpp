@@ -101,6 +101,7 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 	g_Player.m_isAttacked = false;
 	g_Player.m_isTransformed = false;
 	g_Player.m_isDeadFlag = false;
+	g_Player.m_moveMul = 1.0f;
 	auto collider = g_Player.AddComponent<BoxCollider>(&g_Player, g_Player.m_scale);
 	ManagerCollider::AddCollider(collider);
 
@@ -130,7 +131,7 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 		g_Player.m_model = ModelLoad("asset\\model\\default_shuriken.fbx");
 	}
 
-	g_Player.EquipBaseWeapon(); //���E���h�����p�ɏ���������đ���
+	g_Player.EquipBaseWeapon();
 	
 	gp1_slopeSpeed = { 0.0f, 0.0f, 0.0f };
 
@@ -1146,4 +1147,13 @@ void Player_PlusScore(int score)
 int Player_GetScore()
 {
 	return g_Player.m_score;
+}
+
+void Player_SetPlayerIsAttaking(int flg)
+{
+	g_Player1AttackPlaying = flg;
+}
+void Player_ResetMoveMul()
+{
+	g_Player.m_moveMul = 1.0f;
 }
