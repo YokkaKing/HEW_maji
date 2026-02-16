@@ -108,6 +108,7 @@ bool GetChangeP1();
 void SetWTP1(WeaponTerrain wt);
 WeaponTerrain GetPlayerCurrentWT();
 void SetPlayer_IsTransformed(bool isTransformed);
+bool GetPlayer_IsTransformed();
 int Player_GetTransformCount();
 int Player_GetItemCount();
 int Player_GetLoseCount();

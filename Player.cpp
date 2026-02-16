@@ -51,6 +51,8 @@ static int g_Player1CurrentAnim = 0; // 0: idle, 1: move, 2: attack 3:jump
 bool g_isChangeP1;
 ITEM_SPONER gp_itemSponer;
 XMFLOAT3 gp1_slopeSpeed;
+bool gp1_move; // プレイヤーが動いているかのフラグ
+bool gp1_koyoteFlag; // コヨーテタイムを回復するかどうか
 
 void PlayerDie()
 {
@@ -133,6 +135,8 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 	g_Player.EquipBaseWeapon(); //���E���h�����p�ɏ���������đ���
 	
 	gp1_slopeSpeed = { 0.0f, 0.0f, 0.0f };
+	gp1_move = false; // 最初は動いてない
+	gp1_koyoteFlag = false; // 最初はフラグをオフ
 
 	g_isChangeP1 = false;
 }
@@ -539,6 +543,8 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 	float forwardX = GetCameraAtPosition().x - GetCameraPosition().x;
 	float forwardZ = GetCameraAtPosition().z - GetCameraPosition().z;
 
+	gp1_move = false; // 常に動いていないと更新
+
 	if (!g_Player.m_isGround) // 地面についてないときに重力発動
 	{
 		g_Player.m_velocity.x += g_Player.m_acceleration.x;
@@ -547,7 +553,9 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 	}
 
 	// 地面についているときにコヨーテタイムが1.0fになる
-	if (g_Player.m_isGround)
+	// フラグがオフの時に1.0fになる
+	if (g_Player.m_isGround &&
+		!gp1_koyoteFlag)
 	{
 		g_Player.m_koyoteTime = 1.0f;
 	}
@@ -583,16 +591,19 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 		// ベクトルが逆だから移動が逆になる
 		// 左スティック上方向 (+1.0f) で前進 (speed = -0.1f) に対応
 		speed = stickY * 0.1f;
+		gp1_move = true; // 動いている
 	}
 
 
 	if (Keyboard_IsKeyDown(KK_W))
 	{
 		speed = +0.1f;
+		gp1_move = true; // 動いている
 	}
 	if (Keyboard_IsKeyDown(KK_S))
 	{
 		speed = -0.1f;
+		gp1_move = true; // 動いている
 	}
 
 	moveX += forwardX * speed;
@@ -605,15 +616,18 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 	{
 		// 左スティック左方向 (-1.0f) で左移動 (strafe = +0.1f) に対応
 		strafe = stickX * 0.1f;
+		gp1_move = true; // 動いている
 	}
 
 	if (Keyboard_IsKeyDown(KK_A))
 	{
 		strafe = -0.1f;  // 左
+		gp1_move = true; // 動いている
 	}
 	if (Keyboard_IsKeyDown(KK_D))
 	{
 		strafe = +0.1f;  // 右
+		gp1_move = true; // 動いている
 	}
 	moveX += rightX * strafe;
 	moveZ += rightZ * strafe;
@@ -829,6 +843,8 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 	if (!info.isHit) return;
 	if (m_isDead) return; //死亡していたら衝突処理を無視
 
+	gp1_koyoteFlag = false; // 基本false
+
 	// --- まずタグで相手を識別 ---
 	if (info.other)
 	{
@@ -1025,6 +1041,72 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 				m_velocity.z *= 0.0f;
 			}
 		}
+
+		if (info.other->m_tag == "SlopeP1")
+		{
+			// 1. 押し出し（めり込み防止の基本）
+			m_position.x += info.normal.x * info.penetration;
+			m_position.y += info.normal.y * info.penetration;
+			m_position.z += info.normal.z * info.penetration;
+
+			if (info.normal.y > 0.1f)
+			{
+				m_isGround = true;
+				if (m_velocity.y < 0) m_velocity.y = 0.0f;
+
+				float climbResistance = 0.7f; // 0.8〜0.9 くらいで調整（小さいほど遅くなる）
+
+				// 入力によって進もうとしている速度にブレーキをかける
+				m_velocity.x *= climbResistance;
+				m_velocity.z *= climbResistance;
+
+				if (gp1_move)
+				{
+					m_position.y += 0.1f;
+				}
+
+				// 滑り計算（gp1_slopeSpeed）は使わないので 0 にリセット
+				gp1_slopeSpeed = { 0.0f, 0.0f, 0.0f };
+			}
+		}
+
+		if (info.other->m_tag == "SlopeP2")
+		{
+			m_position.x += info.normal.x * info.penetration;
+			m_position.y += info.normal.y * info.penetration;
+			m_position.z += info.normal.z * info.penetration;
+
+			// 坂道なら normal.y が 0 より大きければ地面とみなす
+			if (info.normal.y > 0.1f)
+			{
+				m_isGround = true;
+				if (m_velocity.y < 0) m_velocity.y = 0.0f;
+				gp1_koyoteFlag = true; // フラグをオンにする
+				m_koyoteTime = 0.0f; // ジャンプできなくする
+
+				// --- gp_speed への計算 ---
+				const float slideFriction = 0.25f;
+				float slopeSeverity = 1.0f - info.normal.y;
+				float slidePower = slopeSeverity * slideFriction;
+				const float gravityEffect = 0.02f;
+
+				// m_velocity ではなく gp_speed に加算
+				gp1_slopeSpeed.x += info.normal.x * (slidePower + gravityEffect);
+				gp1_slopeSpeed.z += info.normal.z * (slidePower + gravityEffect);
+
+				// リミッター
+				float maxSlide = 0.08f;
+				float speedXZ = sqrtf(gp1_slopeSpeed.x * gp1_slopeSpeed.x + gp1_slopeSpeed.z * gp1_slopeSpeed.z);
+				if (speedXZ > maxSlide)
+				{
+					gp1_slopeSpeed.x = (gp1_slopeSpeed.x / speedXZ) * maxSlide;
+					gp1_slopeSpeed.z = (gp1_slopeSpeed.z / speedXZ) * maxSlide;
+				}
+
+				m_velocity.x *= 0.0f;
+				m_velocity.z *= 0.0f;
+			}
+		}
 	}
 }
 
@@ -1103,6 +1185,10 @@ WeaponTerrain GetPlayerCurrentWT()
 void SetPlayer_IsTransformed(bool isTransformed)
 {
 	g_Player.m_isTransformed = isTransformed;
+}
+bool GetPlayer_IsTransformed()
+{
+	return g_Player.m_isTransformed;
 }
 int Player_GetTransformCount()
 {

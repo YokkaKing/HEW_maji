@@ -14,6 +14,7 @@
 #include"model.h"
 #include"colliderFactory.h"
 #include"gameObject.h"
+#include"keyboard.h"
 
 //================================================================
 //	グローバル変数
@@ -30,6 +31,7 @@ static	ID3D11Buffer* g_IndexBuffer = NULL;
 static ID3D11ShaderResourceView* g_Texture;
 
 static std::vector<std::unique_ptr<GameObject>> g_FieldObjects;
+GameObject* slope;
 
 #define		BOX_NUM_VERTEX	(24)
 
@@ -494,7 +496,7 @@ void Field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 			break;
 
 		case FIELD::FIELD_LIFT:
-			object = ColliderFactory::CreateTrapezoidSlopeObject(
+			slope = ColliderFactory::CreateTrapezoidSlopeObject(
 				{ 0.0f, 0.0f, 0.0f },
 				{ 0.0f, 2.0f, 3.0f },
 				1.0f,
@@ -503,11 +505,9 @@ void Field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 				"Slope",
 				0
 			);
-			object->m_position = { 3.0f, 1.5f, 1.0f };
+			slope->m_position = { 3.0f, 1.5f, 1.0f };
 			Map[i].pos = { 3.0f, 1.5f, 1.0f };
 			Map[i].scale = { 2.0f, 4.0f, 6.0f };
-			hal::dout << "pos = (" << object->m_position.x << "," <<
-				object->m_position.y << "," << object->m_position.z << ")\n\n\n\n";
 			break;
 
 		case FIELD::FIELD_MAX:
@@ -524,7 +524,7 @@ void Field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 		switch (i)
 		{
 			case FIELD_BOX:
-				CreateBox();
+				Model[FIELD_BOX] = ModelLoad("asset\\model\\meyasu.fbx");//デバッグ
 				break;
 
 			case FIELD_OBT:
@@ -615,9 +615,58 @@ void Field_Draw(void)
 
 		if (/*Map[i].no == FIELD_BOX || */Map[i].no == FIELD_LIFT)
 		{
-			////描画リクエスト
-			//g_pContext->DrawIndexed(6 * 6, 0, 0);
+			//////描画リクエスト
+			////g_pContext->DrawIndexed(6 * 6, 0, 0);
+			//if (Keyboard_IsKeyDown(KK_U))
+			//{
+			//	slope->m_position.z += 0.05f;
+			//	Map[i].pos.z += 0.05f;
+			//}
+			//if (Keyboard_IsKeyDown(KK_J))
+			//{
+			//	slope->m_position.z -= 0.05f;
+			//	Map[i].pos.z -= 0.05f;
+			//}
+			//if (Keyboard_IsKeyDown(KK_H))
+			//{
+			//	slope->m_position.x -= 0.05f;
+			//	Map[i].pos.x -= 0.05f;
+			//}
+			//if (Keyboard_IsKeyDown(KK_K))
+			//{
+			//	slope->m_position.x += 0.05f;
+			//	Map[i].pos.x += 0.05f;
+			//}
 			ModelDraw(Model[FIELD_LIFT]);
+
+			//for (int i = 0; i < 3; i++)
+			//{
+			//	//ModelDraw(Model[Map[i].no]);
+			//	ScalingMatrix = XMMatrixScaling
+			//	(
+			//		1.0f,
+			//		1.0f,
+			//		1.0f
+			//	);
+			//	TranslationMatrix = XMMatrixTranslation
+			//	(
+			//		1.0f + i,
+			//		0.5f + i,
+			//		1.0f + i
+			//	);
+			//	RotationMatrix = XMMatrixRotationRollPitchYaw
+			//	(
+			//		0.0f,
+			//		0.0f,
+			//		0.0f
+			//	);
+
+			//	World = ScalingMatrix * RotationMatrix * TranslationMatrix;
+
+			//	Shader_SetWorldMatrix(World);
+
+			//	ModelDraw(Model[FIELD_BOX]);
+			//}
 		}
 		else
 		{

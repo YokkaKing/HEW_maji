@@ -48,6 +48,8 @@ static bool g_Player2JumpPlaying = false; // ジャンプワンショット再�
 static int g_Player2CurrentAnim = 0; // 0: idle, 1: move, 2: attack 3:jump
 bool g_isChangeP2;
 XMFLOAT3 gp2_slopeSpeed;
+bool gp2_move; // プレイヤーが動いているかのフラグ
+bool gp2_koyoteFlag; // コヨーテタイムを回復するかどうか
 
 void Player2Die()
 {
@@ -127,6 +129,8 @@ void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 	}
 
 	gp2_slopeSpeed = { 0.0f, 0.0f, 0.0f };
+	gp2_move = false; // 最初は動いてない
+	gp2_koyoteFlag = false; // 最初はフラグをオフ
 
 	g_isChangeP2 = false;
 }
@@ -538,6 +542,8 @@ void Player2_ManualMove()
 	float forwardX = GetCamera2AtPosition().x - GetCamera2Position().x;
 	float forwardZ = GetCamera2AtPosition().z - GetCamera2Position().z;
 
+	gp2_move = false; // 常に動いていないと更新
+
 	if (!g_Player2.m_isGround) // 地面についてないときに重力発動
 	{
 		g_Player2.m_velocity.x += g_Player2.m_acceleration.x;
@@ -546,7 +552,8 @@ void Player2_ManualMove()
 	}
 
 	// 地面についているときにコヨーテタイムが1.0fになる
-	if (g_Player2.m_isGround)
+	if (g_Player2.m_isGround &&
+		!gp2_koyoteFlag)
 	{
 		g_Player2.m_koyoteTime = 1.0f;
 	}
@@ -573,14 +580,17 @@ void Player2_ManualMove()
 		// ベクトルが逆だから移動が逆になる
 		// 左スティック上方向 (+1.0f) で前進 (speed = -0.1f) に対応
 		speed = stickY * 0.1f;
+		gp2_move = true;
 	}
 	if (Keyboard_IsKeyDown(KK_U))
 	{
 		speed = -0.1f;
+		gp2_move = true;
 	}
 	if (Keyboard_IsKeyDown(KK_J))
 	{
 		speed = +0.1f;
+		gp2_move = true;
 	}
 
 	moveX += forwardX * speed;
@@ -593,14 +603,17 @@ void Player2_ManualMove()
 	{
 		// 左スティック左方向 (-1.0f) で左移動 (strafe = +0.1f) に対応
 		strafe = stickX * 0.1f;
+		gp2_move = true;
 	}
 	if (Keyboard_IsKeyDown(KK_H))
 	{
 		strafe = +0.1f;  // 左
+		gp2_move = true;
 	}
 	if (Keyboard_IsKeyDown(KK_K))
 	{
 		strafe = -0.1f;  // 右
+		gp2_move = true;
 	}
 	moveX += rightX * strafe;
 	moveZ += rightZ * strafe;
@@ -804,6 +817,9 @@ void PLAYER2::EquipWeapon(std::unique_ptr<IWeapon> weapon)
 void PLAYER2::OnCollision(const CollisionInfo& info)
 {
 	if (!info.isHit) return;
+	if (m_isDead) return; //死亡していたら衝突処理を無視
+
+	gp2_koyoteFlag = false; // 基本false
 
 	// --- まずタグで相手を識別 ---
 	if (info.other)
@@ -994,6 +1010,72 @@ void PLAYER2::OnCollision(const CollisionInfo& info)
 				m_velocity.z *= 0.0f;
 			}
 		}
+
+		if (info.other->m_tag == "SlopeP2")
+		{
+			// 1. 押し出し（めり込み防止の基本）
+			m_position.x += info.normal.x * info.penetration;
+			m_position.y += info.normal.y * info.penetration;
+			m_position.z += info.normal.z * info.penetration;
+
+			if (info.normal.y > 0.1f)
+			{
+				m_isGround = true;
+				if (m_velocity.y < 0) m_velocity.y = 0.0f;
+
+				float climbResistance = 0.7f; // 0.8〜0.9 くらいで調整（小さいほど遅くなる）
+
+				// 入力によって進もうとしている速度にブレーキをかける
+				m_velocity.x *= climbResistance;
+				m_velocity.z *= climbResistance;
+
+				if (gp2_move)
+				{
+					m_position.y += 0.1f;
+				}
+
+				// 滑り計算（gp1_slopeSpeed）は使わないので 0 にリセット
+				gp2_slopeSpeed = { 0.0f, 0.0f, 0.0f };
+			}
+		}
+
+		if (info.other->m_tag == "SlopeP1")
+		{
+			m_position.x += info.normal.x * info.penetration;
+			m_position.y += info.normal.y * info.penetration;
+			m_position.z += info.normal.z * info.penetration;
+
+			// 坂道なら normal.y が 0 より大きければ地面とみなす
+			if (info.normal.y > 0.1f)
+			{
+				m_isGround = true;
+				if (m_velocity.y < 0) m_velocity.y = 0.0f;
+				gp2_koyoteFlag = true; // フラグをオンにする
+				m_koyoteTime = 0.0f; // ジャンプできなくする
+
+				// --- gp_speed への計算 ---
+				const float slideFriction = 0.25f;
+				float slopeSeverity = 1.0f - info.normal.y;
+				float slidePower = slopeSeverity * slideFriction;
+				const float gravityEffect = 0.02f;
+
+				// m_velocity ではなく gp_speed に加算
+				gp2_slopeSpeed.x += info.normal.x * (slidePower + gravityEffect);
+				gp2_slopeSpeed.z += info.normal.z * (slidePower + gravityEffect);
+
+				// リミッター
+				float maxSlide = 0.08f;
+				float speedXZ = sqrtf(gp2_slopeSpeed.x * gp2_slopeSpeed.x + gp2_slopeSpeed.z * gp2_slopeSpeed.z);
+				if (speedXZ > maxSlide)
+				{
+					gp2_slopeSpeed.x = (gp2_slopeSpeed.x / speedXZ) * maxSlide;
+					gp2_slopeSpeed.z = (gp2_slopeSpeed.z / speedXZ) * maxSlide;
+				}
+
+				m_velocity.x *= 0.0f;
+				m_velocity.z *= 0.0f;
+			}
+		}
 	}
 }
 
@@ -1077,6 +1159,10 @@ void SetPlayer2_IsAttacked(bool isAttacked)
 void SetPlayer2_IsTransformed(bool isTransformed)
 {
 	g_Player2.m_isTransformed = isTransformed;
+}
+bool GetPlayer2_IsTransformed()
+{
+	return g_Player2.m_isTransformed;
 }
 int Player2_GetTransformCount()
 {
