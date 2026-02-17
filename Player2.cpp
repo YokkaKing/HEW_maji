@@ -619,14 +619,8 @@ void Player2_ManualMove()
 	moveZ += rightZ * strafe;
 
 	// 最終速度
-
-	g_Player2.m_velocity.x = moveX*  g_Player2.m_moveMul;
-	g_Player2.m_velocity.z = moveZ * g_Player2.m_moveMul;
 	if (g_Player2.m_isGround)
 	{
-		// 地面にいるときは、入力方向へクイックに速度を合わせる
-		// ただし、完全に上書きせず、現在の速度（滑り成分など）に加算する形にするのがベターです
-
 		// 入力がないときは、今の速度を少しずつ減衰させる（摩擦の表現）
 		if (fabs(moveX) < 0.001f && fabs(moveZ) < 0.001f)
 		{

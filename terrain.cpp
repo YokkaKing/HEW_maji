@@ -740,12 +740,6 @@ void TerrainUpdate()
 		}
 	}
 
-	if (Keyboard_IsKeyDown(KK_L))
-	{
-		g_Terrain.m_isChange[0] = true; 
-		g_Terrain.m_coolTime[0] = 20.0f;
-	}
-
 	// 変身したら-する
 	if (g_Terrain.m_isChange[0])
 	{
@@ -1058,8 +1052,25 @@ void TerrainDraw()
 }
 void TerrainSet(WeaponTerrain set, bool playerSelect)
 {
-	int select = 0;
+	// --- 追加：重複呼び出し防止用のフラグ ---
+	static WeaponTerrain lastSetP1 = (WeaponTerrain)-1;
+	static WeaponTerrain lastSetP2 = (WeaponTerrain)-1;
+	static bool firstCallP1 = true;
+	static bool firstCallP2 = true;
 
+	if (!playerSelect) { // P1の場合
+		if (!firstCallP1 && lastSetP1 == set) return; // 変化がなければ何もしない
+		lastSetP1 = set;
+		firstCallP1 = false;
+	}
+	else { // P2の場合
+		if (!firstCallP2 && lastSetP2 == set) return; // 変化がなければ何もしない
+		lastSetP2 = set;
+		firstCallP2 = false;
+	}
+	// ----------------------------------------
+
+	int select = 0;
 	if (playerSelect)
 	{
 		select = 1;
@@ -1068,11 +1079,10 @@ void TerrainSet(WeaponTerrain set, bool playerSelect)
 	switch (select)
 	{
 	case 0:
-		g_Terrain.ClearPlayerObjects(GetSetWTP1(), select); // 古い地形を解放する
+		g_Terrain.ClearPlayerObjects(GetSetWTP1(), select);
 		break;
-
 	case 1:
-		g_Terrain.ClearPlayerObjects(GetSetWTP2(), select); // 古い地形を解放する
+		g_Terrain.ClearPlayerObjects(GetSetWTP2(), select);
 		break;
 	}
 
@@ -1082,8 +1092,7 @@ void TerrainSet(WeaponTerrain set, bool playerSelect)
 		g_Terrain.SimpleObjects(Walls, { 1.0f, 1.0f, 1.0f }, TERRAIN_TYPE::WALL, g_Terrain.m_motherPosition[select], select);
 		break;
 	case WeaponTerrain::SPEAR_HILL:
-		//g_Terrain.SimpleObjects(Hills, { 0.25f, 0.25f, 0.25f }, TERRAIN_TYPE::HILL, g_Terrain.m_motherPosition[select], select);
-		g_Terrain.CreateAnt(g_Terrain.m_motherPosition[0], 0);
+		g_Terrain.CreateAnt(g_Terrain.m_motherPosition[select], select);
 		break;
 	case WeaponTerrain::BOW_HILL:
 		g_Terrain.SimpleObjects(Hills, { 0.25f, 0.25f, 0.25f }, TERRAIN_TYPE::HILL, g_Terrain.m_motherPosition[select], select);
@@ -1465,18 +1474,34 @@ void TERRAIN::UpdateObject(std::vector<GameObject*> terrain, XMFLOAT3 motherPosi
 				{
 					obj->m_position.y += 0.1f; // 上昇
 				}
+				
+				if (obj->m_position.y >= -0.5f)
+				{
+					obj->m_position.y = -0.4f;
+				}
+
+				/*hal::dout << "SLOPE position (" << obj->m_position.x <<
+					"," << obj->m_position.y << "," << obj->m_position.z << "\n";*/
 			}
 			else
 			{
 				obj->m_position.y += 0.1f; // 上昇
+				/*hal::dout << "NORMAL position (" << obj->m_position.x <<
+					"," << obj->m_position.y << "," << obj->m_position.z << "\n";*/
 			}
 			// キー入力で動くのと同じように、直接 position を更新
 
-			if (obj->m_tag == "SlopeP1")
+			/*if (obj->m_tag == "SlopeP1")
 			{
-				hal::dout << "座標 (" << obj->m_position.x << "," <<
-					obj->m_position.y << "," << obj->m_position.z << ")\n";
+				hal::dout << "ANTS1 position (" << ants[0][0]->m_position.x << "," <<
+					ants[0][0]->m_position.y << "," << ants[0][0]->m_position.z << ")\n";
 			}
+
+			if (obj->m_tag == "SlopeP2")
+			{
+				hal::dout << "ANTS2 position (" << ants[1][0]->m_position.x << "," <<
+					ants[1][0]->m_position.y << "," << ants[1][0]->m_position.z << ")\n";
+			}*/
 		}
 	}
 }
@@ -1568,11 +1593,6 @@ void TERRAIN::CreateAnt(XMFLOAT3 motherPosition, int select)
 				0
 			)
 		);
-
-		// 高さ　半径1.3　直径2.6
-		// 奥行　半径1.5　直径3.0
-		// 横幅　半径2.5　直径5.0
-		// 厚み　0.5くらいでいいでしょ
 
 		antObj->m_position = motherPosition;
 		antObj->m_velocity.x = g_antlionData2[i].x; // dataの数値を代入
