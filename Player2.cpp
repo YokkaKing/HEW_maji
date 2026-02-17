@@ -155,65 +155,6 @@ void	Player2Update()
 //================================================================
 //	武器変更処理(一旦)
 //================================================================
-	/*
-	int slotToUse = -1;
-	if (Keyboard_IsKeyDownTrigger(KK_D2) && !GetIsUsedA_P2())
-	{
-		slotToUse = 0;
-		g_isChangeP2 = true;
-	}
-	if (Keyboard_IsKeyDownTrigger(KK_D9) && !GetIsUsedB_P2())
-	{
-		slotToUse = 1;
-		g_isChangeP2 = true;
-	}
-
-	if (slotToUse != -1)
-	{
-		// 予約されている変身先を取得
-		WeaponTerrain reserved = g_Player2.GetReservedWT(slotToUse);
-
-		// 選択（予約）済みであり、かつ現在変身中でない（または NONE でない）場合
-		if (reserved != WeaponTerrain::NONE)
-		{
-			inGameWTselect data;
-			data.player1 = WeaponTerrain::NONE; // P1は変更しない
-			data.player2 = reserved;            // P2に予約分を適用
-
-			// 武器の適用
-			//generateWT_Apply(data, &g_Player, &g_Player2, g_pDevice2, g_pContext2);
-
-			// 地形の生成（P2用なので第二引数はTRUE）
-			TerrainSet(reserved, TRUE);
-
-			//下にある攻撃処理のアニメーションの順と合わせる
-			switch (reserved) {
-			case WeaponTerrain::SWORD_WALL:
-				g_changeP2 = 1;
-				g_Player2.EquipWeapon(std::make_unique<Sword>(&g_Player2, TRUE));
-				break;
-			case WeaponTerrain::SPEAR_HILL:
-				g_changeP2 = 2;
-				g_Player2.EquipWeapon(std::make_unique<Spear>(&g_Player2, TRUE));
-				break;
-			case WeaponTerrain::BOW_HILL:
-				g_changeP2 = 3;
-				g_Player2.EquipWeapon(std::make_unique<Arrow>(&g_Player2, TRUE));
-				break;
-			case WeaponTerrain::HAMMER_:
-				g_changeP2 = 4;
-				g_Player2.EquipWeapon(std::make_unique<Hammer>(&g_Player2, TRUE));
-				break;
-			case WeaponTerrain::SHURIKEN_:
-				g_changeP2 = 5;
-				g_Player2.EquipWeapon(std::make_unique<Shuriken>(&g_Player2, TRUE));
-				break;
-			}
-			g_setWTP2 = reserved;
-			// g_Player2.SetCurrentWT(reserved);
-		}
-	}
-	*/
 
 //================================================================
 //	攻撃処理
@@ -1070,6 +1011,17 @@ void PLAYER2::OnCollision(const CollisionInfo& info)
 				m_velocity.x *= 0.0f;
 				m_velocity.z *= 0.0f;
 			}
+		}
+
+		if (info.other->m_tag == "BOGP1")
+		{
+			// 現在の速度を大幅に減衰させる（例：毎フレーム 70% に落とす）
+			m_velocity.x *= 0.3f;
+			m_velocity.z *= 0.3f;
+
+			// もし坂道用の速度（gp1_slopeSpeed）も適用されているなら、それも減衰させる
+			gp2_slopeSpeed.x *= 0.5f;
+			gp2_slopeSpeed.z *= 0.5f;
 		}
 	}
 }

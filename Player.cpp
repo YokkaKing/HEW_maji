@@ -1111,6 +1111,17 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 				m_velocity.z *= 0.0f;
 			}
 		}
+
+		if (info.other->m_tag == "BOGP2")
+		{
+			// 現在の速度を大幅に減衰させる（例：毎フレーム 70% に落とす）
+			m_velocity.x *= 0.3f;
+			m_velocity.z *= 0.3f;
+
+			// もし坂道用の速度（gp1_slopeSpeed）も適用されているなら、それも減衰させる
+			gp1_slopeSpeed.x *= 0.5f;
+			gp1_slopeSpeed.z *= 0.5f;
+		}
 	}
 }
 

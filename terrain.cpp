@@ -11,6 +11,7 @@
 //================================================================
 #define TERRAIN_SIZE (0.25f)
 #define ANTLION_POS_Y (2.7f)
+#define BOG_POS_Y (-0.3f)
 
 //================================================================
 //	インクルード
@@ -567,6 +568,23 @@ const std::vector<std::vector<std::vector<std::string>>> Walls =
 	},
 };
 
+// 沼の当たり判定
+const std::vector<std::vector<std::vector<std::string>>> Bogs =
+{
+	{
+		{"annnnnnnna"},
+		{"nnnnnnnnnn"},
+		{"nnnnnnnnnn"},
+		{"nnnnnnnnnn"},
+		{"nnnnnnnnnn"},
+		{"nnnnnnnnnn"},
+		{"nnnnnnnnnn"},
+		{"nnnnnnnnnn"},
+		{"nnnnnnnnnn"},
+		{"annnnnnnna"},
+	},
+};
+
 // 木の当たり判定
 const std::vector<std::vector<std::vector<std::string>>> Trees =
 {
@@ -622,6 +640,7 @@ void TerrainInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 	g_Terrain.m_moveTerrain[0] = ModelLoad("asset\\model\\hill.fbx");
 	g_Terrain.m_moveTerrain[1] = ModelLoad("asset\\model\\wall.fbx");
 	g_Terrain.m_moveTerrain[2] = ModelLoad("asset\\model\\antlion.fbx");
+	g_Terrain.m_moveTerrain[3] = ModelLoad("asset\\model\\numa.fbx");
 	blockModel = ModelLoad("asset\\model\\block.fbx");
 	slopeModel = ModelLoad("asset\\model\\block3.fbx");
 
@@ -630,14 +649,16 @@ void TerrainInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 	g_Terrain.m_terrainScale[0] = { 5.0f, 5.0f, 5.0f };
 	g_Terrain.m_terrainScale[1] = { 5.0f, 6.5f, 5.0f };
 	g_Terrain.m_terrainScale[2] = { 5.0f, 5.5f, 5.0f };
+	g_Terrain.m_terrainScale[3] = { 5.0f, 5.0f, 5.0f };
 	g_Terrain.m_terrainRotation[0] = { 0.0f,0.0f,0.0f };
 	g_Terrain.m_terrainRotation[1] = { 0.0f,0.0f,0.0f };
 	g_Terrain.m_terrainRotation[2] = { 0.0f,0.0f,0.0f };
+	g_Terrain.m_terrainRotation[3] = { 0.0f,0.0f,0.0f };
 
 	g_Terrain.m_terrainScaling[0] = { 5.0f, 5.0f, 5.0f };
 	g_Terrain.m_terrainScaling[1] = { 10.0f, 6.5f, 10.0f };
 	g_Terrain.m_terrainScaling[2] = { 10.0f, 8.0f, 10.0f };
-	g_Terrain.m_terrainScaling[3] = { 10.0f, 6.5f, 10.0f };
+	g_Terrain.m_terrainScaling[3] = { 10.0f, 5.0f, 10.0f };
 
 	g_Terrain.m_motherPosition[0].y -= 5.0f;
 	g_Terrain.m_motherPosition[1].y -= 5.0f;
@@ -673,7 +694,7 @@ void TerrainInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 		g_Terrain.CreateAnt(g_Terrain.m_motherPosition[0], 0);
 		break;
 	case WeaponTerrain::BOW_HILL:
-		g_Terrain.SimpleObjects(Hills, { 0.25f, 0.25f, 0.25f }, TERRAIN_TYPE::HILL, g_Terrain.m_motherPosition[0], 0);
+		g_Terrain.SimpleObjects(Bogs, { 1.0f, 2.5f, 1.0f }, TERRAIN_TYPE::BOG, g_Terrain.m_motherPosition[0], 0);
 		break;
 	case WeaponTerrain::HAMMER_:
 		g_Terrain.SimpleObjects(Walls, { 1.0f, 1.0f, 1.0f }, TERRAIN_TYPE::HILL, g_Terrain.m_motherPosition[1], 1);
@@ -696,7 +717,7 @@ void TerrainInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 		g_Terrain.CreateAnt(g_Terrain.m_motherPosition[1], 1);
 		break;
 	case WeaponTerrain::BOW_HILL:
-		g_Terrain.SimpleObjects(Hills, { 0.25f, 0.25f, 0.25f }, TERRAIN_TYPE::HILL, g_Terrain.m_motherPosition[1], 1);
+		g_Terrain.SimpleObjects(Bogs, { 1.0f, 2.5f, 1.0f }, TERRAIN_TYPE::BOG, g_Terrain.m_motherPosition[1], 1);
 		//g_Terrain.PixelObjects(Hills, TERRAIN_TYPE::HILL, initPosHill);
 		break;
 	case WeaponTerrain::HAMMER_:
@@ -728,6 +749,7 @@ void TerrainFinalize()
 		g_Terrain.walls[i].clear();
 		g_Terrain.trees[i].clear();
 		g_Terrain.ants[i].clear();
+		g_Terrain.bogs[i].clear();
 	}
 }
 void TerrainUpdate()
@@ -754,11 +776,11 @@ void TerrainUpdate()
 		}
 	}
 
-	if (Keyboard_IsKeyDown(KK_L))
-	{
-		g_Terrain.m_isChange[0] = true; // 2Pの変身を確認
-		g_Terrain.m_coolTime[0] = 20.0f;
-	}
+	//if (Keyboard_IsKeyDown(KK_L))
+	//{
+	//	g_Terrain.m_isChange[0] = true; // 2Pの変身を確認
+	//	g_Terrain.m_coolTime[0] = 20.0f;
+	//}
 
 	// 変身したら-する
 	if (g_Terrain.m_isChange[0])
@@ -803,7 +825,7 @@ void TerrainUpdate()
 			g_Terrain.UpdateObject(g_Terrain.ants[0], g_Terrain.m_motherPosition[0], FALSE); // P1の地形の当たり判定
 			break;
 		case WeaponTerrain::BOW_HILL:
-			g_Terrain.UpdateObject(g_Terrain.hills[0], g_Terrain.m_motherPosition[0], FALSE); // P1の地形の当たり判定
+			g_Terrain.UpdateObject(g_Terrain.bogs[0], g_Terrain.m_motherPosition[0], FALSE); // P1の地形の当たり判定
 			break;
 		case WeaponTerrain::HAMMER_:
 			g_Terrain.UpdateObject(g_Terrain.walls[0], g_Terrain.m_motherPosition[1], TRUE); // P1の地形の当たり判定
@@ -826,7 +848,7 @@ void TerrainUpdate()
 			posY = ANTLION_POS_Y;
 			break;
 		case WeaponTerrain::BOW_HILL:
-			posY = -0.25f;
+			posY = BOG_POS_Y;
 			break;
 		case WeaponTerrain::HAMMER_:
 			posY = 0.7f;
@@ -851,7 +873,7 @@ void TerrainUpdate()
 				g_Terrain.UpdateObject(g_Terrain.ants[0], g_Terrain.m_motherPosition[0], TRUE); // P1の地形の当たり判定
 				break;
 			case WeaponTerrain::BOW_HILL:
-				g_Terrain.UpdateObject(g_Terrain.hills[0], g_Terrain.m_motherPosition[0], TRUE); // P1の地形の当たり判定
+				g_Terrain.UpdateObject(g_Terrain.bogs[0], g_Terrain.m_motherPosition[0], TRUE); // P1の地形の当たり判定
 				break;
 			case WeaponTerrain::HAMMER_:
 				g_Terrain.UpdateObject(g_Terrain.walls[0], g_Terrain.m_motherPosition[1], TRUE); // P1の地形の当たり判定
@@ -877,7 +899,7 @@ void TerrainUpdate()
 			g_Terrain.UpdateObject(g_Terrain.ants[1], g_Terrain.m_motherPosition[1], FALSE); // P1の地形の当たり判定
 			break;
 		case WeaponTerrain::BOW_HILL:
-			g_Terrain.UpdateObject(g_Terrain.hills[1], g_Terrain.m_motherPosition[1], FALSE); // P1の地形の当たり判定
+			g_Terrain.UpdateObject(g_Terrain.bogs[1], g_Terrain.m_motherPosition[1], FALSE); // P1の地形の当たり判定
 			break;
 		case WeaponTerrain::HAMMER_:
 			g_Terrain.UpdateObject(g_Terrain.walls[1], g_Terrain.m_motherPosition[1], TRUE); // P1の地形の当たり判定
@@ -900,7 +922,7 @@ void TerrainUpdate()
 			posY = ANTLION_POS_Y;
 			break;
 		case WeaponTerrain::BOW_HILL:
-			posY = -0.25f;
+			posY = BOG_POS_Y;
 			break;
 		case WeaponTerrain::HAMMER_:
 			posY = 0.7f;
@@ -925,7 +947,7 @@ void TerrainUpdate()
 				g_Terrain.UpdateObject(g_Terrain.ants[1], g_Terrain.m_motherPosition[1], TRUE); // P1の地形の当たり判定
 				break;
 			case WeaponTerrain::BOW_HILL:
-				g_Terrain.UpdateObject(g_Terrain.hills[1], g_Terrain.m_motherPosition[1], TRUE); // P1の地形の当たり判定
+				g_Terrain.UpdateObject(g_Terrain.bogs[1], g_Terrain.m_motherPosition[1], TRUE); // P1の地形の当たり判定
 				break;
 			case WeaponTerrain::HAMMER_:
 				g_Terrain.UpdateObject(g_Terrain.walls[1], g_Terrain.m_motherPosition[1], TRUE); // P1の地形の当たり判定
@@ -953,7 +975,7 @@ void TerrainDraw()
 			no = 2;
 			break;
 		case WeaponTerrain::BOW_HILL:
-			no = 0;
+			no = 3;
 			break;
 		case WeaponTerrain::HAMMER_:
 			no = 1;
@@ -992,7 +1014,7 @@ void TerrainDraw()
 			ModelDraw(g_Terrain.m_moveTerrain[2]);
 			break;
 		case WeaponTerrain::BOW_HILL:
-			ModelDraw(g_Terrain.m_moveTerrain[0]);
+			ModelDraw(g_Terrain.m_moveTerrain[3]);
 			break;
 		case WeaponTerrain::HAMMER_:
 			ModelDraw(g_Terrain.m_moveTerrain[1]);
@@ -1018,7 +1040,7 @@ void TerrainDraw()
 			no = 2;
 			break;
 		case WeaponTerrain::BOW_HILL:
-			no = 0;
+			no = 3;
 			break;
 		case WeaponTerrain::HAMMER_:
 			no = 1;
@@ -1057,7 +1079,7 @@ void TerrainDraw()
 			ModelDraw(g_Terrain.m_moveTerrain[2]);
 			break;
 		case WeaponTerrain::BOW_HILL:
-			ModelDraw(g_Terrain.m_moveTerrain[0]);
+			ModelDraw(g_Terrain.m_moveTerrain[3]);
 			break;
 		case WeaponTerrain::HAMMER_:
 			ModelDraw(g_Terrain.m_moveTerrain[1]);
@@ -1115,7 +1137,7 @@ void TerrainSet(WeaponTerrain set, bool playerSelect)
 		g_Terrain.CreateAnt(g_Terrain.m_motherPosition[select], select);
 		break;
 	case WeaponTerrain::BOW_HILL:
-		g_Terrain.SimpleObjects(Hills, { 0.25f, 0.25f, 0.25f }, TERRAIN_TYPE::HILL, g_Terrain.m_motherPosition[select], select);
+		g_Terrain.SimpleObjects(Bogs, { 1.0f, 2.5f, 1.0f }, TERRAIN_TYPE::BOG, g_Terrain.m_motherPosition[select], select);
 		break;
 	case WeaponTerrain::HAMMER_:
 		g_Terrain.SimpleObjects(Walls, { 1.0f, 1.0f, 1.0f }, TERRAIN_TYPE::WALL, g_Terrain.m_motherPosition[select], select);
@@ -1147,7 +1169,7 @@ void TERRAIN::ClearPlayerObjects(WeaponTerrain set, int select)
 		targetList = &ants[select];
 		break;
 	case WeaponTerrain::BOW_HILL:
-		targetList = &hills[select];
+		targetList = &bogs[select];
 		break;
 	case WeaponTerrain::HAMMER_:
 		targetList = &walls[select];
@@ -1213,6 +1235,8 @@ void TERRAIN::SetObject(XMFLOAT3 pos, XMFLOAT3 scl, std::string tag, int lay, in
 		if (raw_ptr->m_tag == "HILL") hills[select].push_back(raw_ptr);
 		if (raw_ptr->m_tag == "WALL") walls[select].push_back(raw_ptr);
 		if (raw_ptr->m_tag == "TREE") trees[select].push_back(raw_ptr);
+		if (raw_ptr->m_tag == "BOGP1") bogs[0].push_back(raw_ptr);
+		if (raw_ptr->m_tag == "BOGP2") bogs[1].push_back(raw_ptr);
 
 		terrainObjects.push_back(std::move(obj_owner));
 	}
@@ -1530,6 +1554,13 @@ void TERRAIN::CreateHit(std::vector<TERRAIN_OBJECT> terrain, XMFLOAT3 motherPosi
 {
 	XMFLOAT3 pos;
 
+	std::string tag;
+	tag = "BOGP1";
+	if (select == 1)
+	{
+		tag = "BOGP2";
+	}
+
 	// terrainの数だけ繰り返す
 	for (int i = 0; i < terrain.size(); i++)
 	{
@@ -1559,6 +1590,13 @@ void TERRAIN::CreateHit(std::vector<TERRAIN_OBJECT> terrain, XMFLOAT3 motherPosi
 			trees[select][i]->m_position = pos;	// 座標を格納
 			trees[select][i]->m_velocity = terrain[i].m_distance;
 			trees[select][i]->m_scale = terrain[i].m_size;
+			break;
+
+		case TERRAIN_TYPE::BOG:
+			SetObject(pos, terrain[i].m_size, tag, 0, select);
+			bogs[select][i]->m_position = pos;	// 座標を格納
+			bogs[select][i]->m_velocity = terrain[i].m_distance;
+			bogs[select][i]->m_scale = terrain[i].m_size;
 			break;
 
 		case TERRAIN_TYPE::MAX:

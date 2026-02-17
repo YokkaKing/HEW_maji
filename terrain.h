@@ -12,7 +12,7 @@
 //================================================================
 //	マクロ定義
 //================================================================
-#define MOVE_TERRAIN_TYPE (3)
+#define MOVE_TERRAIN_TYPE (4)
 #define CHANGE_FLAG (4)
  
 //================================================================
@@ -40,6 +40,7 @@ enum class TERRAIN_TYPE
 	HILL = 0,
 	WALL,
 	TREE,
+	BOG,
 
 	MAX
 };
@@ -70,6 +71,7 @@ public:
 	std::vector<GameObject*> walls[2];	// 壁の当たり判定の全て
 	std::vector<GameObject*> trees[2];	// 木の当たり判定の全て
 	std::vector<GameObject*> ants[2];	// 蟻地獄の当たり判定の全て
+	std::vector<GameObject*> bogs[2];	// 沼地の当たり判定の全て
 
 	MODEL* m_moveTerrain[MOVE_TERRAIN_TYPE] = {}; // 地形で使うモデル
 	XMFLOAT3 m_terrainScale[MOVE_TERRAIN_TYPE] = {}; // 各地形の大きさ
