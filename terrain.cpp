@@ -47,12 +47,26 @@ XMFLOAT3 g_antlionData[4] =
 	{ 0.0f, 0.5f, -0.6f },
 	{ -0.6f, 0.5f, 0.0f }
 };
+XMFLOAT3 g_antlionBoxData[4] =
+{
+	{ 9.5f, 1.2f, 1.3f },
+	{ 1.3f, 1.2f, 9.5f },
+	{ 9.5f, 1.2f, 1.3f },
+	{ 1.3f, 1.2f, 9.5f }
+};
 XMFLOAT2 g_antlionData2[4] =
 {
 	{ 0.0f, 0.5f },
 	{ 0.5f, 0.0f },
 	{ 0.0f, -0.5f },
-	{ -0.5f, 0.0f },
+	{ -0.5f, 0.0f }
+};
+XMFLOAT2 g_antlionBoxData2[4] =
+{
+	{ 0.0f, +4.2f },
+	{ +4.2f, 0.0f },
+	{ 0.0f, -4.2f },
+	{ -4.2f, -0.0f }
 };
 
 //================================================================
@@ -738,6 +752,12 @@ void TerrainUpdate()
 			g_Terrain.m_isChange[1] = true; // 2Pの変身を確認
 			g_Terrain.m_coolTime[1] = 20.0f;
 		}
+	}
+
+	if (Keyboard_IsKeyDown(KK_L))
+	{
+		g_Terrain.m_isChange[0] = true; // 2Pの変身を確認
+		g_Terrain.m_coolTime[0] = 20.0f;
 	}
 
 	// 変身したら-する
@@ -1569,11 +1589,7 @@ void TERRAIN::CreateAnt(XMFLOAT3 motherPosition, int select)
 {
 	std::string tag = "SlopeP1";
 
-	if (!select)
-	{
-		tag = "SlopeP1"; // 専用のタグをつける
-	}
-	else
+	if (select)
 	{
 		tag = "SlopeP2"; // 専用のタグをつける
 	}
@@ -1597,6 +1613,39 @@ void TERRAIN::CreateAnt(XMFLOAT3 motherPosition, int select)
 		antObj->m_position = motherPosition;
 		antObj->m_velocity.x = g_antlionData2[i].x; // dataの数値を代入
 		antObj->m_velocity.z = g_antlionData2[i].y; // dataの数値を代入
+		GameObject* raw_ptr = antObj.get(); // 生のポインタを取得（参照用）
+
+		if (raw_ptr != nullptr)
+		{
+			ants[select].push_back(raw_ptr);
+			terrainObjects.push_back(std::move(antObj));
+		}
+	}
+
+	// 四方分の壁を作る
+	for (int i = 0; i < 4; i++)
+	{
+		// ファクトリの戻り値 (生のポインタ) を unique_ptr で受け取り、所有権を確保
+		std::unique_ptr<GameObject> antObj(
+			ColliderFactory::CreateBoxObject(
+				{ 0.0f, 0.0f, 0.0f },
+				g_antlionBoxData[i],
+				"WALL",
+				0
+			)
+		);
+
+		antObj->m_position = motherPosition;
+		antObj->m_position.y -= 1.0f;
+		antObj->m_velocity.y = -1.0f;
+
+		antObj->m_position.x += g_antlionBoxData2[i].x;
+		antObj->m_velocity.x = g_antlionBoxData2[i].x;
+		antObj->m_position.z += g_antlionBoxData2[i].y;
+		antObj->m_velocity.z = g_antlionBoxData2[i].y;
+
+		//antObj->m_velocity.x = g_antlionData2[i].x; // dataの数値を代入
+		//antObj->m_velocity.z = g_antlionData2[i].y; // dataの数値を代入
 		GameObject* raw_ptr = antObj.get(); // 生のポインタを取得（参照用）
 
 		if (raw_ptr != nullptr)

@@ -863,19 +863,22 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 
 		// 例えば壁・木だけコリジョン有効
 		if (info.other->m_tag == "Wall" ||
-			info.other->m_tag == "Tree")
+			info.other->m_tag == "Tree" ||
+			info.other->m_tag == "WallA")
 		{
+			auto INFO = info;
+
 			//================================================================
 			//	押し戻し
 			//================================================================
-			m_position.x += info.normal.x * info.penetration;
-			m_position.y += info.normal.y * info.penetration;
-			m_position.z += info.normal.z * info.penetration;
+			m_position.x += INFO.normal.x * INFO.penetration;
+			m_position.y += INFO.normal.y * INFO.penetration;
+			m_position.z += INFO.normal.z * INFO.penetration;
 
 			//================================================================
 			//	地面判定
 			//================================================================
-			if (info.normal.y > 0.7f)
+			if (INFO.normal.y > 0.7f)
 			{
 				m_isGround = true;
 				m_velocity.y = 0;
@@ -884,7 +887,7 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 			//================================================================
 			//	壁判定
 			//================================================================
-			float horiz = fabs(info.normal.x) + fabs(info.normal.z);
+			float horiz = fabs(INFO.normal.x) + fabs(INFO.normal.z);
 			if (horiz > 0.7f)
 			{
 				m_velocity.x = 0;
