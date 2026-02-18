@@ -232,7 +232,7 @@ const std::vector<std::vector<std::string>> Stage =
 		{"nnnfnfnnfnnfnfnnn"},
 		{"nnntnnnnnnnnnjnnn"},
 		{"nnbnnnnnnnnnnncnn"},
-		{"isnnnnnnnnnnlnnkg"},
+		{"isnnnnnnnnnnnnnkg"},
 		{"nnnnnnnnnnnnnnnnn"},
 		{"innnnnnnnnnnnnnng"},
 		{"nnnnnnnnnnnnnnnnn"},
@@ -615,58 +615,7 @@ void Field_Draw(void)
 
 		if (/*Map[i].no == FIELD_BOX || */Map[i].no == FIELD_LIFT)
 		{
-			//////描画リクエスト
-			////g_pContext->DrawIndexed(6 * 6, 0, 0);
-			//if (Keyboard_IsKeyDown(KK_U))
-			//{
-			//	slope->m_position.z += 0.05f;
-			//	Map[i].pos.z += 0.05f;
-			//}
-			//if (Keyboard_IsKeyDown(KK_J))
-			//{
-			//	slope->m_position.z -= 0.05f;
-			//	Map[i].pos.z -= 0.05f;
-			//}
-			//if (Keyboard_IsKeyDown(KK_H))
-			//{
-			//	slope->m_position.x -= 0.05f;
-			//	Map[i].pos.x -= 0.05f;
-			//}
-			//if (Keyboard_IsKeyDown(KK_K))
-			//{
-			//	slope->m_position.x += 0.05f;
-			//	Map[i].pos.x += 0.05f;
-			//}
-			ModelDraw(Model[FIELD_LIFT]);
-
-			//for (int i = 0; i < 3; i++)
-			//{
-			//	//ModelDraw(Model[Map[i].no]);
-			//	ScalingMatrix = XMMatrixScaling
-			//	(
-			//		1.0f,
-			//		1.0f,
-			//		1.0f
-			//	);
-			//	TranslationMatrix = XMMatrixTranslation
-			//	(
-			//		1.0f + i,
-			//		0.5f + i,
-			//		1.0f + i
-			//	);
-			//	RotationMatrix = XMMatrixRotationRollPitchYaw
-			//	(
-			//		0.0f,
-			//		0.0f,
-			//		0.0f
-			//	);
-
-			//	World = ScalingMatrix * RotationMatrix * TranslationMatrix;
-
-			//	Shader_SetWorldMatrix(World);
-
-			//	ModelDraw(Model[FIELD_BOX]);
-			//}
+			
 		}
 		else
 		{
