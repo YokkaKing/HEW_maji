@@ -1015,13 +1015,22 @@ void PLAYER2::OnCollision(const CollisionInfo& info)
 
 		if (info.other->m_tag == "BOGP1")
 		{
-			// 現在の速度を大幅に減衰させる（例：毎フレーム 70% に落とす）
-			m_velocity.x *= 0.3f;
-			m_velocity.z *= 0.3f;
+			XMFLOAT3 bogPos = info.other->m_position;
 
-			// もし坂道用の速度（gp1_slopeSpeed）も適用されているなら、それも減衰させる
-			gp2_slopeSpeed.x *= 0.5f;
-			gp2_slopeSpeed.z *= 0.5f;
+			float dx = m_position.x - bogPos.x;
+			float dz = m_position.z - bogPos.z;
+			float distance = sqrtf(dx * dx + dz * dz);
+
+			const float effectRadius = 5.0f;
+
+			if (distance < effectRadius)
+			{
+				m_velocity.x *= 0.3f;
+				m_velocity.z *= 0.3f;
+
+				gp2_slopeSpeed.x *= 0.5f;
+				gp2_slopeSpeed.z *= 0.5f;
+			}
 		}
 	}
 }
