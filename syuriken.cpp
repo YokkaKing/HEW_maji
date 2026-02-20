@@ -17,7 +17,7 @@
 #include"Player.h"
 #include"Player2.h"
 #include"keyboard.h"
-
+#include"HitEffect.h"
 #include"controller.h"
 /*********************************/
 
@@ -320,6 +320,11 @@ void ShurikenShot::OnCollision(const CollisionInfo& info)
 			m_isDead = true;
 			g_Player2.m_isAttacked = true;
 
+			//ヒットエフェクト
+			XMFLOAT3 effectPos = info.other->m_position;
+			effectPos.y -= 1.0f;
+			HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::ZANGEKI);
+
 			//ヒットバック計算式
 			XMFLOAT3 dir = {
 				info.other->m_position.x - this->m_position.x,
@@ -342,6 +347,11 @@ void ShurikenShot::OnCollision(const CollisionInfo& info)
 			info.other->TakeDamage(5.0f);
 			m_isDead = true;
 			g_Player.m_isAttacked = true;
+
+			//ヒットエフェクト
+			XMFLOAT3 effectPos = info.other->m_position;
+			effectPos.y -= 1.0f;
+			HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::ZANGEKI);
 
 			//ヒットバック計算式
 			XMFLOAT3 dir = {

@@ -17,7 +17,7 @@
 #include"Player.h"
 #include"Player2.h"
 #include"keyboard.h"
-
+#include "HitEffect.h"
 #include"controller.h"
 /*********************************/
 
@@ -31,7 +31,6 @@ PLAYER2* g_PlayerSpear2;
 
 XMFLOAT3 g_moveSpear[2]; // �ȈՃA�j���[�V����
 extern Controller g_Controller[2];
-
 
 Spear::Spear(GameObject* player, bool select) : IWeapon(player)
 {
@@ -375,6 +374,11 @@ void Spear::OnWeaponCollision(GameObject* target)
 				m_hitTargets.insert(target);
 				target->TakeDamage(15.0f); // 仮に20ダメージ
 
+				//ヒットエフェクト
+				XMFLOAT3 effectPos = target->m_position;
+				effectPos.y -= 1.0f;
+				HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::ZANGEKI);
+
 				//ヒットバック計算式
 				XMFLOAT3 dir = {
 					target->m_position.x - owner->m_position.x,
@@ -396,6 +400,11 @@ void Spear::OnWeaponCollision(GameObject* target)
 			{
 				m_hitTargets.insert(target);
 				target->TakeDamage(15.0f);
+
+				//ヒットエフェクト
+				XMFLOAT3 effectPos = target->m_position;
+				effectPos.y -= 1.0f;
+				HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::ZANGEKI);
 
 				//ヒットバック計算式
 				XMFLOAT3 dir = {
@@ -539,6 +548,11 @@ void SpearShot::OnCollision(const CollisionInfo& info)
 			Player_PlusScore(15.0f);
 			m_isDead = true;
 
+			//ヒットエフェクト
+			XMFLOAT3 effectPos = info.other->m_position;
+			effectPos.y -= 1.0f;
+			HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::ZANGEKI);
+
 			//ヒットバック計算式
 			XMFLOAT3 dir = {
 				info.other->m_position.x - this->m_position.x,
@@ -560,6 +574,11 @@ void SpearShot::OnCollision(const CollisionInfo& info)
 			Player2_PlusScore(15.0f);
 
 			m_isDead = true;
+
+			//ヒットエフェクト
+			XMFLOAT3 effectPos = info.other->m_position;
+			effectPos.y -= 1.0f;
+			HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::ZANGEKI);
 
 			//ヒットバック計算式
 			XMFLOAT3 dir = {

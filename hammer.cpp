@@ -20,7 +20,7 @@
 #include"controller.h"
 #include"Manager.h"
 #include"hitAction.h"
-
+#include"HitEffect.h"
 //================================================================
 //	グローバル変数
 //================================================================
@@ -415,6 +415,12 @@ void Hammer::OnWeaponCollision(GameObject* target)
 				if (m_chargePower < 3.4f)
 				{
 					target->TakeDamage(10.0f);
+
+					//ヒットエフェクト
+					XMFLOAT3 effectPos = target->m_position;
+					effectPos.y -= 1.0f;
+					HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::DAGEKI);
+
 					//ヒットバック計算式
 					XMFLOAT3 dir = {
 						target->m_position.x - owner->m_position.x,
@@ -433,6 +439,12 @@ void Hammer::OnWeaponCollision(GameObject* target)
 				else if (m_chargePower < 3.5f)
 				{
 					target->TakeDamage(20.0f);
+
+					//ヒットエフェクト
+					XMFLOAT3 effectPos = target->m_position;
+					effectPos.y -= 1.0f;
+					HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::DAGEKI);
+
 					//ヒットバック計算式
 					XMFLOAT3 dir = {
 						target->m_position.x - owner->m_position.x,
@@ -451,6 +463,12 @@ void Hammer::OnWeaponCollision(GameObject* target)
 				else if (m_chargePower < 4.5f)
 				{
 					target->TakeDamage(30.0f);
+
+					//ヒットエフェクト
+					XMFLOAT3 effectPos = target->m_position;
+					effectPos.y -= 1.0f;
+					HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::DAGEKI);
+
 					//ヒットバック計算式
 					XMFLOAT3 dir = {
 						target->m_position.x - owner->m_position.x,
@@ -469,6 +487,12 @@ void Hammer::OnWeaponCollision(GameObject* target)
 				else if (m_chargePower < 5.5f)
 				{
 					target->TakeDamage(40.0f);
+
+					//ヒットエフェクト
+					XMFLOAT3 effectPos = target->m_position;
+					effectPos.y -= 1.0f;
+					HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::DAGEKI);
+
 					//ヒットバック計算式
 					XMFLOAT3 dir = {
 						target->m_position.x - owner->m_position.x,
@@ -487,6 +511,12 @@ void Hammer::OnWeaponCollision(GameObject* target)
 				else if (m_chargePower >= 5.5f)
 				{
 					target->TakeDamage(70.0f);
+
+					//ヒットエフェクト
+					XMFLOAT3 effectPos = target->m_position;
+					effectPos.y -= 1.0f;
+					HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::DAGEKI);
+
 					//ヒットバック計算式
 					XMFLOAT3 dir = {
 						target->m_position.x - owner->m_position.x,
@@ -514,6 +544,12 @@ void Hammer::OnWeaponCollision(GameObject* target)
 				if (m_chargePower < 3.4f)
 				{
 					target->TakeDamage(10.0f);
+
+					//ヒットエフェクト
+					XMFLOAT3 effectPos = target->m_position;
+					effectPos.y -= 1.0f;
+					HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::DAGEKI);
+
 					//ヒットバック計算式
 					XMFLOAT3 dir = {
 						target->m_position.x - owner->m_position.x,
@@ -532,6 +568,12 @@ void Hammer::OnWeaponCollision(GameObject* target)
 				else if (m_chargePower < 3.5f)
 				{
 					target->TakeDamage(20.0f);
+
+					//ヒットエフェクト
+					XMFLOAT3 effectPos = target->m_position;
+					effectPos.y -= 1.0f;
+					HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::DAGEKI);
+
 					//ヒットバック計算式
 					XMFLOAT3 dir = {
 						target->m_position.x - owner->m_position.x,
@@ -550,6 +592,12 @@ void Hammer::OnWeaponCollision(GameObject* target)
 				else if (m_chargePower < 4.5f)
 				{
 					target->TakeDamage(30.0f);
+
+					//ヒットエフェクト
+					XMFLOAT3 effectPos = target->m_position;
+					effectPos.y -= 1.0f;
+					HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::DAGEKI);
+
 					//ヒットバック計算式
 					XMFLOAT3 dir = {
 						target->m_position.x - owner->m_position.x,
@@ -568,6 +616,12 @@ void Hammer::OnWeaponCollision(GameObject* target)
 				else if (m_chargePower < 5.5f)
 				{
 					target->TakeDamage(40.0f);
+
+					//ヒットエフェクト
+					XMFLOAT3 effectPos = target->m_position;
+					effectPos.y -= 1.0f;
+					HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::DAGEKI);
+
 					//ヒットバック計算式
 					XMFLOAT3 dir = {
 						target->m_position.x - owner->m_position.x,
@@ -586,6 +640,12 @@ void Hammer::OnWeaponCollision(GameObject* target)
 				else if (m_chargePower >= 5.5f)
 				{
 					target->TakeDamage(70.0f);
+
+					//ヒットエフェクト
+					XMFLOAT3 effectPos = target->m_position;
+					effectPos.y -= 1.0f;
+					HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::DAGEKI);
+
 					//ヒットバック計算式
 					XMFLOAT3 dir = {
 						target->m_position.x - owner->m_position.x,
