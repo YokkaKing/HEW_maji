@@ -17,7 +17,7 @@
 #include"Player.h"
 #include"Player2.h"
 #include"keyboard.h"
-
+#include"HitEffect.h"
 #include"controller.h"
 /*********************************/
 
@@ -301,6 +301,10 @@ void ShurikenShot::OnCollision(const CollisionInfo& info)
 	if (!m_selectPlayer && info.other->m_tag == "Player") return; // 武器はなった本人は無視
 	if (m_selectPlayer && info.other->m_tag == "Player2") return; // 武器はなった本人は無視
 	if (info.other->m_tag == "Item") return;
+	if (info.other->m_tag == "Slope1") return;
+	if (info.other->m_tag == "Slope2") return;
+	if (info.other->m_tag == "BOGP1") return;
+	if (info.other->m_tag == "BOGP2") return;
 
 	m_velocity = { 0.0f, 0.0f, 0.0f };
 	m_isStuck = true;
@@ -322,6 +326,11 @@ void ShurikenShot::OnCollision(const CollisionInfo& info)
 			info.other->TakeDamage(5.0f);
 			m_isDead = true;
 			g_Player2.m_isAttacked = true;
+
+			//ヒットエフェクト
+			XMFLOAT3 effectPos = info.other->m_position;
+			effectPos.y -= 1.0f;
+			HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::ZANGEKI);
 
 			//ヒットバック計算式
 			XMFLOAT3 dir = {
@@ -347,6 +356,11 @@ void ShurikenShot::OnCollision(const CollisionInfo& info)
 			info.other->TakeDamage(5.0f);
 			m_isDead = true;
 			g_Player.m_isAttacked = true;
+
+			//ヒットエフェクト
+			XMFLOAT3 effectPos = info.other->m_position;
+			effectPos.y -= 1.0f;
+			HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::ZANGEKI);
 
 			//ヒットバック計算式
 			XMFLOAT3 dir = {

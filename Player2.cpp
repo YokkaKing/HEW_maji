@@ -49,7 +49,12 @@ static bool g_Player2JumpPlaying = false; // ジャンプワンショット再�
 static int g_Player2CurrentAnim = 0; // 0: idle, 1: move, 2: attack 3:jump
 bool g_isChangeP2;
 XMFLOAT3 gp2_slopeSpeed;
+
 static const float HIT_ANIM_DURATION = 0.35f;
+
+bool gp2_move; // プレイヤーが動いているかのフラグ
+bool gp2_koyoteFlag; // コヨーテタイムを回復するかどうか
+
 
 void Player2Die()
 {
@@ -128,6 +133,8 @@ void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 	}
 	g_Player2.EquipBaseWeapon();
 	gp2_slopeSpeed = { 0.0f, 0.0f, 0.0f };
+	gp2_move = false; // 最初は動いてない
+	gp2_koyoteFlag = false; // 最初はフラグをオフ
 	g_isChangeP2 = false;
 }
 void Player2Finalize()
@@ -166,65 +173,6 @@ void	Player2Update()
 //================================================================
 //	武器変更処理(一旦)
 //================================================================
-	/*
-	int slotToUse = -1;
-	if (Keyboard_IsKeyDownTrigger(KK_D2) && !GetIsUsedA_P2())
-	{
-		slotToUse = 0;
-		g_isChangeP2 = true;
-	}
-	if (Keyboard_IsKeyDownTrigger(KK_D9) && !GetIsUsedB_P2())
-	{
-		slotToUse = 1;
-		g_isChangeP2 = true;
-	}
-
-	if (slotToUse != -1)
-	{
-		// 予約されている変身先を取得
-		WeaponTerrain reserved = g_Player2.GetReservedWT(slotToUse);
-
-		// 選択（予約）済みであり、かつ現在変身中でない（または NONE でない）場合
-		if (reserved != WeaponTerrain::NONE)
-		{
-			inGameWTselect data;
-			data.player1 = WeaponTerrain::NONE; // P1は変更しない
-			data.player2 = reserved;            // P2に予約分を適用
-
-			// 武器の適用
-			//generateWT_Apply(data, &g_Player, &g_Player2, g_pDevice2, g_pContext2);
-
-			// 地形の生成（P2用なので第二引数はTRUE）
-			TerrainSet(reserved, TRUE);
-
-			//下にある攻撃処理のアニメーションの順と合わせる
-			switch (reserved) {
-			case WeaponTerrain::SWORD_WALL:
-				g_changeP2 = 1;
-				g_Player2.EquipWeapon(std::make_unique<Sword>(&g_Player2, TRUE));
-				break;
-			case WeaponTerrain::SPEAR_HILL:
-				g_changeP2 = 2;
-				g_Player2.EquipWeapon(std::make_unique<Spear>(&g_Player2, TRUE));
-				break;
-			case WeaponTerrain::BOW_HILL:
-				g_changeP2 = 3;
-				g_Player2.EquipWeapon(std::make_unique<Arrow>(&g_Player2, TRUE));
-				break;
-			case WeaponTerrain::HAMMER_:
-				g_changeP2 = 4;
-				g_Player2.EquipWeapon(std::make_unique<Hammer>(&g_Player2, TRUE));
-				break;
-			case WeaponTerrain::SHURIKEN_:
-				g_changeP2 = 5;
-				g_Player2.EquipWeapon(std::make_unique<Shuriken>(&g_Player2, TRUE));
-				break;
-			}
-			g_setWTP2 = reserved;
-			// g_Player2.SetCurrentWT(reserved);
-		}
-	}
-	*/
 
 //================================================================
 //	攻撃処理
@@ -556,6 +504,8 @@ void Player2_ManualMove()
 	float forwardX = GetCamera2AtPosition().x - GetCamera2Position().x;
 	float forwardZ = GetCamera2AtPosition().z - GetCamera2Position().z;
 
+	gp2_move = false; // 常に動いていないと更新
+
 	if (!g_Player2.m_isGround) // 地面についてないときに重力発動
 	{
 		g_Player2.m_velocity.x += g_Player2.m_acceleration.x;
@@ -564,7 +514,8 @@ void Player2_ManualMove()
 	}
 
 	// 地面についているときにコヨーテタイムが1.0fになる
-	if (g_Player2.m_isGround)
+	if (g_Player2.m_isGround &&
+		!gp2_koyoteFlag)
 	{
 		g_Player2.m_koyoteTime = 1.0f;
 	}
@@ -595,6 +546,7 @@ void Player2_ManualMove()
 	// 移動量初期化
 	float moveX = 0.0f;
 	float moveZ = 0.0f;
+
 	bool allowInput = true;
 	// ★ヒットストップ中 / 被弾アニメ中 / 死亡中 は入力を無効化
 	if (g_Player2.m_hitAction.IsStopping() || g_Player2.m_hitAnimPlaying || g_Player2.m_isDead)
@@ -645,11 +597,9 @@ void Player2_ManualMove()
 		moveZ += rightZ * strafe;
 
 	}
+
 	if (g_Player2.m_isGround)
 	{
-		// 地面にいるときは、入力方向へクイックに速度を合わせる
-		// ただし、完全に上書きせず、現在の速度（滑り成分など）に加算する形にするのがベターです
-
 		// 入力がないときは、今の速度を少しずつ減衰させる（摩擦の表現）
 		if (fabs(moveX) < 0.001f && fabs(moveZ) < 0.001f)
 		{
@@ -841,6 +791,9 @@ void PLAYER2::EquipWeapon(std::unique_ptr<IWeapon> weapon)
 void PLAYER2::OnCollision(const CollisionInfo& info)
 {
 	if (!info.isHit) return;
+	if (m_isDead) return; //死亡していたら衝突処理を無視
+
+	gp2_koyoteFlag = false; // 基本false
 
 	// --- まずタグで相手を識別 ---
 	if (info.other)
@@ -1031,6 +984,92 @@ void PLAYER2::OnCollision(const CollisionInfo& info)
 				m_velocity.z *= 0.0f;
 			}
 		}
+
+		if (info.other->m_tag == "SlopeP2")
+		{
+			// 1. 押し出し（めり込み防止の基本）
+			m_position.x += info.normal.x * info.penetration;
+			m_position.y += info.normal.y * info.penetration;
+			m_position.z += info.normal.z * info.penetration;
+
+			if (info.normal.y > 0.1f)
+			{
+				m_isGround = true;
+				if (m_velocity.y < 0) m_velocity.y = 0.0f;
+
+				float climbResistance = 0.7f; // 0.8〜0.9 くらいで調整（小さいほど遅くなる）
+
+				// 入力によって進もうとしている速度にブレーキをかける
+				m_velocity.x *= climbResistance;
+				m_velocity.z *= climbResistance;
+
+				if (gp2_move)
+				{
+					m_position.y += 0.1f;
+				}
+
+				// 滑り計算（gp1_slopeSpeed）は使わないので 0 にリセット
+				gp2_slopeSpeed = { 0.0f, 0.0f, 0.0f };
+			}
+		}
+
+		if (info.other->m_tag == "SlopeP1")
+		{
+			m_position.x += info.normal.x * info.penetration;
+			m_position.y += info.normal.y * info.penetration;
+			m_position.z += info.normal.z * info.penetration;
+
+			// 坂道なら normal.y が 0 より大きければ地面とみなす
+			if (info.normal.y > 0.1f)
+			{
+				m_isGround = true;
+				if (m_velocity.y < 0) m_velocity.y = 0.0f;
+				gp2_koyoteFlag = true; // フラグをオンにする
+				m_koyoteTime = 0.0f; // ジャンプできなくする
+
+				// --- gp_speed への計算 ---
+				const float slideFriction = 0.25f;
+				float slopeSeverity = 1.0f - info.normal.y;
+				float slidePower = slopeSeverity * slideFriction;
+				const float gravityEffect = 0.02f;
+
+				// m_velocity ではなく gp_speed に加算
+				gp2_slopeSpeed.x += info.normal.x * (slidePower + gravityEffect);
+				gp2_slopeSpeed.z += info.normal.z * (slidePower + gravityEffect);
+
+				// リミッター
+				float maxSlide = 0.08f;
+				float speedXZ = sqrtf(gp2_slopeSpeed.x * gp2_slopeSpeed.x + gp2_slopeSpeed.z * gp2_slopeSpeed.z);
+				if (speedXZ > maxSlide)
+				{
+					gp2_slopeSpeed.x = (gp2_slopeSpeed.x / speedXZ) * maxSlide;
+					gp2_slopeSpeed.z = (gp2_slopeSpeed.z / speedXZ) * maxSlide;
+				}
+
+				m_velocity.x *= 0.0f;
+				m_velocity.z *= 0.0f;
+			}
+		}
+
+		if (info.other->m_tag == "BOGP1")
+		{
+			XMFLOAT3 bogPos = info.other->m_position;
+
+			float dx = m_position.x - bogPos.x;
+			float dz = m_position.z - bogPos.z;
+			float distance = sqrtf(dx * dx + dz * dz);
+
+			const float effectRadius = 5.0f;
+
+			if (distance < effectRadius)
+			{
+				m_velocity.x *= 0.3f;
+				m_velocity.z *= 0.3f;
+
+				gp2_slopeSpeed.x *= 0.5f;
+				gp2_slopeSpeed.z *= 0.5f;
+			}
+		}
 	}
 }
 
@@ -1114,6 +1153,10 @@ void SetPlayer2_IsAttacked(bool isAttacked)
 void SetPlayer2_IsTransformed(bool isTransformed)
 {
 	g_Player2.m_isTransformed = isTransformed;
+}
+bool GetPlayer2_IsTransformed()
+{
+	return g_Player2.m_isTransformed;
 }
 int Player2_GetTransformCount()
 {

@@ -55,7 +55,7 @@ void ManagerCollider::ClearCollider()
 void ManagerCollider::UpdateAllCollisions()
 {
     // ”»’è‚ğs‚¤üˆÍ‚Ì‹——£
-    const float checkRadius = 5.0f;
+    const float checkRadius = 7.0f;
     const float checkRadiusSq = checkRadius * checkRadius;
 
     for (size_t i = 0; i < colliders.size(); ++i)

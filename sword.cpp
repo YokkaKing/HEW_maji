@@ -18,7 +18,7 @@
 #include"Player.h"
 #include"Player2.h"
 #include"hitAction.h"
-
+#include"HitEffect.h"
 //================================================================
 //	グローバル変数
 //================================================================
@@ -282,6 +282,10 @@ void Sword::OnWeaponCollision(GameObject* target)
 				m_hitTargets.insert(target);
 				SetPlayer2_IsAttacked(true);
 
+				//ヒットエフェクト
+				XMFLOAT3 effectPos = target->m_position;
+				effectPos.y -= 1.0f;
+				HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::ZANGEKI);
 
 				//ヒットバック計算式
 				XMFLOAT3 dir = {
@@ -308,6 +312,12 @@ void Sword::OnWeaponCollision(GameObject* target)
 
 				PlayAudio(g_damageSharp, false);
 				m_hitTargets.insert(target);
+
+				//ヒットエフェクト
+				XMFLOAT3 effectPos = target->m_position;
+				effectPos.y -= 1.0f;
+				HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::ZANGEKI);
+
 				//ヒットバック計算式
 				XMFLOAT3 dir = {
 					target->m_position.x - owner->m_position.x,

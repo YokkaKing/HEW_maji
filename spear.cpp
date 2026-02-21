@@ -17,7 +17,7 @@
 #include"Player.h"
 #include"Player2.h"
 #include"keyboard.h"
-
+#include "HitEffect.h"
 #include"controller.h"
 /*********************************/
 
@@ -31,7 +31,6 @@ PLAYER2* g_PlayerSpear2;
 
 XMFLOAT3 g_moveSpear[2]; // �ȈՃA�j���[�V����
 extern Controller g_Controller[2];
-
 
 Spear::Spear(GameObject* player, bool select) : IWeapon(player)
 {
@@ -488,6 +487,11 @@ void Spear::OnWeaponCollision(GameObject* target)
 				m_hitTargets.insert(target);
 				target->TakeDamage(100.0f); // 仮に20ダメージ
 
+				//ヒットエフェクト
+				XMFLOAT3 effectPos = target->m_position;
+				effectPos.y -= 1.0f;
+				HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::ZANGEKI);
+
 				//ヒットバック計算式
 				XMFLOAT3 dir = {
 					target->m_position.x - owner->m_position.x,
@@ -511,6 +515,11 @@ void Spear::OnWeaponCollision(GameObject* target)
 
 				m_hitTargets.insert(target);
 				target->TakeDamage(100.0f);
+
+				//ヒットエフェクト
+				XMFLOAT3 effectPos = target->m_position;
+				effectPos.y -= 1.0f;
+				HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::ZANGEKI);
 
 				//ヒットバック計算式
 				XMFLOAT3 dir = {
@@ -660,6 +669,11 @@ void SpearShot::OnCollision(const CollisionInfo& info)
 	if (info.other->m_tag == "Attack") return; // 武器に当たっても無視
 	if (!m_selectPlayer && info.other->m_tag == "Player") return; // 武器はなった本人は無視
 	if (m_selectPlayer && info.other->m_tag == "Player2") return; // 武器はなった本人は無視
+	if (info.other->m_tag == "Item") return;
+	if (info.other->m_tag == "Slope1") return;
+	if (info.other->m_tag == "Slope2") return;
+	if (info.other->m_tag == "BOGP1") return;
+	if (info.other->m_tag == "BOGP2") return;
 
 	m_velocity = { 0.0f, 0.0f, 0.0f };
 	m_isStuck = true;
@@ -679,6 +693,11 @@ void SpearShot::OnCollision(const CollisionInfo& info)
 			info.other->TakeDamage(15.0f); // 仮に20ダメージ
 			Player_PlusScore(15.0f);
 			m_isDead = true;
+
+			//ヒットエフェクト
+			XMFLOAT3 effectPos = info.other->m_position;
+			effectPos.y -= 1.0f;
+			HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::ZANGEKI);
 
 			//ヒットバック計算式
 			XMFLOAT3 dir = {
@@ -702,6 +721,11 @@ void SpearShot::OnCollision(const CollisionInfo& info)
 			SetPlayer_IsAttacked(true);
 
 			m_isDead = true;
+
+			//ヒットエフェクト
+			XMFLOAT3 effectPos = info.other->m_position;
+			effectPos.y -= 1.0f;
+			HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::ZANGEKI);
 
 			//ヒットバック計算式
 			XMFLOAT3 dir = {
