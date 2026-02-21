@@ -567,11 +567,11 @@ void Player2_ManualMove()
 		}
 		if (Keyboard_IsKeyDown(KK_U))
 		{
-			speed = -0.1f;
+			speed = +0.1f;
 		}
 		if (Keyboard_IsKeyDown(KK_J))
 		{
-			speed = +0.1f;
+			speed = -0.1f;
 		}
 
 		moveX += forwardX * speed;
@@ -587,11 +587,11 @@ void Player2_ManualMove()
 		}
 		if (Keyboard_IsKeyDown(KK_H))
 		{
-			strafe = +0.1f;  // 左
+			strafe = -0.1f;  // 左
 		}
 		if (Keyboard_IsKeyDown(KK_K))
 		{
-			strafe = -0.1f;  // 右
+			strafe = +0.1f;  // 右
 		}
 		moveX += rightX * strafe;
 		moveZ += rightZ * strafe;

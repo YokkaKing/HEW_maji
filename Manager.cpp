@@ -36,6 +36,9 @@ static int  g_P1Wins = 0;         // 1P勝利数
 static int  g_P2Wins = 0;         // 2P勝利数
 static bool g_roundResultLocked = false; // 決着を1回だけ処理するため
 static int g_lastRoundResult = 0;
+static bool g_deathUseSlow = true; // true=STOP→SLOW→SCORE, false=STOP→SCORE
+static void StartDeathSequence(SCENE nextScene);
+static void StartDeathSequence(SCENE nextScene, bool useSlow);
 //================================================================
 //  死亡演出シーケンス
 //  誰か倒れたら：1秒ストップ → 1秒スロウ → スコア表示 → フェード
@@ -111,9 +114,23 @@ void Manager_Update()
 					// 完全停止（Game_Updateは呼ばない）
 					if (g_deathSeqTimer <= 0.0f)
 					{
-						g_deathSeq = DS_SLOW;
-						g_deathSeqTimer = 1.0f;     // 1秒スロウ
-						Game_SetTimeScale(0.5f);
+						if (g_deathUseSlow)
+						{
+							// 死亡決着：1秒スロウへ
+							g_deathSeq = DS_SLOW;
+							g_deathSeqTimer = 1.0f;
+							Game_SetTimeScale(0.5f);
+						}
+						else
+						{
+							// 時間切れ決着：スロウなしでそのままスコア表示へ
+							g_deathSeq = DS_SHOW_SCORE;
+							g_deathSeqTimer = SCORE_SHOW_TIME;
+							Game_SetTimeScale(1.0f);
+
+							Score_BeginShow(g_lastRoundResult);
+							Game_SetShowScore(true);
+						}
 						break; // 演出中は通常処理しない
 					}
 				}
@@ -241,12 +258,12 @@ void Manager_Update()
 						ResultSystem_SetMatchInfo(info);
 
 						// 演出後は Result へ
-						StartDeathSequence(SCENE_RESULT);
+						StartDeathSequence(SCENE_RESULT, true);
 					}
 					else
 					{
 						// 演出後は Game を再Initialize（次ラウンド扱い）
-						StartDeathSequence(SCENE_GAME);
+						StartDeathSequence(SCENE_GAME,true);
 					}
 
 					break;
@@ -454,14 +471,15 @@ void ResetWinCount()
 	g_P1Wins = 0;
 	g_P2Wins = 0;
 }
-static void StartDeathSequence(SCENE nextScene)
+static void StartDeathSequence(SCENE nextScene, bool useSlow)
 {
 	// 二重開始防止
 	if (g_deathSeq != DS_NONE) return;
 
 	g_deathNextScene = nextScene;
+	g_deathUseSlow = useSlow;
 
-	// 1秒ストップ → 1秒スロウ → スコア → フェード
+	// まずは1秒停止
 	g_deathSeq = DS_STOP;
 	g_deathSeqTimer = 1.0f;
 
