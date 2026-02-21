@@ -36,7 +36,7 @@ public:
     XMFLOAT3 m_animePosition = { 0.0f, 0.0f, 0.5f };
     XMFLOAT3 m_animeRotation = { 0.0f, 0.0f, 0.0f };
 
-    FLOAT m_coolTime = 0.0f;
+    //FLOAT m_coolTime = 0.0f;
 public:
     Sword(GameObject* player, bool select);
     virtual ~Sword();

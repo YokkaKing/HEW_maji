@@ -16,7 +16,7 @@
 #include "generateWT.h"
 #include<cstdio>
 #include<cstdlib>
-
+#include "Audio.h"
 #include "sword.h"
 #include "spear.h"
 #include "hammer.h"
@@ -236,6 +236,8 @@ void TransformPlayer()
             Player_PlusTransformCount();
             Player_SetPlayerIsAttaking(false);
             Player_ResetMoveMul();
+            PlayAudio(g_change, false);
+
             g_IsUsedA_P1 = true;
 			SetPlayer_IsTransformed(true);
         }
@@ -246,7 +248,7 @@ void TransformPlayer()
             Player_PlusTransformCount();
             Player_SetPlayerIsAttaking(false);
             Player_ResetMoveMul();
-
+            PlayAudio(g_change, false);
             g_IsUsedB_P1 = true;
             SetPlayer_IsTransformed(true);
 
@@ -342,6 +344,8 @@ void TransformPlayer2()
             Player2_ResetMoveMul();
             Player2_SetPlayerIsAttaking(false);
             Player2_PlusTransformCount();
+            PlayAudio(g_change, false);
+
             SetPlayer2_IsTransformed(true);
         }
         else if ((Keyboard_IsKeyDownTrigger(KK_D9) || g_Controller[1].IsButtonPushed(ControllerButton::R_SHOULDER)) && !g_IsUsedB_P2)
@@ -352,6 +356,8 @@ void TransformPlayer2()
             Player2_PlusTransformCount();
             SetPlayer2_IsTransformed(true);
             Player2_ResetMoveMul();
+            PlayAudio(g_change, false);
+
             Player2_SetPlayerIsAttaking(false);
         }
         if (targetWT != WeaponTerrain::NONE) {

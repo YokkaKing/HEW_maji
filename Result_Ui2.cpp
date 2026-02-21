@@ -265,7 +265,7 @@ void Result2_Ui_Update()
         }
         if (challenge_frame[0] >= UI_MAX)
         {
-            g_Ch_Ui2.size[1] = { 1000 * 0.7,416 * 0.7 };
+            g_Ch_Ui2.size[1] = { 1000 * 0.8,416 * 0.8 };
             if (g_Ch_Ui2.col[1].w < 1.0f)
             {
                 g_Ch_Ui2.col[1].w += 0.05f;
@@ -438,10 +438,10 @@ void Result2_Ui_Draw()
         g_pContext->PSSetShaderResources(0, 1, &g_TextureResult_Ui_2P[1]);
         SetBlendState(BLENDSTATE_ALFA);
         DrawSpriteEx(g_Result_Ui2.pos[1], g_Result_Ui2.size[0], g_Result_Ui2.col, result_frame[2], UI_YOKO, UI_TATE, -3.0f);
-        g_Ch_Ui2.pos[1] = { SCREEN_WIDTH / 2 - 350.0f ,SCREEN_HEIGHT / 2 + 80.0f };
-        g_Ch_Ui2.pos[2] = { SCREEN_WIDTH / 2 - 350.0f ,SCREEN_HEIGHT / 2 + 10.0f };
-        g_Ch_Ui2.pos[3] = { SCREEN_WIDTH / 2 - 350.0f ,SCREEN_HEIGHT / 2 + 80.0f };
-        g_Ch_Ui2.pos[4] = { SCREEN_WIDTH / 2 - 350.0f ,SCREEN_HEIGHT / 2 + 150.0f };
+        g_Ch_Ui2.pos[1] = { SCREEN_WIDTH / 2 - 350.0f ,SCREEN_HEIGHT / 2 + 100.0f };
+        g_Ch_Ui2.pos[2] = { SCREEN_WIDTH / 2 - 350.0f ,SCREEN_HEIGHT / 2 + 30.0f };
+        g_Ch_Ui2.pos[3] = { SCREEN_WIDTH / 2 - 350.0f ,SCREEN_HEIGHT / 2 + 100.0f };
+        g_Ch_Ui2.pos[4] = { SCREEN_WIDTH / 2 - 350.0f ,SCREEN_HEIGHT / 2 + 170.0f };
 
     }
     if (g_Ch_Ui2.ui_used)
@@ -476,10 +476,9 @@ void Result2_Ui_Draw()
 
         for (int i = 5; i < 8; i++)
         {
-            g_Ch_Ui2.pos[5] = { SCREEN_WIDTH / 2 - 490.0f ,SCREEN_HEIGHT / 2 + 10.0f };
-            g_Ch_Ui2.pos[6] = { SCREEN_WIDTH / 2 - 490.0f ,SCREEN_HEIGHT / 2 + 80.0f };
-            g_Ch_Ui2.pos[7] = { SCREEN_WIDTH / 2 - 490.0f ,SCREEN_HEIGHT / 2 + 150.0f };
-
+            g_Ch_Ui2.pos[5] = { SCREEN_WIDTH / 2 - 490.0f ,SCREEN_HEIGHT / 2 + 30.0f };
+            g_Ch_Ui2.pos[6] = { SCREEN_WIDTH / 2 - 490.0f ,SCREEN_HEIGHT / 2 + 100.0f };
+            g_Ch_Ui2.pos[7] = { SCREEN_WIDTH / 2 - 490.0f ,SCREEN_HEIGHT / 2 + 170.0f };
             g_pContext->PSSetShaderResources(0, 1, &g_Texturecheck_2P);
             SetBlendState(BLENDSTATE_ALFA);
             DrawSpriteEx(g_Ch_Ui2.pos[i], g_Ch_Ui2.size[i], g_Ch_Ui2.col[i], challenge_frame[i], 4, 3, -3.0f);

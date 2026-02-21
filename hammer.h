@@ -34,7 +34,7 @@ public:
     bool m_isAttacking = false;
     bool m_isAttack = false;
     float m_attackTimer = 0.0f;
-    const float ATTACK_DURATION = 0.5f;   // 攻撃の有効時間
+    const float ATTACK_DURATION = 1.5f;   // 攻撃の有効時間
     
     // プレイヤーから見てどこに位置するか
     XMFLOAT3 m_offset = { 0.0f, 0.0f, 0.5f };
@@ -42,7 +42,7 @@ public:
     XMFLOAT3 m_animePosition = { 0.0f, 0.0f, 0.5f };
     XMFLOAT3 m_animeRotation = { 0.0f, 0.0f, 0.0f };
 
-    FLOAT m_coolTime = 0.0f;
+    //FLOAT m_coolTime = 0.0f;
 
     float m_chargePower = 0.0f; // チャージ
     bool m_isCharging = false; // チャージしてるか

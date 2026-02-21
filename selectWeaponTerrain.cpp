@@ -11,6 +11,7 @@
 #include "Manager.h"
 #include "keyboard.h"
 #include"Controller.h"
+#include "selectWeaponUi3D.h"
 #include "fade.h"
 #include "shader.h"
 #include "Camera.h"
@@ -127,89 +128,6 @@ const int SWORD_SLOT_INDEX = 0;
 
 static int g_vibrationTimerP1 = 0;
 static int g_vibrationTimerP2 = 0;
-// 単純なスプライトアニメ再生機構
-struct SpriteAnim
-{
-    ID3D11ShaderResourceView* srv = nullptr; // SRV
-    int cols = 1;     // 横フレーム数 (wc)
-    int rows = 1;     // 縦フレーム数 (hc)
-    int frameCount = 1; // 総フレーム数
-    float frameTime = 0.1f; // 1フレームの秒数
-    float acc = 0.0f;  // 経過時間蓄積
-    int curFrame = 0;  // 現在のフレームインデックス
-    bool loop = true;  // ループ再生するか
-    bool playing = false; // 再生中フラグ
-
-    // ループ再生開始
-    void PlayLoop(int startFrame = 0)
-    {
-        loop = true;
-        curFrame = startFrame;
-        acc = 0.0f;
-        playing = true;
-    }
-    // 1回再生（終了後 playing=false になる）
-    void PlayOnce(int startFrame = 0)
-    {
-        loop = false;
-        curFrame = startFrame;
-        acc = 0.0f;
-        playing = true;
-    }
-    // 停止
-    void Stop()
-    {
-        playing = false;
-        acc = 0.0f;
-    }
-    // 更新
-    void Update(float dt)
-    {
-        if (!playing) return;
-        acc += dt;
-        while (acc >= frameTime)
-        {
-            acc -= frameTime;
-            curFrame++;
-            if (curFrame >= frameCount)
-            {
-                if (loop)
-                {
-                    curFrame = 0;
-                }
-                else
-                {
-                    curFrame = frameCount - 1;
-                    playing = false;
-                    break;
-                }
-            }
-        }
-    }
-    // 現在のブロック番号（bno）取得
-    int GetBno() const { return curFrame; }
-};
-
-// プレイヤーごとにアニメを保持（0 = P1, 1 = P2）
-static SpriteAnim g_swordIdleAnim[2];
-static SpriteAnim g_swordAttackAnim[2];
-// 攻撃再生中フラグ（アニメーションが終わるまで Ready にしない）
-static bool g_p1AttackPlaying = false;
-static bool g_p2AttackPlaying = false;
-
-// スプライトシートのレイアウト（必要に応じて変更してください）
-static const int SWORD_IDLE_WC = 5;   // idle シートの列数
-static const int SWORD_IDLE_HC = 6;   // idle シートの行数
-static const int SWORD_IDLE_FRAMES = 26; // idle 総フレーム数
-static const float SWORD_IDLE_FRAME_TIME = 1.0f / 30.0f; // 12 fps
-
-static const int SWORD_ATTACK_WC = 5;
-static const int SWORD_ATTACK_HC = 5;
-static const int SWORD_ATTACK_FRAMES = 22;
-static const float SWORD_ATTACK_FRAME_TIME = 1.0f / 30.0f; // 24 fps (例)
-
-
-
 static ID3D11ShaderResourceView* g_TextureGoBg = nullptr;
 static ID3D11ShaderResourceView* g_TextureGoBtn = nullptr;
 enum GO_STATE
@@ -234,8 +152,7 @@ void selectWT_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
     g_pContext = pContext;
     g_isP1Ready = false;
     g_isP2Ready = false;
-    g_p1AttackPlaying = false;
-    g_p2AttackPlaying = false;
+
 
 #pragma region スプライトアニメ初期化
     for (int p = 0; p < 2; ++p)
@@ -256,21 +173,11 @@ void selectWT_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
     g_goBtnY = 0.0f;
     g_goBtnStartX = 0.0f;
     g_goBtnTargetX = 0.0f;
-    for (int p = 0; p < 2; ++p)
-    {
-        g_swordIdleAnim[p].playing = false;
-        g_swordIdleAnim[p].acc = 0.0f;
-        g_swordIdleAnim[p].curFrame = 0;
-
-        g_swordAttackAnim[p].playing = false;
-        g_swordAttackAnim[p].acc = 0.0f;
-        g_swordAttackAnim[p].curFrame = 0;
-    }
 #pragma endregion
 #pragma region スロットスケール初期化
     // 基本セットアップ
-    g_cursorP1 = 1;
-    g_cursorP2 = 1;
+    g_cursorP1 = 0;
+    g_cursorP2 = 0;
     g_isP1Ready = false;
     g_isP2Ready = false;
     g_selectData.player1 = WeaponTerrain::SWORD_WALL;
@@ -422,73 +329,20 @@ void selectWT_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
         CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUI[4]);
         assert(g_TextureUI[4]);
     }
-#pragma endregion
-	#pragma region スプライトシート読み込み
-    // ====== スプライトシート読み込み（sword idle / attack） ======
     {
-        TexMetadata metaIdle;
-        ScratchImage imgIdle;
-        // ファイル名は実際のものに合わせてください
-        HRESULT r = LoadFromWICFile(L"asset\\texture\\sword_idle.png", WIC_FLAGS_FORCE_SRGB, &metaIdle, imgIdle);
-        if (SUCCEEDED(r))
-        {
-            CreateShaderResourceView(pDevice, imgIdle.GetImages(), imgIdle.GetImageCount(), metaIdle, &g_TextureSwordIdle);
-        }
+        TexMetadata		metadata;
+        ScratchImage	image;
+        LoadFromWICFile(L"asset\\texture\\go_bg.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureGoBg);
+        assert(g_TextureGoBg);
     }
     {
-        TexMetadata metaAtk;
-        ScratchImage imgAtk;
-        HRESULT r = LoadFromWICFile(L"asset\\texture\\sword_attack.png", WIC_FLAGS_FORCE_SRGB, &metaAtk, imgAtk);
-        if (SUCCEEDED(r))
-        {
-            CreateShaderResourceView(pDevice, imgAtk.GetImages(), imgAtk.GetImageCount(), metaAtk, &g_TextureSwordAttack);
-        }
+        TexMetadata		metadata;
+        ScratchImage	image;
+        LoadFromWICFile(L"asset\\texture\\go_button.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureGoBtn);
+        assert(g_TextureGoBtn);
     }
-	// ====== GO ボタン関連テクスチャ読み込み ======
-    {
-       
-        TexMetadata metaGo;
-        ScratchImage imgGo;
-        HRESULT rgo = LoadFromWICFile(L"asset\\texture\\go_bg.png", WIC_FLAGS_FORCE_SRGB, &metaGo, imgGo);
-        if (SUCCEEDED(rgo))
-        {
-            CreateShaderResourceView(pDevice, imgGo.GetImages(), imgGo.GetImageCount(), metaGo, &g_TextureGoBg);
-        }
-       
-        TexMetadata metaBtn;
-        ScratchImage imgBtn;
-        HRESULT rbtn = LoadFromWICFile(L"asset\\texture\\GO_BUTTON.PNG", WIC_FLAGS_FORCE_SRGB, &metaBtn, imgBtn);
-        if (SUCCEEDED(rbtn))
-        {
-            CreateShaderResourceView(pDevice, imgBtn.GetImages(), imgBtn.GetImageCount(), metaBtn, &g_TextureGoBtn);
-          
-        }
-    }
-
-#pragma endregion
-    // スプライトアニメの初期設定
-    for (int p = 0; p < 2; ++p)
-    {
-        // idle
-        g_swordIdleAnim[p].srv = g_TextureSwordIdle;
-        g_swordIdleAnim[p].cols = SWORD_IDLE_WC;
-        g_swordIdleAnim[p].rows = SWORD_IDLE_HC;
-        g_swordIdleAnim[p].frameCount = SWORD_IDLE_FRAMES;
-        g_swordIdleAnim[p].frameTime = SWORD_IDLE_FRAME_TIME;
-        g_swordIdleAnim[p].PlayLoop(0);
-
-        // attack
-        g_swordAttackAnim[p].srv = g_TextureSwordAttack;
-        g_swordAttackAnim[p].cols = SWORD_ATTACK_WC;
-        g_swordAttackAnim[p].rows = SWORD_ATTACK_HC;
-        g_swordAttackAnim[p].frameCount = SWORD_ATTACK_FRAMES;
-        g_swordAttackAnim[p].frameTime = SWORD_ATTACK_FRAME_TIME;
-        g_swordAttackAnim[p].Stop();
-    }
-
-    // 3Dプレビューモデルは不要なら読み込まないが念のため NULL に
-    g_CenterSwordModel = nullptr;
-    // フェードイン
     XMFLOAT4 color = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
     SetFade(60.0f, color, FADE_IN, SCENE_GAME);
 }
@@ -534,7 +388,12 @@ void selectWT_Finalize()
     g_goState = GO_NONE;
     g_goAnimTime = 0.0f;
 }
-
+auto ResetGoAnimation = [&]()
+    {
+        g_goState = GO_NONE;
+        g_goAnimTime = 0.0f;
+        g_goBtnX = g_goBtnStartX;
+    };
 // ------------------ 更新処理 ------------------
 void selectWT_Update()
 {
@@ -544,184 +403,7 @@ void selectWT_Update()
     if (g_vibrationTimerP2 > 0) {
         if (--g_vibrationTimerP2 <= 0) g_Controller[1].SetVibration(0.0f, 0.0f);
     }
-#pragma region カーソル移動アニメ更新(1P)
-    float dt = FRAME_DT;
-
-    if (!g_p1AttackPlaying)
-    {
-        // If selected slot is sword and sword idle exists -> keep original sword idle/attack behavior
-        if (g_cursorP1 == SWORD_SLOT_INDEX && g_swordIdleAnim[0].srv)
-        {
-            if (!g_swordIdleAnim[0].playing) g_swordIdleAnim[0].PlayLoop(0);
-
-            if (Keyboard_IsKeyDownTrigger(KK_LEFTCONTROL) && !g_isP1Ready)
-            {
-                g_selectData.player1 = static_cast<WeaponTerrain>(g_cursorP1 + 1);
-                // sword-specific attack playback
-                if (!g_p1AttackPlaying)
-                {
-                    g_swordAttackAnim[0].PlayOnce(0);
-                    g_p1AttackPlaying = true;
-                    g_swordIdleAnim[0].Stop();
-
-                    // cursor scale anim
-                    g_cursorScaleAnim[0] = true;
-                    g_cursorScaleTime[0] = 0.0f;
-                }
-            }
-            if (Keyboard_IsKeyDownTrigger(KK_Z)|| g_Controller[0].IsButtonPushed(ControllerButton::B_BUTTON))
-            {
-                g_p1AttackPlaying = false;
-                g_isP1Ready = false;
-                g_swordAttackAnim[0].Stop();
-                g_swordIdleAnim[0].Stop();
-                g_swordIdleAnim[0].PlayLoop(0);
-
-                g_cursorScaleAnim[0] = false;
-                g_cursorScale[0] = 1.0f;
-                g_cursorScaleTime[0] = 0.0f;
-            }
-        }
-        else
-        {
-            // Non-sword slot: stop any sword idle to avoid conflicts
-            if (g_swordIdleAnim[0].playing) g_swordIdleAnim[0].Stop();
-
-            // Selection for any weapon: start cursor scale anim and mark ready
-            if (Keyboard_IsKeyDownTrigger(KK_LEFTCONTROL)|| g_Controller[0].IsButtonPushed(ControllerButton::A_BUTTON) && !g_isP1Ready)
-            {
-                PlayAudio(g_button, false);
-                // start cursor animation
-                g_cursorScaleAnim[0] = true;
-                g_cursorScaleTime[0] = 0.0f;
-
-                // mark ready and save choice
-                g_isP1Ready = true;
-                g_selectData.player1 = static_cast<WeaponTerrain>(g_cursorP1+1);
-            }
-
-    
-            if (Keyboard_IsKeyDownTrigger(KK_Z) || g_Controller[0].IsButtonPushed(ControllerButton::B_BUTTON))
-            {
-                if (g_isP1Ready)
-                {
-                    g_isP1Ready = false;
-                    // optional: reset choice -> uncomment if you want to clear selection
-                    // g_selectData.player1 = WeaponTerrain::SWORD_WALL;
-
-                    g_cursorScaleAnim[0] = false;
-                    g_cursorScale[0] = 1.0f;
-                    g_cursorScaleTime[0] = 0.0f;
-                }
-            }
-        }
-    }
-#pragma endregion
-#pragma region カーソル移動アニメ更新(2P)
-    // --- Player2 selection / cancel (generalized for any slot) ---
-    if (!g_p2AttackPlaying)
-    {
-        if (g_cursorP2 == SWORD_SLOT_INDEX && g_swordIdleAnim[1].srv)
-        {
-            if (!g_swordIdleAnim[1].playing) g_swordIdleAnim[1].PlayLoop(0);
-
-            if (Keyboard_IsKeyDownTrigger(KK_D5) && !g_isP2Ready)
-            {
-                if (!g_p2AttackPlaying)
-                {
-                    g_swordAttackAnim[1].PlayOnce(0);
-                    g_p2AttackPlaying = true;
-                    g_swordIdleAnim[1].Stop();
-
-                    g_cursorScaleAnim[1] = true;
-                    g_cursorScaleTime[1] = 0.0f;
-                }
-            }
-
-            if (Keyboard_IsKeyDownTrigger(KK_D6) || g_Controller[1].IsButtonPushed(ControllerButton::B_BUTTON))
-            {
-                g_p2AttackPlaying = false;
-                g_isP2Ready = false;
-                g_swordAttackAnim[1].Stop();
-                g_swordIdleAnim[1].Stop();
-                g_swordIdleAnim[1].PlayLoop(0);
-
-                g_cursorScaleAnim[1] = false;
-                g_cursorScale[1] = 1.0f;
-                g_cursorScaleTime[1] = 0.0f;
-            }
-        }
-        else
-        {
-            // Non-sword slot for player2
-            if (g_swordIdleAnim[1].playing) g_swordIdleAnim[1].Stop();
-
-            if (Keyboard_IsKeyDownTrigger(KK_D5)|| g_Controller[1].IsButtonPushed(ControllerButton::A_BUTTON) && !g_isP2Ready)
-            {
-                PlayAudio(g_button, false);
-                // start cursor anim and mark ready for any weapon
-                g_cursorScaleAnim[1] = true;
-                g_cursorScaleTime[1] = 0.0f;
-
-                g_isP2Ready = true;
-                g_selectData.player2 = static_cast<WeaponTerrain>(g_cursorP2 +1);
-            }
-
-            // cancel for any weapon (D6)
-            if (Keyboard_IsKeyDownTrigger(KK_D6) || g_Controller[1].IsButtonPushed(ControllerButton::B_BUTTON))
-            {
-                if (g_isP2Ready)
-                {
-                    g_isP2Ready = false;
-                    // optional reset:
-                    // g_selectData.player2 = WeaponTerrain::SWORD_WALL;
-
-                    g_cursorScaleAnim[1] = false;
-                    g_cursorScale[1] = 1.0f;
-                    g_cursorScaleTime[1] = 0.0f;
-                }
-            }
-        }
-    }
-#pragma endregion
-#pragma region アニメ更新(1P)
-    // アニメ更新（攻撃アニメ優先）
-    // P1
-    if (g_p1AttackPlaying)
-    {
-        g_swordAttackAnim[0].Update(dt);
-        if (!g_swordAttackAnim[0].playing)
-        {
-            // 攻撃アニメ終了 -> Ready にして idle に戻す
-            g_p1AttackPlaying = false;
-            g_isP1Ready = true;
-            g_selectData.player1 = static_cast<WeaponTerrain>(g_cursorP1+1);
-            g_swordIdleAnim[0].PlayLoop(0);
-        }
-    }
-    else
-    {
-        g_swordIdleAnim[0].Update(dt);
-    }
-#pragma endregion
-#pragma region アニメ更新(2P)
-    // P2
-    if (g_p2AttackPlaying)
-    {
-        g_swordAttackAnim[1].Update(dt);
-        if (!g_swordAttackAnim[1].playing)
-        {
-            g_p2AttackPlaying = false;
-            g_isP2Ready = true;
-            g_selectData.player2 = static_cast<WeaponTerrain>(g_cursorP2+1);
-            g_swordIdleAnim[1].PlayLoop(0);
-        }
-    }
-    else
-    {
-        g_swordIdleAnim[1].Update(dt);
-    }
-#pragma endregion
+    static float dt = 1 / 60.0f;
 #pragma region スロットスケールアニメ更新
     // --- カーソルスケールアニメ ---
     for (int p = 0; p < 2; ++p)
@@ -801,6 +483,7 @@ void selectWT_Update()
             // スケール: 古いスロットは縮小、新しいスロットは拡大アニメ開始
             StartSlotScaleAnim(oldIndex, false);
             StartSlotScaleAnim(g_cursorP1, true);
+            Selectweaponui3d_ModelUpdate(1, g_cursorP1);
         }
         if (Keyboard_IsKeyDownTrigger(KK_RIGHT)||(nowStickRight && !g_oldStickRight[0]))
         {
@@ -816,6 +499,8 @@ void selectWT_Update()
 
             StartSlotScaleAnim(oldIndex, false);
             StartSlotScaleAnim(g_cursorP1, true);
+            Selectweaponui3d_ModelUpdate(1, g_cursorP1);
+
         }
 
         // 次のフレームのために現在の状態を保存
@@ -827,13 +512,21 @@ void selectWT_Update()
             PlayAudio(g_button, false);
             g_isP1Ready = true;
             g_selectData.player1 = static_cast<WeaponTerrain>(g_cursorP1+1);
+            Selectweaponui3d_ModelAttack(1, g_cursorP1);
         }
         else
         {
             if (Keyboard_IsKeyDownTrigger(KK_F1)) g_isP1Ready = false;
         }
     }
+    if (g_isP1Ready && (Keyboard_IsKeyDownTrigger(KK_Z) || g_Controller[0].IsButtonPushed(ControllerButton::B_BUTTON)))
+    {
+        PlayAudio(g_button, false); // 好みでキャンセルSEにしてもOK
+        g_isP1Ready = false;
 
+        // GO演出を消す（片方でも解除されたら消す）
+        ResetGoAnimation();
+    }
     // P2 操作
     if (!g_isP2Ready)
     {
@@ -855,6 +548,8 @@ void selectWT_Update()
 
             StartSlotScaleAnim(oldIndex, false);
             StartSlotScaleAnim(g_cursorP2, true);
+            Selectweaponui3d_ModelUpdate(2, g_cursorP2);
+
         }
         if (Keyboard_IsKeyDownTrigger(KK_D4)|| (nowStickRight && !g_oldStickRight[1]))
         {
@@ -870,6 +565,8 @@ void selectWT_Update()
 
             StartSlotScaleAnim(oldIndex, false);
             StartSlotScaleAnim(g_cursorP2, true);
+            Selectweaponui3d_ModelUpdate(2, g_cursorP2);
+
         }
 
         // 次のフレームのために現在の状態を保存
@@ -881,13 +578,23 @@ void selectWT_Update()
             PlayAudio(g_button, false);
             g_isP2Ready = true;
             g_selectData.player2 = static_cast<WeaponTerrain>(g_cursorP2+1);
+            Selectweaponui3d_ModelAttack(2, g_cursorP2);
+
         }
         else
         {
             if (Keyboard_IsKeyDownTrigger(KK_DELETE)) g_isP2Ready = false;
         }
     }
+    // P2 Ready解除（6）
+    if (g_isP2Ready && (Keyboard_IsKeyDownTrigger(KK_D6) || g_Controller[1].IsButtonPushed(ControllerButton::B_BUTTON)))
+    {
+        PlayAudio(g_button, false); // 好みでキャンセルSEにしてもOK
+        g_isP2Ready = false;
 
+        // GO演出を消す（片方でも解除されたら消す）
+        ResetGoAnimation();
+    }
 	// 両者 Ready なら GO アニメ開始
     if (g_isP1Ready && g_isP2Ready)
     {
@@ -913,7 +620,14 @@ void selectWT_Update()
         }
 
     }
-
+    // どちらかがReady解除されたら GO 表示を強制的に消す
+    if (!(g_isP1Ready && g_isP2Ready))
+    {
+        if (g_goState != GO_NONE)
+        {
+            ResetGoAnimation();
+        }
+    }
     if (g_goState == GO_ANIMATING)
     {
         g_goAnimTime += FRAME_DT; 
@@ -1016,9 +730,19 @@ void selectWT_Update()
 // ------------------ 描画処理 ------------------
 void selectWT_Draw(int playerID)
 {
-    // 描画用の画面サイズ
+    Shader_Begin();
+    Shader_SetMatrix(GetViewMatrix() * GetProjectionMatrix());
     float screenWidth = (float)Direct3D_GetBackBufferWidth();
     float screenHeight = (float)Direct3D_GetBackBufferHeight();
+    Shader_SetMatrix(XMMatrixOrthographicOffCenterLH(
+        0.0f,
+        screenWidth,
+        screenHeight,
+        0.0f,
+        0.0f,
+        1.0f));
+    Shader_SetWorldMatrix(XMMatrixIdentity());
+
     g_pContext->PSSetShaderResources(0, 1, &g_TextureBG[0]);
     DrawSprite(XMFLOAT2(screenWidth * 0.5f, screenHeight * 0.5f), XMFLOAT2(screenWidth, screenHeight), XMFLOAT4(1, 1, 1, 1));
     // 右側描画: テクスチャは回転済み（縦長）なので、高さ = g_BG3_LeftHeight を用いる
@@ -1141,47 +865,6 @@ void selectWT_Draw(int playerID)
     XMFLOAT2 drawSize = XMFLOAT2(600.0f, 600.0f); // 描画サイズ（ピクセル）: 調整可
     XMFLOAT4 white = XMFLOAT4(1, 1, 1, 1);
 
-    // P1: 攻撃再生中なら attack を、そうでなければ cursor が剣上なら idle を描画
-    if (g_p1AttackPlaying)
-    {
-        if (g_swordAttackAnim[0].srv)
-        {
-            g_pContext->PSSetShaderResources(0, 1, &g_swordAttackAnim[0].srv);
-            int bno = g_swordAttackAnim[0].GetBno();
-            DrawSpriteEx(p1Pos, XMFLOAT2(drawSize.x+50,drawSize.y), white, bno, g_swordAttackAnim[0].cols, g_swordAttackAnim[0].rows);
-        }
-    }
-    else
-    {
-        if (g_cursorP1 == SWORD_SLOT_INDEX && g_swordIdleAnim[0].srv)
-        {
-            g_pContext->PSSetShaderResources(0, 1, &g_swordIdleAnim[0].srv);
-            int bno = g_swordIdleAnim[0].GetBno();
-            DrawSpriteEx(p1Pos, drawSize, white, bno, g_swordIdleAnim[0].cols, g_swordIdleAnim[0].rows);
-        }
-    }
-
-    // P2: 右側に左右反転して描画（flip は幅に負値を渡すことで実現）
-    if (g_p2AttackPlaying)
-    {
-        if (g_swordAttackAnim[1].srv)
-        {
-            g_pContext->PSSetShaderResources(0, 1, &g_swordAttackAnim[1].srv);
-            int bno = g_swordAttackAnim[1].GetBno();
-            XMFLOAT2 flipSize = XMFLOAT2(-drawSize.x, drawSize.y); // 左右反転
-            DrawSpriteEx(p2Pos, flipSize, white, bno, g_swordAttackAnim[1].cols, g_swordAttackAnim[1].rows);
-        }
-    }
-    else
-    {
-        if (g_cursorP2 == SWORD_SLOT_INDEX && g_swordIdleAnim[1].srv)
-        {
-            g_pContext->PSSetShaderResources(0, 1, &g_swordIdleAnim[1].srv);
-            int bno = g_swordIdleAnim[1].GetBno();
-            XMFLOAT2 flipSize = XMFLOAT2(-drawSize.x, drawSize.y); // 左右反転
-            DrawSpriteEx(p2Pos, flipSize, white, bno, g_swordIdleAnim[1].cols, g_swordIdleAnim[1].rows);
-        }
-    }
 
     if (g_goState != GO_NONE)
     {
@@ -1215,4 +898,13 @@ bool selectWT_IsP1Ready()
 bool selectWT_IsP2Ready()
 {
     return g_isP2Ready;
+}
+
+int GetPlayer1SelectedIndex()
+{
+	return g_cursorP1;
+}
+int GetPlayer2SelectedIndex()
+{
+	return g_cursorP2;
 }

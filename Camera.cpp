@@ -45,6 +45,7 @@ static float s_yawDur = 0.6f;
 
 void Camera_Initialize()
 { 
+	
 	CameraObject.Position = XMFLOAT3(0.0f, 3.0f, -10.0f);
 	CameraObject.AtPosition = XMFLOAT3(0.0f, 1.0f, 0.0f);
 	CameraObject.UpVector = XMFLOAT3(0.0f, 1.0f, 0.0f);
@@ -94,8 +95,17 @@ void Camera2_Finalize()
 }
 void Camera_Update()
 {
+	//========================
+	// シーン遷移検知
+	//========================
 	static int s_prevScene = -1;
 	int sceneNow = GetScene();
+
+	// ローテーション累積値（シーン跨いで保持）
+	static float nowYaw = 0.0f;     // 水平回転 (左右)
+	static float nowPitch = 22.0f;  // 垂直回転 (上下)
+	static float nowDistance = 6.0f; // 距離も保持（ローカルだと毎フレーム戻る）
+
 	if (sceneNow != s_prevScene)
 	{
 		// Resultから出た直後に「追従差分」が暴れないように old を同期
@@ -103,24 +113,50 @@ void Camera_Update()
 		{
 			g_PlayerPosOld = GetPlayerPosition();
 		}
+
+		// Select画面に入った瞬間だけ初期化（毎フレーム固定しない）
+		if (sceneNow == SCENE_SELECT_WT)
+		{
+			nowYaw = 0.0f;
+			nowPitch = -10.0f;
+			nowDistance = 4.0f;
+
+			// 追従差分暴れ防止
+			g_PlayerPosOld = GetPlayerPosition();
+		}
+
+		// Game画面に入った瞬間だけ初期化
+		if (sceneNow == SCENE_GAME) // ←あなたのゲーム用シーン定数名に合わせて
+		{
+			nowYaw = 0.0f;
+			nowPitch = 22.0f;
+			nowDistance = 6.0f;
+
+			// 追従差分暴れ防止
+			g_PlayerPosOld = GetPlayerPosition();
+		}
+
 		s_prevScene = sceneNow;
 	}
+
+	// Result中は追従差分を止める（元コード維持）
 	if (sceneNow == SCENE_RESULT)
-	{		
+	{
 		g_PlayerPosOld = GetPlayerPosition();
 		return;
 	}
-	//プレイヤーの座標取得<<<<<<<<<<<<<<<<<<<<<<
-	XMFLOAT3 playerPos = GetPlayerPosition();//P1
+
+	//========================
+	// プレイヤー追従移動
+	//========================
+	XMFLOAT3 playerPos = GetPlayerPosition(); //P1
 	XMFLOAT3 diff; //現在と過去のプレイヤーのposの差
-	//前回のプレイヤーと現在のプレイヤーの座標の差分<<<<<<<<<<<<<<
-	//P1
+
 	diff.x = playerPos.x - g_PlayerPosOld.x;
 	diff.y = playerPos.y - g_PlayerPosOld.y;
 	diff.z = playerPos.z - g_PlayerPosOld.z;
 
 	//カメラを移動
-	//P1
 	CameraObject.Position.x += diff.x;
 	CameraObject.Position.y += diff.y;
 	CameraObject.Position.z += diff.z;
@@ -133,49 +169,12 @@ void Camera_Update()
 	g_PlayerPosOld.y = playerPos.y;
 	g_PlayerPosOld.z = playerPos.z;
 
-
-	//ローテーション変数初期化
+	//========================
+	// 入力取得
+	//========================
 	float rotX = 0.0f;
 	float rotY = 0.0f;
 
-	//回転角度の累積と制限
-	//現在の累積角度を保持する静的変数 (初期値 0.0f)
-	static float nowYaw = 0.0f;   // 水平回転 (左右)
-	static float nowPitch = 22.0f; // 垂直回転 (上下)
-	//static int s_prevScene = -1;
-	//int sceneNow = GetScene();
-
-	//if (sceneNow != s_prevScene)
-	//{
-	//	// Resultに入った瞬間：必ず基本角度(15°)から始める
-	//	if (sceneNow == SCENE_RESULT)
-	//	{
-	//		nowYaw = 15.0f;     // ★これが「最初の画面は15度」
-	//		nowPitch = -25.0f;
-
-	//		// Result回転状態を初期化（残りカスを消す）
-	//		s_yawTurning = false;
-	//		s_resultTurnRequest = false;
-	//		s_yawTime = 0.0f;
-	//		s_yawFrom = nowYaw;
-	//		s_yawTo = nowYaw;
-	//	}
-
-	//	// Resultから出た瞬間：ゲーム用カメラに戻す（移動方向バグ対策）
-	//	if (s_prevScene == SCENE_RESULT && sceneNow != SCENE_RESULT)
-	//	{
-	//		// ここは好みの初期角度に戻してOK
-	//		nowYaw = 0.0f;
-	//		nowPitch = 22.0f;
-
-	//		// プレイヤー追従の差分が暴れないように、過去座標も更新
-	//		g_PlayerPosOld = GetPlayerPosition();
-	//	}
-
-	//	s_prevScene = sceneNow;
-	//}
-
-	//コントローラー・キーボードからの入力を取得
 	float inputX = g_Controller[0].GetRightStickX() * -2.0f;
 	float inputY = g_Controller[0].GetRightStickY() * 1.5f;
 
@@ -183,94 +182,48 @@ void Camera_Update()
 	if (Keyboard_IsKeyDown(KK_E)) inputX = -1.0f;
 	if (Keyboard_IsKeyDown(KK_UP)) inputY = 1.0f;
 	if (Keyboard_IsKeyDown(KK_DOWN)) inputY = -1.0f;
-	if (GetScene() == SCENE_RESULT)
+
+	// Result/Select中は入力無効（元コード維持）
+	if (GetScene() == SCENE_RESULT || GetScene() == SCENE_SELECT_WT)
 	{
 		inputX = 0.0f;
 		inputY = 0.0f;
 	}
-	//角度を更新
+
+	//========================
+	// 角度更新
+	//========================
 	nowYaw += inputX;
 	nowPitch += inputY;
 
 	//回転制限の適用
-	//左右180度制限 (-90度 から +90度 = 合計180度)
-	//if (nowYaw > ROTATION_Y_MAX)  nowYaw = ROTATION_Y_MAX;
-	//if (nowYaw < -ROTATION_Y_MAX) nowYaw = -ROTATION_Y_MAX;
 	if (GetScene() != SCENE_RESULT)
 	{
-		//上下45度制限 (水平を0度として +-45度)
 		if (nowPitch > ROTATION_X_MAX)  nowPitch = ROTATION_X_MAX;
 		if (nowPitch < -ROTATION_X_MAX) nowPitch = -ROTATION_X_MAX;
 	}
-	//座標の再計算
-	//プレイヤーからの基本距離 (初期設定 -4.0f に基づき 4.0f)
-	float distance = 6.0f;
 
-	//if (GetScene() == SCENE_RESULT)
-	//{
-	//	static bool s_resultInit = false;
+	//========================
+	// 距離（シーンで変えるなら nowDistance を使う）
+	//========================
+	float distance = nowDistance;
 
-	//	nowPitch = -25.0f;      // 固定
-	//	distance = 4.5f;        // 固定
+	// ※ここにあった
+	// if (sceneNow == SCENE_SELECT_WT) { nowYaw=0; nowPitch=-10; distance=4; }
+	// は「毎フレーム固定」になってしまうので削除済み
 
-	//	CameraObject.AtPosition = GetWinnerCenterposition();
-	//	CameraObject.AtPosition.y += 1.0f;
-	//	
-
-
-	//	// Resultに入った最初の1回だけ初期角度をセット（好み）
-	//	if (!s_resultInit)
-	//	{
-	//		nowYaw = 15.0f;
-	//		s_resultInit = true;
-	//	}
-
-	//	// Enterで「120度回して」要求が来たらターン開始
-	//	if (s_resultTurnRequest && !s_yawTurning)
-	//	{
-	//		s_resultTurnRequest = false;
-
-	//		s_yawTurning = true;
-	//		s_yawFrom = nowYaw;
-	//		s_yawTo = nowYaw + 120.0f;
-	//		s_yawTime = 0.0f;
-	//	}
-
-	//	// EaseOutで回転（最初速い→最後ゆっくり）
-	//	if (s_yawTurning)
-	//	{
-	//		const float dt = 1.0f / 60.0f; // 実Δtがあるならそれに
-	//		s_yawTime += dt;
-
-	//		float t = s_yawTime / s_yawDur;
-	//		if (t >= 1.0f)
-	//		{
-	//			t = 1.0f;
-	//			s_yawTurning = false;
-	//		}
-
-	//		nowYaw = Lerp(s_yawFrom, s_yawTo, EaseOutCubic(t));
-	//		if (!s_yawTurning) nowYaw = s_yawTo;
-	//	}
-	//}
-
-	//回転行列の作成 (Yaw, Pitch, Roll)
+	//========================
+	// 回転行列 & 位置再計算
+	//========================
 	XMMATRIX matRot = XMMatrixRotationRollPitchYaw(
 		XMConvertToRadians(nowPitch),
 		XMConvertToRadians(nowYaw),
 		0.0f
 	);
 
-	//注視点からカメラへのベクトル
-	//P1
 	XMVECTOR vOffset = XMVectorSet(0.0f, 0.0f, -distance, 0.0f);
 	vOffset = XMVector3TransformNormal(vOffset, matRot);
 
-	//XMFLOAT2 vec2;// 横と前後(x,z)地面に対して平行な移動
-	//vec2.x = CameraObject.Position.y - CameraObject.AtPosition.y;
-	//vec2.y = CameraObject.Position.z - CameraObject.AtPosition.z;// vec変数はXMFLOAT2のためyに値を入れているが実際の値はz
-
-	//ベクトルの回転
 	XMVECTOR vAt = XMLoadFloat3(&CameraObject.AtPosition);
 	XMVECTOR vNewPos = XMVectorAdd(vAt, vOffset);
 
@@ -278,39 +231,9 @@ void Camera_Update()
 
 	XMStoreFloat3(&CameraObject.Position, vNewPos);
 
-	// Rotation2(X軸回転)
-	//CameraObject.Position.y = (vec2.x * co2 - vec2.y * si2);
-	//CameraObject.Position.z = (vec2.x * si2 + vec2.y * co2);
-	//CameraObject.Position.y += CameraObject.AtPosition.y;
-	//CameraObject.Position.z += CameraObject.AtPosition.z;
-
-	////vecを正規化する
-	//float len = sqrtf(vec.x * vec.x + vec.y * vec.y);
-	//vec.x /= len;
-	//vec.y /= len;
-
-	////注視点の方向へ移動する
-	//float	speed = 0.0f;
-	//if (Keyboard_IsKeyDown(KK_W))
-	//{
-	//	speed = -0.1f;
-	//}
-	//if (Keyboard_IsKeyDown(KK_S))
-	//{
-	//	speed = 0.1f;
-	//}
-
-	////今回の移動量ベクトル
-	//vec.x *= speed;
-	//vec.y *= speed;
-
-	////座標と注視点へ移動量を加算
-	//CameraObject.Position.x += vec.x;
-	//CameraObject.Position.z += vec.y;
-	//CameraObject.AtPosition.x += vec.x;
-	//CameraObject.AtPosition.z += vec.y;
-
-	//FOVの変更(P1)
+	//========================
+	// FOV変更（元コード維持）
+	//========================
 	if (Keyboard_IsKeyDown(KK_Z))
 	{
 		CameraObject.Fov += 0.3f;
@@ -318,7 +241,6 @@ void Camera_Update()
 		{
 			CameraObject.Fov = 160.0f;
 		}
-
 	}
 	if (Keyboard_IsKeyDown(KK_X))
 	{
@@ -385,8 +307,8 @@ void Camera2_Update()
 
 	//回転制限の適用
 	//左右180度制限 (-90度 から +90度 = 合計180度)
-	if (nowYaw > ROTATION_Y_MAX)  nowYaw = ROTATION_Y_MAX;
-	if (nowYaw < -ROTATION_Y_MAX) nowYaw = -ROTATION_Y_MAX;
+	//if (nowYaw > ROTATION_Y_MAX)  nowYaw = ROTATION_Y_MAX;
+	//if (nowYaw < -ROTATION_Y_MAX) nowYaw = -ROTATION_Y_MAX;
 
 	//上下45度制限 (水平を0度として +-45度)
 	if (nowPitch > ROTATION_X_MAX)  nowPitch = ROTATION_X_MAX;

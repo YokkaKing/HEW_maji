@@ -37,11 +37,21 @@ public:
     XMFLOAT3 m_animePosition = { 0.0f, 0.0f, 0.5f };
     XMFLOAT3 m_animeRotation = { 0.0f, 0.0f, 0.0f };
 
-    FLOAT m_coolTime = 0.0f;
+    //FLOAT m_coolTime = 0.0f;
 
     float m_chargePower = 0.0f; // チャージ
     bool m_isCharging = false; // チャージしてるか
     const float MAX_CHARGE = 2.0f; // 最大2倍の飛距離
+
+    enum CHARGE_STATE {
+        CHARGE_NONE = 0,   
+        CHARGE_IN,         
+        CHARGE_HOLD,       
+        CHARGE_MOVE_LOOP,  
+        CHARGE_ATTACK_PLAY 
+    };
+    CHARGE_STATE m_chargeState = CHARGE_NONE;
+    bool m_wasCharging = false;
 public:
     Spear(GameObject* player, bool select);
     virtual ~Spear();

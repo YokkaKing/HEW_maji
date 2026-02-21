@@ -33,7 +33,7 @@ public:
     XMFLOAT3 m_animePosition = { 0.0f, 0.0f, 0.5f };
     XMFLOAT3 m_animeRotation = { 0.0f, 0.0f, 0.0f };
 
-    FLOAT m_coolTime = 0.0f;
+   // FLOAT m_coolTime = 0.0f;
 
     float m_chargePower = 0.0f; // チャージ
     bool m_isCharging = false; // チャージしてるか
