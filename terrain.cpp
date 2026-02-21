@@ -9,9 +9,10 @@
 //================================================================
 //	マクロ定義
 //================================================================
-#define TERRAIN_SIZE (0.25f)
+#define TERRAIN_SIZE (0.5f)
 #define ANTLION_POS_Y (2.7f)
 #define BOG_POS_Y (-0.3f)
+#define TREE_POS_Y (1.0f)
 
 //================================================================
 //	インクルード
@@ -39,6 +40,7 @@ static ID3D11DeviceContext* g_pContext;
 
 MODEL* blockModel = nullptr;
 MODEL* slopeModel = nullptr;
+XMFLOAT3 g_pos[2];
 
 // 蟻地獄のためのデータ(endPositionのみ)他は共通のため
 XMFLOAT3 g_antlionData[4] =
@@ -589,41 +591,20 @@ const std::vector<std::vector<std::vector<std::string>>> Bogs =
 const std::vector<std::vector<std::vector<std::string>>> Trees =
 {
 	{
-		{"aannnnnnbb"},
-		{"nnnnnnnnnn"},
-		{"nnnnnnnnnn"},
-		{"nnnnnnnnnn"},
-		{"nnnnnnnnnn"},
-		{"nnnnnnnnnn"},
-		{"nnnnnnnnnn"},
-		{"nnnnnnnnnn"},
-		{"nnnnnnnnnn"},
-		{"ccnnnnnndd"},
-	},
-	{
-		{"nnnnnnnnnn"},
-		{"nnnnnnnnnn"},
-		{"nnnnnnnnnn"},
-		{"nnnnnnnnnn"},
-		{"nnnnnnnnnn"},
-		{"nnnnnnnnnn"},
-		{"nnnnnnnnnn"},
-		{"nnnnnnnnnn"},
-		{"nnnnnnnnnn"},
-		{"nnnnnnnnnn"},
-	},
-	{
-		{"aannnnnnbb"},
-		{"nnnnnnnnnn"},
-		{"nnnnnnnnnn"},
-		{"nnnnnnnnnn"},
-		{"nnnnnnnnnn"},
-		{"nnnnnnnnnn"},
-		{"nnnnnnnnnn"},
-		{"nnnnnnnnnn"},
-		{"ccnnnnnndd"},
-		{"nnnnnnnnnn"},
-	},
+		{"nnnaaaaaaannn"},
+		{"nnannnnnnnann"},
+		{"nannnnnnnnnan"},
+		{"annnnnnnnnnna"},
+		{"annnnnnnnnnna"},
+		{"annnnnnnnnnna"},
+		{"annnnnnnnnnna"},
+		{"annnnnnnnnnna"},
+		{"annnnnnnnnnna"},
+		{"annnnnnnnnnna"},
+		{"nannnnnnnnnan"},
+		{"nnannnnnnnann"},
+		{"nnnaaaaaaannn"},
+	}
 };
 
 void TerrainInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, WeaponTerrain p1Set, WeaponTerrain p2Set)
@@ -641,6 +622,7 @@ void TerrainInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 	g_Terrain.m_moveTerrain[1] = ModelLoad("asset\\model\\wall.fbx");
 	g_Terrain.m_moveTerrain[2] = ModelLoad("asset\\model\\antlion.fbx");
 	g_Terrain.m_moveTerrain[3] = ModelLoad("asset\\model\\numa.fbx");
+	g_Terrain.m_moveTerrain[4] = ModelLoad("asset\\model\\trees.fbx");
 	blockModel = ModelLoad("asset\\model\\block.fbx");
 	slopeModel = ModelLoad("asset\\model\\block3.fbx");
 
@@ -650,21 +632,27 @@ void TerrainInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 	g_Terrain.m_terrainScale[1] = { 5.0f, 6.5f, 5.0f };
 	g_Terrain.m_terrainScale[2] = { 5.0f, 5.5f, 5.0f };
 	g_Terrain.m_terrainScale[3] = { 5.0f, 5.0f, 5.0f };
+	g_Terrain.m_terrainScale[4] = { 5.0f, 5.0f, 5.0f };
 	g_Terrain.m_terrainRotation[0] = { 0.0f,0.0f,0.0f };
 	g_Terrain.m_terrainRotation[1] = { 0.0f,0.0f,0.0f };
 	g_Terrain.m_terrainRotation[2] = { 0.0f,0.0f,0.0f };
 	g_Terrain.m_terrainRotation[3] = { 0.0f,0.0f,0.0f };
+	g_Terrain.m_terrainRotation[4] = { 0.0f,0.0f,0.0f };
 
 	g_Terrain.m_terrainScaling[0] = { 5.0f, 5.0f, 5.0f };
 	g_Terrain.m_terrainScaling[1] = { 10.0f, 6.5f, 10.0f };
 	g_Terrain.m_terrainScaling[2] = { 10.0f, 8.0f, 10.0f };
 	g_Terrain.m_terrainScaling[3] = { 10.0f, 5.0f, 10.0f };
+	g_Terrain.m_terrainScaling[4] = { 7.0f, 7.0f, 7.0f };
 
 	g_Terrain.m_motherPosition[0].y -= 5.0f;
 	g_Terrain.m_motherPosition[1].y -= 5.0f;
 
 	g_Terrain.m_coolTime[0] = 0.0f;
 	g_Terrain.m_coolTime[1] = 0.0f;
+
+	g_pos[0] = {};
+	g_pos[1] = {};
 
 	//g_Terrain.PixelObjects(Hill, TERRAIN_TYPE::HILL, g_Terrain.m_motherPosition);
 
@@ -687,7 +675,8 @@ void TerrainInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 	switch (p1Set)
 	{
 	case WeaponTerrain::SWORD_WALL:
-		g_Terrain.SimpleObjects(Walls, { 1.0f, 1.0f, 1.0f }, TERRAIN_TYPE::WALL, g_Terrain.m_motherPosition[0], 0);
+		//g_Terrain.SimpleObjects(Trees, { 0.25f, 2.0f, 0.25f }, TERRAIN_TYPE::TREE, g_Terrain.m_motherPosition[1], 0); // 相手を中心に生えるから
+		g_Terrain.PixelObjects(Trees, TERRAIN_TYPE::TREE, g_Terrain.m_motherPosition[1], 0);
 		break;
 	case WeaponTerrain::SPEAR_HILL:
 		//g_Terrain.SimpleObjects(Hills, { 0.25f, 0.25f, 0.25f }, TERRAIN_TYPE::HILL, g_Terrain.m_motherPosition[0], 0);
@@ -710,7 +699,8 @@ void TerrainInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 	switch (p2Set)
 	{
 	case WeaponTerrain::SWORD_WALL:
-		g_Terrain.SimpleObjects(Walls, { 1.0f, 1.0f, 1.0f }, TERRAIN_TYPE::WALL, g_Terrain.m_motherPosition[1], 1);
+		//g_Terrain.SimpleObjects(Trees, { 0.25f, 2.0f, 0.25f }, TERRAIN_TYPE::TREE, g_Terrain.m_motherPosition[0], 1); // 相手を中心に生えるから
+		g_Terrain.PixelObjects(Trees, TERRAIN_TYPE::TREE, g_Terrain.m_motherPosition[0], 1);
 		break;
 	case WeaponTerrain::SPEAR_HILL:
 		//g_Terrain.SimpleObjects(Hills, { 0.25f, 0.25f, 0.25f }, TERRAIN_TYPE::HILL, g_Terrain.m_motherPosition[1], 1);
@@ -735,9 +725,13 @@ void TerrainFinalize()
 	//ModelRelease(g_Terrain.m_model);
 	ModelRelease(blockModel);
 
-	for (int i = 0; i < 2; i++)
+	for (int i = 0; i < 4; i++)
 	{
 		ModelRelease(g_Terrain.m_moveTerrain[i]);
+	}
+
+	for (int i = 0; i < CHANGE_FLAG; i++)
+	{
 		g_Terrain.m_isChange[i] = false;
 	}
 
@@ -762,6 +756,7 @@ void TerrainUpdate()
 		{
 			g_Terrain.m_isChange[0] = true; // 1Pの変身を確認
 			g_Terrain.m_coolTime[0] = 20.0f;
+			g_pos[0] = g_Terrain.m_motherPosition[1];
 		}
 	}
 
@@ -773,6 +768,7 @@ void TerrainUpdate()
 		{
 			g_Terrain.m_isChange[1] = true; // 2Pの変身を確認
 			g_Terrain.m_coolTime[1] = 20.0f;
+			g_pos[1] = g_Terrain.m_motherPosition[0];
 		}
 	}
 
@@ -794,6 +790,7 @@ void TerrainUpdate()
 		{
 			g_Terrain.m_coolTime[0] = 0.0f;	// クールタイムをなくす
 			g_Terrain.m_isChange[0] = false; // 変身を解く
+			g_pos[0] = {};
 		}
 	}
 	// 変身したら-する
@@ -808,6 +805,7 @@ void TerrainUpdate()
 		{
 			g_Terrain.m_coolTime[1] = 0.0f;	// クールタイムをなくす
 			g_Terrain.m_isChange[1] = false; // 変身を解く
+			g_pos[1] = {};
 		}
 	}
 
@@ -819,7 +817,7 @@ void TerrainUpdate()
 		switch (GetSetWTP1())
 		{
 		case WeaponTerrain::SWORD_WALL:
-			g_Terrain.UpdateObject(g_Terrain.walls[0], g_Terrain.m_motherPosition[0], FALSE); // P1の地形の当たり判定
+			g_Terrain.UpdateObject(g_Terrain.trees[0], g_Terrain.m_motherPosition[1], FALSE); // P1の地形の当たり判定
 			break;
 		case WeaponTerrain::SPEAR_HILL:
 			g_Terrain.UpdateObject(g_Terrain.ants[0], g_Terrain.m_motherPosition[0], FALSE); // P1の地形の当たり判定
@@ -842,7 +840,7 @@ void TerrainUpdate()
 		switch (GetSetWTP1())
 		{
 		case WeaponTerrain::SWORD_WALL:
-			posY = 0.7f;
+			posY = TREE_POS_Y;
 			break;
 		case WeaponTerrain::SPEAR_HILL:
 			posY = ANTLION_POS_Y;
@@ -867,7 +865,7 @@ void TerrainUpdate()
 			switch (GetSetWTP1())
 			{
 			case WeaponTerrain::SWORD_WALL:
-				g_Terrain.UpdateObject(g_Terrain.walls[0], g_Terrain.m_motherPosition[0], TRUE); // P1の地形の当たり判定
+				g_Terrain.UpdateObject(g_Terrain.trees[0], g_Terrain.m_motherPosition[1], TRUE); // P1の地形の当たり判定
 				break;
 			case WeaponTerrain::SPEAR_HILL:
 				g_Terrain.UpdateObject(g_Terrain.ants[0], g_Terrain.m_motherPosition[0], TRUE); // P1の地形の当たり判定
@@ -893,7 +891,7 @@ void TerrainUpdate()
 		switch (GetSetWTP2())
 		{
 		case WeaponTerrain::SWORD_WALL:
-			g_Terrain.UpdateObject(g_Terrain.walls[1], g_Terrain.m_motherPosition[1], FALSE); // P1の地形の当たり判定
+			g_Terrain.UpdateObject(g_Terrain.trees[1], g_Terrain.m_motherPosition[0], FALSE); // P1の地形の当たり判定
 			break;
 		case WeaponTerrain::SPEAR_HILL:
 			g_Terrain.UpdateObject(g_Terrain.ants[1], g_Terrain.m_motherPosition[1], FALSE); // P1の地形の当たり判定
@@ -916,7 +914,7 @@ void TerrainUpdate()
 		switch (GetSetWTP2())
 		{
 		case WeaponTerrain::SWORD_WALL:
-			posY = 0.7f;
+			posY = TREE_POS_Y;
 			break;
 		case WeaponTerrain::SPEAR_HILL:
 			posY = ANTLION_POS_Y;
@@ -941,7 +939,7 @@ void TerrainUpdate()
 			switch (GetSetWTP2())
 			{
 			case WeaponTerrain::SWORD_WALL:
-				g_Terrain.UpdateObject(g_Terrain.walls[1], g_Terrain.m_motherPosition[1], TRUE); // P1の地形の当たり判定
+				g_Terrain.UpdateObject(g_Terrain.trees[1], g_Terrain.m_motherPosition[0], TRUE); // P1の地形の当たり判定
 				break;
 			case WeaponTerrain::SPEAR_HILL:
 				g_Terrain.UpdateObject(g_Terrain.ants[1], g_Terrain.m_motherPosition[1], TRUE); // P1の地形の当たり判定
@@ -969,7 +967,7 @@ void TerrainDraw()
 		switch (GetSetWTP1())
 		{
 		case WeaponTerrain::SWORD_WALL:
-			no = 1;
+			no = 4;
 			break;
 		case WeaponTerrain::SPEAR_HILL:
 			no = 2;
@@ -1000,6 +998,14 @@ void TerrainDraw()
 			g_Terrain.m_motherPosition[0].x,
 			g_Terrain.m_motherPosition[0].y,
 			g_Terrain.m_motherPosition[0].z);
+		if (no == 4)
+		{
+
+			translation = XMMatrixTranslation(
+				g_pos[0].x,
+				g_Terrain.m_motherPosition[0].y,
+				g_pos[0].z);
+		}
 		XMMATRIX	world = scale * rotation * translation;
 
 		//シェーダーへ行列をセット
@@ -1008,7 +1014,7 @@ void TerrainDraw()
 		switch (GetSetWTP1())
 		{
 		case WeaponTerrain::SWORD_WALL:
-			ModelDraw(g_Terrain.m_moveTerrain[1]);
+			ModelDraw(g_Terrain.m_moveTerrain[4]);
 			break;
 		case WeaponTerrain::SPEAR_HILL:
 			ModelDraw(g_Terrain.m_moveTerrain[2]);
@@ -1034,7 +1040,7 @@ void TerrainDraw()
 		switch (GetSetWTP2())
 		{
 		case WeaponTerrain::SWORD_WALL:
-			no = 1;
+			no = 4;
 			break;
 		case WeaponTerrain::SPEAR_HILL:
 			no = 2;
@@ -1065,6 +1071,13 @@ void TerrainDraw()
 			g_Terrain.m_motherPosition[1].x,
 			g_Terrain.m_motherPosition[1].y,
 			g_Terrain.m_motherPosition[1].z);
+		if (no == 4)
+		{
+			translation = XMMatrixTranslation(
+				g_pos[1].x,
+				g_Terrain.m_motherPosition[1].y,
+				g_pos[1].z);
+		}
 		XMMATRIX	world = scale * rotation * translation;
 
 		//シェーダーへ行列をセット
@@ -1073,7 +1086,7 @@ void TerrainDraw()
 		switch (GetSetWTP2())
 		{
 		case WeaponTerrain::SWORD_WALL:
-			ModelDraw(g_Terrain.m_moveTerrain[1]);
+			ModelDraw(g_Terrain.m_moveTerrain[4]);
 			break;
 		case WeaponTerrain::SPEAR_HILL:
 			ModelDraw(g_Terrain.m_moveTerrain[2]);
@@ -1128,10 +1141,17 @@ void TerrainSet(WeaponTerrain set, bool playerSelect)
 		break;
 	}
 
+	int swordSelect = 0;
+	if (select == 0)
+	{
+		swordSelect = 1;
+	}
+
 	switch (set)
 	{
 	case WeaponTerrain::SWORD_WALL:
-		g_Terrain.SimpleObjects(Walls, { 1.0f, 1.0f, 1.0f }, TERRAIN_TYPE::WALL, g_Terrain.m_motherPosition[select], select);
+		//g_Terrain.SimpleObjects(Trees, { 0.25f, 2.0f, 0.25f }, TERRAIN_TYPE::TREE, g_Terrain.m_motherPosition[swordSelect], select);
+		g_Terrain.PixelObjects(Trees, TERRAIN_TYPE::TREE, g_Terrain.m_motherPosition[swordSelect], select);
 		break;
 	case WeaponTerrain::SPEAR_HILL:
 		g_Terrain.CreateAnt(g_Terrain.m_motherPosition[select], select);
@@ -1163,7 +1183,7 @@ void TERRAIN::ClearPlayerObjects(WeaponTerrain set, int select)
 	switch (set)
 	{
 	case WeaponTerrain::SWORD_WALL:
-		targetList = &walls[select];
+		targetList = &trees[select];
 		break;
 	case WeaponTerrain::SPEAR_HILL:
 		targetList = &ants[select];
@@ -1234,7 +1254,8 @@ void TERRAIN::SetObject(XMFLOAT3 pos, XMFLOAT3 scl, std::string tag, int lay, in
 	{
 		if (raw_ptr->m_tag == "HILL") hills[select].push_back(raw_ptr);
 		if (raw_ptr->m_tag == "WALL") walls[select].push_back(raw_ptr);
-		if (raw_ptr->m_tag == "TREE") trees[select].push_back(raw_ptr);
+		if (raw_ptr->m_tag == "TREEP1") trees[0].push_back(raw_ptr);
+		if (raw_ptr->m_tag == "TREEP2") trees[1].push_back(raw_ptr);
 		if (raw_ptr->m_tag == "BOGP1") bogs[0].push_back(raw_ptr);
 		if (raw_ptr->m_tag == "BOGP2") bogs[1].push_back(raw_ptr);
 
@@ -1554,11 +1575,14 @@ void TERRAIN::CreateHit(std::vector<TERRAIN_OBJECT> terrain, XMFLOAT3 motherPosi
 {
 	XMFLOAT3 pos;
 
-	std::string tag;
-	tag = "BOGP1";
+	std::string b_tag;
+	std::string t_tag;
+	b_tag = "BOGP1";
+	t_tag = "TREEP1";
 	if (select == 1)
 	{
-		tag = "BOGP2";
+		b_tag = "BOGP2";
+		t_tag = "TREEP2";
 	}
 
 	// terrainの数だけ繰り返す
@@ -1586,14 +1610,14 @@ void TERRAIN::CreateHit(std::vector<TERRAIN_OBJECT> terrain, XMFLOAT3 motherPosi
 			break;
 
 		case TERRAIN_TYPE::TREE:
-			SetObject(pos, terrain[i].m_size, "TREE", 0, select);
+			SetObject(pos, terrain[i].m_size, t_tag, 0, select);
 			trees[select][i]->m_position = pos;	// 座標を格納
 			trees[select][i]->m_velocity = terrain[i].m_distance;
 			trees[select][i]->m_scale = terrain[i].m_size;
 			break;
 
 		case TERRAIN_TYPE::BOG:
-			SetObject(pos, terrain[i].m_size, tag, 0, select);
+			SetObject(pos, terrain[i].m_size, b_tag, 0, select);
 			bogs[select][i]->m_position = pos;	// 座標を格納
 			bogs[select][i]->m_velocity = terrain[i].m_distance;
 			bogs[select][i]->m_scale = terrain[i].m_size;

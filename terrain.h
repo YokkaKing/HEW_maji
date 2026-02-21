@@ -12,8 +12,8 @@
 //================================================================
 //	マクロ定義
 //================================================================
-#define MOVE_TERRAIN_TYPE (4)
-#define CHANGE_FLAG (4)
+#define MOVE_TERRAIN_TYPE (5)
+#define CHANGE_FLAG (2)
  
 //================================================================
 //	インクルード
@@ -77,7 +77,7 @@ public:
 	XMFLOAT3 m_terrainScale[MOVE_TERRAIN_TYPE] = {}; // 各地形の大きさ
 	XMFLOAT3 m_terrainRotation[MOVE_TERRAIN_TYPE] = {};	// 各地形の回転
 	bool m_isChange[CHANGE_FLAG] = { false, false }; // 変身したか
-	XMFLOAT3 m_terrainScaling[4] = {};
+	XMFLOAT3 m_terrainScaling[MOVE_TERRAIN_TYPE] = {};
 	FLOAT m_coolTime[2] = {}; // 変身時間(仮) 今後は他のファイルから持ってくる予定
 public:
 	void SetObject(XMFLOAT3 pos, XMFLOAT3 scl, std::string tag, int lay, int select);
