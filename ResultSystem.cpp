@@ -5,6 +5,7 @@
 
 #include "direct3d.h"
 #include "keyboard.h"
+#include "Controller.h"
 #include "fade.h"
 #include "Manager.h"
 #include "shader.h"
@@ -16,9 +17,11 @@
 #include "Player2.h"
 #include "Result_Ui.h"
 #include "Result_Ui2.h"
+#include "Entry.h"
 
 
 using namespace DirectX;
+extern Controller g_Controller[2];
 
 // Result_Ui ‘¤
 bool ResultUi_IsResultAttackReady();
@@ -673,7 +676,24 @@ void ResultSystem_Update()
     const bool finished = (!s_camP1.continuous && s_camP1.yawNow >= kRotPages[2].driftToDeg);
     if (finished && GetFadeState() == FADE_NONE)
     {
-        if (Keyboard_IsKeyDownTrigger(KK_ENTER))
+        bool isNextTriggered = Keyboard_IsKeyDownTrigger(KK_ENTER);
+        for (int i = 0; i < 2; i++)
+        {
+            int ctrlIdx = GetControllerIndexFromPlayerNo(i);
+            if (ctrlIdx != -1)
+            {
+                if (g_Controller[ctrlIdx].IsButtonPushed(ControllerButton::A_BUTTON)) {
+                    isNextTriggered = true;
+                }
+            }
+            else
+            {
+                if (g_Controller[i].IsButtonPushed(ControllerButton::A_BUTTON)) {
+                    isNextTriggered = true;
+                }
+            }
+        }
+        if (isNextTriggered)
         {
             XMFLOAT4 color(0, 0, 0, 1);
             Player_AllCountReset();

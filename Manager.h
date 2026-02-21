@@ -15,6 +15,7 @@ enum SCENE
 {
 	SCENE_NONE = 0,		//何もなし
 	SCENE_TITLE,		//タイトルシーン
+	SCENE_ENTRY,		//コントローラー割り当てシーン
 	SCENE_SELECT_WT,    //武器・地形選択
 	SCENE_GAME,			//ゲームシーン
 	SCENE_RESULT,		//リザルトルシーン

@@ -17,6 +17,7 @@
 #include"Title.h"
 #include"fade.h"
 #include"shader.h"
+#include "Entry.h"
 
 //================================================================
 //	グローバル変数
@@ -45,7 +46,7 @@ void Title_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 
 	//フェードインのセット
 	XMFLOAT4	color = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
-	SetFade(60.0f, color, FADE_IN, SCENE_SELECT_WT);
+	SetFade(60.0f, color, FADE_IN, SCENE_ENTRY);
     PlayAudio(g_title, true);
 }
 void Title_Finalize()
@@ -58,28 +59,63 @@ void Title_Finalize()
 }
 void Title_Update()
 { 
-    if (g_titleVibTimerP1 > 0) {
-        g_titleVibTimerP1--;
-        if (g_titleVibTimerP1 <= 0) g_Controller[0].SetVibration(0.0f, 0.0f);
-    }
-    if (g_titleVibTimerP2 > 0) {
-        g_titleVibTimerP2--;
-        if (g_titleVibTimerP2 <= 0) g_Controller[1].SetVibration(0.0f, 0.0f);
+for (int playerNo = 0; playerNo < 2; playerNo++)
+    {
+        int ctrlIdx = GetControllerIndexFromPlayerNo(playerNo);
+        if (ctrlIdx == -1) continue; // コントローラーが割り当てられていない場合はスキップ
+
+        int& timer = (playerNo == 0) ? g_titleVibTimerP1 : g_titleVibTimerP2;
+
+        if (timer > 0) {
+            timer--;
+            if (timer <= 0) {
+                g_Controller[ctrlIdx].SetVibration(0.0f, 0.0f);
+            }
+        }
     }
 	//キー入力チェック
 	//スタートボタンが押されたらシーンを切り替え
 	//フェード処理中はキーを受け付けない
-    if ((Keyboard_IsKeyDownTrigger(KK_ENTER) || g_Controller[0].IsButtonPushed(ControllerButton::A_BUTTON)) && (GetFadeState() == FADE_NONE))
-	{
-        g_Controller[0].SetVibration(0.7f, 0.7f);
-        g_Controller[1].SetVibration(0.7f, 0.7f);
-        g_titleVibTimerP1 = 10;
-        g_titleVibTimerP2 = 10;
-        PlayAudio(g_fade, false);
-		//フェードアウトさせてシーンを切り替える
-		XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
-		SetFade(40.0f, color, FADE_OUT, SCENE_SELECT_WT);
-	}
+    bool isStartTriggered = Keyboard_IsKeyDownTrigger(KK_ENTER);
+    for (int playerNo = 0; playerNo < 2; playerNo++)
+    {
+        int ctrlIdx = GetControllerIndexFromPlayerNo(playerNo);
+        if (ctrlIdx != -1)
+        {
+            if (g_Controller[i].IsButtonPushed(ControllerButton::A_BUTTON)) {
+                isStartTriggered = true;
+            }
+        }
+        else
+        {
+            if (g_Controller[playerNo].IsButtonPushed(ControllerButton::A_BUTTON)) {
+                isStartTriggered = true;
+            }
+        }
+
+    }
+        if (isStartTriggered && (GetFadeState() == FADE_NONE))
+        {
+            for (int playerNo = 0; playerNo < 2; playerNo++)
+            {
+                int ctrlIdx = GetControllerIndexFromPlayerNo(playerNo);
+                if (ctrlIdx != -1)
+                {
+                    g_Controller[ctrlIdx].SetVibration(0.7f, 0.7f);
+                }
+                else
+                {
+                    // エントリー前なら 0, 1 両方に送る
+                    g_Controller[playerNo].SetVibration(0.7f, 0.7f);
+                }
+            }
+            g_titleVibTimerP1 = 10;
+            g_titleVibTimerP2 = 10;
+            PlayAudio(g_fade, false);
+            //フェードアウトさせてシーンを切り替える
+            XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
+            SetFade(40.0f, color, FADE_OUT, SCENE_ENTRY);
+        }
 
 }
 void Title_Draw()

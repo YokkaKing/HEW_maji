@@ -11,6 +11,7 @@
 //================================================================
 #include"Audio.h"
 #include"spear.h"
+#include "Entry.h"
 #include"debug_ostream.h"
 #include"model.h"
 #include"Camera.h"
@@ -107,6 +108,9 @@ void Spear::Attack()
 
 void Spear::Update()
 {
+	int controlIdx = GetControllerIndexFromPlayerNo(m_selectPlayer);
+	if (controlIdx == -1) return;
+
 	m_fxAnim.Update(1.0f / 60.0f);
 	if (m_coolTime > 0.0f)
 	{

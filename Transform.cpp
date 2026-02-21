@@ -12,6 +12,7 @@
 #include"Transform.h"
 #include"keyboard.h"
 #include"Controller.h"
+#include "Entry.h"
 #include "terrain.h"
 #include "generateWT.h"
 #include<cstdio>
@@ -223,13 +224,16 @@ void ApplyTransformationP2(PLAYER2* p, WeaponTerrain wt, bool isTransform)
 
 void TransformPlayer()
 {
+    int controllerIdx = GetControllerIndexFromPlayerNo(0);
+    if (controllerIdx == -1) return;
+    Controller& ctrl = g_Controller[controllerIdx];
     const char* newModelPath = nullptr;
     TRANSFORM_TYPE nextType = TRANSFORM_TYPE::TRANSFORM_TYPE_NONE;
     if (g_Player.TransformType == TRANSFORM_TYPE::TRANSFORM_TYPE_NONE)
     {
         WeaponTerrain targetWT = WeaponTerrain::NONE;
 
-        if ((Keyboard_IsKeyDownTrigger(KK_D1) || g_Controller[0].IsButtonPushed(ControllerButton::L_SHOULDER)) && !g_IsUsedA_P1)
+        if ((Keyboard_IsKeyDownTrigger(KK_D1) || ctrl.IsButtonPushed(ControllerButton::L_SHOULDER)) && !g_IsUsedA_P1)
         {
             g_Player.TransformType = TRANSFORM_TYPE::TRANSFORM_TYPE_A;
             targetWT = g_TransformA_P1;
@@ -237,7 +241,7 @@ void TransformPlayer()
             g_IsUsedA_P1 = true;
 			SetPlayer_IsTransformed(true);
         }
-        else if ((Keyboard_IsKeyDownTrigger(KK_D0) || g_Controller[0].IsButtonPushed(ControllerButton::R_SHOULDER)) && !g_IsUsedB_P1)
+        else if ((Keyboard_IsKeyDownTrigger(KK_D0) || ctrl.IsButtonPushed(ControllerButton::R_SHOULDER)) && !g_IsUsedB_P1)
         {
             g_Player.TransformType = TRANSFORM_TYPE::TRANSFORM_TYPE_B;
             targetWT = g_TransformB_P1;
@@ -262,11 +266,11 @@ void TransformPlayer()
         }
         // âèúîªíË
         bool unevolve = (g_Player.TransformTimer <= 0) || Keyboard_IsKeyDownTrigger(KK_D8);
-        if (g_Player.TransformType == TRANSFORM_TYPE::TRANSFORM_TYPE_A && g_Controller[0].GetLeftTrigger() >= 0.9f) unevolve = true;
-        if (g_Player.TransformType == TRANSFORM_TYPE::TRANSFORM_TYPE_B && g_Controller[0].GetRightTrigger() >= 0.9f) unevolve = true;
+        if (g_Player.TransformType == TRANSFORM_TYPE::TRANSFORM_TYPE_A && ctrl.GetLeftTrigger() >= 0.9f) unevolve = true;
+        if (g_Player.TransformType == TRANSFORM_TYPE::TRANSFORM_TYPE_B && ctrl.GetRightTrigger() >= 0.9f) unevolve = true;
 
         if (unevolve) {
-            g_Controller[0].SetVibration(0.0f, 0.0f);
+            g_Controller[controllerIdx].SetVibration(0.0f, 0.0f);
             g_Player.TransformType = TRANSFORM_TYPE::TRANSFORM_TYPE_NONE;
             SetPlayer_IsTransformed(false);
             ApplyTransformationP1(&g_Player, g_Player.m_baseWT, false); // å≥ÇÃïêäÌÇ…ñﬂÇ∑
@@ -321,13 +325,16 @@ void ApplyTransformEffect()
 
 void TransformPlayer2()
 {
+    int controllerIdx = GetControllerIndexFromPlayerNo(1);
+    if (controllerIdx == -1) return;
+    Controller& ctrl = g_Controller[controllerIdx];
     const char* newModelPath = nullptr;
     TRANSFORM_TYPE2 nextType = TRANSFORM_TYPE2::TRANSFORM_TYPE_NONE;
     if (g_Player2.TransformType == TRANSFORM_TYPE2::TRANSFORM_TYPE_NONE)
     {
         WeaponTerrain targetWT = WeaponTerrain::NONE;
 
-        if ((Keyboard_IsKeyDownTrigger(KK_D2) || g_Controller[1].IsButtonPushed(ControllerButton::L_SHOULDER)) && !g_IsUsedA_P2)
+        if ((Keyboard_IsKeyDownTrigger(KK_D2) || ctrl.IsButtonPushed(ControllerButton::L_SHOULDER)) && !g_IsUsedA_P2)
         {
             g_Player2.TransformType = TRANSFORM_TYPE2::TRANSFORM_TYPE_A;
             targetWT = g_TransformA_P2;
@@ -336,7 +343,7 @@ void TransformPlayer2()
             Player2_PlusTransformCount();
             SetPlayer2_IsTransformed(true);
         }
-        else if ((Keyboard_IsKeyDownTrigger(KK_D9) || g_Controller[1].IsButtonPushed(ControllerButton::R_SHOULDER)) && !g_IsUsedB_P2)
+        else if ((Keyboard_IsKeyDownTrigger(KK_D9) || ctrl.IsButtonPushed(ControllerButton::R_SHOULDER)) && !g_IsUsedB_P2)
         {
             g_Player2.TransformType = TRANSFORM_TYPE2::TRANSFORM_TYPE_B;
             targetWT = g_TransformB_P2;
@@ -356,10 +363,11 @@ void TransformPlayer2()
     else {
         // âèúîªíË
         bool unevolve = (g_Player2.TransformTimer-- <= 0) || Keyboard_IsKeyDownTrigger(KK_D8);
-        if (g_Player2.TransformType == TRANSFORM_TYPE2::TRANSFORM_TYPE_A && g_Controller[1].GetLeftTrigger() >= 0.9f) unevolve = true;
-        if (g_Player2.TransformType == TRANSFORM_TYPE2::TRANSFORM_TYPE_B && g_Controller[1].GetRightTrigger() >= 0.9f) unevolve = true;
+        if (g_Player2.TransformType == TRANSFORM_TYPE2::TRANSFORM_TYPE_A && ctrl.GetLeftTrigger() >= 0.9f) unevolve = true;
+        if (g_Player2.TransformType == TRANSFORM_TYPE2::TRANSFORM_TYPE_B && ctrl.GetRightTrigger() >= 0.9f) unevolve = true;
 
         if (unevolve) {
+            g_Controller[controllerIdx].SetVibration(0.0f, 0.0f);
             g_Player2.TransformType = TRANSFORM_TYPE2::TRANSFORM_TYPE_NONE;
             g_Player2.m_isTransformed = false;
             ApplyTransformationP2(&g_Player2, g_Player2.m_baseWT, false); // å≥ÇÃïêäÌÇ…ñﬂÇ∑
