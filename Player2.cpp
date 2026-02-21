@@ -554,11 +554,11 @@ void Player2_ManualMove()
 		allowInput = false;
 	}
 
-	float speed = 0.0f;
-	float stickY = g_Controller[1].GetLeftStickY();
+
 	if (allowInput)
 	{
-		
+		float speed = 0.0f;
+		float stickY = g_Controller[1].GetLeftStickY();
 		if (fabs(stickY) > 0.05f) // デッドゾーンを設定 (必要に応じて調整)
 		{
 			// ベクトルが逆だから移動が逆になる

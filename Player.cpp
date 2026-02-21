@@ -614,54 +614,48 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 	{
 		allowInput = false;
 	}
-	float speed = 0.0f;
-	float stickY = g_Controller[0].GetLeftStickY();
 	if (allowInput)
 	{
-		// ベクトルが逆だから移動が逆になる
-		// 左スティック上方向 (+1.0f) で前進 (speed = -0.1f) に対応
-		speed = stickY * 0.1f;
-		gp1_move = true; // 動いている
-	}
-
-
-	if (Keyboard_IsKeyDown(KK_W))
-	{
-		speed = +0.1f;
-		gp1_move = true; // 動いている
-	}
-	if (Keyboard_IsKeyDown(KK_S))
-	{
-		speed = -0.1f;
-		gp1_move = true; // 動いている
-	}
-
+		float speed = 0.0f;
+		float stickY = g_Controller[0].GetLeftStickY();
+		if (fabs(stickY) > 0.05f) // デッドゾーンを設定 (必要に応じて調整)
+		{
+			// ベクトルが逆だから移動が逆になる
+			// 左スティック上方向 (+1.0f) で前進 (speed = -0.1f) に対応
+			speed = stickY * 0.1f;
+		}
+		if (Keyboard_IsKeyDown(KK_W))
+		{
+			speed = -0.1f;
+		}
+		if (Keyboard_IsKeyDown(KK_S))
+		{
+			speed = +0.1f;
+		}
 
 		moveX += forwardX * speed;
 		moveZ += forwardZ * speed;
 
-
-	// 横移動
-	float strafe = 0.0f;
-	float stickX = g_Controller[0].GetLeftStickX();
-	if (fabs(stickX) > 0.05f) // デッドゾーンを設定 (必要に応じて調整)
-	{
-		// 左スティック左方向 (-1.0f) で左移動 (strafe = +0.1f) に対応
-		strafe = stickX * 0.1f;
-		gp1_move = true; // 動いている
+		// 横移動
+		float strafe = 0.0f;
+		float stickX = g_Controller[0].GetLeftStickX();
+		if (fabs(stickX) > 0.05f) // デッドゾーンを設定 (必要に応じて調整)
+		{
+			// 左スティック左方向 (-1.0f) で左移動 (strafe = +0.1f) に対応
+			strafe = stickX * 0.1f;
+		}
+		if (Keyboard_IsKeyDown(KK_A))
+		{
+			strafe = +0.1f;  // 左
+		}
+		if (Keyboard_IsKeyDown(KK_D))
+		{
+			strafe = -0.1f;  // 右
+		}
+		moveX += rightX * strafe;
+		moveZ += rightZ * strafe;
+		
 	}
-
-	if (Keyboard_IsKeyDown(KK_A))
-	{
-		strafe = -0.1f;  // 左
-		gp1_move = true; // 動いている
-	}
-	if (Keyboard_IsKeyDown(KK_D))
-	{
-		strafe = +0.1f;  // 右
-		gp1_move = true; // 動いている
-	}
-
 	// 最終速度
 	if (g_Player.m_isGround)
 	{
