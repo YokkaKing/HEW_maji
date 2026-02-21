@@ -64,10 +64,9 @@ Hammer::Hammer(GameObject* player, bool select) : IWeapon(player)
 	m_coolTime = 0.0f;
 
 	m_damageFCount = 0.0f; // ダメージの経過時間
-	m_damageFrame = { 0.03f, 0.1f }; // ダメージの有効フレーム
+	m_damageFrame = { 0.38f, 0.5f }; // ダメージの有効フレーム
 
 	m_move = { 0.0f, 0.0f, 0.0f };
-	m_coolTime = 0.0f;
 
 	/*********** テストコード **********/
 	g_modelHammer[0] = ModelLoad("asset\\model\\block.fbx");
@@ -191,6 +190,7 @@ void Hammer::Update()
 	}
 	else if (m_isCharging)
 	{
+		StopAudio(g_charge);
 		if (g_Controller[m_playerIndex].IsConnected()) {
 			g_Controller[m_playerIndex].SetVibration(0.0f, 0.0f);
 		}
@@ -240,6 +240,7 @@ void Hammer::Update()
 		if (model) {
 			ModelPlayClip(model, 241, 280, 60.0f, false, 1.0f);
 		}
+		PlayAudioLoopSection(g_charge, 2.0f, 3.0f);
 		m_chargeState = CHARGE_IN;
 	}
 	if (m_isCharging && isMoving)
@@ -409,7 +410,7 @@ void Hammer::OnWeaponCollision(GameObject* target)
 			if (target->m_tag == "Player2") // 相手がPlayer2の時のみ
 			{
 				PlayAudio(g_damageHammer, false);
-
+				SetPlayer2_IsAttacked(true);
 				m_hitTargets.insert(target);
 
 				if (m_chargePower < 3.4f)
@@ -538,6 +539,7 @@ void Hammer::OnWeaponCollision(GameObject* target)
 			if (target->m_tag == "Player") // 相手がPlayerの時のみ
 			{
 				PlayAudio(g_damageHammer, false);
+				SetPlayer_IsAttacked(true);
 
 				m_hitTargets.insert(target);
 
@@ -545,10 +547,14 @@ void Hammer::OnWeaponCollision(GameObject* target)
 				{
 					target->TakeDamage(10.0f);
 
+					PlayAudio(g_damageHammer);
+
+
 					//ヒットエフェクト
 					XMFLOAT3 effectPos = target->m_position;
 					effectPos.y -= 1.0f;
 					HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::DAGEKI);
+
 
 					//ヒットバック計算式
 					XMFLOAT3 dir = {
@@ -567,6 +573,8 @@ void Hammer::OnWeaponCollision(GameObject* target)
 				}
 				else if (m_chargePower < 3.5f)
 				{
+					PlayAudio(g_damageHammer);
+
 					target->TakeDamage(20.0f);
 
 					//ヒットエフェクト
@@ -591,6 +599,8 @@ void Hammer::OnWeaponCollision(GameObject* target)
 				}
 				else if (m_chargePower < 4.5f)
 				{
+					PlayAudio(g_damageHammer);
+
 					target->TakeDamage(30.0f);
 
 					//ヒットエフェクト
@@ -615,6 +625,8 @@ void Hammer::OnWeaponCollision(GameObject* target)
 				}
 				else if (m_chargePower < 5.5f)
 				{
+					PlayAudio(g_damageHammer);
+
 					target->TakeDamage(40.0f);
 
 					//ヒットエフェクト
@@ -639,6 +651,8 @@ void Hammer::OnWeaponCollision(GameObject* target)
 				}
 				else if (m_chargePower >= 5.5f)
 				{
+					PlayAudio(g_damageHammer);
+
 					target->TakeDamage(70.0f);
 
 					//ヒットエフェクト

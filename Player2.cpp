@@ -27,6 +27,7 @@
 #include"spear.h"
 #include"hammer.h"
 #include"arrow.h"
+#include "Audio.h"
 #include"syuriken.h"
 #include<memory>
 #include"terrain.h"
@@ -48,25 +49,27 @@ static bool g_Player2JumpPlaying = false; // ジャンプワンショット再�
 static int g_Player2CurrentAnim = 0; // 0: idle, 1: move, 2: attack 3:jump
 bool g_isChangeP2;
 XMFLOAT3 gp2_slopeSpeed;
+
+static const float HIT_ANIM_DURATION = 0.35f;
+
 bool gp2_move; // プレイヤーが動いているかのフラグ
 bool gp2_koyoteFlag; // コヨーテタイムを回復するかどうか
+
 
 void Player2Die()
 {
 	hal::dout << "Player2 died!" << std::endl;
-	// ここにゲームオーバー画面への遷移、リスポーン処理など
-	//プレイヤーを非表示にする
+
 	if (g_Player2.m_gameObject != nullptr)
 	{
 		g_Player2.m_gameObject->m_isEnable = false;
 	}
-	g_Player2.State = PLAYER2_STATE::PLAYER2_STATE_IDLE;
 	
-	//フェードアウトさせてシーンを切り替える
-	XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
-	SetFade(40.0f, color, FADE_OUT, SCENE_GAME);
-}
 
+	g_Player2.State = PLAYER2_STATE::PLAYER2_STATE_IDLE;
+
+	// ★フェードはManager側で「1秒スロウ後」に開始する
+}
 void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, WeaponTerrain setWTp2)
 {
 	g_pDevice2 = pDevice;
@@ -142,16 +145,31 @@ void	Player2Update()
 {
 	TransformPlayer2();           // Eキーで進化タイプを選択
 	ApplyTransformEffect2();   // 進化タイプに応じたパラメータを適用
-	if (g_Player2.m_isDead)return;	//死亡している場合は更新処理をスキップ
-	
+	if (g_Player2.m_isAttacked && !g_Player2.m_isDead)
+	{
+		Player2_StartHitAnim();
+		g_Player2.m_isAttacked = false; // ★ここで消す（連続発火防止）
+	}
+
+	// ★被弾アニメ進行（死んでてもタイマーは進めてOK）
+	if (g_Player2.m_hitAnimPlaying)
+	{
+		g_Player2.m_hitAnimTimer += 1.0f / 60.0f;
+		if (g_Player2.m_hitAnimTimer >= HIT_ANIM_DURATION)
+		{
+			g_Player2.m_hitAnimPlaying = false;
+		}
+	}
 	//ヒットアクション
 	g_Player2.m_hitAction.Update(g_Player2.m_position);
 	//ヒットストップ中ならこの関数自体を抜けるため今後の処理がすべてスキップされる
 	if (g_Player2.m_hitAction.IsStopping())
 	{
+		Player2_ManualMove();
+		//ModelUpdateAnimation(g_Player2.m_model, 1.0f / 60.0f);
 		return;
 	}
-
+	if (g_Player2.m_isDead)return;	//死亡している場合は更新処理をスキップ
 //================================================================
 //	武器変更処理(一旦)
 //================================================================
@@ -163,7 +181,7 @@ void	Player2Update()
 	if (Keyboard_IsKeyDownTrigger(KK_P) || g_Controller[1].IsButtonPushed(ControllerButton::X_BUTTON))
 	{
 		// 武器があるか
-		if (g_Player2.m_currentWeapon && !g_Player2AttackPlaying)
+		if (g_Player2.m_currentWeapon && !g_Player2AttackPlaying&&g_Player2.m_currentWeapon->GetCoolTime() ==0.0f&& !g_Player.m_hitAnimPlaying)
 		{
 			g_Player2.m_currentWeapon->Attack(); // 攻撃
 			if (g_Player2.m_isTransformed)
@@ -225,7 +243,10 @@ void	Player2Update()
 		g_Player2.m_currentWeapon->Update();
 	}
 
-	Player2_ManualMove();
+	if (!g_Player2.m_hitAction.IsStopping())
+	{
+		Player2_ManualMove();
+	}
 	//死亡判定
 	if (g_Player2.m_currentHp <= 0.0f && !g_Player2.m_isDead)
 	{
@@ -243,7 +264,7 @@ void	Player2Update()
 	// アニメーション状態管理：
 	//  - 攻撃ワンショット再生中はその完了を監視し、完了したら移動/待機ループへ復帰
 	//  - 攻撃中でなければ移動/待機のループアニメを確実に再生しておく
-	if (g_Player2AttackPlaying || g_Player2JumpPlaying)
+	if ((g_Player2AttackPlaying || g_Player2JumpPlaying)&& !g_Player.m_hitAnimPlaying)
 	{
 		// ワンショットクリップが終了したか確認
 		if (ModelConsumeClipFinished(g_Player2.m_model))
@@ -503,10 +524,21 @@ void Player2_ManualMove()
 		g_Player2.m_koyoteTime -= 0.1f;
 	}
 
-	float len = sqrtf(forwardX * forwardX + forwardZ * forwardZ);
-	forwardX /= len;
-	forwardZ /= len;
+	//float len = sqrtf(forwardX * forwardX + forwardZ * forwardZ);
+	//forwardX /= len;
+	//forwardZ /= len;
 
+	float len = sqrtf(forwardX * forwardX + forwardZ * forwardZ);
+	if (len > 0.0f)
+	{
+		forwardX /= len;
+		forwardZ /= len;
+	}
+	else
+	{
+		forwardX = 0.0f;
+		forwardZ = 0.0f;
+	}
 	// カメラの右方向ベクトル
 	float rightX = forwardZ;    // 右方向は前方向ベクトルを90度回転
 	float rightZ = -forwardX;
@@ -514,52 +546,58 @@ void Player2_ManualMove()
 	// 移動量初期化
 	float moveX = 0.0f;
 	float moveZ = 0.0f;
+
+	bool allowInput = true;
+	// ★ヒットストップ中 / 被弾アニメ中 / 死亡中 は入力を無効化
+	if (g_Player2.m_hitAction.IsStopping() || g_Player2.m_hitAnimPlaying || g_Player2.m_isDead)
+	{
+		allowInput = false;
+	}
+
 	float speed = 0.0f;
 	float stickY = g_Controller[1].GetLeftStickY();
-	if (fabs(stickY) > 0.05f) // デッドゾーンを設定 (必要に応じて調整)
+	if (allowInput)
 	{
-		// ベクトルが逆だから移動が逆になる
-		// 左スティック上方向 (+1.0f) で前進 (speed = -0.1f) に対応
-		speed = stickY * 0.1f;
-		gp2_move = true;
-	}
-	if (Keyboard_IsKeyDown(KK_U))
-	{
-		speed = -0.1f;
-		gp2_move = true;
-	}
-	if (Keyboard_IsKeyDown(KK_J))
-	{
-		speed = +0.1f;
-		gp2_move = true;
+		
+		if (fabs(stickY) > 0.05f) // デッドゾーンを設定 (必要に応じて調整)
+		{
+			// ベクトルが逆だから移動が逆になる
+			// 左スティック上方向 (+1.0f) で前進 (speed = -0.1f) に対応
+			speed = stickY * 0.1f;
+		}
+		if (Keyboard_IsKeyDown(KK_U))
+		{
+			speed = -0.1f;
+		}
+		if (Keyboard_IsKeyDown(KK_J))
+		{
+			speed = +0.1f;
+		}
+
+		moveX += forwardX * speed;
+		moveZ += forwardZ * speed;
+
+		// 横移動
+		float strafe = 0.0f;
+		float stickX = g_Controller[1].GetLeftStickX();
+		if (fabs(stickX) > 0.05f) // デッドゾーンを設定 (必要に応じて調整)
+		{
+			// 左スティック左方向 (-1.0f) で左移動 (strafe = +0.1f) に対応
+			strafe = stickX * 0.1f;
+		}
+		if (Keyboard_IsKeyDown(KK_H))
+		{
+			strafe = +0.1f;  // 左
+		}
+		if (Keyboard_IsKeyDown(KK_K))
+		{
+			strafe = -0.1f;  // 右
+		}
+		moveX += rightX * strafe;
+		moveZ += rightZ * strafe;
+
 	}
 
-	moveX += forwardX * speed;
-	moveZ += forwardZ * speed;
-
-	// 横移動
-	float strafe = 0.0f;
-	float stickX = g_Controller[1].GetLeftStickX();
-	if (fabs(stickX) > 0.05f) // デッドゾーンを設定 (必要に応じて調整)
-	{
-		// 左スティック左方向 (-1.0f) で左移動 (strafe = +0.1f) に対応
-		strafe = stickX * 0.1f;
-		gp2_move = true;
-	}
-	if (Keyboard_IsKeyDown(KK_H))
-	{
-		strafe = +0.1f;  // 左
-		gp2_move = true;
-	}
-	if (Keyboard_IsKeyDown(KK_K))
-	{
-		strafe = -0.1f;  // 右
-		gp2_move = true;
-	}
-	moveX += rightX * strafe;
-	moveZ += rightZ * strafe;
-
-	// 最終速度
 	if (g_Player2.m_isGround)
 	{
 		// 入力がないときは、今の速度を少しずつ減衰させる（摩擦の表現）
@@ -666,7 +704,7 @@ void Player2_ManualMove()
 		g_Player2.m_isGround = false;
 	}
 
-	if (!g_Player.m_isGround)
+	if (!g_Player2.m_isGround)
 	{
 		gp2_slopeSpeed.x *= 0.3f;
 		gp2_slopeSpeed.z *= 0.3f;
@@ -767,7 +805,7 @@ void PLAYER2::OnCollision(const CollisionInfo& info)
 			{	
 				// 武器の衝突判定を呼び出す
 				info.other->m_weaponPtr->OnWeaponCollision(this);
-				g_Player2.m_isAttacked = true;
+				//g_Player2.m_isAttacked = true;
 			}
 		}
 
@@ -1170,4 +1208,61 @@ void Player2_ResetMoveMul()
 void Player2_SetPlayerIsAttaking(int flg)
 {
 	g_Player2AttackPlaying = flg;
+}
+static void Player2_StartHitAnim()
+{
+	if (!g_Player2.m_model) return;
+
+	const int HIT_START = 600;
+	const int HIT_END = 660;
+
+	if (!g_Player2.m_hitAnimPlaying)
+	{
+		if (g_Player2.m_isTransformed)
+		{
+			switch (g_Player2.m_currentWT)
+			{
+			case WeaponTerrain::SWORD_WALL: // Sword
+				ModelPlayClip(g_Player2.m_model, 230, 280, 60.0f, false, 1.0f);
+				break;
+			case WeaponTerrain::SPEAR_HILL: // spear
+				ModelPlayClip(g_Player2.m_model, 641, 700, 60.0f, false, 2.0f);
+				break;
+			case WeaponTerrain::BOW_HILL: // arrow
+				ModelPlayClip(g_Player2.m_model, 400, 450, 60.0f, false, 1.0f);
+				break;
+			case WeaponTerrain::HAMMER_: // hammer
+				ModelPlayClip(g_Player2.m_model, 541, 600, 60.0f, false, 1.0f);
+				break;
+
+			case WeaponTerrain::SHURIKEN_: //shuriken
+				ModelPlayClip(g_Player2.m_model, 211, 260, 60.0f, false, 1.0f);
+				break;
+			}
+		}
+		else
+		{
+			switch (g_setWTP2)
+			{
+			case WeaponTerrain::SWORD_WALL: // Sword
+				ModelPlayClip(g_Player2.m_model, 230, 280, 60.0f, false, 1.0f);
+				break;
+			case WeaponTerrain::SPEAR_HILL: // spear
+				ModelPlayClip(g_Player2.m_model, 641, 700, 60.0f, false, 2.0f);
+				break;
+			case WeaponTerrain::BOW_HILL: // arrow
+				ModelPlayClip(g_Player2.m_model, 400, 450, 60.0f, false, 1.0f);
+				break;
+			case WeaponTerrain::HAMMER_: // hammer
+				ModelPlayClip(g_Player2.m_model, 541, 600, 60.0f, false, 1.0f);
+				break;
+
+			case WeaponTerrain::SHURIKEN_: //shuriken
+				ModelPlayClip(g_Player2.m_model, 211, 260, 60.0f, false, 1.0f);
+				break;
+			}
+		}
+		g_Player2.m_hitAnimPlaying = true;
+		g_Player2.m_hitAnimTimer = 0.0f;
+	}
 }

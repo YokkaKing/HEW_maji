@@ -23,5 +23,8 @@ void Game_Draw_Player2();
 
 int Game_GetRoundResult();
 void Game_ResetRound();
-
+void  Game_SetTimeScale(float s);
+float Game_GetTimeScale();
+void Game_SetShowScore(bool on);
+bool Game_IsShowScore();
 #endif // GAME_H

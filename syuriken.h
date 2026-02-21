@@ -35,7 +35,7 @@ public:
     XMFLOAT3 m_animePosition = { 0.0f, 0.0f, 0.5f };
     XMFLOAT3 m_animeRotation = { 0.0f, 0.0f, 0.0f };
 
-    FLOAT m_coolTime = 0.0f;
+   // FLOAT m_coolTime = 0.0f;
 public:
     Shuriken(GameObject* player, bool select);
     virtual ~Shuriken();
@@ -69,5 +69,7 @@ public:
     void Draw() override;
     void OnCollision(const CollisionInfo& info)override;
 };
+
+
 
 #endif // SHURIKEN_H

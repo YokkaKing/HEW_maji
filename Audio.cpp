@@ -89,6 +89,17 @@ void InitAudio()
 	g_go = LoadAudio("asset\\Audio\\go.wav");
 	g_round1 = LoadAudio("asset\\Audio\\round_1.wav");
 	g_round2 = LoadAudio("asset\\Audio\\round_2.wav");
+	SetAudioVolume(g_hammer, 2.0f);
+	SetAudioVolume(g_charge, 2.0f);
+	SetAudioVolume(g_sword, 2.0f);
+	SetAudioVolume(g_fade, 2.0f);
+	SetAudioVolume(g_damageHammer, 2.0f);
+	SetAudioVolume(g_damageSharp, 2.0f);
+	SetAudioVolume(g_arrow_shuriken, 2.0f);
+
+
+
+
 
 }
 
@@ -100,11 +111,14 @@ void UninitAudio()
 
 struct AUDIO
 {
-	IXAudio2SourceVoice*	SourceVoice{};
-	BYTE*					SoundData{};
+	IXAudio2SourceVoice* SourceVoice{};
+	BYTE* SoundData{};
 
-	int						Length{};
-	int						PlayLength{};
+	int Length{};
+	int PlayLength{};
+	int SamplesPerSec{};
+
+	float Volume = 1.0f;   // ★追加：この音IDの音量
 };
 
 #define AUDIO_MAX 100
@@ -170,15 +184,29 @@ int LoadAudio(const char *FileName)
 
 		g_Audio[index].Length = readlen;
 		g_Audio[index].PlayLength = readlen / wfx.nBlockAlign;
-
+		g_Audio[index].SamplesPerSec = (int)wfx.nSamplesPerSec;
 		mmioClose(hmmio, 0);
 	}
 
 	// サウンドソース生成
 	g_Xaudio->CreateSourceVoice(&g_Audio[index].SourceVoice, &wfx);
+	g_Audio[index].Volume = 1.0f;
+	g_Audio[index].SourceVoice->SetVolume(g_Audio[index].Volume);
 	assert(g_Audio[index].SourceVoice);
 
 	return index;
+}
+void SetAudioVolume(int Index, float volume)
+{
+	if (Index < 0 || Index >= AUDIO_MAX || g_Audio[Index].SourceVoice == nullptr)
+		return;
+
+	// clamp（std::max使わない）
+	if (volume < 0.0f) volume = 0.0f;
+	if (volume > 4.0f) volume = 4.0f;
+
+	g_Audio[Index].Volume = volume;
+	g_Audio[Index].SourceVoice->SetVolume(volume);
 }
 
 void UnloadAudio(int Index)
@@ -192,19 +220,19 @@ void UnloadAudio(int Index)
 
 void PlayAudio(int Index, bool Loop)
 {
+	if (Index < 0 || Index >= AUDIO_MAX || g_Audio[Index].SourceVoice == nullptr)
+		return;
+
 	g_Audio[Index].SourceVoice->Stop();
 	g_Audio[Index].SourceVoice->FlushSourceBuffers();
 
-	// バッファ設定
 	XAUDIO2_BUFFER bufinfo;
-
 	memset(&bufinfo, 0x00, sizeof(bufinfo));
 	bufinfo.AudioBytes = g_Audio[Index].Length;
 	bufinfo.pAudioData = g_Audio[Index].SoundData;
 	bufinfo.PlayBegin = 0;
 	bufinfo.PlayLength = g_Audio[Index].PlayLength;
 
-	// ループ設定
 	if (Loop)
 	{
 		bufinfo.LoopBegin = 0;
@@ -214,9 +242,12 @@ void PlayAudio(int Index, bool Loop)
 
 	g_Audio[Index].SourceVoice->SubmitSourceBuffer(&bufinfo, NULL);
 
-	// 再生
+	// ★追加：この音IDの音量を反映
+	g_Audio[Index].SourceVoice->SetVolume(g_Audio[Index].Volume);
+
 	g_Audio[Index].SourceVoice->Start();
 }
+
 
 void StopAudio(int Index)
 {
@@ -230,4 +261,55 @@ void StopAudio(int Index)
 
 	// 次回再生時に最初から流れるようにバッファをクリア
 	g_Audio[Index].SourceVoice->FlushSourceBuffers();
+}
+void PlayAudioLoopSection(int Index, float loopBeginSec, float loopEndSec)
+{
+    if (Index < 0 || Index >= AUDIO_MAX || g_Audio[Index].SourceVoice == nullptr)
+
+        return;
+
+    g_Audio[Index].SourceVoice->Stop();
+    g_Audio[Index].SourceVoice->FlushSourceBuffers();
+
+    XAUDIO2_BUFFER bufinfo;
+    memset(&bufinfo, 0, sizeof(bufinfo));
+
+    bufinfo.AudioBytes = g_Audio[Index].Length;
+    bufinfo.pAudioData = g_Audio[Index].SoundData;
+
+    // 全体は先頭から再生
+    bufinfo.PlayBegin  = 0;
+    bufinfo.PlayLength = g_Audio[Index].PlayLength;
+
+    // 秒→サンプル（フレーム）変換
+    unsigned int loopBegin = (unsigned int)(loopBeginSec * (float)g_Audio[Index].SamplesPerSec);
+    unsigned int loopEnd   = (unsigned int)(loopEndSec   * (float)g_Audio[Index].SamplesPerSec);
+
+    // 範囲チェック
+    if (loopBegin >= (unsigned int)g_Audio[Index].PlayLength)
+    {
+        // ループ無しで再生だけ
+		g_Audio[Index].SourceVoice->SubmitSourceBuffer(&bufinfo, NULL);
+		g_Audio[Index].SourceVoice->SetVolume(g_Audio[Index].Volume); // ★追加
+		g_Audio[Index].SourceVoice->Start();
+        return;
+    }
+    if (loopEnd > (unsigned int)g_Audio[Index].PlayLength)
+        loopEnd = (unsigned int)g_Audio[Index].PlayLength;
+
+    if (loopEnd <= loopBegin + 1)
+    {
+        // ループ区間が短すぎる → ループ無しで再生
+		g_Audio[Index].SourceVoice->SubmitSourceBuffer(&bufinfo, NULL);
+		g_Audio[Index].SourceVoice->SetVolume(g_Audio[Index].Volume); // ★追加
+		g_Audio[Index].SourceVoice->Start();
+        return;
+    }
+
+    bufinfo.LoopBegin  = loopBegin;                 // 例：2秒
+    bufinfo.LoopLength = (loopEnd - loopBegin);     // 例：1秒(2→3)
+    bufinfo.LoopCount  = XAUDIO2_LOOP_INFINITE;
+
+    g_Audio[Index].SourceVoice->SubmitSourceBuffer(&bufinfo, NULL);
+    g_Audio[Index].SourceVoice->Start();
 }

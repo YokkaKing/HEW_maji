@@ -83,6 +83,10 @@ void Arrow::Update()
 			if (m_coolTime < 0.0f) m_coolTime = 0.0f;
 		}
 	}
+	else
+	{
+		m_coolTime = 0.0f;
+	}
 
 	if (!m_selectPlayer)
 	{
@@ -340,6 +344,8 @@ void ArrowShot::OnCollision(const CollisionInfo& info)
 	case FALSE: // 1Pだったら
 		if (info.other->m_tag == "Player2") // 相手がPlayer2の時のみ
 		{
+			SetPlayer2_IsAttacked(true);
+
 			PlayAudio(g_damageSharp, false);
 			if (m_chargePower < 0.5f)
 			{
@@ -410,6 +416,8 @@ void ArrowShot::OnCollision(const CollisionInfo& info)
 	case TRUE: // 2Pだったら
 		if (info.other->m_tag == "Player") // 相手がPlayerの時のみ
 		{
+			SetPlayer_IsAttacked(true);
+
 			PlayAudio(g_damageSharp, false);
 			if (m_chargePower < 0.5f)
 			{

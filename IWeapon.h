@@ -39,7 +39,7 @@ public:
 
     // 既にヒットしたGameObjectを記録するセット(多重ヒット防止)
     std::unordered_set<GameObject*> m_hitTargets;
-
+    FLOAT m_coolTime;
     float m_damage = 10.0f; // 武器の基本ダメージ量
     bool m_selectPlayer = false; // 1Pか2Pか false=1P true=2P
     float m_damageFCount = 0.0f; // ダメージの経過時間
@@ -57,6 +57,15 @@ public:
 
     // 衝突応答関数
     virtual void OnWeaponCollision(GameObject* target) = 0;
+    void SetCoolTime(FLOAT coolTime)
+    {
+        m_coolTime = coolTime;
+    }
+    FLOAT GetCoolTime()
+    {
+        return m_coolTime;
+    }
 };
+
 
 #endif // IWEAPON_H

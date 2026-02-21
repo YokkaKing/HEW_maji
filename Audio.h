@@ -21,7 +21,8 @@ int LoadAudio(const char* FileName);		//サウンドデータ読み込み
 void UnloadAudio(int Index);				//サウンドデータ解放（停止）
 void PlayAudio(int Index, bool Loop = false);//サウンドデータ再生
 void StopAudio(int Index);
-
+void PlayAudioLoopSection(int Index, float loopBeginSec, float loopEndSec);
+void SetAudioVolume(int Index, float volume);
 extern int g_arrow_shuriken;
 extern int g_button;
 extern int g_change;

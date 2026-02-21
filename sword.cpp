@@ -84,6 +84,7 @@ void Sword::Attack()
 	m_fxAnim.PlayFrames(1, 20, 30.0f, false, 1.0f);
 	m_collider->SetEnable(true); // 当たり判定の有効
 
+	
 	// 多重ヒット帽子リストをリセット
 	m_hitTargets.clear();
 }
@@ -95,6 +96,11 @@ void Sword::Update()
 	{
 		m_coolTime -= 1.0f / 60.0f; 
 	}
+	else
+	{
+		m_coolTime = 0.0f;
+	}
+
 
 	if (m_isAttacking)
 	{
@@ -274,6 +280,7 @@ void Sword::OnWeaponCollision(GameObject* target)
 			{
 				PlayAudio(g_damageSharp, false);
 				m_hitTargets.insert(target);
+				SetPlayer2_IsAttacked(true);
 
 				//ヒットエフェクト
 				XMFLOAT3 effectPos = target->m_position;
@@ -301,6 +308,8 @@ void Sword::OnWeaponCollision(GameObject* target)
 		case TRUE: // 2Pだったら
 			if (target->m_tag == "Player") // 相手がPlayerの時のみ
 			{
+				SetPlayer_IsAttacked(true);
+
 				PlayAudio(g_damageSharp, false);
 				m_hitTargets.insert(target);
 

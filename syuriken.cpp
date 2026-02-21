@@ -28,7 +28,7 @@
 MODEL* g_modelShuriken[2] = { NULL, NULL };
 PLAYER* g_PlayerShuriken1;
 PLAYER2* g_PlayerShuriken2;
-
+Shuriken* g_shuriken;
 XMFLOAT3 g_moveShuriken[2];
 extern Controller g_Controller[2];
 
@@ -84,6 +84,7 @@ void Shuriken::Attack()
 	PlayAudio(g_arrow_shuriken, false);
 	Throw(m_selectPlayer);
 	m_coolTime = 0.5f;
+	
 }
 
 void Shuriken::Update()
@@ -93,6 +94,10 @@ void Shuriken::Update()
 		{
 			m_coolTime -= 1.0f / 60.0f;
 		}
+	}
+	else
+	{
+		m_coolTime = 0.0f;
 	}
 
 	//bool shouldReload = false;
@@ -313,6 +318,8 @@ void ShurikenShot::OnCollision(const CollisionInfo& info)
 	case FALSE: // 1Pだったら
 		if (info.other->m_tag == "Player2") // 相手がPlayer2の時のみ
 		{
+			SetPlayer2_IsAttacked(true);
+
 			PlayAudio(g_damageSharp, false);
 			Player_PlusScore(5.0f); // スコア加算
 
@@ -341,6 +348,8 @@ void ShurikenShot::OnCollision(const CollisionInfo& info)
 	case TRUE: // 2Pだったら
 		if (info.other->m_tag == "Player") // 相手がPlayerの時のみ
 		{
+			SetPlayer_IsAttacked(true);
+
 			PlayAudio(g_damageSharp, false);
 			Player2_PlusScore(5.0f); // スコア加算
 
@@ -367,3 +376,4 @@ void ShurikenShot::OnCollision(const CollisionInfo& info)
 		break;
 	}
 }
+
