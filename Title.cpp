@@ -82,7 +82,7 @@ for (int playerNo = 0; playerNo < 2; playerNo++)
         int ctrlIdx = GetControllerIndexFromPlayerNo(playerNo);
         if (ctrlIdx != -1)
         {
-            if (g_Controller[i].IsButtonPushed(ControllerButton::A_BUTTON)) {
+            if (g_Controller[playerNo].IsButtonPushed(ControllerButton::A_BUTTON)) {
                 isStartTriggered = true;
             }
         }

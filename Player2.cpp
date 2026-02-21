@@ -513,7 +513,7 @@ void	Player2Update()
 void Player2_ManualMove()
 {
 	int controllerIdx = GetControllerIndexFromPlayerNo(1);
-	if (controllerIdx == -1) return;
+//	if (controllerIdx == -1) return;
 
 	Controller& ctrl = g_Controller[controllerIdx];
 
@@ -570,8 +570,8 @@ void Player2_ManualMove()
 	{
 		speed = stickY * 0.1f;
 	}
-	if (Keyboard_IsKeyDown(KK_U)) speed = -0.1f;
-	if (Keyboard_IsKeyDown(KK_J)) speed = +0.1f;
+	if (Keyboard_IsKeyDown(KK_U)) speed = +0.1f;
+	if (Keyboard_IsKeyDown(KK_J)) speed = -0.1f;
 
 		moveX += forwardX * speed;
 		moveZ += forwardZ * speed;
@@ -584,13 +584,13 @@ void Player2_ManualMove()
 		// 左スティック左方向 (-1.0f) で左移動 (strafe = +0.1f) に対応
 		strafe = stickX * 0.1f;
 	}
-	if (Keyboard_IsKeyDown(KK_H)) strafe = +0.1f;
-	if (Keyboard_IsKeyDown(KK_K)) strafe = -0.1f;
+	if (Keyboard_IsKeyDown(KK_H)) strafe = -0.1f;
+	if (Keyboard_IsKeyDown(KK_K)) strafe = +0.1f;
 
 	moveX += rightX * strafe;
 	moveZ += rightZ * strafe;
 
-	}
+	
 
 	if (g_Player2.m_isGround)
 	{

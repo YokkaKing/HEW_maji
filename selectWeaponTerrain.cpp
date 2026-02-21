@@ -11,7 +11,6 @@
 #include "Manager.h"
 #include "keyboard.h"
 #include"Controller.h"
-#include "Entry.h"
 #include "selectWeaponUi3D.h"
 #include "fade.h"
 #include "shader.h"
@@ -398,196 +397,13 @@ auto ResetGoAnimation = [&]()
 // ------------------ 更新処理 ------------------
 void selectWT_Update()
 {
-    int ctrlIdxP1 = GetControllerIndexFromPlayerNo(0);
-    int ctrlIdxP2 = GetControllerIndexFromPlayerNo(1);
-
     if (g_vibrationTimerP1 > 0) {
         if (--g_vibrationTimerP1 <= 0) g_Controller[0].SetVibration(0.0f, 0.0f);
     }
     if (g_vibrationTimerP2 > 0) {
         if (--g_vibrationTimerP2 <= 0) g_Controller[1].SetVibration(0.0f, 0.0f);
     }
-#pragma region カーソル移動アニメ更新(1P)
-    float dt = FRAME_DT;
-
-    if (!g_p1AttackPlaying)
-    {
-        // If selected slot is sword and sword idle exists -> keep original sword idle/attack behavior
-        if (g_cursorP1 == SWORD_SLOT_INDEX && g_swordIdleAnim[0].srv)
-        {
-            if (!g_swordIdleAnim[0].playing) g_swordIdleAnim[0].PlayLoop(0);
-            bool pushedA = (ctrlIdxP1 != -1 && g_Controller[ctrlIdxP1].IsButtonPushed(ControllerButton::A_BUTTON));
-            if ((Keyboard_IsKeyDownTrigger(KK_LEFTCONTROL) || pushedA) && !g_isP1Ready)
-            {
-                g_selectData.player1 = static_cast<WeaponTerrain>(g_cursorP1 + 1);
-                // sword-specific attack playback
-                if (!g_p1AttackPlaying)
-                {
-                    g_swordAttackAnim[0].PlayOnce(0);
-                    g_p1AttackPlaying = true;
-                    g_swordIdleAnim[0].Stop();
-
-                    // cursor scale anim
-                    g_cursorScaleAnim[0] = true;
-                    g_cursorScaleTime[0] = 0.0f;
-                }
-            }
-            bool pushedB = (ctrlIdxP1 != -1 && g_Controller[ctrlIdxP1].IsButtonPushed(ControllerButton::B_BUTTON));
-            if (Keyboard_IsKeyDownTrigger(KK_Z)|| pushedB)
-            {
-                g_p1AttackPlaying = false;
-                g_isP1Ready = false;
-                g_swordAttackAnim[0].Stop();
-                g_swordIdleAnim[0].Stop();
-                g_swordIdleAnim[0].PlayLoop(0);
-
-                g_cursorScaleAnim[0] = false;
-                g_cursorScale[0] = 1.0f;
-                g_cursorScaleTime[0] = 0.0f;
-            }
-        }
-        else
-        {
-            // Non-sword slot: stop any sword idle to avoid conflicts
-            if (g_swordIdleAnim[0].playing) g_swordIdleAnim[0].Stop();
-
-            // Selection for any weapon: start cursor scale anim and mark ready
-            bool pushedA = (ctrlIdxP1 != -1 && g_Controller[ctrlIdxP1].IsButtonPushed(ControllerButton::A_BUTTON));
-            if ((Keyboard_IsKeyDownTrigger(KK_LEFTCONTROL) || pushedA) && !g_isP1Ready)
-            {
-                PlayAudio(g_button, false);
-                // start cursor animation
-                g_cursorScaleAnim[0] = true;
-                g_cursorScaleTime[0] = 0.0f;
-
-                // mark ready and save choice
-                g_isP1Ready = true;
-                g_selectData.player1 = static_cast<WeaponTerrain>(g_cursorP1+1);
-            }
-
-            bool pushedB = (ctrlIdxP1 != -1 && g_Controller[ctrlIdxP1].IsButtonPushed(ControllerButton::B_BUTTON));
-            if (Keyboard_IsKeyDownTrigger(KK_Z) || pushedB)
-            {
-                if (g_isP1Ready)
-                {
-                    g_isP1Ready = false;
-                    // optional: reset choice -> uncomment if you want to clear selection
-                    // g_selectData.player1 = WeaponTerrain::SWORD_WALL;
-
-                    g_cursorScaleAnim[0] = false;
-                    g_cursorScale[0] = 1.0f;
-                    g_cursorScaleTime[0] = 0.0f;
-                }
-            }
-        }
-    }
-#pragma endregion
-#pragma region カーソル移動アニメ更新(2P)
-    // --- Player2 selection / cancel (generalized for any slot) ---
-    if (!g_p2AttackPlaying)
-    {
-        if (g_cursorP2 == SWORD_SLOT_INDEX && g_swordIdleAnim[1].srv)
-        {
-            if (!g_swordIdleAnim[1].playing) g_swordIdleAnim[1].PlayLoop(0);
-            bool pushedA = (ctrlIdxP2 != -1 && g_Controller[ctrlIdxP2].IsButtonPushed(ControllerButton::A_BUTTON));
-            if ((Keyboard_IsKeyDownTrigger(KK_D5) || pushedA) && !g_isP2Ready)
-            {
-                if (!g_p2AttackPlaying)
-                {
-                    g_swordAttackAnim[1].PlayOnce(0);
-                    g_p2AttackPlaying = true;
-                    g_swordIdleAnim[1].Stop();
-
-                    g_cursorScaleAnim[1] = true;
-                    g_cursorScaleTime[1] = 0.0f;
-                }
-            }
-            bool pushedB = (ctrlIdxP2 != -1 && g_Controller[ctrlIdxP2].IsButtonPushed(ControllerButton::B_BUTTON));
-            if (Keyboard_IsKeyDownTrigger(KK_D6) || pushedB)
-            {
-                g_p2AttackPlaying = false;
-                g_isP2Ready = false;
-                g_swordAttackAnim[1].Stop();
-                g_swordIdleAnim[1].Stop();
-                g_swordIdleAnim[1].PlayLoop(0);
-
-                g_cursorScaleAnim[1] = false;
-                g_cursorScale[1] = 1.0f;
-                g_cursorScaleTime[1] = 0.0f;
-            }
-        }
-        else
-        {
-            // Non-sword slot for player2
-            if (g_swordIdleAnim[1].playing) g_swordIdleAnim[1].Stop();
-            bool pushedA = (ctrlIdxP2 != -1 && g_Controller[ctrlIdxP2].IsButtonPushed(ControllerButton::A_BUTTON));
-            if ((Keyboard_IsKeyDownTrigger(KK_D5)|| pushedA) && !g_isP2Ready)
-            {
-                PlayAudio(g_button, false);
-                // start cursor anim and mark ready for any weapon
-                g_cursorScaleAnim[1] = true;
-                g_cursorScaleTime[1] = 0.0f;
-
-                g_isP2Ready = true;
-                g_selectData.player2 = static_cast<WeaponTerrain>(g_cursorP2 +1);
-            }
-
-            // cancel for any weapon (D6)
-            bool pushedB = (ctrlIdxP2 != -1 && g_Controller[ctrlIdxP2].IsButtonPushed(ControllerButton::B_BUTTON));
-            if (Keyboard_IsKeyDownTrigger(KK_D6) || pushedB)
-            {
-                if (g_isP2Ready)
-                {
-                    g_isP2Ready = false;
-                    // optional reset:
-                    // g_selectData.player2 = WeaponTerrain::SWORD_WALL;
-
-                    g_cursorScaleAnim[1] = false;
-                    g_cursorScale[1] = 1.0f;
-                    g_cursorScaleTime[1] = 0.0f;
-                }
-            }
-        }
-    }
-#pragma endregion
-#pragma region アニメ更新(1P)
-    // アニメ更新（攻撃アニメ優先）
-    // P1
-    if (g_p1AttackPlaying)
-    {
-        g_swordAttackAnim[0].Update(dt);
-        if (!g_swordAttackAnim[0].playing)
-        {
-            // 攻撃アニメ終了 -> Ready にして idle に戻す
-            g_p1AttackPlaying = false;
-            g_isP1Ready = true;
-            g_selectData.player1 = static_cast<WeaponTerrain>(g_cursorP1+1);
-            g_swordIdleAnim[0].PlayLoop(0);
-        }
-    }
-    else
-    {
-        g_swordIdleAnim[0].Update(dt);
-    }
-#pragma endregion
-#pragma region アニメ更新(2P)
-    // P2
-    if (g_p2AttackPlaying)
-    {
-        g_swordAttackAnim[1].Update(dt);
-        if (!g_swordAttackAnim[1].playing)
-        {
-            g_p2AttackPlaying = false;
-            g_isP2Ready = true;
-            g_selectData.player2 = static_cast<WeaponTerrain>(g_cursorP2+1);
-            g_swordIdleAnim[1].PlayLoop(0);
-        }
-    }
-    else
-    {
-        g_swordIdleAnim[1].Update(dt);
-    }
-#pragma endregion
+    static float dt = 1 / 60.0f;
 #pragma region スロットスケールアニメ更新
     // --- カーソルスケールアニメ ---
     for (int p = 0; p < 2; ++p)
@@ -647,7 +463,7 @@ void selectWT_Update()
     if (!g_isP1Ready)
     {
         // スティックの状態を取得
-        float stickX = (ctrlIdxP1 != -1) ? g_Controller[ctrlIdxP1].GetLeftStickX() : 0.0f;
+        float stickX = g_Controller[0].GetLeftStickX();
         bool nowStickLeft = (stickX < -0.5f);
         bool nowStickRight = (stickX > 0.5f);
 
@@ -690,9 +506,8 @@ void selectWT_Update()
         // 次のフレームのために現在の状態を保存
         g_oldStickLeft[0] = nowStickLeft;
         g_oldStickRight[0] = nowStickRight;
-        bool pushedA = (ctrlIdxP1 != -1 && g_Controller[ctrlIdxP1].IsButtonPushed(ControllerButton::A_BUTTON));
 
-        if (Keyboard_IsKeyDownTrigger(KK_LEFTCONTROL) || pushedA)
+        if (Keyboard_IsKeyDownTrigger(KK_LEFTCONTROL) || g_Controller[0].IsButtonPushed(ControllerButton::A_BUTTON))
         {
             PlayAudio(g_button, false);
             g_isP1Ready = true;
@@ -715,7 +530,7 @@ void selectWT_Update()
     // P2 操作
     if (!g_isP2Ready)
     {
-        float stickX = (ctrlIdxP2 != -1) ? g_Controller[ctrlIdxP2].GetLeftStickX() : 0.0f;
+        float stickX = g_Controller[1].GetLeftStickX();
         bool nowStickLeft = (stickX < -0.5f);
         bool nowStickRight = (stickX > 0.5f);
 
@@ -757,9 +572,8 @@ void selectWT_Update()
         // 次のフレームのために現在の状態を保存
         g_oldStickLeft[1] = nowStickLeft;
         g_oldStickRight[1] = nowStickRight;
-        bool pushedA = (ctrlIdxP2 != -1 && g_Controller[ctrlIdxP2].IsButtonPushed(ControllerButton::A_BUTTON));
 
-        if (Keyboard_IsKeyDownTrigger(KK_D5) || pushedA)
+        if (Keyboard_IsKeyDownTrigger(KK_D5) || g_Controller[1].IsButtonPushed(ControllerButton::A_BUTTON))
         {
             PlayAudio(g_button, false);
             g_isP2Ready = true;
@@ -830,15 +644,12 @@ void selectWT_Update()
     }
     else if (g_goState == GO_WAIT_FOR_A)
     {
-        bool p1PushedA = (ctrlIdxP1 != -1 && g_Controller[ctrlIdxP1].IsButtonPushed(ControllerButton::A_BUTTON));
-        bool p2PushedA = (ctrlIdxP2 != -1 && g_Controller[ctrlIdxP2].GetLeftStickX());
-
-        if (Keyboard_IsKeyDownTrigger(KK_A) || p1PushedA || p2PushedA)
+   
+        if (Keyboard_IsKeyDownTrigger(KK_A)|| (g_Controller[0].IsButtonPushed(ControllerButton::A_BUTTON)))
         {
-            if (ctrlIdxP1 != -1) g_Controller[ctrlIdxP1].SetVibration(1.0f, 1.0f);
-            if (ctrlIdxP2 != -1) g_Controller[ctrlIdxP2].SetVibration(1.0f, 1.0f);
+            g_Controller[0].SetVibration(1.0f, 1.0f);
+            g_Controller[1].SetVibration(1.0f, 1.0f);
             g_vibrationTimerP1 = 20;
-            g_vibrationTimerP2 = 20;
             PlayAudio(g_gameStart, false);
             XMFLOAT4 fadeColor(0.0f, 0.0f, 0.0f, 1.0f);
             SetFade(40.0f, fadeColor, FADE_STATE::FADE_OUT, SCENE_GAME);

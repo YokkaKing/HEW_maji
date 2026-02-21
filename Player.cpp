@@ -624,8 +624,8 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 	if (Keyboard_IsKeyDown(KK_A)) strafe = -0.1f;
 	if (Keyboard_IsKeyDown(KK_D)) strafe = +0.1f;
 
-	float moveX = (forwardX * speed) + (rightX * strafe);
-	float moveZ = (forwardZ * speed) + (rightZ * strafe);
+	moveX = (forwardX * speed) + (rightX * strafe);
+	moveZ = (forwardZ * speed) + (rightZ * strafe);
 
 	if (ctrlIdx != -1)
 	{
