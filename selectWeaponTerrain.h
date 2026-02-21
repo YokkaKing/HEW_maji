@@ -44,3 +44,6 @@ void selectWT_Draw(int playerID);//‚Ç‚¿‚ç‚ÌƒvƒŒƒCƒ„[‚É•`‰æ‚µ‚Ä‚¢‚é‚©‚ğ”»’è‚·‚éˆ
 bool selectWT_IsP1Ready();
 bool selectWT_IsP2Ready();
 
+int GetPlayer1SelectedIndex();
+int GetPlayer2SelectedIndex();
+

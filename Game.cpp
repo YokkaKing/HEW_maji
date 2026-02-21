@@ -30,12 +30,14 @@
 #include "number.h"
 #include "Hp.h"
 #include "Hp2.h"
+#include "score.h"
 #include "generateWT.h"
 #include "transformManager.h"
 #include"Stage.h"
 #include"Item.h"
 #include "Select_Transform_Ui.h"
 #include "countdown.h"
+#include "HitEffect.h"
 //================================================================
 //	グローバル変数
 //================================================================
@@ -50,8 +52,13 @@ static bool  g_roundEndWait = false;
 static float g_roundEndWaitTimer = 0.0f;
 ITEM_SPONER g_sponer;
 extern Controller g_Controller[2];
-
+static float g_timeScale = 1.0f;
+static float g_timeAccum = 0.0f;
 STAGE g_stage;
+static bool g_showScore = false;
+
+void Game_SetShowScore(bool on) { g_showScore = on; }
+bool Game_IsShowScore() { return g_showScore; }
 
 void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, const inGameWTselect& select)
 {
@@ -78,9 +85,9 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, const
 	g_transformMngr.Initialize(pDevice, pContext); //変身先選択の初期化
 	g_selectionPhase = 0;
 	g_transformMngr.StartSelection(WeaponTerrain::NONE, WeaponTerrain::NONE);
-
+	HitEffectManager::GetInstance().Initialize(pDevice, pContext);
 	//===========UI===========
-
+	Score_Initialize(pDevice, pContext);
 	Timer_Initialize(pDevice, pContext);
 	Number_Initialize(pDevice, pContext);
 	Hp_Initialize(pDevice, pContext);
@@ -112,6 +119,9 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, const
 	Light.SetDirection(para);//光の方向（正規化済）
 	g_roundEndWait = false;
 	g_roundEndWaitTimer = 0.0f;
+	g_timeScale = 1.0f;
+	g_timeAccum = 0.0f;
+
 }
 
 void Game_Finalize()
@@ -124,8 +134,9 @@ void Game_Finalize()
 	Camera_Finalize();	//カメラ終了処理
 	Camera2_Finalize();	//カメラ終了処理
 	g_sponer.ResetItem();
+	HitEffectManager::GetInstance().Finalize();
 	//=======UI===========
-
+	Score_Finalize();
 	Timer_Finalize();
 	Number_Finalize();
 	Hp_Finalize();
@@ -137,7 +148,17 @@ void Game_Finalize()
 	ManagerCollider::ClearCollider();
 	//UnloadAudio(g_BgmID);//サウンドの解放
 }
+void Game_SetTimeScale(float s)
+{
+	if (s < 0.05f) s = 0.05f;
+	if (s > 1.0f)  s = 1.0f;
+	g_timeScale = s;
+}
 
+float Game_GetTimeScale()
+{
+	return g_timeScale;
+}
 void Game_Update()
 {
 	const float dt = 1.0f / 60.0f;
@@ -205,8 +226,14 @@ void Game_Update()
 		return;
 	}
 
-		
-		
+	g_timeAccum += g_timeScale;
+	const bool doStep = (g_timeAccum >= 1.0f);
+	if (doStep)
+	{
+		g_timeAccum -= 1.0f;
+
+		TerrainUpdate();
+
 		//更新処理
 		for (auto obj : g_gameObjects)
 		{
@@ -216,15 +243,16 @@ void Game_Update()
 		Player2Update();
 		Field_Update();
 		g_sponer.Update();
-
+		HitEffectManager::GetInstance().Update(1.0f / 60.0f);
 		//=======UI===========
-
 		Timer_Update();
 		Number_Update();
 		Hp_Update();
-	
 		Hp2_Update();
-
+		if (Game_IsShowScore())
+		{
+			Score_Update();
+		}
 		//=====================
 
 		//======当たり判定======
@@ -252,18 +280,13 @@ void Game_Update()
 		g_gameObjects.erase(it, g_gameObjects.end());
 		//=====================
 
-		//キー入力チェック
-		//スタートボタンが押されたらシーンを切り替え
-		//フェード処理中はキーを受け付けない
-		if ((Keyboard_IsKeyDownTrigger(KK_ENTER))&& (GetFadeState() == FADE_NONE))
+		// Enterキーでリザルト（元のままでOK）
+		if ((Keyboard_IsKeyDownTrigger(KK_ENTER)) && (GetFadeState() == FADE_NONE))
 		{
-			//フェードアウトさせてシーンを切り替える
 			XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
 			SetFade(40.0f, color, FADE_OUT, SCENE_RESULT);
 		}
-	
-
-
+	}
 		Camera_Update();
 		Camera2_Update();
 
@@ -289,12 +312,11 @@ void Game_Draw_Player1()
 
 	Camera_Draw();		//Drawの最初で呼ぶ！
 	Shader_SetMatrix(GetViewMatrix() * GetProjectionMatrix());
-	//Field_Draw();
+	Field_Draw();
 	g_stage.Draw();
 	TerrainDraw();
 	PlayerDraw();
 	Player2Draw();
-
 	for (auto obj : g_gameObjects)
 	{
 		obj->Draw();
@@ -330,8 +352,11 @@ void Game_Draw_Player1()
 			CountdownUI_DrawEnd(remain);
 		}
 	}
-
-
+	if (Game_IsShowScore())
+	{
+		Score_Draw();
+	}
+	HitEffectManager::GetInstance().Draw(GetViewMatrix(), GetProjectionMatrix());
 }
 void Game_Draw_Player2()
 {
@@ -343,12 +368,11 @@ void Game_Draw_Player2()
 	//============lightをまたtrueにして、camera2に影響がないように================
 	Camera2_Draw();
 	Shader_SetMatrix(GetViewMatrix2() * GetProjectionMatrix2());
-	//Field_Draw();
+	// Field_Draw();
 	g_stage.Draw();
 	TerrainDraw();
 	PlayerDraw();
 	Player2Draw();
-	
 	for (auto obj : g_gameObjects)
 	{
 		obj->Draw();
@@ -384,6 +408,11 @@ void Game_Draw_Player2()
 			CountdownUI_DrawEnd(remain);
 		}
 	}
+	if (Game_IsShowScore())
+	{
+		Score_Draw();
+	}
+	HitEffectManager::GetInstance().Draw(GetViewMatrix2(), GetProjectionMatrix2());
 	//Timer_Draw();
 	//Number_Draw();
 	//Hp2_Draw();
@@ -405,7 +434,9 @@ int Game_GetRoundResult()
 	{//時間切れ時、残りHPで勝敗を判定
 		float P1_hp = Player_GetHp();
 		float P2_hp = Player2_GetHp();
+		if(p1Dead || p2Dead)
 		PlayAudio(g_roundEnd, false);
+		PlayAudio(g_crowd, false);
 
 		if (P1_hp > P2_hp)
 		{
@@ -423,6 +454,8 @@ int Game_GetRoundResult()
 			SetFade(40.0f, color, FADE_OUT, SCENE_GAME);
 			P1_hp = Player_GetMaxHp();
 			P2_hp = Player2_GetMaxHp();
+			
+
 			Hp_SetTime(60);
 			return 2; //P2の判定勝ち
 		}
@@ -432,6 +465,8 @@ int Game_GetRoundResult()
 			SetFade(40.0f, color, FADE_OUT, SCENE_GAME);
 			P1_hp = Player_GetMaxHp();
 			P2_hp = Player2_GetMaxHp();
+	
+
 			Hp_SetTime(60);
 			return 3; //完全な引き分け
 		}

@@ -87,6 +87,10 @@ void Arrow::Update()
 			if (m_coolTime < 0.0f) m_coolTime = 0.0f;
 		}
 	}
+	else
+	{
+		m_coolTime = 0.0f;
+	}
 
 	if (!m_selectPlayer)
 	{
@@ -253,7 +257,7 @@ void ArrowShot::Start()
 {
 	m_tag = "Attack";
 
-	XMFLOAT3 scale = { 0.2f, 0.2f, 0.7f };
+	XMFLOAT3 scale = { 0.2f, 0.2f, 0.2f };
 	m_scale = scale;
 	m_collider = AddComponent<BoxCollider>(this, scale);
 	ManagerCollider::AddCollider(m_collider);
@@ -296,12 +300,12 @@ void ArrowShot::Draw()
 {
 	//ワールド行列作成
 	XMMATRIX	scale = XMMatrixScaling(
-		m_scale.x,
-		m_scale.y,
-		m_scale.z);
+		m_scale.x*0.08f,
+		m_scale.y*0.08f,
+		m_scale.z*0.08f);
 	XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
 		m_rotation.x,
-		m_rotation.y,
+		m_rotation.y * XM_PI,
 		m_rotation.z);
 	XMMATRIX	translation = XMMatrixTranslation(
 		m_position.x,
@@ -323,6 +327,11 @@ void ArrowShot::OnCollision(const CollisionInfo& info)
 	if (info.other->m_tag == "Attack") return; // 武器に当たっても無視
 	if (!m_selectPlayer && info.other->m_tag == "Player") return; // 武器はなった本人は無視
 	if (m_selectPlayer && info.other->m_tag == "Player2") return; // 武器はなった本人は無視
+	if (info.other->m_tag == "Item") return;
+	if (info.other->m_tag == "Slope1") return;
+	if (info.other->m_tag == "Slope2") return;
+	if (info.other->m_tag == "BOGP1") return;
+	if (info.other->m_tag == "BOGP2") return;
 
 	m_velocity = { 0.0f, 0.0f, 0.0f };
 	m_isStuck = true;
@@ -339,6 +348,8 @@ void ArrowShot::OnCollision(const CollisionInfo& info)
 	case FALSE: // 1Pだったら
 		if (info.other->m_tag == "Player2") // 相手がPlayer2の時のみ
 		{
+			SetPlayer2_IsAttacked(true);
+
 			PlayAudio(g_damageSharp, false);
 			if (m_chargePower < 0.5f)
 			{
@@ -409,6 +420,8 @@ void ArrowShot::OnCollision(const CollisionInfo& info)
 	case TRUE: // 2Pだったら
 		if (info.other->m_tag == "Player") // 相手がPlayerの時のみ
 		{
+			SetPlayer_IsAttacked(true);
+
 			PlayAudio(g_damageSharp, false);
 			if (m_chargePower < 0.5f)
 			{

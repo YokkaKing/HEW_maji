@@ -12,7 +12,7 @@
 //================================================================
 //	マクロ定義
 //================================================================
-#define MOVE_TERRAIN_TYPE (2)
+#define MOVE_TERRAIN_TYPE (4)
 #define CHANGE_FLAG (4)
  
 //================================================================
@@ -40,6 +40,7 @@ enum class TERRAIN_TYPE
 	HILL = 0,
 	WALL,
 	TREE,
+	BOG,
 
 	MAX
 };
@@ -69,6 +70,8 @@ public:
 	std::vector<GameObject*> hills[2];	// 丘の当たり判定の全て
 	std::vector<GameObject*> walls[2];	// 壁の当たり判定の全て
 	std::vector<GameObject*> trees[2];	// 木の当たり判定の全て
+	std::vector<GameObject*> ants[2];	// 蟻地獄の当たり判定の全て
+	std::vector<GameObject*> bogs[2];	// 沼地の当たり判定の全て
 
 	MODEL* m_moveTerrain[MOVE_TERRAIN_TYPE] = {}; // 地形で使うモデル
 	XMFLOAT3 m_terrainScale[MOVE_TERRAIN_TYPE] = {}; // 各地形の大きさ
@@ -108,6 +111,10 @@ public:
 	void ClearPlayerObjects(WeaponTerrain set, int select); // プレイヤーに追従していた地形を解放する
 	void PixelObjects(const std::vector<std::vector<std::vector<std::string>>> terrain, TERRAIN_TYPE type, XMFLOAT3 motherPosition, int select);
 	void SimpleObjects(const std::vector<std::vector<std::vector<std::string>>> terrain, XMFLOAT3 size, TERRAIN_TYPE type, XMFLOAT3 motherPosition, int select);
+
+public:
+	// 蟻地獄のオブジェクトを作る
+	void CreateAnt(XMFLOAT3 motherPosition, int select);
 };
 
 #endif // TERRAIN_H

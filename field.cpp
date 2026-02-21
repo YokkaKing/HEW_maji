@@ -14,6 +14,7 @@
 #include"model.h"
 #include"colliderFactory.h"
 #include"gameObject.h"
+#include"keyboard.h"
 
 //================================================================
 //	グローバル変数
@@ -30,6 +31,7 @@ static	ID3D11Buffer* g_IndexBuffer = NULL;
 static ID3D11ShaderResourceView* g_Texture;
 
 static std::vector<std::unique_ptr<GameObject>> g_FieldObjects;
+GameObject* slope;
 
 #define		BOX_NUM_VERTEX	(24)
 
@@ -494,13 +496,18 @@ void Field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 			break;
 
 		case FIELD::FIELD_LIFT:
-			object = ColliderFactory::CreateBoxObject(
-				Map[i].pos,
-				{ 0.5f, 0.5f, 0.5f },
-				"Lift",
+			slope = ColliderFactory::CreateTrapezoidSlopeObject(
+				{ 0.0f, 0.0f, 0.0f },
+				{ 0.0f, 2.0f, 3.0f },
+				1.0f,
+				1.0f,
+				0.3f,
+				"Slope",
 				0
 			);
-			object->m_isStatic = true;
+			slope->m_position = { 3.0f, 1.5f, 1.0f };
+			Map[i].pos = { 3.0f, 1.5f, 1.0f };
+			Map[i].scale = { 2.0f, 4.0f, 6.0f };
 			break;
 
 		case FIELD::FIELD_MAX:
@@ -517,7 +524,7 @@ void Field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 		switch (i)
 		{
 			case FIELD_BOX:
-				CreateBox();
+				Model[FIELD_BOX] = ModelLoad("asset\\model\\meyasu.fbx");//デバッグ
 				break;
 
 			case FIELD_OBT:
@@ -525,7 +532,7 @@ void Field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 				break;
 
 			case FIELD_LIFT:
-				CreateBox();
+				Model[FIELD_LIFT] = ModelLoad("asset\\model\\block3.fbx");
 				break;
 		}
 	}
@@ -571,11 +578,6 @@ void Field_Draw(void)
 			Map[i].scale.z
 		);
 
-		if (Map[i].no == FIELD::FIELD_LIFT)
-		{
-			ScalingMatrix = XMMatrixScaling(0.5f, 0.5f, 0.5f);
-		}
-
 		//平行移動行列の作成
 		XMMATRIX	TranslationMatrix = XMMatrixTranslation
 		(
@@ -611,14 +613,13 @@ void Field_Draw(void)
 		//描画するポリゴンの種類をセット 3頂点でポリゴン１枚として表示
 		g_pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-		if (Map[i].no == FIELD_BOX || Map[i].no == FIELD_LIFT)
+		if (/*Map[i].no == FIELD_BOX || */Map[i].no == FIELD_LIFT)
 		{
-			////描画リクエスト
-			g_pContext->DrawIndexed(6 * 6, 0, 0);
+			
 		}
 		else
 		{
-			ModelDraw(Model[Map[i].no]);
+			//ModelDraw(Model[Map[i].no]);
 		}
 
 		//ModelDraw(Test);//デバッグ

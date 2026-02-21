@@ -54,6 +54,8 @@ public:
 	WeaponTerrain m_reservedWT[2] = { WeaponTerrain::NONE, WeaponTerrain::NONE }; // 予約された変身先
 	WeaponTerrain m_currentWT = WeaponTerrain::NONE; // 現在の姿
 	WeaponTerrain m_baseWT; //初期武器選択で選んだ武器を保持
+	bool  m_hitAnimPlaying = false;
+	float m_hitAnimTimer = 0.0f;
 
 	float m_moveSpeed; // 移動速度
 	float m_jumpForce; // 移動速度
@@ -115,5 +117,9 @@ void Player2_PlusLoseCount();
 void Player2_AllCountReset();
 void Player2_PlusScore(int score);
 void SetPlayer2_IsTransformed(bool isTransformed);
+bool GetPlayer2_IsTransformed();
 int Player2_GetScore();
+void Player2_SetPlayerIsAttaking(int flg);
+void Player2_ResetMoveMul();
+void Player2_StartHitAnim();
 #endif // PLAYER2_H

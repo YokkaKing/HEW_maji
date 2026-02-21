@@ -18,7 +18,7 @@
 #include"Player.h"
 #include"Player2.h"
 #include"keyboard.h"
-
+#include "HitEffect.h"
 #include"controller.h"
 /*********************************/
 
@@ -32,7 +32,6 @@ PLAYER2* g_PlayerSpear2;
 
 XMFLOAT3 g_moveSpear[2]; // �ȈՃA�j���[�V����
 extern Controller g_Controller[2];
-
 
 Spear::Spear(GameObject* player, bool select) : IWeapon(player)
 {
@@ -102,6 +101,37 @@ void Spear::Attack()
 	m_collider->SetEnable(true); // 当たり判定の有効
 	m_weapon->m_delay = 0.1f;
 	m_isAttack = false;
+
+	MODEL* model = nullptr;
+	bool isMoving = false;
+
+	if (m_selectPlayer == FALSE)
+	{
+		PLAYER* player = g_PlayerSpear1;
+		if (player)
+		{
+			model = player->m_model;
+
+			float mv = sqrtf(player->m_velocity.x * player->m_velocity.x +
+				player->m_velocity.z * player->m_velocity.z);
+			isMoving = (mv > 0.001f);
+			ModelPlayClip(model, 420, 479, 60.0f, false, 3.0f);
+		}
+	}
+	else
+	{
+		PLAYER2* player = g_PlayerSpear2;
+		if (player)
+		{
+			model = player->m_model;
+
+			float mv = sqrtf(player->m_velocity.x * player->m_velocity.x +
+				player->m_velocity.z * player->m_velocity.z);
+			isMoving = (mv > 0.001f);
+				ModelPlayClip(model, 420, 479, 60.0f, false, 3.0f);
+
+		}
+	}
 	// 多重ヒット帽子リストをリセット
 	m_hitTargets.clear();
 }
@@ -117,6 +147,10 @@ void Spear::Update()
 		{
 			m_coolTime -= 1.0f / 60.0f;
 		}
+	}
+	else
+	{
+		m_coolTime = 0.0f;
 	}
 
 	if (m_isAttacking)
@@ -149,16 +183,16 @@ void Spear::Update()
 
 	if (Keyboard_IsKeyDown(m_chargeKey) || Keyboard_IsKeyDown(KK_C)) {
 		inputCharge = true;
+
 	}
 	// �R���g���[���[�`�F�b�N
 	if (g_Controller[m_playerIndex].IsConnected()) {
 		if (g_Controller[m_playerIndex].IsButtonDown(m_chargeButton)) {
 			inputCharge = true;
+
+
 		}
 	}
-
-
-	// ����p�t���O���g���ă`���[�W����
 	if (!m_selectPlayer)
 	{
 		if (Keyboard_IsKeyDown(KK_C) || g_Controller[0].IsButtonDown(ControllerButton::X_BUTTON))
@@ -224,8 +258,84 @@ void Spear::Update()
 			}
 		}
 	}
-	
+	const float mul = (m_isCharging || m_isAttacking) ? 0.3f : 1.0f;
+	if (m_selectPlayer == FALSE)
+	{
+		if (g_PlayerSpear1) g_PlayerSpear1->m_moveMul = mul;
+	}
+	else
+	{
+		if (g_PlayerSpear2) g_PlayerSpear2->m_moveMul = mul;
+	}
+	MODEL* model = nullptr;
+	bool isMoving = false;
+	if (m_playerIndex == 0)
+	{
+		PLAYER* p = g_PlayerSpear1;
+		if (p)
+		{
+			model = p->m_model;
+			float mv = sqrtf(p->m_velocity.x * p->m_velocity.x + p->m_velocity.z * p->m_velocity.z);
+			isMoving = (mv > 0.001f);
+		}
+	}
+	else
+	{
+		PLAYER2* p = g_PlayerSpear2;
+		if (p)
+		{
+			model = p->m_model;
+			float mv = sqrtf(p->m_velocity.x * p->m_velocity.x + p->m_velocity.z * p->m_velocity.z);
+			isMoving = (mv > 0.001f);
+		}
+	}
 
+	if (m_isCharging && !m_wasCharging)
+	{
+		if (model) 
+		{
+			ModelPlayClip(model, 761, 810, 60.0f, false, 1.0f);
+		}
+		m_chargeState = CHARGE_IN;
+	}
+	if (m_isCharging && isMoving)
+	{
+		if (m_chargeState != CHARGE_MOVE_LOOP)
+		{
+			if (model)
+			{
+				ModelPlayClip(model, 500, 640, 60.0f, true, 1.0f);
+			}
+			m_chargeState = CHARGE_MOVE_LOOP;
+		}
+	}
+	if (m_isCharging && !isMoving)
+	{
+		if (m_chargeState == CHARGE_MOVE_LOOP)
+		{
+			if (model) {
+				ModelPlayClip(model, 810, 810, 60.0f, true, 1.0f);
+			}
+			m_chargeState = CHARGE_HOLD;
+		}
+		else if (m_chargeState == CHARGE_IN)
+		{
+
+			if (model && ModelConsumeClipFinished(model))
+			{
+				ModelPlayClip(model, 810, 810, 60.0f, true, 1.0f);
+				m_chargeState = CHARGE_HOLD;
+			}
+		}
+		else if (m_chargeState == CHARGE_NONE)
+		{
+			// nothing
+		}
+	}
+
+	// ����p�t���O���g���ă`���[�W����
+
+	m_wasCharging = m_isCharging;
 	if (m_attackTimer < (ATTACK_DURATION / 2) && m_isAttacking)
 	{
 		float progress = m_attackTimer / (ATTACK_DURATION / 2.0f);
@@ -376,8 +486,15 @@ void Spear::OnWeaponCollision(GameObject* target)
 		case FALSE: // 攻撃者が1Pだったら
 			if (target->m_tag == "Player2") // 相手がPlayer2の時のみ
 			{
+				SetPlayer2_IsAttacked(true);
+				PlayAudio(g_damageSharp);
 				m_hitTargets.insert(target);
-				target->TakeDamage(15.0f); // 仮に20ダメージ
+				target->TakeDamage(100.0f); // 仮に20ダメージ
+
+				//ヒットエフェクト
+				XMFLOAT3 effectPos = target->m_position;
+				effectPos.y -= 1.0f;
+				HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::ZANGEKI);
 
 				//ヒットバック計算式
 				XMFLOAT3 dir = {
@@ -385,7 +502,6 @@ void Spear::OnWeaponCollision(GameObject* target)
 					0.1f,
 					target->m_position.z - owner->m_position.z
 				};
-
 				//P2に対してヒットアクションを発動
 				//引数:方向vec, HS時間, KB距離
 				g_Player2.m_hitAction.triggerHA(dir, stopTime, 0.1);
@@ -398,8 +514,16 @@ void Spear::OnWeaponCollision(GameObject* target)
 		case TRUE: // 攻撃者が2Pだったら
 			if (target->m_tag == "Player") // 相手がPlayerの時のみ
 			{
+				SetPlayer_IsAttacked(true);
+				PlayAudio(g_damageSharp);
+
 				m_hitTargets.insert(target);
-				target->TakeDamage(15.0f);
+				target->TakeDamage(100.0f);
+
+				//ヒットエフェクト
+				XMFLOAT3 effectPos = target->m_position;
+				effectPos.y -= 1.0f;
+				HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::ZANGEKI);
 
 				//ヒットバック計算式
 				XMFLOAT3 dir = {
@@ -437,7 +561,36 @@ void Spear::Throw(float power, bool select)
 	shot->m_velocity.x = sinf(ry) * finalSpeed;
 	shot->m_velocity.y = 0.0f;
 	shot->m_velocity.z = cosf(ry) * finalSpeed;
+	MODEL* model = nullptr;
+	bool isMoving = false;
 
+	if (m_selectPlayer == FALSE)
+	{
+		PLAYER* player = g_PlayerSpear1;
+		if (player)
+		{
+			model = player->m_model;
+
+			float mv = sqrtf(player->m_velocity.x * player->m_velocity.x +
+				player->m_velocity.z * player->m_velocity.z);
+			isMoving = (mv > 0.001f);
+			ModelPlayClip(model, 810, 879, 60.0f, false, 2.0f);
+		}
+	}
+	else
+	{
+		PLAYER2* player = g_PlayerSpear2;
+		if (player)
+		{
+			model = player->m_model;
+
+			float mv = sqrtf(player->m_velocity.x * player->m_velocity.x +
+				player->m_velocity.z * player->m_velocity.z);
+			isMoving = (mv > 0.001f);
+			ModelPlayClip(model, 810, 880, 60.0f, false, 2.0f);
+
+		}
+	}
 	extern std::vector<GameObject*> g_gameObjects;
 	g_gameObjects.push_back(shot);
 	shot->Start();
@@ -493,9 +646,9 @@ void SpearShot::Draw()
 {
 	//ワールド行列作成
 	XMMATRIX	scale = XMMatrixScaling(
-		m_scale.x*0.01f,
-		m_scale.y * 0.01f,
-		m_scale.z * 0.01f);
+		m_scale.x*0.015f,
+		m_scale.y * 0.015f,
+		m_scale.z * 0.015f);
 	XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
 		m_rotation.x,
 		m_rotation.y + XM_PI,
@@ -520,6 +673,11 @@ void SpearShot::OnCollision(const CollisionInfo& info)
 	if (info.other->m_tag == "Attack") return; // 武器に当たっても無視
 	if (!m_selectPlayer && info.other->m_tag == "Player") return; // 武器はなった本人は無視
 	if (m_selectPlayer && info.other->m_tag == "Player2") return; // 武器はなった本人は無視
+	if (info.other->m_tag == "Item") return;
+	if (info.other->m_tag == "Slope1") return;
+	if (info.other->m_tag == "Slope2") return;
+	if (info.other->m_tag == "BOGP1") return;
+	if (info.other->m_tag == "BOGP2") return;
 
 	m_velocity = { 0.0f, 0.0f, 0.0f };
 	m_isStuck = true;
@@ -533,10 +691,17 @@ void SpearShot::OnCollision(const CollisionInfo& info)
 	case FALSE: // 1Pだったら
 		if (info.other->m_tag == "Player2") // 相手がPlayer2の時のみ
 		{
+			SetPlayer2_IsAttacked(true);
+
 			PlayAudio(g_damageSharp, false);
 			info.other->TakeDamage(15.0f); // 仮に20ダメージ
 			Player_PlusScore(15.0f);
 			m_isDead = true;
+
+			//ヒットエフェクト
+			XMFLOAT3 effectPos = info.other->m_position;
+			effectPos.y -= 1.0f;
+			HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::ZANGEKI);
 
 			//ヒットバック計算式
 			XMFLOAT3 dir = {
@@ -557,8 +722,14 @@ void SpearShot::OnCollision(const CollisionInfo& info)
 			PlayAudio(g_damageSharp, false);
 			info.other->TakeDamage(15.0f);
 			Player2_PlusScore(15.0f);
+			SetPlayer_IsAttacked(true);
 
 			m_isDead = true;
+
+			//ヒットエフェクト
+			XMFLOAT3 effectPos = info.other->m_position;
+			effectPos.y -= 1.0f;
+			HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::ZANGEKI);
 
 			//ヒットバック計算式
 			XMFLOAT3 dir = {

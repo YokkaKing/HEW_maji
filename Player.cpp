@@ -33,6 +33,7 @@
 #include"terrain.h"
 #include<memory>
 #include"generateWT.h"
+#include"Audio.h"
 #include"selectWeaponTerrain.h"
 #include"Item.h"
 //================================================================
@@ -51,6 +52,12 @@ static bool g_Player1JumpPlaying = false; // ジャンプワンショット再�
 static int g_Player1CurrentAnim = 0; // 0: idle, 1: move, 2: attack 3:jump
 bool g_isChangeP1;
 ITEM_SPONER gp_itemSponer;
+XMFLOAT3 gp1_slopeSpeed;
+static const float HIT_ANIM_DURATION = 0.35f;
+bool gp1_move; // プレイヤーが動いているかのフラグ
+bool gp1_koyoteFlag; // コヨーテタイムを回復するかどうか
+
+
 void PlayerDie()
 {
 	hal::dout << "Player died!" << std::endl;
@@ -61,17 +68,13 @@ void PlayerDie()
 	{
 		g_Player.m_gameObject->m_isEnable = false;
 	}
-
-	// 例: 入力を受け付けないようにする（状態をIDLEにするなど）
+	
+	// 入力を受け付けないようにする
 	g_Player.State = PLAYER_STATE::PLAYER_STATE_IDLE;
 	g_Player.m_isDeadFlag = true;
-	XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
-	SetFade(40.0f, color, FADE_OUT, SCENE_GAME);
 
-	
-
+	// ★フェードはManager側で「1秒スロウ後」に開始する
 }
-
 void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, WeaponTerrain setWTp1)
 {
 	g_pDevice = pDevice;
@@ -103,6 +106,7 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 	g_Player.m_isAttacked = false;
 	g_Player.m_isTransformed = false;
 	g_Player.m_isDeadFlag = false;
+	g_Player.m_moveMul = 1.0f;
 	auto collider = g_Player.AddComponent<BoxCollider>(&g_Player, g_Player.m_scale);
 	ManagerCollider::AddCollider(collider);
 
@@ -132,8 +136,12 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 		g_Player.m_model = ModelLoad("asset\\model\\default_shuriken.fbx");
 	}
 
-	g_Player.EquipBaseWeapon(); //���E���h�����p�ɏ���������đ���
+	g_Player.EquipBaseWeapon();
 	
+	gp1_slopeSpeed = { 0.0f, 0.0f, 0.0f };
+	gp1_move = false; // 最初は動いてない
+	gp1_koyoteFlag = false; // 最初はフラグをオフ
+
 	g_isChangeP1 = false;
 }
 void PlayerFinalize()
@@ -145,17 +153,35 @@ void	PlayerUpdate()
 	int ctrlIdx = GetControllerIndexFromPlayerNo(0);
 
 	TransformPlayer();
-	// こいつの中でscaleが1.0fに固定されている
-	ApplyTransformEffect();   // 進化タイプに応じたパラメータを適用
-	if (g_Player.m_isDead)return;	//死亡している場合は更新処理をスキップ
-
-	//ヒットアクション
+	
+	ApplyTransformEffect();   
+	if (g_Player.m_isAttacked && !g_Player.m_isDead)
+	{
+		Player_StartHitAnim();
+		g_Player.m_isAttacked = false;
+	}
+	if (g_Player.m_hitAnimPlaying)
+	{
+		g_Player.m_hitAnimTimer += 1.0f / 60.0f;
+		if (g_Player.m_hitAnimTimer >= HIT_ANIM_DURATION)
+		{
+			g_Player.m_hitAnimPlaying = false;
+		}
+	}
 	g_Player.m_hitAction.Update(g_Player.m_position);
-	//ヒットストップ中ならこの関数自体を抜けるため今後の処理がすべてスキップされる
+
+
 	if (g_Player.m_hitAction.IsStopping())
 	{
-		return;
+		Player_ManualMove();                         
+		//ModelUpdateAnimation(g_Player.m_model, 1.0f / 60.0f);  
+		return;                                      
 	}
+	if (g_Player.m_isDead)return;	
+
+	//ヒットアクション
+
+	//ヒットストップ中ならこの関数自体を抜けるため今後の処理がすべてスキップされる
 	
 //================================================================
 //	武器変更処理(一旦)
@@ -227,7 +253,7 @@ void	PlayerUpdate()
 	if (Keyboard_IsKeyDownTrigger(KK_C) || attackPushed)
 	{
 		// 武器が存在し攻撃中でなければ攻撃開始
-		if (g_Player.m_currentWeapon && !g_Player1AttackPlaying)
+		if (g_Player.m_currentWeapon && !g_Player1AttackPlaying && g_Player.m_currentWeapon->GetCoolTime()==0.0f&& !g_Player.m_hitAnimPlaying)
 		{
 			g_Player.m_currentWeapon->Attack();
 			if (g_Player.m_isTransformed)
@@ -287,8 +313,11 @@ void	PlayerUpdate()
 	{
 		g_Player.m_currentWeapon->Update();
 	}
+	if (!g_Player.m_hitAction.IsStopping())
+	{
+		Player_ManualMove();
+	}
 
-	Player_ManualMove();
 	//死亡判定
 	if (g_Player.m_currentHp <= 0.0f && !g_Player.m_isDead)
 	{
@@ -306,7 +335,7 @@ void	PlayerUpdate()
 	// アニメーション状態管理：
 	//  - 攻撃ワンショット再生中はその完了を監視し、完了したら移動/待機ループへ復帰
 	//  - 攻撃中でなければ移動/待機のループアニメを確実に再生しておく
-	if (g_Player1AttackPlaying||g_Player1JumpPlaying)
+	if ((g_Player1AttackPlaying||g_Player1JumpPlaying)&& !g_Player.m_hitAnimPlaying)
 	{
 		// ワンショットクリップが終了したか確認
 		if (ModelConsumeClipFinished(g_Player.m_model))
@@ -544,6 +573,27 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 	float forwardX = GetCameraAtPosition().x - GetCameraPosition().x;
 	float forwardZ = GetCameraAtPosition().z - GetCameraPosition().z;
 
+	gp1_move = false; // 常に動いていないと更新
+
+	if (!g_Player.m_isGround) // 地面についてないときに重力発動
+	{
+		g_Player.m_velocity.x += g_Player.m_acceleration.x;
+		g_Player.m_velocity.y += g_Player.m_acceleration.y;
+		g_Player.m_velocity.z += g_Player.m_acceleration.z;
+	}
+
+	// 地面についているときにコヨーテタイムが1.0fになる
+	// フラグがオフの時に1.0fになる
+	if (g_Player.m_isGround &&
+		!gp1_koyoteFlag)
+	{
+		g_Player.m_koyoteTime = 1.0f;
+	}
+	else
+	{
+		g_Player.m_koyoteTime -= 0.1f;
+	}
+
 	float len = sqrtf(forwardX * forwardX + forwardZ * forwardZ);
 	if (len > 0.001f) {
 		forwardX /= len;
@@ -556,6 +606,9 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 	float rightX = forwardZ;    // 右方向は前方向ベクトルを90度回転
 	float rightZ = -forwardX;
 
+	// 移動量初期化
+	float moveX = 0.0f;
+	float moveZ = 0.0f;
 
 	float speed = 0.0f;
 	float strafe = 0.0f;
@@ -606,8 +659,48 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 	}
 
 	// 最終速度
-	g_Player.m_velocity.x = moveX * g_Player.m_moveMul;
-	g_Player.m_velocity.z = moveZ * g_Player.m_moveMul;
+	if (g_Player.m_isGround)
+	{
+		// 地面にいるときは、入力方向へクイックに速度を合わせる
+		// ただし、完全に上書きせず、現在の速度（滑り成分など）に加算する形にするのがベターです
+
+		// 入力がないときは、今の速度を少しずつ減衰させる（摩擦の表現）
+		if (fabs(moveX) < 0.001f && fabs(moveZ) < 0.001f)
+		{
+			g_Player.m_velocity.x *= 0.45f; // 摩擦で止まる
+			g_Player.m_velocity.z *= 0.45f;
+		}
+		else
+		{
+			// 入力があるときは、入力方向に速度をセットする
+			// ただし、滑っている力を消さないために「加算」に近い形にする
+			g_Player.m_velocity.x += moveX * 0.3f; // 加速度的に足す
+			g_Player.m_velocity.z += moveZ * 0.3f;
+
+			// 最高速制限（これがないと無限に加速する）
+			float maxSpeed = 0.15f * g_Player.m_moveMul;
+			float currSpeed = sqrtf(g_Player.m_velocity.x * g_Player.m_velocity.x + g_Player.m_velocity.z * g_Player.m_velocity.z);
+			if (currSpeed > maxSpeed)
+			{
+				g_Player.m_velocity.x = (g_Player.m_velocity.x / currSpeed) * maxSpeed;
+				g_Player.m_velocity.z = (g_Player.m_velocity.z / currSpeed) * maxSpeed;
+			}
+		}
+	}
+	else
+	{
+		// 空中にいるときは制御を弱くする（または慣性を維持）
+		g_Player.m_velocity.x += moveX * 0.05f;
+		g_Player.m_velocity.z += moveZ * 0.05f;
+
+		float maxSpeed = 0.1f * g_Player.m_moveMul;
+		float currSpeed = sqrtf(g_Player.m_velocity.x * g_Player.m_velocity.x + g_Player.m_velocity.z * g_Player.m_velocity.z);
+		if (currSpeed > maxSpeed)
+		{
+			g_Player.m_velocity.x = (g_Player.m_velocity.x / currSpeed) * maxSpeed;
+			g_Player.m_velocity.z = (g_Player.m_velocity.z / currSpeed) * maxSpeed;
+		}
+	}
 
 	// モデルの向きを移動方向に合わせる
 	XMFLOAT3 moveDir = { g_Player.m_velocity.x, 0.0f, g_Player.m_velocity.z };
@@ -678,9 +771,22 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 		g_Player.m_isGround = false;
 	}
 
-	g_Player.m_position.x += g_Player.m_velocity.x;
-	g_Player.m_position.z += g_Player.m_velocity.z;
-	g_Player.m_position.y += g_Player.m_velocity.y;
+	if (!g_Player.m_isGround)
+	{
+		gp1_slopeSpeed.x *= 0.3f;
+		gp1_slopeSpeed.z *= 0.3f;
+		gp1_slopeSpeed.y *= 0.3f;
+	}
+	// 地面にいても、入力をしているときは少し滑りを抑えるなどの調整も可能
+	if (fabs(moveX) > 0.01f || fabs(moveZ) > 0.01f)
+	{
+		gp1_slopeSpeed.x *= 0.95f;
+		gp1_slopeSpeed.z *= 0.95f;
+	}
+
+	g_Player.m_position.x += (g_Player.m_velocity.x + gp1_slopeSpeed.x);
+	g_Player.m_position.z += (g_Player.m_velocity.z + gp1_slopeSpeed.y);
+	g_Player.m_position.y += (g_Player.m_velocity.y + gp1_slopeSpeed.z);
 }
 
 void PlayerDraw() 
@@ -763,6 +869,8 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 	if (!info.isHit) return;
 	if (m_isDead) return; //死亡していたら衝突処理を無視
 
+	gp1_koyoteFlag = false; // 基本false
+
 	// --- まずタグで相手を識別 ---
 	if (info.other)
 	{
@@ -773,26 +881,30 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 			if (info.other->m_weaponPtr)
 			{
 				// 武器の衝突判定を呼び出す
-				g_Player.m_isAttacked = true;
+		//		g_Player.m_isAttacked = true;
 				info.other->m_weaponPtr->OnWeaponCollision(this);
+				
 			}
 		}
 
 		// 例えば壁・木だけコリジョン有効
 		if (info.other->m_tag == "Wall" ||
-			info.other->m_tag == "Tree")
+			info.other->m_tag == "Tree" ||
+			info.other->m_tag == "WallA")
 		{
+			auto INFO = info;
+
 			//================================================================
 			//	押し戻し
 			//================================================================
-			m_position.x += info.normal.x * info.penetration;
-			m_position.y += info.normal.y * info.penetration;
-			m_position.z += info.normal.z * info.penetration;
+			m_position.x += INFO.normal.x * INFO.penetration;
+			m_position.y += INFO.normal.y * INFO.penetration;
+			m_position.z += INFO.normal.z * INFO.penetration;
 
 			//================================================================
 			//	地面判定
 			//================================================================
-			if (info.normal.y > 0.7f)
+			if (INFO.normal.y > 0.7f)
 			{
 				m_isGround = true;
 				m_velocity.y = 0;
@@ -801,7 +913,7 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 			//================================================================
 			//	壁判定
 			//================================================================
-			float horiz = fabs(info.normal.x) + fabs(info.normal.z);
+			float horiz = fabs(INFO.normal.x) + fabs(INFO.normal.z);
 			if (horiz > 0.7f)
 			{
 				m_velocity.x = 0;
@@ -917,9 +1029,133 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 				m_velocity.y = CLIMB_SPEED;				
 			}
 		}
-		else
+		
+		if (info.other->m_tag == "Slope")
 		{
-			return; // 他は無視
+			auto INFO = info;
+			// 法線が自分を押し出す方向に向くように反転
+			INFO.normal.x *= -1;
+			INFO.normal.y *= -1;
+			INFO.normal.z *= -1;
+
+			m_position.x += INFO.normal.x * INFO.penetration;
+			m_position.y += INFO.normal.y * INFO.penetration;
+			m_position.z += INFO.normal.z * INFO.penetration;
+
+			// 坂道なら normal.y が 0 より大きければ地面とみなす
+			if (INFO.normal.y > 0.1f)
+			{
+				m_isGround = true;
+				if (m_velocity.y < 0) m_velocity.y = 0.0f;
+
+				// --- gp_speed への計算 ---
+				const float slideFriction = 0.15f;
+				float slopeSeverity = 1.0f - INFO.normal.y;
+				float slidePower = slopeSeverity * slideFriction;
+				const float gravityEffect = 0.02f;
+
+				// m_velocity ではなく gp_speed に加算
+				gp1_slopeSpeed.x += INFO.normal.x * (slidePower + gravityEffect);
+				gp1_slopeSpeed.z += INFO.normal.z * (slidePower + gravityEffect);
+
+				// リミッター
+				float maxSlide = 0.08f;
+				float speedXZ = sqrtf(gp1_slopeSpeed.x * gp1_slopeSpeed.x + gp1_slopeSpeed.z * gp1_slopeSpeed.z);
+				if (speedXZ > maxSlide)
+				{
+					gp1_slopeSpeed.x = (gp1_slopeSpeed.x / speedXZ) * maxSlide;
+					gp1_slopeSpeed.z = (gp1_slopeSpeed.z / speedXZ) * maxSlide;
+				}
+
+				m_velocity.x *= 0.0f;
+				m_velocity.z *= 0.0f;
+			}
+		}
+
+		if (info.other->m_tag == "SlopeP1")
+		{
+			// 1. 押し出し（めり込み防止の基本）
+			m_position.x += info.normal.x * info.penetration;
+			m_position.y += info.normal.y * info.penetration;
+			m_position.z += info.normal.z * info.penetration;
+
+			if (info.normal.y > 0.1f)
+			{
+				m_isGround = true;
+				if (m_velocity.y < 0) m_velocity.y = 0.0f;
+
+				float climbResistance = 0.7f; // 0.8〜0.9 くらいで調整（小さいほど遅くなる）
+
+				// 入力によって進もうとしている速度にブレーキをかける
+				m_velocity.x *= climbResistance;
+				m_velocity.z *= climbResistance;
+
+				if (gp1_move)
+				{
+					m_position.y += 0.1f;
+				}
+
+				// 滑り計算（gp1_slopeSpeed）は使わないので 0 にリセット
+				gp1_slopeSpeed = { 0.0f, 0.0f, 0.0f };
+			}
+		}
+
+		if (info.other->m_tag == "SlopeP2")
+		{
+			m_position.x += info.normal.x * info.penetration;
+			m_position.y += info.normal.y * info.penetration;
+			m_position.z += info.normal.z * info.penetration;
+
+			// 坂道なら normal.y が 0 より大きければ地面とみなす
+			if (info.normal.y > 0.1f)
+			{
+				m_isGround = true;
+				if (m_velocity.y < 0) m_velocity.y = 0.0f;
+				gp1_koyoteFlag = true; // フラグをオンにする
+				m_koyoteTime = 0.0f; // ジャンプできなくする
+
+				// --- gp_speed への計算 ---
+				const float slideFriction = 0.25f;
+				float slopeSeverity = 1.0f - info.normal.y;
+				float slidePower = slopeSeverity * slideFriction;
+				const float gravityEffect = 0.02f;
+
+				// m_velocity ではなく gp_speed に加算
+				gp1_slopeSpeed.x += info.normal.x * (slidePower + gravityEffect);
+				gp1_slopeSpeed.z += info.normal.z * (slidePower + gravityEffect);
+
+				// リミッター
+				float maxSlide = 0.08f;
+				float speedXZ = sqrtf(gp1_slopeSpeed.x * gp1_slopeSpeed.x + gp1_slopeSpeed.z * gp1_slopeSpeed.z);
+				if (speedXZ > maxSlide)
+				{
+					gp1_slopeSpeed.x = (gp1_slopeSpeed.x / speedXZ) * maxSlide;
+					gp1_slopeSpeed.z = (gp1_slopeSpeed.z / speedXZ) * maxSlide;
+				}
+
+				m_velocity.x *= 0.0f;
+				m_velocity.z *= 0.0f;
+			}
+		}
+
+		if (info.other->m_tag == "BOGP2")
+		{
+			XMFLOAT3 bogPos = info.other->m_position;
+
+			float dx = m_position.x - bogPos.x;
+			float dz = m_position.z - bogPos.z;
+			float distance = sqrtf(dx * dx + dz * dz);
+
+			const float effectRadius = 5.0f;
+
+			if (distance < effectRadius)
+			{
+				m_velocity.x *= 0.3f;
+				m_velocity.z *= 0.3f;
+
+				gp1_slopeSpeed.x *= 0.5f;
+				gp1_slopeSpeed.z *= 0.5f;
+			}
 		}
 	}
 }
@@ -1000,6 +1236,10 @@ void SetPlayer_IsTransformed(bool isTransformed)
 {
 	g_Player.m_isTransformed = isTransformed;
 }
+bool GetPlayer_IsTransformed()
+{
+	return g_Player.m_isTransformed;
+}
 int Player_GetTransformCount()
 {
 	return g_Player.m_transformCount;
@@ -1043,3 +1283,72 @@ int Player_GetScore()
 {
 	return g_Player.m_score;
 }
+
+void Player_SetPlayerIsAttaking(int flg)
+{
+	g_Player1AttackPlaying = flg;
+}
+void Player_ResetMoveMul()
+{
+	g_Player.m_moveMul = 1.0f;
+}
+static void Player_StartHitAnim()
+{
+	if (!g_Player.m_model) return;
+
+	// ★ここを“被弾アニメのフレーム範囲”にする（仮の例）
+	const int HIT_START = 600;
+	const int HIT_END = 660;
+
+	// 1回だけ開始（毎フレーム呼ぶと最初のフレームに戻る可能性がある）
+	if (!g_Player.m_hitAnimPlaying)
+	{
+		if (g_Player.m_isTransformed)
+		{
+			switch (g_Player.m_currentWT)
+			{
+			case WeaponTerrain::SWORD_WALL: // Sword
+				ModelPlayClip(g_Player.m_model, 230, 280, 60.0f, false, 1.0f);
+				break;
+			case WeaponTerrain::SPEAR_HILL: // spear
+				ModelPlayClip(g_Player.m_model, 641, 700, 60.0f, false, 2.0f);
+				break;
+			case WeaponTerrain::BOW_HILL: // arrow
+				ModelPlayClip(g_Player.m_model, 400, 450, 60.0f, false, 1.0f);
+				break;
+			case WeaponTerrain::HAMMER_: // hammer
+				ModelPlayClip(g_Player.m_model, 541, 600, 60.0f, false, 1.0f);
+				break;
+
+			case WeaponTerrain::SHURIKEN_: //shuriken
+				ModelPlayClip(g_Player.m_model, 211, 260, 60.0f, false, 1.0f);
+				break;
+			}
+		}
+		else
+		{
+			switch (g_setWTP1)
+			{
+			case WeaponTerrain::SWORD_WALL: // Sword
+				ModelPlayClip(g_Player.m_model, 230, 280, 60.0f, false, 1.0f);
+				break;
+			case WeaponTerrain::SPEAR_HILL: // spear
+				ModelPlayClip(g_Player.m_model, 641, 700, 60.0f, false, 2.0f);
+				break;
+			case WeaponTerrain::BOW_HILL: // arrow
+				ModelPlayClip(g_Player.m_model, 400, 450, 60.0f, false, 1.0f);
+				break;
+			case WeaponTerrain::HAMMER_: // hammer
+				ModelPlayClip(g_Player.m_model, 541, 600, 60.0f, false, 1.0f);
+				break;
+
+			case WeaponTerrain::SHURIKEN_: //shuriken
+				ModelPlayClip(g_Player.m_model, 211, 260, 60.0f, false, 1.0f);
+				break;
+			}
+		}
+		g_Player.m_hitAnimPlaying = true;
+		g_Player.m_hitAnimTimer = 0.0f;
+	}
+}
+

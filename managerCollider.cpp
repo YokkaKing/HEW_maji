@@ -54,46 +54,8 @@ void ManagerCollider::ClearCollider()
 //================================================================
 void ManagerCollider::UpdateAllCollisions()
 {
-    /*
-    for (size_t i = 0; i < colliders.size(); ++i)
-    {
-        if (!colliders[i]->IsEnable()) continue; // 検知しない
-
-        for (size_t j = i + 1; j < colliders.size(); ++j)
-        {
-            if (!colliders[i]->IsEnable()) continue; // 検知しない
-
-            auto a = colliders[i];
-            auto b = colliders[j];
-
-            if (a->owner->m_isStatic && b->owner->m_isStatic)
-            {
-                continue; // 止まってる同士はスキップ
-            }
-
-            CollisionInfo info = CheckCollision(a.get(), b.get());
-
-            if (info.isHit)
-            {
-                // a に衝突情報を渡す
-                info.other = b->owner;
-                if (a->owner)
-                {
-                    a->owner->OnCollision(info);
-                }
-
-                // b にも逆向きの情報を渡す
-                info.other = a->owner;
-                if (b->owner)
-                {
-                    b->owner->OnCollision(info);
-                }
-            }
-        }
-    }*/
-
     // 判定を行う周囲の距離
-    const float checkRadius = 5.0f;
+    const float checkRadius = 7.0f;
     const float checkRadiusSq = checkRadius * checkRadius;
 
     for (size_t i = 0; i < colliders.size(); ++i)
@@ -190,6 +152,30 @@ CollisionInfo ManagerCollider::CheckCollision(const Collider* collider1, const C
         // 法線は a->b の向きに反転
         ManagerCollider::InvertNormalize(info);
         return info;
+    }
+
+    // Slope vs Sphere
+    if (collider1->type == ColliderType::Sphere && collider2->type == ColliderType::Slope) {
+        return CheckTrapezoidSlopeSphere(static_cast<const TrapezoidSlopeCollider*>(collider2), static_cast<const SphereCollider*>(collider1));
+    }
+    if (collider1->type == ColliderType::Slope && collider2->type == ColliderType::Sphere) {
+        CollisionInfo info = CheckTrapezoidSlopeSphere(static_cast<const TrapezoidSlopeCollider*>(collider1), static_cast<const SphereCollider*>(collider2));
+        InvertNormalize(info); return info;
+    }
+
+    // --- ボックス vs 台形 ---
+    if (collider1->type == ColliderType::Box && collider2->type == ColliderType::Slope) {
+        return CheckBoxTrapezoidSlope(static_cast<const BoxCollider*>(collider1), static_cast<const TrapezoidSlopeCollider*>(collider2));
+    }
+
+    if (collider1->type == ColliderType::Slope && collider2->type == ColliderType::Box) {
+        CollisionInfo info = CheckBoxTrapezoidSlope(static_cast<const BoxCollider*>(collider2), static_cast<const TrapezoidSlopeCollider*>(collider1));
+        InvertNormalize(info); return info;
+    }
+
+    // --- 台形 vs 台形 ---
+    if (collider1->type == ColliderType::Slope && collider2->type == ColliderType::Slope) {
+        return CheckTrapezoidSlopeTrapezoidSlope(static_cast<const TrapezoidSlopeCollider*>(collider1), static_cast<const TrapezoidSlopeCollider*>(collider2));
     }
 
     return {};
@@ -439,5 +425,181 @@ CollisionInfo ManagerCollider::CheckBoxBoxOBB(const BoxCollider* box1, const Box
     info.penetration = overlapMin;
     XMStoreFloat3(&info.normal, hitNormal);
 
+    return info;
+}
+
+CollisionInfo ManagerCollider::CheckTrapezoidSlopeSphere(const TrapezoidSlopeCollider* slope, const SphereCollider* sphere)
+{
+    CollisionInfo info;
+    XMVECTOR objPos = XMLoadFloat3(&slope->owner->m_position);
+    // start と end に、親の座標を足し算して「現在のワールド座標」にする
+    XMVECTOR S = XMVectorAdd(objPos, XMLoadFloat3(&slope->start));
+    XMVECTOR E = XMVectorAdd(objPos, XMLoadFloat3(&slope->end));
+    XMVECTOR C = XMLoadFloat3(&sphere->owner->m_position);
+
+    XMVECTOR lineVec = XMVectorSubtract(E, S);
+    float lineLenSq = XMVector3LengthSq(lineVec).m128_f32[0];
+    if (lineLenSq < 1e-6f) return info;
+
+    // 1. 線分上の比率 t (0~1)
+    XMVECTOR v = XMVectorSubtract(C, S);
+    float t = (std::max)(0.0f, (std::min)(1.0f, XMVector3Dot(v, lineVec).m128_f32[0] / lineLenSq));
+
+    // 2. その地点の幅と中心点
+    float currentWidth = slope->startWidth + (slope->endWidth - slope->startWidth) * t;
+    XMVECTOR P = XMVectorAdd(S, XMVectorScale(lineVec, t));
+
+    // 3. 右方向(幅)ベクトルと上方向(厚み)ベクトルの算出
+    XMVECTOR upDir = XMVectorSet(0, 1, 0, 0);
+    XMVECTOR forwardDir = XMVector3Normalize(lineVec);
+    if (fabsf(XMVector3Dot(forwardDir, upDir).m128_f32[0]) > 0.99f) upDir = XMVectorSet(0, 0, 1, 0);
+    XMVECTOR rightDir = XMVector3Normalize(XMVector3Cross(forwardDir, upDir));
+    upDir = XMVector3Normalize(XMVector3Cross(rightDir, forwardDir)); // 正確な上方向
+
+    // 4. 板の範囲内での最近接点 P_final を求める
+    XMVECTOR vToC = XMVectorSubtract(C, P);
+    float distR = XMVector3Dot(vToC, rightDir).m128_f32[0];
+    float distU = XMVector3Dot(vToC, upDir).m128_f32[0];
+
+    // 幅と厚みの範囲内にクランプ
+    distR = (std::max)(-currentWidth * 0.5f, (std::min)(currentWidth * 0.5f, distR));
+    distU = (std::max)(-slope->thickness * 0.5f, (std::min)(slope->thickness * 0.5f, distU));
+
+    XMVECTOR P_final = XMVectorAdd(P, XMVectorAdd(XMVectorScale(rightDir, distR), XMVectorScale(upDir, distU)));
+
+    // 5. 衝突判定
+    XMVECTOR diff = XMVectorSubtract(C, P_final);
+    float dist = XMVector3Length(diff).m128_f32[0];
+    if (dist < sphere->radius) {
+        info.isHit = true;
+        info.other = slope->owner;
+        info.penetration = sphere->radius - dist;
+        XMStoreFloat3(&info.normal, XMVector3Normalize(diff));
+        XMStoreFloat3(&info.depth, XMVectorScale(XMLoadFloat3(&info.normal), info.penetration));
+    }
+    return info;
+}
+
+CollisionInfo ManagerCollider::CheckBoxTrapezoidSlope(const BoxCollider* box, const TrapezoidSlopeCollider* slope)
+{
+    CollisionInfo info;
+    XMFLOAT3 boxHalf = box->HalfSize();
+
+    // --- ここで行列を合成する ---
+    XMMATRIX mScale = XMMatrixScaling(box->owner->m_scale.x, box->owner->m_scale.y, box->owner->m_scale.z);
+    XMMATRIX mRot = XMMatrixRotationRollPitchYaw(box->owner->m_rotation.x, box->owner->m_rotation.y, box->owner->m_rotation.z);
+    XMMATRIX mTrans = XMMatrixTranslation(box->owner->m_position.x, box->owner->m_position.y, box->owner->m_position.z);
+
+    // ワールド行列 = スケール * 回転 * 移動
+    XMMATRIX boxWorld = mScale * mRot * mTrans;
+    // ----------------------------
+
+    // ボックスのローカル座標における8頂点
+    XMFLOAT3 corners[8] = {
+        {-boxHalf.x, -boxHalf.y, -boxHalf.z}, {boxHalf.x, -boxHalf.y, -boxHalf.z},
+        {-boxHalf.x,  boxHalf.y, -boxHalf.z}, {boxHalf.x,  boxHalf.y, -boxHalf.z},
+        {-boxHalf.x, -boxHalf.y,  boxHalf.z}, {boxHalf.x, -boxHalf.y,  boxHalf.z},
+        {-boxHalf.x,  boxHalf.y,  boxHalf.z}, {boxHalf.x,  boxHalf.y,  boxHalf.z}
+    };
+
+    float maxPen = -1.0f;
+    // 8つの頂点が台形の中にめり込んでいるか調べる
+    for (int i = 0; i < 8; i++) {
+        // ローカル頂点をワールド座標に変換
+        XMVECTOR worldCorner = XMVector3Transform(XMLoadFloat3(&corners[i]), boxWorld);
+
+        // 以前作成した CheckTrapezoidSlopeSphere のロジックを流用するため
+        // 一時的にこの頂点を中心とする半径0の「点」として判定を行う
+        // ※実際には球を作らず、判定ロジックだけを抽出して呼ぶのがスマートです
+
+        XMVECTOR objPos = XMLoadFloat3(&slope->owner->m_position);
+        // start と end に、親の座標を足し算して「現在のワールド座標」にする
+        XMVECTOR S = XMVectorAdd(objPos, XMLoadFloat3(&slope->start));
+        XMVECTOR E = XMVectorAdd(objPos, XMLoadFloat3(&slope->end));
+        XMVECTOR lineVec = XMVectorSubtract(E, S);
+        float lineLenSq = XMVector3LengthSq(lineVec).m128_f32[0];
+        if (lineLenSq < 1e-6f) continue;
+
+        XMVECTOR v = XMVectorSubtract(worldCorner, S);
+        float t = (std::max)(0.0f, (std::min)(1.0f, XMVector3Dot(v, lineVec).m128_f32[0] / lineLenSq));
+        float currentWidth = slope->startWidth + (slope->endWidth - slope->startWidth) * t;
+        XMVECTOR P = XMVectorAdd(S, XMVectorScale(lineVec, t));
+
+        // 方向ベクトルの算出（CheckTrapezoidSlopeSphereと同じ）
+        XMVECTOR upDir = XMVectorSet(0, 1, 0, 0);
+        XMVECTOR forwardDir = XMVector3Normalize(lineVec);
+        if (fabsf(XMVector3Dot(forwardDir, upDir).m128_f32[0]) > 0.99f) upDir = XMVectorSet(0, 0, 1, 0);
+        XMVECTOR rightDir = XMVector3Normalize(XMVector3Cross(forwardDir, upDir));
+        upDir = XMVector3Normalize(XMVector3Cross(rightDir, forwardDir));
+
+        XMVECTOR vToC = XMVectorSubtract(worldCorner, P);
+        float distR = XMVector3Dot(vToC, rightDir).m128_f32[0];
+        float distU = XMVector3Dot(vToC, upDir).m128_f32[0];
+
+        // 台形の範囲内（幅・厚み）に点があるかチェック
+        if (fabsf(distR) <= currentWidth * 0.5f && fabsf(distU) <= slope->thickness * 0.5f) {
+            // 最も近い面への押し戻し距離を計算
+            float penR = (currentWidth * 0.5f) - fabsf(distR);
+            float penU = (slope->thickness * 0.5f) - fabsf(distU);
+            float penetration = (std::min)(penR, penU);
+
+            if (penetration > maxPen) {
+                maxPen = penetration;
+                info.isHit = true;
+                info.penetration = penetration;
+                // 法線は単純化して上方向（坂の面）とする
+                XMStoreFloat3(&info.normal, upDir);
+                XMStoreFloat3(&info.depth, XMVectorScale(upDir, penetration));
+            }
+        }
+    }
+
+    info.other = const_cast<GameObject*>(slope->owner);
+    return info;
+}
+
+CollisionInfo ManagerCollider::CheckTrapezoidSlopeTrapezoidSlope(const TrapezoidSlopeCollider* slope1, const TrapezoidSlopeCollider* slope2)
+{
+    CollisionInfo info;
+
+    // slope1の各端点を算出
+    auto GetCorners = [](const TrapezoidSlopeCollider* s, XMVECTOR* outCorners) {
+        XMVECTOR S = XMLoadFloat3(&s->start);
+        XMVECTOR E = XMLoadFloat3(&s->end);
+        XMVECTOR dir = XMVector3Normalize(XMVectorSubtract(E, S));
+        XMVECTOR up = XMVectorSet(0, 1, 0, 0);
+        if (fabsf(XMVector3Dot(dir, up).m128_f32[0]) > 0.99f) up = XMVectorSet(0, 0, 1, 0);
+        XMVECTOR right = XMVector3Normalize(XMVector3Cross(dir, up));
+        up = XMVector3Normalize(XMVector3Cross(right, dir));
+
+        float sw = s->startWidth * 0.5f;
+        float ew = s->endWidth * 0.5f;
+        float th = s->thickness * 0.5f;
+
+        // 始点側4点, 終点側4点
+        outCorners[0] = S + right * sw + up * th; outCorners[1] = S - right * sw + up * th;
+        outCorners[2] = S + right * sw - up * th; outCorners[3] = S - right * sw - up * th;
+        outCorners[4] = E + right * ew + up * th; outCorners[5] = E - right * ew + up * th;
+        outCorners[6] = E + right * ew - up * th; outCorners[7] = E - right * ew - up * th;
+        };
+
+    XMVECTOR corners1[8];
+    GetCorners(slope1, corners1);
+
+    float maxPen = -1.0f;
+    for (int i = 0; i < 8; i++) {
+        SphereCollider point(nullptr, 0.0f);
+        point.owner = new GameObject();
+        XMStoreFloat3(&point.owner->m_position, corners1[i]);
+        CollisionInfo cinfo = CheckTrapezoidSlopeSphere(slope2, &point);
+        delete point.owner;
+
+        if (cinfo.isHit && cinfo.penetration > maxPen) {
+            info = cinfo;
+            maxPen = cinfo.penetration;
+        }
+    }
+
+    info.other = slope2->owner;
     return info;
 }
