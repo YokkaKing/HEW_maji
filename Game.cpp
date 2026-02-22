@@ -441,33 +441,33 @@ int Game_GetRoundResult()
 		if (P1_hp > P2_hp)
 		{
 			XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
-			SetFade(40.0f, color, FADE_OUT, SCENE_GAME);
-			P1_hp = Player_GetMaxHp();
-			P2_hp = Player2_GetMaxHp();
+			//SetFade(40.0f, color, FADE_OUT, SCENE_GAME);
+		//	P1_hp = Player_GetMaxHp();
+		//	P2_hp = Player2_GetMaxHp();
 
-			Hp_SetTime(60);
+			//Hp_SetTime(60);
 			return 1; //P1の判定勝ち
 		}
 		if (P2_hp > P1_hp)
 		{
 			XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
-			SetFade(40.0f, color, FADE_OUT, SCENE_GAME);
-			P1_hp = Player_GetMaxHp();
-			P2_hp = Player2_GetMaxHp();
+			//SetFade(40.0f, color, FADE_OUT, SCENE_GAME);
+			//P1_hp = Player_GetMaxHp();
+		//	P2_hp = Player2_GetMaxHp();
 			
 
-			Hp_SetTime(60);
+			//Hp_SetTime(60);
 			return 2; //P2の判定勝ち
 		}
 		if (P1_hp == P2_hp)                    
 		{
 			XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
-			SetFade(40.0f, color, FADE_OUT, SCENE_GAME);
-			P1_hp = Player_GetMaxHp();
-			P2_hp = Player2_GetMaxHp();
+			//SetFade(40.0f, color, FADE_OUT, SCENE_GAME);
+		//	P1_hp = Player_GetMaxHp();
+			//P2_hp = Player2_GetMaxHp();
 	
 
-			Hp_SetTime(60);
+			//Hp_SetTime(60);
 			return 3; //完全な引き分け
 		}
 	}

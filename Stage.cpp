@@ -17,7 +17,7 @@ void STAGE::Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_pDevice = pDevice;
 	g_pContext = pContext;
 
-	m_model[0] = ModelLoad("asset\\model\\stadium.fbx");
+	m_model[0] = ModelLoad("asset\\model\\stadium_grass.fbx");
 	m_model[1] = ModelLoad("asset\\model\\block.fbx");
 
 	m_position = XMFLOAT3(0.0f, 0.0f, 0.0f);

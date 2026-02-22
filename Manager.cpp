@@ -305,18 +305,16 @@ void Manager_Update()
 					}
 
 					ResultSystem_SetMatchInfo(info);
-
-					// ここは従来通り即フェードでもOK
-					XMFLOAT4 color(0.0f, 0.0f, 0.0f, 1.0f);
-					SetFade(40.0f, color, FADE_OUT, SCENE_RESULT);
+					StartDeathSequence(SCENE_RESULT, false);
 				}
 				else
 				{
 					// まだ続く場合：ここも従来通りでもOK
 					// 次ラウンドへ移る方法は「Game_ResetRound」でも「SetScene(SCENE_GAME)」でも好きな方に
 					// 今回は簡単に暗転せず即リセット（必要ならここも演出統一できる）
-					Game_ResetRound();
-					g_roundResultLocked = false;
+					//Game_ResetRound();
+					StartDeathSequence(SCENE_GAME, false);
+					//g_roundResultLocked = false;
 				}
 			}
 

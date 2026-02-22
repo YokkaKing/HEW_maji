@@ -49,7 +49,15 @@ void HitEffectManager::Update(float deltaTime)
         it->timer += deltaTime;
         if (it->timer >= m_frameDuration) {
             it->timer = 0.0f;
-            it->currentFrame++;
+            if (it->type == EffectType::ZANGEKI)
+            {
+				it->currentFrame += 2.5f;
+            }
+            else
+            {
+                it->currentFrame++;
+            }
+          
         }
 
         // その種類の最大フレーム数と比較
@@ -125,7 +133,16 @@ void HitEffectManager::Draw(const XMMATRIX& viewMat, const XMMATRIX& projectionM
 
         // DrawSpriteEx を使用してアニメーションのコマを指定
         // 引数: 位置, サイズ, 色, 現在のフレーム, 横の分割数, 縦の分割数
-        DrawSpriteEx(drawPos, effectSize, color, effect.currentFrame, m_columns[typeIndex], m_rows[typeIndex]);
+        if (typeIndex == (int)EffectType::ZANGEKI)
+        {
+            DrawSpriteEx(drawPos, XMFLOAT2(effectSize.x*3.0f,effectSize.y*3.0f), color, effect.currentFrame, m_columns[typeIndex], m_rows[typeIndex],45.0f);
+        }
+        else
+        {
+            DrawSpriteEx(drawPos, effectSize, color, effect.currentFrame, m_columns[typeIndex], m_rows[typeIndex]);
+        }
+        
+       
     }
 }
 

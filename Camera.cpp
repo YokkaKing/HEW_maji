@@ -234,22 +234,22 @@ void Camera_Update()
 	//========================
 	// FOV変更（元コード維持）
 	//========================
-	if (Keyboard_IsKeyDown(KK_Z))
-	{
-		CameraObject.Fov += 0.3f;
-		if (CameraObject.Fov > 160.0f)
-		{
-			CameraObject.Fov = 160.0f;
-		}
-	}
-	if (Keyboard_IsKeyDown(KK_X))
-	{
-		CameraObject.Fov -= 0.3f;
-		if (CameraObject.Fov < 5.0f)
-		{
-			CameraObject.Fov = 5.0f;
-		}
-	}
+	//if (Keyboard_IsKeyDown(KK_Z))
+	//{
+	//	CameraObject.Fov += 0.3f;
+	//	if (CameraObject.Fov > 160.0f)
+	//	{
+	//		CameraObject.Fov = 160.0f;
+	//	}
+	//}
+	//if (Keyboard_IsKeyDown(KK_X))
+	//{
+	//	CameraObject.Fov -= 0.3f;
+	//	if (CameraObject.Fov < 5.0f)
+	//	{
+	//		CameraObject.Fov = 5.0f;
+	//	}
+	//}
 
 	return;
 }
