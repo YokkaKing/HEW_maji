@@ -74,8 +74,10 @@ XMFLOAT2 g_antlionBoxData2[4] =
 
 std::string otherModel[2][3] =
 {
-	{"asset\\model\\tree.fbx", "asset\\model\\rock.fbx", "asset\\model\\water.fbx" },
-	{"asset\\model\\tree.fbx", "asset\\model\\tree.fbx", "asset\\model\\lava.fbx" }
+	/*{"asset\\model\\tree.fbx", "asset\\model\\rock.fbx", "asset\\model\\water.fbx" },
+	{"asset\\model\\tree.fbx", "asset\\model\\tree.fbx", "asset\\model\\lava.fbx" }*/
+	{ "asset\\model\\tree.fbx", "asset\\model\\rock.fbx", "asset\\model\\water.fbx" },
+	{ "asset\\model\\rock.fbx", "asset\\model\\rock.fbx", "asset\\model\\lava.fbx" }
 };
 
 int otherM[2][6] =
@@ -107,40 +109,80 @@ XMFLOAT3 g_otherPos[2][6] =
 XMFLOAT3 g_otherScale[2][6] =
 {
 	{
-		{ 0.5f, 1.0f, 0.5f },
-		{ 0.5f, 1.0f, 0.5f },
-		{ 0.5f, 1.0f, 0.5f },
-		{ 0.5f, 1.0f, 0.5f },
-		{ 0.5f, 1.0f, 0.5f },
-		{ 2.0f, 1.0f, 2.0f },
+		{ 0.5f, 2.0f, 0.5f },
+		{ 0.5f, 2.0f, 0.5f },
+		{ 1.4f, 2.0f, 1.4f },
+		{ 1.4f, 2.0f, 1.4f },
+		{ 1.4f, 2.0f, 1.4f },
+		{ 4.0f, 0.5f, 4.0f },
 	},
 	{
-		{ 0.5f, 1.0f, 0.5f },
-		{ 0.5f, 1.0f, 0.5f },
-		{ 0.5f, 1.0f, 0.5f },
-		{ 0.5f, 1.0f, 0.5f },
-		{ 2.0f, 1.0f, 2.0f },
-		{ 2.0f, 1.0f, 2.0f },
+		{ 1.4f, 2.0f, 1.4f },
+		{ 1.4f, 2.0f, 1.4f },
+		{ 1.4f, 2.0f, 1.4f },
+		{ 1.4f, 2.0f, 1.4f },
+		{ 4.0f, 0.5f, 4.0f },
+		{ 4.0f, 0.5f, 4.0f },
 	}
 };
 
 XMFLOAT3 g_otherModelScale[2][6] =
 {
 	{
-		{ 3.0f, 3.0f, 3.0f },
-		{ 3.0f, 3.0f, 3.0f },
-		{ 3.0f, 3.0f, 3.0f },
-		{ 3.0f, 3.0f, 3.0f },
-		{ 3.0f, 3.0f, 3.0f },
-		{ 4.0f, 1.0f, 4.0f },
+		{ 1.0f, 1.0f, 1.0f },
+		{ 1.0f, 1.0f, 1.0f },
+		{ 1.0f, 1.0f, 1.0f },
+		{ 1.0f, 1.0f, 1.0f },
+		{ 1.0f, 1.0f, 1.0f },
+		{ 1.0f, 1.0f, 1.0f },
 	},
 	{
-		{ 3.0f, 3.0f, 3.0f },
-		{ 3.0f, 3.0f, 3.0f },
-		{ 3.0f, 3.0f, 3.0f },
-		{ 3.0f, 3.0f, 3.0f },
-		{ 4.0f, 1.0f, 4.0f },
-		{ 4.0f, 1.0f, 4.0f },
+		{ 1.0f, 1.0f, 1.0f },
+		{ 1.0f, 1.0f, 1.0f },
+		{ 1.0f, 1.0f, 1.0f },
+		{ 1.0f, 1.0f, 1.0f },
+		{ 1.0f, 1.0f, 1.0f },
+		{ 1.0f, 1.0f, 1.0f },
+	}
+};
+
+XMFLOAT3 g_otherOffset[2][6] =
+{
+	{
+		{ 0.0f, 0.5f, 0.0f },
+		{ 0.0f, 0.5f, 0.0f },
+		{ -0.2f, 0.0f, -0.2f },
+		{ -0.2f, 0.0f, -0.2f },
+		{ -0.2f, 0.0f, -0.2f },
+		{ 0.0f, -0.5f, 0.0f },
+	},
+	{
+		{ -0.2f, 0.0f, -0.2f },
+		{ -0.2f, 0.0f, -0.2f },
+		{ -0.2f, 0.0f, -0.2f },
+		{ -0.2f, 0.0f, -0.2f },
+		{ 0.0f, -0.5f, 0.0f },
+		{ 0.0f, -0.5f, 0.0f },
+	}
+};
+
+std::string g_otherTag[2][6] =
+{
+	{
+		"WALL",
+		"WALL",
+		"WALL",
+		"WALL",
+		"WALL",
+		"WATER"
+	},
+	{
+		"WALL",
+		"WALL",
+		"WALL",
+		"WALL",
+		"LAVA",
+		"LAVA"
 	}
 };
 
@@ -763,7 +805,7 @@ void TerrainInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 		g_Terrain.other[i] = ColliderFactory::CreateBoxObject(
 			g_Terrain.m_otherPosition[i],
 			g_Terrain.m_otherScale[i],
-			"WALL",
+			g_otherTag[Trand][i],
 			0
 		);
 		g_Terrain.other[i]->m_isStatic = true;
@@ -1079,13 +1121,15 @@ void TerrainDraw()
 			0.0f,
 			0.0f);
 		XMMATRIX	translation = XMMatrixTranslation(
-			g_Terrain.m_otherPosition[i].x + 1.0f,
-			g_Terrain.m_otherPosition[i].y,
-			g_Terrain.m_otherPosition[i].z);
+			g_Terrain.m_otherPosition[i].x + g_otherOffset[Trand][i].x,
+			g_Terrain.m_otherPosition[i].y + g_otherOffset[Trand][i].y,
+			g_Terrain.m_otherPosition[i].z + g_otherOffset[Trand][i].z);
 		XMMATRIX	world = scale * rotation * translation;
 
 		//シェーダーへ行列をセット
 		Shader_SetWorldMatrix(world);
+
+		g_Terrain.other[i]->m_position = g_Terrain.m_otherPosition[i];
 
 		ModelDraw(g_Terrain.m_otherModel[otherM[Trand][i]]);
 	}
