@@ -17,6 +17,7 @@
 #include"keyboard.h"
 #include"controller.h"
 #include"Player2.h"
+#include "Entry.h"
 #include"Camera.h"
 #include"shader.h"
 #include"Transform.h"
@@ -143,6 +144,8 @@ void Player2Finalize()
 }
 void	Player2Update()
 {
+	int controllerIdx = GetControllerIndexFromPlayerNo(1);
+
 	TransformPlayer2();           // Eキーで進化タイプを選択
 	ApplyTransformEffect2();   // 進化タイプに応じたパラメータを適用
 	if (g_Player2.m_isAttacked && !g_Player2.m_isDead)
@@ -178,7 +181,16 @@ void	Player2Update()
 //	攻撃処理
 //================================================================
 	// CキーかAボタンで
-	if (Keyboard_IsKeyDownTrigger(KK_P) || g_Controller[1].IsButtonPushed(ControllerButton::X_BUTTON))
+	bool bAttackTrigger = Keyboard_IsKeyDownTrigger(KK_P); // キーボード(Pキー)
+	if (controllerIdx != -1)
+	{
+		// コントローラーのXボタンもチェック
+		if (g_Controller[controllerIdx].IsButtonPushed(ControllerButton::X_BUTTON))
+		{
+			bAttackTrigger = true;
+		}
+	}
+	if (bAttackTrigger)
 	{
 		// 武器があるか
 		if (g_Player2.m_currentWeapon && !g_Player2AttackPlaying&&g_Player2.m_currentWeapon->GetCoolTime() ==0.0f&& !g_Player.m_hitAnimPlaying)
@@ -500,6 +512,11 @@ void	Player2Update()
 
 void Player2_ManualMove()
 {
+	int controllerIdx = GetControllerIndexFromPlayerNo(1);
+//	if (controllerIdx == -1) return;
+
+	Controller& ctrl = g_Controller[controllerIdx];
+
 	// カメラの前方向ベクトル
 	float forwardX = GetCamera2AtPosition().x - GetCamera2Position().x;
 	float forwardZ = GetCamera2AtPosition().z - GetCamera2Position().z;
@@ -546,57 +563,34 @@ void Player2_ManualMove()
 	// 移動量初期化
 	float moveX = 0.0f;
 	float moveZ = 0.0f;
-
-	bool allowInput = true;
-	// ★ヒットストップ中 / 被弾アニメ中 / 死亡中 は入力を無効化
-	if (g_Player2.m_hitAction.IsStopping() || g_Player2.m_hitAnimPlaying || g_Player2.m_isDead)
+	float speed = 0.0f;
+	
+	float stickY = ctrl.GetLeftStickY();
+	if (fabs(stickY) > 0.05f) // デッドゾーンを設定 (必要に応じて調整)
 	{
-		allowInput = false;
+		speed = stickY * 0.1f;
 	}
-
-
-	if (allowInput)
-	{
-		float speed = 0.0f;
-		float stickY = g_Controller[1].GetLeftStickY();
-		if (fabs(stickY) > 0.05f) // デッドゾーンを設定 (必要に応じて調整)
-		{
-			// ベクトルが逆だから移動が逆になる
-			// 左スティック上方向 (+1.0f) で前進 (speed = -0.1f) に対応
-			speed = stickY * 0.1f;
-		}
-		if (Keyboard_IsKeyDown(KK_U))
-		{
-			speed = +0.1f;
-		}
-		if (Keyboard_IsKeyDown(KK_J))
-		{
-			speed = -0.1f;
-		}
+	if (Keyboard_IsKeyDown(KK_U)) speed = +0.1f;
+	if (Keyboard_IsKeyDown(KK_J)) speed = -0.1f;
 
 		moveX += forwardX * speed;
 		moveZ += forwardZ * speed;
 
-		// 横移動
-		float strafe = 0.0f;
-		float stickX = g_Controller[1].GetLeftStickX();
-		if (fabs(stickX) > 0.05f) // デッドゾーンを設定 (必要に応じて調整)
-		{
-			// 左スティック左方向 (-1.0f) で左移動 (strafe = +0.1f) に対応
-			strafe = stickX * 0.1f;
-		}
-		if (Keyboard_IsKeyDown(KK_H))
-		{
-			strafe = -0.1f;  // 左
-		}
-		if (Keyboard_IsKeyDown(KK_K))
-		{
-			strafe = +0.1f;  // 右
-		}
-		moveX += rightX * strafe;
-		moveZ += rightZ * strafe;
-
+	// 横移動
+	float strafe = 0.0f;
+	float stickX = ctrl.GetLeftStickX();
+	if (fabs(stickX) > 0.05f) // デッドゾーンを設定 (必要に応じて調整)
+	{
+		// 左スティック左方向 (-1.0f) で左移動 (strafe = +0.1f) に対応
+		strafe = stickX * 0.1f;
 	}
+	if (Keyboard_IsKeyDown(KK_H)) strafe = -0.1f;
+	if (Keyboard_IsKeyDown(KK_K)) strafe = +0.1f;
+
+	moveX += rightX * strafe;
+	moveZ += rightZ * strafe;
+
+	
 
 	if (g_Player2.m_isGround)
 	{
@@ -646,8 +640,9 @@ void Player2_ManualMove()
 		g_Player2.m_rotation.y = atan2f(moveDir.x, moveDir.z); // atan2f(X,Z)でY回転
 	}
 	// スペース押した && コヨーテタイムが0.0fより大きい
-	//if (Keyboard_IsKeyDownTrigger(KK_SPACE) && g_Player2.m_koyoteTime > 0.0f)
-	if (g_Controller[1].IsButtonPushed(ControllerButton::A_BUTTON) && g_Player2.m_koyoteTime > 0.0f) //Aボタン**
+	bool jumpPushed = Keyboard_IsKeyDown(KK_SPACE);
+	if (controllerIdx != -1 && g_Controller[controllerIdx].IsButtonPushed(ControllerButton::A_BUTTON)) jumpPushed = true;
+	if (jumpPushed && g_Player2.m_koyoteTime > 0.0f) //Aボタン**
 	{
 		g_Player2.m_velocity.y = g_Player2.m_jumpForce;
 		g_Player2.m_isGround = false;

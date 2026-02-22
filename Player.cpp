@@ -18,6 +18,7 @@
 #include"keyboard.h"
 #include"Controller.h"
 #include"Player.h"
+#include "Entry.h"
 #include"Camera.h"
 #include"shader.h"
 #include"Transform.h"
@@ -149,6 +150,8 @@ void PlayerFinalize()
 }
 void	PlayerUpdate()
 {
+	int ctrlIdx = GetControllerIndexFromPlayerNo(0);
+
 	TransformPlayer();
 	
 	ApplyTransformEffect();   
@@ -245,8 +248,9 @@ void	PlayerUpdate()
 //================================================================
 //	攻撃処理(変身前)
 //================================================================
+	bool attackPushed = (ctrlIdx != -1 && g_Controller[ctrlIdx].IsButtonPushed(ControllerButton::X_BUTTON));
 
-	if (Keyboard_IsKeyDownTrigger(KK_C) || g_Controller[0].IsButtonPushed(ControllerButton::X_BUTTON))
+	if (Keyboard_IsKeyDownTrigger(KK_C) || attackPushed)
 	{
 		// 武器が存在し攻撃中でなければ攻撃開始
 		if (g_Player.m_currentWeapon && !g_Player1AttackPlaying && g_Player.m_currentWeapon->GetCoolTime()==0.0f&& !g_Player.m_hitAnimPlaying)
@@ -563,6 +567,8 @@ void	PlayerUpdate()
 
 void Player_ManualMove() // 新しい手動移動関数として作成
 {
+	int ctrlIdx = GetControllerIndexFromPlayerNo(0);
+
 	// カメラの前方向ベクトル
 	float forwardX = GetCameraAtPosition().x - GetCameraPosition().x;
 	float forwardZ = GetCameraAtPosition().z - GetCameraPosition().z;
@@ -589,17 +595,13 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 	}
 
 	float len = sqrtf(forwardX * forwardX + forwardZ * forwardZ);
-	if (len > 0.0f)
-	{
+	if (len > 0.001f) {
 		forwardX /= len;
 		forwardZ /= len;
 	}
-	else
-	{
-		forwardX = 0.0f;
-		forwardZ = 0.0f;
+	else {
+		forwardX = 0.0f; forwardZ = 1.0f;
 	}
-
 	// カメラの右方向ベクトル
 	float rightX = forwardZ;    // 右方向は前方向ベクトルを90度回転
 	float rightZ = -forwardX;
@@ -607,55 +609,55 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 	// 移動量初期化
 	float moveX = 0.0f;
 	float moveZ = 0.0f;
-	bool allowInput = true;
 
-	// ★ヒットストップ中 / 被弾アニメ中 / 死亡中 は入力を無効化
-	if (g_Player.m_hitAction.IsStopping() || g_Player.m_hitAnimPlaying || g_Player.m_isDead)
-	{
-		allowInput = false;
+	float speed = 0.0f;
+	float strafe = 0.0f;
+	if (ctrlIdx != -1) {
+		float stickY = g_Controller[ctrlIdx].GetLeftStickY();
+		if (fabs(stickY) > 0.05f) speed = stickY * 0.1f;
+
+		float stickX = g_Controller[ctrlIdx].GetLeftStickX();
+		if (fabs(stickX) > 0.05f) strafe = stickX * 0.1f;
 	}
-	if (allowInput)
+	if (Keyboard_IsKeyDown(KK_W)) speed = +0.1f;
+	if (Keyboard_IsKeyDown(KK_S)) speed = -0.1f;
+	if (Keyboard_IsKeyDown(KK_A)) strafe = -0.1f;
+	if (Keyboard_IsKeyDown(KK_D)) strafe = +0.1f;
+
+	moveX = (forwardX * speed) + (rightX * strafe);
+	moveZ = (forwardZ * speed) + (rightZ * strafe);
+
+	if (ctrlIdx != -1)
 	{
-		float speed = 0.0f;
-		float stickY = g_Controller[0].GetLeftStickY();
-		if (fabs(stickY) > 0.05f) // デッドゾーンを設定 (必要に応じて調整)
-		{
-			// ベクトルが逆だから移動が逆になる
-			// 左スティック上方向 (+1.0f) で前進 (speed = -0.1f) に対応
-			speed = stickY * 0.1f;
-		}
-		if (Keyboard_IsKeyDown(KK_W))
-		{
-			speed = +0.1f;
-		}
-		if (Keyboard_IsKeyDown(KK_S))
-		{
-			speed = -0.1f;
-		}
-
-		moveX += forwardX * speed;
-		moveZ += forwardZ * speed;
-
-		// 横移動
-		float strafe = 0.0f;
-		float stickX = g_Controller[0].GetLeftStickX();
-		if (fabs(stickX) > 0.05f) // デッドゾーンを設定 (必要に応じて調整)
-		{
-			// 左スティック左方向 (-1.0f) で左移動 (strafe = +0.1f) に対応
-			strafe = stickX * 0.1f;
-		}
-		if (Keyboard_IsKeyDown(KK_A))
-		{
-			strafe = -0.1f;  // 左
-		}
-		if (Keyboard_IsKeyDown(KK_D))
-		{
-			strafe = +0.1f;  // 右
-		}
-		moveX += rightX * strafe;
-		moveZ += rightZ * strafe;
-		
+		float stickY = g_Controller[ctrlIdx].GetLeftStickY();
+		if (fabs(stickY) > 0.05f) speed = stickY * 0.1f;
 	}
+	if (ctrlIdx != -1)
+	{
+		float stickX = g_Controller[ctrlIdx].GetLeftStickX();
+		if (fabs(stickX) > 0.05f) strafe = stickX * 0.1f;
+	}
+
+	moveX += rightX * strafe;
+	moveZ += rightZ * strafe;
+
+	if (!g_Player.m_isGround) // 地面についてないときに重力発動
+	{
+		g_Player.m_velocity.x += g_Player.m_acceleration.x;
+		g_Player.m_velocity.y += g_Player.m_acceleration.y;
+		g_Player.m_velocity.z += g_Player.m_acceleration.z;
+	}
+
+	// 地面についているときにコヨーテタイムが1.0fになる
+	if (g_Player.m_isGround)
+	{
+		g_Player.m_koyoteTime = 1.0f;
+	}
+	else
+	{
+		g_Player.m_koyoteTime -= 0.1f;
+	}
+
 	// 最終速度
 	if (g_Player.m_isGround)
 	{
@@ -710,8 +712,8 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 	}
 
 	// Aボタンを押した && コヨーテタイムが0.0fより大きい
-	//if (Keyboard_IsKeyDownTrigger(KK_SPACE) && g_Player.m_koyoteTime > 0.0f)
-	if ((g_Controller[0].IsButtonPushed(ControllerButton::A_BUTTON) || Keyboard_IsKeyDown(KK_SPACE))
+	int idx = GetControllerIndexFromPlayerNo(0);
+	if (idx != -1 && g_Controller[idx].IsButtonPushed(ControllerButton::A_BUTTON) || Keyboard_IsKeyDown(KK_SPACE)
 		&& g_Player.m_koyoteTime > 0.0f) //Aボタン**
 	{
 		g_Player.m_velocity.y = g_Player.m_jumpForce;
