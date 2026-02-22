@@ -173,6 +173,20 @@ void	PlayerUpdate()
 {
 	int ctrlIdx = GetControllerIndexFromPlayerNo(0);
 
+	// --- 揺れ処理の追加 ---
+	// ダメージを検知
+	float damage = g_Player.m_lastHp - g_Player.m_currentHp;
+	if (damage > 0.0f)
+	{
+		// ダメージ量に応じて揺れの強さを設定 (例: ダメージの 0.05倍)
+		g_Player.m_shakeIntensity += damage * 0.05f;
+	}
+	g_Player.m_lastHp = g_Player.m_currentHp; // HPを保存
+
+	// 揺れの減衰 (毎フレーム 90% に減らすなど)
+	g_Player.m_shakeIntensity *= 0.9f;
+	if (g_Player.m_shakeIntensity < 0.001f) g_Player.m_shakeIntensity = 0.0f;
+
 	TransformPlayer();
 	
 	ApplyTransformEffect();   
@@ -814,19 +828,29 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 
 void PlayerDraw() 
 {
-	//ワールド行列作成
-	XMMATRIX	scale = XMMatrixScaling(
-		0.01f,
-		0.01f,
-		0.01f );
-	XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
+	// --- 揺れオフセットの計算 ---
+	float offsetX = 0.0f;
+	float offsetY = 0.0f;
+	if (g_Player.m_shakeIntensity > 0.0f)
+	{
+		// -1.0 ～ 1.0 のランダム値 * 強度
+		offsetX = ((float)rand() / RAND_MAX * 2.0f - 1.0f) * g_Player.m_shakeIntensity;
+		offsetY = ((float)rand() / RAND_MAX * 2.0f - 1.0f) * g_Player.m_shakeIntensity;
+	}
+
+	// ワールド行列作成
+	XMMATRIX scale = XMMatrixScaling(0.01f, 0.01f, 0.01f);
+	XMMATRIX rotation = XMMatrixRotationRollPitchYaw(
 		g_Player.m_rotation.x,
 		g_Player.m_rotation.y + XM_PI,
 		g_Player.m_rotation.z);
-	XMMATRIX	translation = XMMatrixTranslation(
-		g_Player.m_position.x,
-		g_Player.m_position.y - 1.0f,
+
+	// ★ translation の計算時に offsetX, offsetY を加える
+	XMMATRIX translation = XMMatrixTranslation(
+		g_Player.m_position.x + offsetX,
+		g_Player.m_position.y - 1.0f + offsetY,
 		g_Player.m_position.z);
+
 	if (g_Player.m_position.y < g_Player.m_position.y - 1.0f)
 	{
 		g_Player.m_position.y = g_Player.m_position.y - 0.99f;
