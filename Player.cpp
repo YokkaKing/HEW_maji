@@ -1155,6 +1155,15 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 				gp1_slopeSpeed.z *= 0.5f;
 			}
 		}
+
+		if (info.other->m_tag == "TREEP2")
+		{
+			m_velocity.x *= 0.4f;
+			m_velocity.z *= 0.4f;
+
+			gp1_slopeSpeed.x *= 0.5f;
+			gp1_slopeSpeed.z *= 0.5f;
+		}
 	}
 }
 
