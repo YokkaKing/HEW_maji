@@ -58,6 +58,7 @@ XMFLOAT3 gp1_slopeSpeed;
 static const float HIT_ANIM_DURATION = 0.35f;
 bool gp1_move; // プレイヤーが動いているかのフラグ
 bool gp1_koyoteFlag; // コヨーテタイムを回復するかどうか
+bool gp1_roundReset; // ラウンドがリセットされたかどうか
 
 
 void PlayerDie()
@@ -117,6 +118,8 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 	g_Player.m_moveMul = 1.0f;
 	auto collider = g_Player.AddComponent<BoxCollider>(&g_Player, g_Player.m_scale);
 	ManagerCollider::AddCollider(collider);
+
+	gp1_roundReset = false; // ラウンドがリセットされる
 
 	// のちのちセレクト画面から分岐できるようにする
 	// 自分をownerとして武器を生成
@@ -888,6 +891,7 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 {
 	if (!info.isHit) return;
 	if (m_isDead) return; //死亡していたら衝突処理を無視
+	if (gp1_roundReset) return;
 
 	gp1_koyoteFlag = false; // 基本false
 
@@ -1178,6 +1182,58 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 			}
 		}
 
+		if (info.other->m_tag == "WATER")
+		{
+			XMFLOAT3 bogPos = info.other->m_position;
+
+			float dx = m_position.x - bogPos.x;
+			float dz = m_position.z - bogPos.z;
+			float distance = sqrtf(dx * dx + dz * dz);
+
+			const float effectRadius = 3.0f;
+
+			if (distance < effectRadius)
+			{
+				m_velocity.x *= 0.1f;
+				m_velocity.z *= 0.1f;
+
+				gp1_slopeSpeed.x *= 0.0f;
+				gp1_slopeSpeed.z *= 0.0f;
+			}
+		}
+
+		if (info.other->m_tag == "LAVA")
+		{
+			XMFLOAT3 bogPos = info.other->m_position;
+
+			float dx = m_position.x - bogPos.x;
+			float dz = m_position.z - bogPos.z;
+			float distance = sqrtf(dx * dx + dz * dz);
+
+			const float effectRadius = 3.0f;
+
+			static float coolTime = 0.0f;
+
+			if (distance < effectRadius)
+			{
+				m_velocity.x *= 0.3f;
+				m_velocity.z *= 0.3f;
+
+				gp1_slopeSpeed.x *= 0.5f;
+				gp1_slopeSpeed.z *= 0.5f;
+
+				coolTime += 1.0f / 60.0f;
+
+				if (coolTime > 1.0f)
+				{
+					m_currentHp -= 3.0f;
+					coolTime = 0.0f;
+				}
+			}
+			else
+			{
+				coolTime = 0.0f;
+			}
 		if (info.other->m_tag == "TREEP2")
 		{
 			m_velocity.x *= 0.4f;
@@ -1230,6 +1286,7 @@ void PLAYER::RoundReset(XMFLOAT3 startPos)
     m_currentHp = m_maxHp; //�̗͑S��
     m_isDead = false;
     State = PLAYER_STATE_IDLE;
+	gp1_roundReset = true;
 
     //����ƕϐg��Ԃ��u��������v�ɖ߂�
     EquipBaseWeapon();

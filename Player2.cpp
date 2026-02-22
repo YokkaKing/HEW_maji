@@ -50,6 +50,7 @@ static bool g_Player2JumpPlaying = false; // ジャンプワンショット再�
 static int g_Player2CurrentAnim = 0; // 0: idle, 1: move, 2: attack 3:jump
 bool g_isChangeP2;
 XMFLOAT3 gp2_slopeSpeed;
+bool gp2_roundReset;
 
 static const float HIT_ANIM_DURATION = 0.35f;
 
@@ -105,6 +106,8 @@ void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 	// プレイヤーの当たり判定の追加
 	auto collider = g_Player2.AddComponent<BoxCollider>(&g_Player2, g_Player2.m_scale);
 	ManagerCollider::AddCollider(collider);
+
+	gp2_roundReset = false; // ラウンドがリセットされる
 
 	// のちのちセレクト画面から分岐できるようにする
 	// 自分をownerとして武器を生成
@@ -790,6 +793,7 @@ void PLAYER2::OnCollision(const CollisionInfo& info)
 {
 	if (!info.isHit) return;
 	if (m_isDead) return; //死亡していたら衝突処理を無視
+	if (gp2_roundReset) return;
 
 	gp2_koyoteFlag = false; // 基本false
 
@@ -1069,6 +1073,58 @@ void PLAYER2::OnCollision(const CollisionInfo& info)
 			}
 		}
 
+		if (info.other->m_tag == "WATER")
+		{
+			XMFLOAT3 bogPos = info.other->m_position;
+
+			float dx = m_position.x - bogPos.x;
+			float dz = m_position.z - bogPos.z;
+			float distance = sqrtf(dx * dx + dz * dz);
+
+			const float effectRadius = 3.0f;
+
+			if (distance < effectRadius)
+			{
+				m_velocity.x *= 0.1f;
+				m_velocity.z *= 0.1f;
+
+				gp2_slopeSpeed.x *= 0.0f;
+				gp2_slopeSpeed.z *= 0.0f;
+			}
+		}
+
+		if (info.other->m_tag == "LAVA")
+		{
+			XMFLOAT3 bogPos = info.other->m_position;
+
+			float dx = m_position.x - bogPos.x;
+			float dz = m_position.z - bogPos.z;
+			float distance = sqrtf(dx * dx + dz * dz);
+
+			const float effectRadius = 3.0f;
+
+			static float coolTime = 0.0f;
+
+			if (distance < effectRadius)
+			{
+				m_velocity.x *= 0.3f;
+				m_velocity.z *= 0.3f;
+
+				gp2_slopeSpeed.x *= 0.5f;
+				gp2_slopeSpeed.z *= 0.5f;
+
+				coolTime += 1.0f / 60.0f;
+
+				if (coolTime > 1.0f)
+				{
+					m_currentHp -= 3.0f;
+					coolTime = 0.0f;
+				}
+			}
+			else
+			{
+				coolTime = 0.0f;
+			}
 		if (info.other->m_tag == "TREEP1")
 		{
 			m_velocity.x *= 0.4f;
@@ -1091,6 +1147,7 @@ void PLAYER2::RoundReset(XMFLOAT3 startPos)
 	m_currentHp = m_maxHp; //体力全快
 	m_isDead = false;
 	State = PLAYER2_STATE_IDLE;
+	gp2_roundReset = true;
 
 	//武器と変身状態を「初期武器」に戻す
 	EquipBaseWeapon();
