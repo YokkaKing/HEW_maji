@@ -51,7 +51,7 @@ void HitEffectManager::Update(float deltaTime)
             it->timer = 0.0f;
             if (it->type == EffectType::ZANGEKI)
             {
-				it->currentFrame += 2.5f;
+				it->currentFrame += 3.0f;
             }
             else
             {
