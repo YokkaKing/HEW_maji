@@ -43,7 +43,7 @@ SELECTWEAPONUI3D	g_Selectweaponui3d[2];
 static ID3D11Device* U_pDevice;
 static ID3D11DeviceContext* U_pContext;
 static LIGHTOBJECT		U_Light;
-
+static MODEL* g_playerModels[2][5] = { nullptr };
 void Selectweaponui3d_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
 	Camera_Initialize();	//カメラ初期化
@@ -77,7 +77,17 @@ void Selectweaponui3d_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pCo
 		g_Selectweaponui3d[i].m_nowCursor = 0;
 		ModelPlayClip(g_Selectweaponui3d[i].m_model, 0, 60, 60.0f, true);
 	}
+	g_playerModels[0][0] = ModelLoad("asset\\model\\default_sword.fbx");
+	g_playerModels[0][1] = ModelLoad("asset\\model\\default_spear.fbx");
+	g_playerModels[0][2] = ModelLoad("asset\\model\\default_bow.fbx");
+	g_playerModels[0][3] = ModelLoad("asset\\model\\default_hammer.fbx");
+	g_playerModels[0][4] = ModelLoad("asset\\model\\default_shuriken.fbx");
 
+	g_playerModels[1][0] = ModelLoad("asset\\model\\default_sword.fbx");
+	g_playerModels[1][1] = ModelLoad("asset\\model\\default_spear.fbx");
+	g_playerModels[1][2] = ModelLoad("asset\\model\\default_bow.fbx");
+	g_playerModels[1][3] = ModelLoad("asset\\model\\default_hammer.fbx");
+	g_playerModels[1][4] = ModelLoad("asset\\model\\default_shuriken.fbx");
 
 }
 void Selectweaponui3d_Finalize()
@@ -106,23 +116,27 @@ void	Selectweaponui3d_Update()
 				switch (g_Selectweaponui3d[i].m_nowCursor)
 				{
 				case 0:
-					g_Selectweaponui3d[i].m_model = ModelLoad("asset\\model\\default_sword.fbx");
+					g_Selectweaponui3d[i].m_model = g_playerModels[i][g_Selectweaponui3d[i].m_nowCursor];
 					ModelPlayClip(g_Selectweaponui3d[i].m_model, 0, 60, 60.0f, true);
 					break;
 				case 1:
-					g_Selectweaponui3d[i].m_model = ModelLoad("asset\\model\\default_spear.fbx");
+					g_Selectweaponui3d[i].m_model = g_playerModels[i][g_Selectweaponui3d[i].m_nowCursor];
+
 					ModelPlayClip(g_Selectweaponui3d[i].m_model, 0, 120, 60.0f, true);
 					break;
 				case 2:
-					g_Selectweaponui3d[i].m_model = ModelLoad("asset\\model\\default_bow.fbx");
+					g_Selectweaponui3d[i].m_model = g_playerModels[i][g_Selectweaponui3d[i].m_nowCursor];
+
 					ModelPlayClip(g_Selectweaponui3d[i].m_model, 0, 60, 60.0f, true);
 					break;
 				case 3:
-					g_Selectweaponui3d[i].m_model = ModelLoad("asset\\model\\default_hammer.fbx");
+					g_Selectweaponui3d[i].m_model = g_playerModels[i][g_Selectweaponui3d[i].m_nowCursor];
+
 					ModelPlayClip(g_Selectweaponui3d[i].m_model, 0, 120, 60.0f, true);
 					break;
 				case 4:
-					g_Selectweaponui3d[i].m_model = ModelLoad("asset\\model\\default_shuriken.fbx");
+					g_Selectweaponui3d[i].m_model = g_playerModels[i][g_Selectweaponui3d[i].m_nowCursor];
+
 					ModelPlayClip(g_Selectweaponui3d[i].m_model, 0, 60, 60.0f, true);
 					break;
 				default:
@@ -197,26 +211,28 @@ void Selectweaponui3d_ModelUpdate(int playerNum,int cursor)
 {
 	if (playerNum ==1)
 	{
+		g_Selectweaponui3d[0].m_model = g_playerModels[0][cursor];
+	
 		switch (cursor)
 		{
 		case 0:
-			g_Selectweaponui3d[0].m_model = ModelLoad("asset\\model\\default_sword.fbx");
+			
 			ModelPlayClip(g_Selectweaponui3d[0].m_model, 0, 60, 60.0f, true);
 			break;
 		case 1:
-			g_Selectweaponui3d[0].m_model = ModelLoad("asset\\model\\default_spear.fbx");
+		
 			ModelPlayClip(g_Selectweaponui3d[0].m_model, 0, 120, 60.0f, true);
 			break;
 		case 2:
-			g_Selectweaponui3d[0].m_model = ModelLoad("asset\\model\\default_bow.fbx");
+			
 			ModelPlayClip(g_Selectweaponui3d[0].m_model, 0, 60, 60.0f, true);
 			break;
 		case 3:
-			g_Selectweaponui3d[0].m_model = ModelLoad("asset\\model\\default_hammer.fbx");
+		
 			ModelPlayClip(g_Selectweaponui3d[0].m_model, 0, 120, 60.0f, true);
 			break;
 		case 4:
-			g_Selectweaponui3d[0].m_model = ModelLoad("asset\\model\\default_shuriken.fbx");
+			
 			ModelPlayClip(g_Selectweaponui3d[0].m_model, 0, 60, 60.0f, true);
 			break;
 		default:
@@ -231,26 +247,27 @@ void Selectweaponui3d_ModelUpdate(int playerNum,int cursor)
 	}
 	if (playerNum == 2)
 	{
+		g_Selectweaponui3d[1].m_model = g_playerModels[1][cursor];
 		switch (cursor)
 		{
 		case 0:
-			g_Selectweaponui3d[1].m_model = ModelLoad("asset\\model\\default_sword.fbx");
+			
 			ModelPlayClip(g_Selectweaponui3d[1].m_model, 0, 60, 60.0f, true);
 			break;
 		case 1:
-			g_Selectweaponui3d[1].m_model = ModelLoad("asset\\model\\default_spear.fbx");
+			
 			ModelPlayClip(g_Selectweaponui3d[1].m_model, 0, 120, 60.0f, true);
 			break;
 		case 2:
-			g_Selectweaponui3d[1].m_model = ModelLoad("asset\\model\\default_bow.fbx");
+		
 			ModelPlayClip(g_Selectweaponui3d[1].m_model, 0, 60, 60.0f, true);
 			break;
 		case 3:
-			g_Selectweaponui3d[1].m_model = ModelLoad("asset\\model\\default_hammer.fbx");
+			
 			ModelPlayClip(g_Selectweaponui3d[1].m_model, 0, 120, 60.0f, true);
 			break;
 		case 4:
-			g_Selectweaponui3d[1].m_model = ModelLoad("asset\\model\\default_shuriken.fbx");
+			
 			ModelPlayClip(g_Selectweaponui3d[1].m_model, 0, 60, 60.0f, true);
 			break;
 		default:
@@ -266,26 +283,27 @@ void Selectweaponui3d_ModelAttack(int playerNum, int cursor)
 {
 	if (playerNum == 1)
 	{
+		g_Selectweaponui3d[0].m_model = g_playerModels[0][cursor];
 		switch (cursor)
 		{
 		case 0:
-			g_Selectweaponui3d[0].m_model = ModelLoad("asset\\model\\default_sword.fbx");
+		
 			ModelPlayClip(g_Selectweaponui3d[0].m_model, 167, 225, 60.0f, false, 2.0f);
 			break;
 		case 1:
-			g_Selectweaponui3d[0].m_model = ModelLoad("asset\\model\\default_spear.fbx");
+			
 			ModelPlayClip(g_Selectweaponui3d[0].m_model, 420, 477, 60.0f, false, 2.0f);
 			break;
 		case 2:
-			g_Selectweaponui3d[0].m_model = ModelLoad("asset\\model\\default_bow.fbx");
+			
 			ModelPlayClip(g_Selectweaponui3d[0].m_model, 301, 418, 60.0f, false, 4.0f);
 			break;
 		case 3:
-			g_Selectweaponui3d[0].m_model = ModelLoad("asset\\model\\default_hammer.fbx");
+			
 			ModelPlayClip(g_Selectweaponui3d[0].m_model, 260, 420, 60.0f, false, 2.0f);
 			break;
 		case 4:
-			g_Selectweaponui3d[0].m_model = ModelLoad("asset\\model\\default_shuriken.fbx");
+	
 			ModelPlayClip(g_Selectweaponui3d[0].m_model, 151, 208, 60.0f, false, 2.0f);
 			break;
 		default:
@@ -296,26 +314,27 @@ void Selectweaponui3d_ModelAttack(int playerNum, int cursor)
 	}
 	if (playerNum == 2)
 	{
+		g_Selectweaponui3d[1].m_model = g_playerModels[1][cursor];
 		switch (cursor)
 		{
 		case 0:
-			g_Selectweaponui3d[1].m_model = ModelLoad("asset\\model\\default_sword.fbx");
+			
 			ModelPlayClip(g_Selectweaponui3d[1].m_model, 167, 225, 60.0f, false, 2.0f);
 			break;
 		case 1:
-			g_Selectweaponui3d[1].m_model = ModelLoad("asset\\model\\default_spear.fbx");
+			
 			ModelPlayClip(g_Selectweaponui3d[1].m_model, 420, 477, 60.0f, false, 2.0f);
 			break;
 		case 2:
-			g_Selectweaponui3d[1].m_model = ModelLoad("asset\\model\\default_bow.fbx");
+			
 			ModelPlayClip(g_Selectweaponui3d[1].m_model, 301,418, 60.0f, false, 4.0f);
 			break;
 		case 3:
-			g_Selectweaponui3d[1].m_model = ModelLoad("asset\\model\\default_hammer.fbx");
+			
 			ModelPlayClip(g_Selectweaponui3d[1].m_model, 260, 420, 60.0f, false, 2.0f);
 			break;
 		case 4:
-			g_Selectweaponui3d[1].m_model = ModelLoad("asset\\model\\default_shuriken.fbx");
+			
 			ModelPlayClip(g_Selectweaponui3d[1].m_model, 151, 208, 60.0f, false, 2.0f);
 			break;
 		default:

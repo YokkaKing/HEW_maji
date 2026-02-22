@@ -5,6 +5,7 @@
 
 #include "direct3d.h"
 #include "keyboard.h"
+#include "Controller.h"
 #include "fade.h"
 #include "Manager.h"
 #include "shader.h"
@@ -16,9 +17,11 @@
 #include "Player2.h"
 #include "Result_Ui.h"
 #include "Result_Ui2.h"
+#include "Entry.h"
 
 
 using namespace DirectX;
+extern Controller g_Controller[2];
 
 // Result_Ui ‘¤
 bool ResultUi_IsResultAttackReady();
@@ -95,9 +98,9 @@ static ClipRange GetAttackRange_Base(WeaponTerrain wt)
     {
     case WeaponTerrain::SWORD_WALL: return { 167,227,60.0f };
     case WeaponTerrain::SHURIKEN_:  return { 151,210,60.0f };
-    case WeaponTerrain::SPEAR_HILL: return { 361,479,60.0f };
+    case WeaponTerrain::SPEAR_HILL: return { 301,420,60.0f };
     case WeaponTerrain::BOW_HILL:   return { 240,360,60.0f };
-    case WeaponTerrain::HAMMER_:    return { 360,539,60.0f };
+    case WeaponTerrain::HAMMER_:    return { 241,420,60.0f };
     default:                        return { 80,150,60.0f };
     }
 }
@@ -108,8 +111,8 @@ static ClipRange GetAttackRange_Transform(WeaponTerrain wt)
     case WeaponTerrain::SWORD_WALL: return { 167,227,60.0f };
     case WeaponTerrain::SHURIKEN_:  return { 151,210,60.0f };
     case WeaponTerrain::SPEAR_HILL: return { 361,379,60.0f };
-    case WeaponTerrain::BOW_HILL:   return { 240,360,60.0f };
-    case WeaponTerrain::HAMMER_:    return { 241,419,60.0f };
+    case WeaponTerrain::BOW_HILL:   return { 301,420,60.0f };
+    case WeaponTerrain::HAMMER_:    return { 241,420,60.0f };
     default:                        return { 80,150,60.0f };
     }
 }
@@ -673,7 +676,24 @@ void ResultSystem_Update()
     const bool finished = (!s_camP1.continuous && s_camP1.yawNow >= kRotPages[2].driftToDeg);
     if (finished && GetFadeState() == FADE_NONE)
     {
-        if (Keyboard_IsKeyDownTrigger(KK_ENTER))
+        bool isNextTriggered = Keyboard_IsKeyDownTrigger(KK_ENTER);
+        for (int i = 0; i < 2; i++)
+        {
+            int ctrlIdx = GetControllerIndexFromPlayerNo(i);
+            if (ctrlIdx != -1)
+            {
+                if (g_Controller[ctrlIdx].IsButtonPushed(ControllerButton::A_BUTTON)) {
+                    isNextTriggered = true;
+                }
+            }
+            else
+            {
+                if (g_Controller[i].IsButtonPushed(ControllerButton::A_BUTTON)) {
+                    isNextTriggered = true;
+                }
+            }
+        }
+        if (isNextTriggered)
         {
             XMFLOAT4 color(0, 0, 0, 1);
             Player_AllCountReset();

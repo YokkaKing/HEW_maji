@@ -16,6 +16,7 @@
 #include "Controller.h"
 #include"Game.h"
 #include"Title.h"
+#include "Entry.h"
 #include"Result.h"
 #include "Score.h"
 #include "Player.h"
@@ -93,6 +94,9 @@ void Manager_Update()
 			break;
 		case SCENE_TITLE:
 			Title_Update();	
+			break;
+		case SCENE_ENTRY:
+			Entry_Update();
 			break;
 		case SCENE_SELECT_WT:
 			selectWT_Update();
@@ -301,18 +305,16 @@ void Manager_Update()
 					}
 
 					ResultSystem_SetMatchInfo(info);
-
-					// ここは従来通り即フェードでもOK
-					XMFLOAT4 color(0.0f, 0.0f, 0.0f, 1.0f);
-					SetFade(40.0f, color, FADE_OUT, SCENE_RESULT);
+					StartDeathSequence(SCENE_RESULT, false);
 				}
 				else
 				{
 					// まだ続く場合：ここも従来通りでもOK
 					// 次ラウンドへ移る方法は「Game_ResetRound」でも「SetScene(SCENE_GAME)」でも好きな方に
 					// 今回は簡単に暗転せず即リセット（必要ならここも演出統一できる）
-					Game_ResetRound();
-					g_roundResultLocked = false;
+					//Game_ResetRound();
+					StartDeathSequence(SCENE_GAME, false);
+					//g_roundResultLocked = false;
 				}
 			}
 
@@ -338,6 +340,9 @@ void Manager_Draw_Player1()
 			break;
 		case SCENE_TITLE:
 			Title_Draw();	
+			break;
+		case SCENE_ENTRY:
+			Entry_Draw();
 			break;
 		case SCENE_SELECT_WT:
 			
@@ -365,6 +370,9 @@ void Manager_Draw_Player2()
 		break;
 	case SCENE_TITLE:
 		Title_Draw();
+		break;
+	case SCENE_ENTRY:
+		Entry_Draw();
 		break;
 	case SCENE_SELECT_WT:
 
@@ -406,6 +414,9 @@ void SetScene(SCENE scene) //シーンを切り替える
 		case SCENE_TITLE:
 			Title_Finalize();	
 			break;
+		case SCENE_ENTRY:
+			Entry_Finalize();
+			break;
 		case SCENE_SELECT_WT:
 			selectWT_Finalize();
 			Selectweaponui3d_Finalize();
@@ -429,6 +440,9 @@ void SetScene(SCENE scene) //シーンを切り替える
 			break;
 		case SCENE_TITLE:
 			Title_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
+			break;
+		case SCENE_ENTRY:
+			Entry_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
 			break;
 		case SCENE_GAME:
 			StopAudio(g_title);

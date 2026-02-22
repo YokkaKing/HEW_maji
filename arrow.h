@@ -33,8 +33,16 @@ public:
     XMFLOAT3 m_animePosition = { 0.0f, 0.0f, 0.5f };
     XMFLOAT3 m_animeRotation = { 0.0f, 0.0f, 0.0f };
 
+    enum CHARGE_STATE {
+        CHARGE_NONE = 0,
+        CHARGE_IN,
+        CHARGE_HOLD,
+        CHARGE_MOVE_LOOP,
+        CHARGE_ATTACK_PLAY
+    };
+    CHARGE_STATE m_chargeState = CHARGE_NONE;
    // FLOAT m_coolTime = 0.0f;
-
+    bool m_wasCharging = false;
     float m_chargePower = 0.0f; // チャージ
     bool m_isCharging = false; // チャージしてるか
     const float MAX_CHARGE = 4.0f; // 最大4倍の飛距離
