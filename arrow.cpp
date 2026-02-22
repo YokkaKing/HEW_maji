@@ -145,6 +145,85 @@ void Arrow::Update()
 			m_coolTime = 1.5f;
 		}
 	}
+	const float mul = (m_isCharging || m_isAttacking) ? 0.3f : 1.0f;
+	if (m_selectPlayer == FALSE)
+	{
+		if (g_PlayerArrow1) g_PlayerArrow1->m_moveMul = mul;
+	}
+	else
+	{
+		if (g_PlayerArrow2) g_PlayerArrow2->m_moveMul = mul;
+	}
+
+	MODEL* model = nullptr;
+	bool isMoving = false;
+	if (m_selectPlayer == 0)
+	{
+		PLAYER* p = g_PlayerArrow1;
+		if (p)
+		{
+			model = p->m_model;
+			float mv = sqrtf(p->m_velocity.x * p->m_velocity.x + p->m_velocity.z * p->m_velocity.z);
+			isMoving = (mv > 0.001f);
+		}
+	}
+	else
+	{
+		PLAYER2* p = g_PlayerArrow2;
+
+		if (p)
+		{
+			model = p->m_model;
+			float mv = sqrtf(p->m_velocity.x * p->m_velocity.x + p->m_velocity.z * p->m_velocity.z);
+			isMoving = (mv > 0.001f);
+		}
+	}
+	if (m_isCharging && !m_wasCharging)
+	{
+		if (model)
+		{
+			ModelPlayClip(model, 301, 374, 60.0f, false, 1.0f);
+		}
+		m_chargeState = CHARGE_IN;
+	}
+	if (m_isCharging && isMoving)
+	{
+		if (m_chargeState != CHARGE_MOVE_LOOP)
+		{
+			if (model)
+			{
+				ModelPlayClip(model, 241, 300, 60.0f, true, 1.0f);
+			}
+			m_chargeState = CHARGE_MOVE_LOOP;
+		}
+	}
+	if (m_isCharging && !isMoving)
+	{
+		if (m_chargeState == CHARGE_MOVE_LOOP)
+		{
+			if (model) {
+				ModelPlayClip(model, 374, 374, 60.0f, true, 1.0f);
+			}
+			m_chargeState = CHARGE_HOLD;
+		}
+		else if (m_chargeState == CHARGE_IN)
+		{
+
+			if (model && ModelConsumeClipFinished(model))
+			{
+				ModelPlayClip(model, 374, 374, 60.0f, true, 1.0f);
+				m_chargeState = CHARGE_HOLD;
+			}
+		}
+		else if (m_chargeState == CHARGE_NONE)
+		{
+			// nothing
+		}
+	}
+
+	// ����p�t���O���g���ă`���[�W����
+
+	m_wasCharging = m_isCharging;
 
 	// キャラに合わせて武器も回転
 	XMMATRIX rotationMatrixY;
@@ -227,7 +306,7 @@ void Arrow::OnWeaponCollision(GameObject* target)
 void Arrow::Throw(float power, bool select)
 {
 	ArrowShot* shot = new ArrowShot();
-
+	PlayAudio(g_arrow_shuriken, false);
 	shot->m_position = m_weapon->m_position;
 	shot->m_rotation = m_weapon->m_rotation;
 	shot->m_selectPlayer = select;
@@ -244,6 +323,35 @@ void Arrow::Throw(float power, bool select)
 	extern std::vector<GameObject*> g_gameObjects;
 	g_gameObjects.push_back(shot);
 	shot->Start();
+	MODEL* model = nullptr;
+	bool isMoving = false;
+	if (m_selectPlayer == FALSE)
+	{
+		PLAYER* player = g_PlayerArrow1;
+		if (player)
+		{
+			model = player->m_model;
+
+			float mv = sqrtf(player->m_velocity.x * player->m_velocity.x +
+				player->m_velocity.z * player->m_velocity.z);
+			isMoving = (mv > 0.001f);
+			ModelPlayClip(model, 374, 420, 60.0f, false, 2.0f);
+		}
+	}
+	else
+	{
+		PLAYER2* player = g_PlayerArrow2;
+		if (player)
+		{
+			model = player->m_model;
+
+			float mv = sqrtf(player->m_velocity.x * player->m_velocity.x +
+				player->m_velocity.z * player->m_velocity.z);
+			isMoving = (mv > 0.001f);
+			ModelPlayClip(model, 374, 420, 60.0f, false, 2.0f);
+
+		}
+	}
 }
 
 //================================================================
@@ -296,12 +404,12 @@ void ArrowShot::Draw()
 {
 	//ワールド行列作成
 	XMMATRIX	scale = XMMatrixScaling(
-		m_scale.x*0.08f,
-		m_scale.y*0.08f,
-		m_scale.z*0.08f);
+		m_scale.x*0.1f,
+		m_scale.y*0.1f,
+		m_scale.z*0.1f);
 	XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
 		m_rotation.x,
-		m_rotation.y * XM_PI,
+		m_rotation.y + XM_PI,
 		m_rotation.z);
 	XMMATRIX	translation = XMMatrixTranslation(
 		m_position.x,

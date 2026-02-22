@@ -67,6 +67,7 @@ void Player2Die()
 	
 
 	g_Player2.State = PLAYER2_STATE::PLAYER2_STATE_IDLE;
+	PlayAudio(g_change, false);
 
 	// ★フェードはManager側で「1秒スロウ後」に開始する
 }
@@ -158,6 +159,8 @@ void	Player2Update()
 		if (g_Player2.m_hitAnimTimer >= HIT_ANIM_DURATION)
 		{
 			g_Player2.m_hitAnimPlaying = false;
+			g_Player2AttackPlaying = false;
+			g_Player2JumpPlaying = false;
 		}
 	}
 	//ヒットアクション
@@ -181,7 +184,7 @@ void	Player2Update()
 	if (Keyboard_IsKeyDownTrigger(KK_P) || g_Controller[1].IsButtonPushed(ControllerButton::X_BUTTON))
 	{
 		// 武器があるか
-		if (g_Player2.m_currentWeapon && !g_Player2AttackPlaying&&g_Player2.m_currentWeapon->GetCoolTime() ==0.0f&& !g_Player.m_hitAnimPlaying)
+		if (g_Player2.m_currentWeapon && !g_Player2AttackPlaying&&g_Player2.m_currentWeapon->GetCoolTime() ==0.0f&& !g_Player2.m_hitAnimPlaying)
 		{
 			g_Player2.m_currentWeapon->Attack(); // 攻撃
 			if (g_Player2.m_isTransformed)
@@ -264,7 +267,7 @@ void	Player2Update()
 	// アニメーション状態管理：
 	//  - 攻撃ワンショット再生中はその完了を監視し、完了したら移動/待機ループへ復帰
 	//  - 攻撃中でなければ移動/待機のループアニメを確実に再生しておく
-	if ((g_Player2AttackPlaying || g_Player2JumpPlaying)&& !g_Player.m_hitAnimPlaying)
+	if ((g_Player2AttackPlaying || g_Player2JumpPlaying)&& !g_Player2.m_hitAnimPlaying)
 	{
 		// ワンショットクリップが終了したか確認
 		if (ModelConsumeClipFinished(g_Player2.m_model))
@@ -288,7 +291,7 @@ void	Player2Update()
 							ModelPlayClip(g_Player2.m_model, 240, 360, 60.0f, true, 1.0f);
 							break;
 						case WeaponTerrain::BOW_HILL:
-							ModelPlayClip(g_Player2.m_model, 181, 240, 60.0f, true, 1.0f);
+							ModelPlayClip(g_Player2.m_model, 121, 150, 60.0f, true, 1.0f);
 							break;
 						case WeaponTerrain::HAMMER_:
 							ModelPlayClip(g_Player2.m_model, 180, 240, 60.0f, true, 1.0f);
@@ -309,7 +312,7 @@ void	Player2Update()
 							ModelPlayClip(g_Player2.m_model, 240, 360, 60.0f, true, 1.0f);
 							break;
 						case WeaponTerrain::BOW_HILL:
-							ModelPlayClip(g_Player2.m_model, 181, 240, 60.0f, true, 1.0f);
+							ModelPlayClip(g_Player2.m_model, 121, 150, 60.0f, true, 1.0f);
 							break;
 						case WeaponTerrain::HAMMER_:
 							ModelPlayClip(g_Player2.m_model, 180, 240, 60.0f, true, 1.0f);
@@ -339,7 +342,7 @@ void	Player2Update()
 							ModelPlayClip(g_Player2.m_model, 0, 120, 60.0f, true);
 							break;
 						case WeaponTerrain::BOW_HILL:
-							ModelPlayClip(g_Player2.m_model, 0, 120, 60.0f, true);
+							ModelPlayClip(g_Player2.m_model, 0, 60, 60.0f, true);
 							break;
 						case WeaponTerrain::HAMMER_:
 							ModelPlayClip(g_Player2.m_model, 0, 120, 60.0f, true);
@@ -360,7 +363,7 @@ void	Player2Update()
 							ModelPlayClip(g_Player2.m_model, 0, 120, 60.0f, true);
 							break;
 						case WeaponTerrain::BOW_HILL:
-							ModelPlayClip(g_Player2.m_model, 0, 120, 60.0f, true);
+							ModelPlayClip(g_Player2.m_model, 0, 60, 60.0f, true);
 							break;
 						case WeaponTerrain::HAMMER_:
 							ModelPlayClip(g_Player2.m_model, 0, 120, 60.0f, true);
@@ -396,7 +399,7 @@ void	Player2Update()
 						ModelPlayClip(g_Player2.m_model, 240, 360, 60.0f, true, 2.0f);
 						break;
 					case WeaponTerrain::BOW_HILL:
-						ModelPlayClip(g_Player2.m_model, 181, 240, 60.0f, true, 2.0f);
+						ModelPlayClip(g_Player2.m_model, 121, 150, 60.0f, true, 2.0f);
 						break;
 					case WeaponTerrain::HAMMER_:
 						ModelPlayClip(g_Player2.m_model, 180, 240, 60.0f, true, 1.0f);
@@ -417,7 +420,7 @@ void	Player2Update()
 						ModelPlayClip(g_Player2.m_model, 240, 360, 60.0f, true, 2.0f);
 						break;
 					case WeaponTerrain::BOW_HILL:
-						ModelPlayClip(g_Player2.m_model, 181, 240, 60.0f, true, 2.0f);
+						ModelPlayClip(g_Player2.m_model, 121, 150, 60.0f, true, 2.0f);
 						break;
 					case WeaponTerrain::HAMMER_:
 						ModelPlayClip(g_Player2.m_model, 180, 240, 60.0f, true, 1.0f);
@@ -446,7 +449,7 @@ void	Player2Update()
 						ModelPlayClip(g_Player2.m_model, 0, 120, 60.0f, true);
 						break;
 					case WeaponTerrain::BOW_HILL:
-						ModelPlayClip(g_Player2.m_model, 0, 120, 60.0f, true);
+						ModelPlayClip(g_Player2.m_model, 0, 60, 60.0f, true);
 						break;
 					case WeaponTerrain::HAMMER_:
 						ModelPlayClip(g_Player2.m_model, 0, 120, 60.0f, true);
@@ -467,7 +470,7 @@ void	Player2Update()
 						ModelPlayClip(g_Player2.m_model, 0, 120, 60.0f, true);
 						break;
 					case WeaponTerrain::BOW_HILL:
-						ModelPlayClip(g_Player2.m_model, 0, 120, 60.0f, true);
+						ModelPlayClip(g_Player2.m_model, 0, 60, 60.0f, true);
 						break;
 					case WeaponTerrain::HAMMER_:
 						ModelPlayClip(g_Player2.m_model, 0, 120, 60.0f, true);
@@ -663,7 +666,7 @@ void Player2_ManualMove()
 				ModelPlayClip(g_Player2.m_model, 361, 420, 60.0f, false, 2.0f);
 				break;
 			case WeaponTerrain::BOW_HILL: // arrow
-				ModelPlayClip(g_Player2.m_model, 400, 450, 60.0f, false, 1.0f);
+				ModelPlayClip(g_Player2.m_model, 181, 240, 60.0f, false, 1.0f);
 				break;
 			case WeaponTerrain::HAMMER_: // hammer
 				ModelPlayClip(g_Player2.m_model, 240, 300, 60.0f, false, 1.0f);
@@ -685,7 +688,7 @@ void Player2_ManualMove()
 				ModelPlayClip(g_Player2.m_model, 361, 420, 60.0f, false, 2.0f);
 				break;
 			case WeaponTerrain::BOW_HILL: // arrow
-				ModelPlayClip(g_Player2.m_model, 400, 450, 60.0f, false, 1.0f);
+				ModelPlayClip(g_Player2.m_model, 181, 240, 60.0f, false, 1.0f);
 				break;
 			case WeaponTerrain::HAMMER_: // hammer
 				ModelPlayClip(g_Player2.m_model, 240, 300, 60.0f, false, 1.0f);
