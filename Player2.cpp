@@ -156,7 +156,11 @@ void	Player2Update()
 	if (damage > 0.0f)
 	{
 		// ダメージ量に応じて揺れの強さを設定 (例: ダメージの 0.05倍)
-		g_Player2.m_shakeIntensity += damage * 0.05f;
+		g_Player2.m_shakeIntensity += damage * 0.02f;
+		if (g_Player2.m_shakeIntensity > 1.0f)
+		{
+			g_Player2.m_shakeIntensity = 1.0f;
+		}
 	}
 	g_Player2.m_lastHp = g_Player2.m_currentHp; // HPを保存
 
@@ -1108,8 +1112,8 @@ void PLAYER2::OnCollision(const CollisionInfo& info)
 
 			if (distance < effectRadius)
 			{
-				m_velocity.x *= 0.1f;
-				m_velocity.z *= 0.1f;
+				m_velocity.x *= 0.7f;
+				m_velocity.z *= 0.7f;
 
 				gp2_slopeSpeed.x *= 0.0f;
 				gp2_slopeSpeed.z *= 0.0f;
