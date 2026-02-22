@@ -514,7 +514,7 @@ void Score_BeginShow(int roundResult)
 {
 	// 勝者を保存（Game_GetRoundResult(): 1=P1,2=P2,3=Draw）
 	g_Winner = roundResult;
-
+	PlayAudio(g_change, false);
 	// 背景アニメを最初から
 	g_Score.frame[0] = 0.0f;
 	g_Score.col[0] = { 1,1,1,1 };

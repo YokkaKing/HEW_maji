@@ -67,7 +67,8 @@ void Player2Die()
 	
 
 	g_Player2.State = PLAYER2_STATE::PLAYER2_STATE_IDLE;
-	PlayAudio(g_change, false);
+	
+	PlayAudio(g_ko, false);
 
 	// ★フェードはManager側で「1秒スロウ後」に開始する
 }

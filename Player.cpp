@@ -73,7 +73,9 @@ void PlayerDie()
 	// 入力を受け付けないようにする
 	g_Player.State = PLAYER_STATE::PLAYER_STATE_IDLE;
 	g_Player.m_isDeadFlag = true;
-	PlayAudio(g_change, false);
+	
+	PlayAudio(g_ko, false);
+
 	// ★フェードはManager側で「1秒スロウ後」に開始する
 }
 void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, WeaponTerrain setWTp1)
