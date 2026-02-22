@@ -323,7 +323,14 @@ void Hp_Update()
     float hpPrev2 = g_Hp2.prevHp;
     g_Hp.m_Hp = Player_GetHp();
     g_Hp2.m_Hp = Player2_GetHp();
-    g_Timer.time -= g_Timer.frame;
+    if (g_Timer.time > 0.0f)
+    {
+        g_Timer.time -= g_Timer.frame;
+    }
+    else
+    {
+		g_Timer.time = 0.0f;
+    }
     const float DAMAGE_DELAY = 2.0f;      // ダメージ後、赤HPが動き出すまで待つ秒数
     const float RED_SHRINK_PER_FRAME = 0.4f; // 赤HPが減る量（1フレームあたり）※元と同じ
 

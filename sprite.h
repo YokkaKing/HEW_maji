@@ -17,6 +17,12 @@
 #include<DirectXMath.h>
 using namespace DirectX;
 
+void DrawSpriteUV(
+    XMFLOAT2 pos,
+    XMFLOAT2 size,
+    XMFLOAT4 col,
+    float u0, float v0,
+    float u1, float v1,float angle);
 
 void DrawSprite(XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 col);
 void DrawSpriteEx(XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 col, int bno, int wc, int hc);

@@ -93,6 +93,68 @@ void DrawSprite(XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 col)
 
 }
 
+void DrawSpriteUV(
+	XMFLOAT2 pos,
+	XMFLOAT2 size,
+	XMFLOAT4 col,
+	float u0, float v0,
+	float u1, float v1,float angle)
+{
+	g_pDevice = Direct3D_GetDevice();
+	g_pContext = Direct3D_GetDeviceContext();
+
+	D3D11_MAPPED_SUBRESOURCE msr;
+	g_pContext->Map(g_pVertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &msr);
+
+	Vertex3D* v = (Vertex3D*)msr.pData;
+
+	const float deg = angle;
+	const float rad = deg * (3.14159265f / 180.0f);
+	const float c = cosf(rad);
+	const float s = sinf(rad);
+
+	auto Rotate = [&](float x, float y) -> XMFLOAT2
+		{
+
+			return XMFLOAT2(x * c - y * s, x * s + y * c);
+		};
+
+
+
+	const float halfW = fabsf(size.x) * 0.5f;
+	const float halfH = fabsf(size.y) * 0.5f;
+
+	XMFLOAT2 p0 = Rotate(-halfW, -halfH);
+	XMFLOAT2 p1 = Rotate(+halfW, -halfH);
+	XMFLOAT2 p2 = Rotate(-halfW, +halfH);
+	XMFLOAT2 p3 = Rotate(+halfW, +halfH);
+
+
+	v[0].position = { pos.x + p0.x, pos.y + p0.y, 0.0f };
+	v[0].color = col;
+	v[0].texCoord = { u0, v0 };
+
+	v[1].position = { pos.x + p1.x, pos.y + p1.y, 0.0f };
+	v[1].color = col;
+	v[1].texCoord = { u1, v0 };
+
+	v[2].position = { pos.x + p2.x, pos.y + p2.y, 0.0f };
+	v[2].color = col;
+	v[2].texCoord = { u0, v1 };
+
+	v[3].position = { pos.x + p3.x, pos.y + p3.y, 0.0f };
+	v[3].color = col;
+	v[3].texCoord = { u1, v1 };
+
+	g_pContext->Unmap(g_pVertexBuffer, 0);
+
+	UINT stride = sizeof(Vertex3D);
+	UINT offset = 0;
+	g_pContext->IASetVertexBuffers(0, 1, &g_pVertexBuffer, &stride, &offset);
+	g_pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+
+	g_pContext->Draw(4, 0);
+}
 
 void DrawSpriteEx(XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 col, int bno, int wc, int hc)
 {
