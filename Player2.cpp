@@ -804,7 +804,7 @@ void PLAYER2::OnCollision(const CollisionInfo& info)
 		{
 			// 相手が武器オブジェクト持ってたら
 			if (info.other->m_weaponPtr)
-			{	
+			{
 				// 武器の衝突判定を呼び出す
 				info.other->m_weaponPtr->OnWeaponCollision(this);
 				//g_Player2.m_isAttacked = true;
@@ -944,7 +944,7 @@ void PLAYER2::OnCollision(const CollisionInfo& info)
 				m_velocity.y = CLIMB_SPEED;
 			}
 		}
-		
+
 		if (info.other->m_tag == "Slope")
 		{
 			auto INFO = info;
@@ -1125,17 +1125,17 @@ void PLAYER2::OnCollision(const CollisionInfo& info)
 			{
 				coolTime = 0.0f;
 			}
-		if (info.other->m_tag == "TREEP1")
-		{
-			m_velocity.x *= 0.4f;
-			m_velocity.z *= 0.4f;
+			if (info.other->m_tag == "TREEP1")
+			{
+				m_velocity.x *= 0.4f;
+				m_velocity.z *= 0.4f;
 
-			gp2_slopeSpeed.x *= 0.5f;
-			gp2_slopeSpeed.z *= 0.5f;
+				gp2_slopeSpeed.x *= 0.5f;
+				gp2_slopeSpeed.z *= 0.5f;
+			}
 		}
 	}
 }
-
 void PLAYER2::RoundReset(XMFLOAT3 startPos)
 {
 	//物理的な状態のリセット

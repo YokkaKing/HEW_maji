@@ -907,7 +907,7 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 				// 武器の衝突判定を呼び出す
 		//		g_Player.m_isAttacked = true;
 				info.other->m_weaponPtr->OnWeaponCollision(this);
-				
+
 			}
 		}
 
@@ -1016,7 +1016,7 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 				m_velocity.z = 0;
 			}
 		}
-		
+
 		if (info.other->m_tag == "Lift" ||
 			info.other->m_tag == "HILL")
 		{
@@ -1050,10 +1050,10 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 			{
 				m_velocity.x = 0;
 				m_velocity.z = 0;
-				m_velocity.y = CLIMB_SPEED;				
+				m_velocity.y = CLIMB_SPEED;
 			}
 		}
-		
+
 		if (info.other->m_tag == "Slope")
 		{
 			auto INFO = info;
@@ -1234,17 +1234,17 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 			{
 				coolTime = 0.0f;
 			}
-		if (info.other->m_tag == "TREEP2")
-		{
-			m_velocity.x *= 0.4f;
-			m_velocity.z *= 0.4f;
+			if (info.other->m_tag == "TREEP2")
+			{
+				m_velocity.x *= 0.4f;
+				m_velocity.z *= 0.4f;
 
-			gp1_slopeSpeed.x *= 0.5f;
-			gp1_slopeSpeed.z *= 0.5f;
+				gp1_slopeSpeed.x *= 0.5f;
+				gp1_slopeSpeed.z *= 0.5f;
+			}
 		}
 	}
 }
-
 void PLAYER::EquipBaseWeapon()
 {
 	m_currentWT = m_baseWT;

@@ -16,7 +16,7 @@
 #include "shader.h"
 #include "Manager.h"
 #include "Stage.h"
-
+#include "Audio.h"
 #include "sprite.h"
 #include "Result_Ui.h"
 #include "Player.h"
@@ -27,6 +27,7 @@
 void Result_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
     ResultSystem_Initialize(pDevice, pContext);
+	PlayAudio(g_result);
 }
 
 void Result_Finalize()
@@ -34,6 +35,8 @@ void Result_Finalize()
     ResultSystem_Finalize();
     Player2_AllCountReset();
     Player_AllCountReset();
+    StopAudio(g_result);
+
 }
 
 void Result_Update()

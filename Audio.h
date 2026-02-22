@@ -51,6 +51,8 @@ extern int g_countdown;
 extern int g_go;
 extern int g_round1;
 extern int g_round2;
+extern int g_result;
+
 /*
 //以下の関数はプログラムの最初と最後に1回ずつ呼び出せばOK
 void InitAudio();		//サウンドの初期化

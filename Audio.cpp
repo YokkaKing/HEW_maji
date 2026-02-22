@@ -52,7 +52,7 @@ int g_countdown = -1;
 int g_go = -1;
 int g_round1 = -1;
 int g_round2 = -1;
-
+int g_result = -1;
 
 void InitAudio()
 {
@@ -89,6 +89,7 @@ void InitAudio()
 	g_go = LoadAudio("asset\\Audio\\go.wav");
 	g_round1 = LoadAudio("asset\\Audio\\round_1.wav");
 	g_round2 = LoadAudio("asset\\Audio\\round_2.wav");
+	g_result = LoadAudio("asset\\Audio\\result.wav");
 	SetAudioVolume(g_hammer, 2.0f);
 	SetAudioVolume(g_charge, 2.0f);
 	SetAudioVolume(g_sword, 2.0f);
