@@ -79,17 +79,43 @@ void Entry_Update() {
 
     int readyCount = 0;
 
-    if (Keyboard_IsKeyDownTrigger(KK_ENTER)) {
-        XMFLOAT4 color(0.0f, 0.0f, 0.0f, 1.0f);
-        SetFade(40.0f, color, FADE_OUT, SCENE_SELECT_WT);
-        return;
+    int currentReady = 0;
+    for (int i = 0; i < 2; i++) {
+        if (g_Cursors[i].isSelected) currentReady++;
     }
+
+    if (currentReady >= 2) {
+        // Enterキー または コントローラーのYボタンで次へ
+        bool nextScene = Keyboard_IsKeyDownTrigger(KK_ENTER);
+        for (int i = 0; i < 2; i++) {
+            if (g_Controller[i].IsButtonPushed(ControllerButton::Y_BUTTON)) nextScene = true;
+        }
+
+        if (nextScene) {
+            XMFLOAT4 color(0.0f, 0.0f, 0.0f, 1.0f);
+            SetFade(40.0f, color, FADE_OUT, SCENE_SELECT_WT);
+            return;
+        }
+    }
+
 
     for (int i = 0; i < 2; i++) {
         //移動処理（決定していない場合のみ）
         if (!g_Cursors[i].isSelected) {
             float dx = g_Controller[i].GetLeftStickX();
             float dy = g_Controller[i].GetLeftStickY();
+            if (i == 0) { // 1P: WASD
+                if (Keyboard_IsKeyDown(KK_A)) dx = -1.0f;
+                if (Keyboard_IsKeyDown(KK_D)) dx = 1.0f;
+                if (Keyboard_IsKeyDown(KK_W)) dy = 1.0f;
+                if (Keyboard_IsKeyDown(KK_S)) dy = -1.0f;
+            }
+            else { // 2P: Arrow Keys
+                if (Keyboard_IsKeyDown(KK_LEFT)) dx = -1.0f;
+                if (Keyboard_IsKeyDown(KK_RIGHT)) dx = 1.0f;
+                if (Keyboard_IsKeyDown(KK_UP)) dy = 1.0f;
+                if (Keyboard_IsKeyDown(KK_DOWN)) dy = -1.0f;
+            }
             g_Cursors[i].pos.x += dx * 15.0f;
             g_Cursors[i].pos.y -= dy * 15.0f;
         }
@@ -103,7 +129,11 @@ void Entry_Update() {
         }
 
         //選択
-        if (g_Controller[i].IsButtonPushed(ControllerButton::A_BUTTON)) {
+        bool isDecideTriggered = g_Controller[i].IsButtonPushed(ControllerButton::A_BUTTON);
+        if (i == 0 && Keyboard_IsKeyDownTrigger(KK_C)) isDecideTriggered = true;
+        if (i == 1 && Keyboard_IsKeyDownTrigger(KK_P)) isDecideTriggered = true;
+
+        if (isDecideTriggered) {
             int slot = g_Cursors[i].targetSlot;
             if (!g_Cursors[i].isSelected && slot != -1) {
                 if (i == slot) {
@@ -119,7 +149,11 @@ void Entry_Update() {
             }
 
             //Bボタン：キャンセル
-            if (g_Controller[i].IsButtonPushed(ControllerButton::B_BUTTON)) {
+            bool isCancelTriggered = g_Controller[i].IsButtonPushed(ControllerButton::B_BUTTON);
+            if (i == 0 && Keyboard_IsKeyDownTrigger(KK_V)) isCancelTriggered = true; // 1Pキャンセル例
+            if (i == 1 && Keyboard_IsKeyDownTrigger(KK_L)) isCancelTriggered = true; // 2Pキャンセル例
+
+            if (isCancelTriggered) {
                 if (g_Cursors[i].isSelected) {
                     if (g_Cursors[i].targetSlot != -1) {
                         g_PlayerToController[g_Cursors[i].targetSlot] = -1;
@@ -131,11 +165,7 @@ void Entry_Update() {
                     return;
                 }
             }
-
-            if (g_Cursors[i].isSelected)
-            {
                 if (g_Cursors[i].isSelected) readyCount++;
-            }
         }
 
         //Yボタン：全員準備完了で次へ
