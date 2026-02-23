@@ -16,6 +16,7 @@ enum class EffectType
 {
     DAGEKI = 0,
     ZANGEKI,
+    TRANSFORM,
 
     EFFECT_MAX
 };
