@@ -6,7 +6,7 @@ using namespace DirectX;
 // 武器選択 → 変身選択 の間に入るカメラ演出
 void CameraIntroSequence_Initialize();
 void CameraIntroSequence_Finalize();
-
+bool CameraIntroSequence_IsOrbitPhase();  
 // 演出開始（Game_Initializeで呼ぶ）
 void CameraIntroSequence_Start(
     const XMFLOAT3& arenaCenter,

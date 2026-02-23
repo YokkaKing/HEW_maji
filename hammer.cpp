@@ -31,6 +31,16 @@ PLAYER2* g_PlayerHammer2;
 XMFLOAT3 g_moveHammer[2]; // 簡易アニメーション
 extern Controller g_Controller[2];
 
+
+static int GetHammerChargeSoundStageByPower(float p)
+{
+	if (p < 2.4f) return 0;
+	if (p < 3.5f) return 1;
+	if (p < 4.5f) return 2;
+	if (p < 5.5f) return 3;
+	return 4; // 最大段階（ループ）
+}
+
 Hammer::Hammer(GameObject* player, bool select) : IWeapon(player)
 {
 	g_PlayerHammer1 = GetPlayer();
@@ -63,7 +73,10 @@ Hammer::Hammer(GameObject* player, bool select) : IWeapon(player)
 
 	m_attackTimer = 0.0f;
 	m_coolTime = 0.0f;
-
+	m_chargeSoundStage = -1;
+	m_chargeLoopPlaying = false;
+	m_charge5Played = false;
+	m_charge5WaitTimer = 0.0f;
 	m_damageFCount = 0.0f; // ダメージの経過時間
 	m_damageFrame = { 0.38f, 0.5f }; // ダメージの有効フレーム
 
@@ -107,7 +120,7 @@ void Hammer::Attack()
 			float mv = sqrtf(player->m_velocity.x * player->m_velocity.x +
 				player->m_velocity.z * player->m_velocity.z);
 			isMoving = (mv > 0.001f);
-			ModelPlayClip(model, 280, 420, 60.0f, false, 2.0f);
+			ModelPlayClip(model, 280, 419, 60.0f, false, 2.0f);
 		}
 	}
 	else
@@ -192,9 +205,23 @@ void Hammer::Update()
 			}
 		}
 	}
+
 	else if (m_isCharging)
 	{
-		StopAudio(g_charge);
+	
+		StopAudio(g_charge1);
+		StopAudio(g_charge2);
+		StopAudio(g_charge3);
+		StopAudio(g_charge4);
+		StopAudio(g_charge5);
+
+		m_chargeLoopPlaying = false;
+		m_charge5Played = false;
+		m_charge5WaitTimer = 0.0f;
+		m_chargeSoundStage = -1;
+
+		// そのあと攻撃音
+		PlayAudio(g_hammer, false);
 		if (g_Controller[m_playerIndex].IsConnected()) {
 			g_Controller[m_playerIndex].SetVibration(0.0f, 0.0f);
 		}
@@ -206,7 +233,68 @@ void Hammer::Update()
 		Attack();
 	}
 	const float mul = (m_isCharging || m_isAttacking) ? 0.3f : 1.0f;
+	const float dt = 1.0f / 60.0f;
 
+	if (m_isCharging)
+	{
+		const int newStage = GetHammerChargeSoundStageByPower(m_chargePower);
+
+		// 段階が変わった瞬間だけ鳴らす
+		if (newStage != m_chargeSoundStage)
+		{
+			// ループ中だったら止める
+			if (m_chargeLoopPlaying)
+			{
+				StopAudio(g_charge5);
+				m_chargeLoopPlaying = false;
+			}
+
+			// 最大段階用の待機状態をリセット
+			m_charge5Played = false;
+			m_charge5WaitTimer = 0.0f;
+
+			switch (newStage)
+			{
+			case 0:
+				PlayAudio(g_charge1, false);
+				break;
+			case 1:
+				PlayAudio(g_charge2, false);
+				break;
+			case 2:
+				PlayAudio(g_charge3, false);
+				break;
+			case 3:
+				PlayAudio(g_charge4, false);
+				break;
+			case 4:
+				// 最大段階に入った瞬間は g_charge5 を1回だけ鳴らす
+				PlayAudio(g_charge5, false);
+				m_charge5Played = true;
+
+				// g_charge5 の長さ分待ってからループへ
+				// ここは実音の長さに合わせて調整（例: 0.8秒）
+				m_charge5WaitTimer = 0.8f;
+				break;
+			}
+
+			m_chargeSoundStage = newStage;
+		}
+
+		// 最大段階にいる間：g_charge5後に 2~3秒ループへ移行
+		if (m_chargeSoundStage == 4 && m_charge5Played && !m_chargeLoopPlaying)
+		{
+			if (m_charge5WaitTimer > 0.0f)
+			{
+				m_charge5WaitTimer -= dt;
+				if (m_charge5WaitTimer <= 0.0f)
+				{
+					PlayAudioLoopSection(g_charge5, 1.5f, 3.0f);
+					m_chargeLoopPlaying = true;
+				}
+			}
+		}
+	}
 	if (m_selectPlayer == FALSE)
 	{
 		if (g_PlayerHammer1) g_PlayerHammer1->m_moveMul = mul;
@@ -244,7 +332,10 @@ void Hammer::Update()
 		if (model) {
 			ModelPlayClip(model, 241, 280, 60.0f, false, 1.0f);
 		}
-		PlayAudioLoopSection(g_charge, 2.0f, 3.0f);
+		m_chargeSoundStage = -1;
+		m_chargeLoopPlaying = false;
+		m_charge5Played = false;
+		m_charge5WaitTimer = 0.0f;
 		m_chargeState = CHARGE_IN;
 	}
 	if (m_isCharging && isMoving)
@@ -417,9 +508,9 @@ void Hammer::OnWeaponCollision(GameObject* target)
 				SetPlayer2_IsAttacked(true);
 				m_hitTargets.insert(target);
 
-				if (m_chargePower < 3.4f)
+				if (m_chargePower < 2.4f)
 				{
-					target->TakeDamage(10.0f);
+					target->TakeDamage(20.0f);
 
 					//ヒットエフェクト
 					XMFLOAT3 effectPos = target->m_position;
@@ -439,11 +530,11 @@ void Hammer::OnWeaponCollision(GameObject* target)
 					//攻撃時に攻撃者側にもヒットストップを入れる
 					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
 					g_Player.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime1, 0.0f);
-					Player_PlusScore(10.0f);
+					Player_PlusScore(20.0f);
 				}
 				else if (m_chargePower < 3.5f)
 				{
-					target->TakeDamage(20.0f);
+					target->TakeDamage(30.0f);
 
 					//ヒットエフェクト
 					XMFLOAT3 effectPos = target->m_position;
@@ -463,33 +554,9 @@ void Hammer::OnWeaponCollision(GameObject* target)
 					//攻撃時に攻撃者側にもヒットストップを入れる
 					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
 					g_Player.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime2, 0.0f);
-					Player_PlusScore(20.0f);
-				}
-				else if (m_chargePower < 4.5f)
-				{
-					target->TakeDamage(30.0f);
-
-					//ヒットエフェクト
-					XMFLOAT3 effectPos = target->m_position;
-					effectPos.y -= 1.0f;
-					HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::DAGEKI);
-
-					//ヒットバック計算式
-					XMFLOAT3 dir = {
-						target->m_position.x - owner->m_position.x,
-						0.1f,
-						target->m_position.z - owner->m_position.z
-					};
-
-					//P2に対してヒットアクションを発動
-					//引数:方向vec, HS時間, KB距離
-					g_Player2.m_hitAction.triggerHA(dir, stopTime3, 0.3f);
-					//攻撃時に攻撃者側にもヒットストップを入れる
-					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
-					g_Player.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime3, 0.0f);
 					Player_PlusScore(30.0f);
 				}
-				else if (m_chargePower < 5.5f)
+				else if (m_chargePower < 4.5f)
 				{
 					target->TakeDamage(40.0f);
 
@@ -512,6 +579,30 @@ void Hammer::OnWeaponCollision(GameObject* target)
 					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
 					g_Player.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime3, 0.0f);
 					Player_PlusScore(40.0f);
+				}
+				else if (m_chargePower < 5.5f)
+				{
+					target->TakeDamage(50.0f);
+
+					//ヒットエフェクト
+					XMFLOAT3 effectPos = target->m_position;
+					effectPos.y -= 1.0f;
+					HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::DAGEKI);
+
+					//ヒットバック計算式
+					XMFLOAT3 dir = {
+						target->m_position.x - owner->m_position.x,
+						0.1f,
+						target->m_position.z - owner->m_position.z
+					};
+
+					//P2に対してヒットアクションを発動
+					//引数:方向vec, HS時間, KB距離
+					g_Player2.m_hitAction.triggerHA(dir, stopTime3, 0.3f);
+					//攻撃時に攻撃者側にもヒットストップを入れる
+					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
+					g_Player.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime3, 0.0f);
+					Player_PlusScore(50.0f);
 				}
 				else if (m_chargePower >= 5.5f)
 				{
@@ -547,9 +638,9 @@ void Hammer::OnWeaponCollision(GameObject* target)
 
 				m_hitTargets.insert(target);
 
-				if (m_chargePower < 3.4f)
+				if (m_chargePower < 2.4f)
 				{
-					target->TakeDamage(10.0f);
+					target->TakeDamage(20.0f);
 
 					PlayAudio(g_damageHammer);
 
@@ -573,35 +664,9 @@ void Hammer::OnWeaponCollision(GameObject* target)
 					//攻撃時に攻撃者側にもヒットストップを入れる
 					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
 					g_Player2.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime1, 0.0f);
-					Player2_PlusScore(10.0f);
-				}
-				else if (m_chargePower < 3.5f)
-				{
-					PlayAudio(g_damageHammer);
-
-					target->TakeDamage(20.0f);
-
-					//ヒットエフェクト
-					XMFLOAT3 effectPos = target->m_position;
-					effectPos.y -= 1.0f;
-					HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::DAGEKI);
-
-					//ヒットバック計算式
-					XMFLOAT3 dir = {
-						target->m_position.x - owner->m_position.x,
-						0.1f,
-						target->m_position.z - owner->m_position.z
-					};
-
-					//P2に対してヒットアクションを発動
-					//引数:方向vec, HS時間, KB距離
-					g_Player.m_hitAction.triggerHA(dir, stopTime2, 0.2f);
-					//攻撃時に攻撃者側にもヒットストップを入れる
-					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
-					g_Player2.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime2, 0.0f);
 					Player2_PlusScore(20.0f);
 				}
-				else if (m_chargePower < 4.5f)
+				else if (m_chargePower < 3.5f)
 				{
 					PlayAudio(g_damageHammer);
 
@@ -621,13 +686,13 @@ void Hammer::OnWeaponCollision(GameObject* target)
 
 					//P2に対してヒットアクションを発動
 					//引数:方向vec, HS時間, KB距離
-					g_Player.m_hitAction.triggerHA(dir, stopTime3, 0.3f);
+					g_Player.m_hitAction.triggerHA(dir, stopTime2, 0.2f);
 					//攻撃時に攻撃者側にもヒットストップを入れる
 					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
-					g_Player2.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime3, 0.0f);
+					g_Player2.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime2, 0.0f);
 					Player2_PlusScore(30.0f);
 				}
-				else if (m_chargePower < 5.5f)
+				else if (m_chargePower < 4.5f)
 				{
 					PlayAudio(g_damageHammer);
 
@@ -652,6 +717,32 @@ void Hammer::OnWeaponCollision(GameObject* target)
 					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
 					g_Player2.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime3, 0.0f);
 					Player2_PlusScore(40.0f);
+				}
+				else if (m_chargePower < 5.5f)
+				{
+					PlayAudio(g_damageHammer);
+
+					target->TakeDamage(50.0f);
+
+					//ヒットエフェクト
+					XMFLOAT3 effectPos = target->m_position;
+					effectPos.y -= 1.0f;
+					HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::DAGEKI);
+
+					//ヒットバック計算式
+					XMFLOAT3 dir = {
+						target->m_position.x - owner->m_position.x,
+						0.1f,
+						target->m_position.z - owner->m_position.z
+					};
+
+					//P2に対してヒットアクションを発動
+					//引数:方向vec, HS時間, KB距離
+					g_Player.m_hitAction.triggerHA(dir, stopTime3, 0.3f);
+					//攻撃時に攻撃者側にもヒットストップを入れる
+					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
+					g_Player2.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime3, 0.0f);
+					Player2_PlusScore(50.0f);
 				}
 				else if (m_chargePower >= 5.5f)
 				{

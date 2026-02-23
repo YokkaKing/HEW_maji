@@ -36,7 +36,7 @@ extern Controller g_Controller[2];
 static inGameWTselect g_selectData;
 static int g_cursorP1 = 0;
 static int g_cursorP2 = 0;
-
+static bool g_isStarted = false;  
 static bool g_isP1Ready = false;
 static bool g_isP2Ready = false;
 
@@ -152,6 +152,7 @@ void selectWT_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
     g_pContext = pContext;
     g_isP1Ready = false;
     g_isP2Ready = false;
+    g_isStarted = false;
 
 
 #pragma region スプライトアニメ初期化
@@ -645,7 +646,7 @@ void selectWT_Update()
     else if (g_goState == GO_WAIT_FOR_A)
     {
    
-        if (Keyboard_IsKeyDownTrigger(KK_A)|| (g_Controller[0].IsButtonPushed(ControllerButton::A_BUTTON)))
+        if (!g_isStarted && (Keyboard_IsKeyDownTrigger(KK_A)|| g_Controller[0].IsButtonPushed(ControllerButton::A_BUTTON)))
         {
             g_Controller[0].SetVibration(1.0f, 1.0f);
             g_Controller[1].SetVibration(1.0f, 1.0f);
@@ -653,7 +654,7 @@ void selectWT_Update()
             PlayAudio(g_gameStart, false);
             XMFLOAT4 fadeColor(0.0f, 0.0f, 0.0f, 1.0f);
             SetFade(40.0f, fadeColor, FADE_STATE::FADE_OUT, SCENE_GAME);
-
+			g_isStarted = true;
             g_goState = GO_NONE;
             g_goAnimTime = 0.0f;
             g_goBtnX = g_goBtnStartX;
