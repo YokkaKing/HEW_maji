@@ -41,6 +41,7 @@
 #include "HitEffect.h"
 #include "PlayerUI.h"
 #include "Guide.h"
+
 //================================================================
 //	グローバル変数
 //================================================================
@@ -61,8 +62,47 @@ STAGE g_stage;
 static bool g_showScore = false;
 static bool g_waitingIntroBeforeTransformSelect = false;
 static bool g_needWarmupPlayerDrawState = false;
+static ID3D11ShaderResourceView* g_TextureArenaIntro = NULL;
 void Game_SetShowScore(bool on) { g_showScore = on; }
 bool Game_IsShowScore() { return g_showScore; }
+
+
+static void Game_DrawArenaIntroImage()
+{
+	// 表示条件：
+	// 1) イントロ待機中
+	// 2) カメライントロが回転フェーズ中（競技場見せ）
+	if (!g_waitingIntroBeforeTransformSelect) return;
+	if (!CameraIntroSequence_IsOrbitPhase())  return;
+	if (g_TextureArenaIntro == NULL)          return;
+
+	ID3D11DeviceContext* pContext = Direct3D_GetDeviceContext();
+
+	const float SCREEN_WIDTH = (float)Direct3D_GetBackBufferWidth();
+	const float SCREEN_HEIGHT = (float)Direct3D_GetBackBufferHeight();
+
+	// Hp_Draw と同じように2D用行列をセット
+	Shader_Begin();
+	Shader_SetMatrix(XMMatrixOrthographicOffCenterLH(
+		0.0f,
+		SCREEN_WIDTH,
+		SCREEN_HEIGHT,
+		0.0f,
+		0.0f,
+		1.0f));
+	Shader_SetWorldMatrix(XMMatrixIdentity());
+
+	// テクスチャ設定
+	pContext->PSSetShaderResources(0, 1, &g_TextureArenaIntro);
+	SetBlendState(BLENDSTATE_ALFA);
+
+	// 表示位置・サイズ（ここは好みで調整）
+	XMFLOAT2 pos = XMFLOAT2(SCREEN_WIDTH * 0.5f, SCREEN_HEIGHT * 0.5f);      // 画面上中央
+	XMFLOAT2 size = XMFLOAT2(SCREEN_WIDTH, SCREEN_HEIGHT);                  // バナーっぽいサイズ
+	XMFLOAT4 col = XMFLOAT4(1, 1, 1, 1);
+
+	DrawSprite(pos, size, col);
+}
 
 void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, const inGameWTselect& select)
 {
@@ -167,6 +207,14 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, const
 	g_timeScale = 1.0f;
 	g_timeAccum = 0.0f;
 	g_needWarmupPlayerDrawState = true;
+
+	TexMetadata metadata;
+	ScratchImage image;
+
+	LoadFromWICFile(L"asset\\texture\\arena.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+	CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureArenaIntro);
+	assert(g_TextureArenaIntro);
+
 }
 
 void Game_Finalize()
@@ -196,6 +244,11 @@ void Game_Finalize()
 	//UnloadAudio(g_BgmID);//サウンドの解放
 	CameraIntroSequence_Finalize();
 	g_waitingIntroBeforeTransformSelect = false;
+	if (g_TextureArenaIntro)
+	{
+		g_TextureArenaIntro->Release();
+		g_TextureArenaIntro = NULL;
+	}
 }
 void Game_SetTimeScale(float s)
 {
@@ -419,6 +472,8 @@ void Game_Draw_Player1()
 	Shader_SetLight(Light.Light);	//ライト構造体をシェーダーへセット
 	SetDepthTest(FALSE);
 	//===UI描画========
+	// イントロ中の競技場紹介画像（回転中だけ表示）
+	Game_DrawArenaIntroImage();
 	PlayerUI::Draw(true);
 	Guide::Draw(true);
 	if (!g_transformMngr.IsActive()&&!CountdownUI_IsBlockingGameplay() && !g_waitingIntroBeforeTransformSelect)
@@ -476,7 +531,8 @@ void Game_Draw_Player2()
 	Shader_SetLight(Light.Light);	//ライト構造体をシェーダーへセット
 	SetDepthTest(FALSE);
 
-
+	// イントロ中の競技場紹介画像（回転中だけ表示）
+	Game_DrawArenaIntroImage();
 	PlayerUI::Draw(false);
 	Guide::Draw(false);
 	if (!g_transformMngr.IsActive() && !CountdownUI_IsBlockingGameplay()&& !g_waitingIntroBeforeTransformSelect)
@@ -531,8 +587,7 @@ int Game_GetRoundResult()
 		float P1_hp = Player_GetHp();
 		float P2_hp = Player2_GetHp();
 		if(p1Dead || p2Dead)
-		PlayAudio(g_roundEnd, false);
-		PlayAudio(g_crowd, false);
+
 
 		if (P1_hp > P2_hp)
 		{
@@ -582,3 +637,4 @@ void Game_ResetRound()
 	//ここで StartSelection しない（フェード中に変身UIが一瞬出る原因になる）
 	//g_transformMngr.StartSelection(WeaponTerrain::NONE, WeaponTerrain::NONE);
 }
+

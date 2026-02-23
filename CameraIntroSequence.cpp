@@ -258,3 +258,7 @@ void SetCameraIntroPlayed(bool played)
 {
     g_hasPlayedCorpseIntro = played;
 }
+bool CameraIntroSequence_IsOrbitPhase()
+{
+    return (g_state == INTRO_ORBIT);
+}

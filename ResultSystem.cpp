@@ -100,7 +100,7 @@ static ClipRange GetAttackRange_Base(WeaponTerrain wt)
     case WeaponTerrain::SHURIKEN_:  return { 151,210,60.0f };
     case WeaponTerrain::SPEAR_HILL: return { 420, 479,60.0f };
     case WeaponTerrain::BOW_HILL:   return { 301,420,60.0f };
-    case WeaponTerrain::HAMMER_:    return { 241,420,60.0f };
+    case WeaponTerrain::HAMMER_:    return { 241,419,60.0f };
     default:                        return { 80,150,60.0f };
     }
 }
@@ -112,7 +112,7 @@ static ClipRange GetAttackRange_Transform(WeaponTerrain wt)
     case WeaponTerrain::SHURIKEN_:  return { 151,210,60.0f };
     case WeaponTerrain::SPEAR_HILL: return { 420, 479,60.0f };
     case WeaponTerrain::BOW_HILL:   return { 301,420,60.0f };
-    case WeaponTerrain::HAMMER_:    return { 241,420,60.0f };
+    case WeaponTerrain::HAMMER_:    return { 241,419,60.0f };
     default:                        return { 80,150,60.0f };
     }
 }
