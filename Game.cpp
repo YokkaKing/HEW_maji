@@ -102,8 +102,30 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, const
 	// 競技場中心座標（まずは仮値。ステージ中心に合わせて調整してOK）
 	XMFLOAT3 arenaCenter = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
-	// 半径/高さ/回転時間/寄り時間
-	CameraIntroSequence_Start(arenaCenter, 30.0f, 20.0f, 4.0f, 1.0f);
+	if (!GetCameraIntroPlayed())
+	{
+		// 1回目だけイントロ演出をやる
+		g_waitingIntroBeforeTransformSelect = true;
+		PlayAudio(g_crowd, false);	
+		CameraIntroSequence_Start(arenaCenter, 30.0f, 20.0f, 4.0f, 1.0f);
+		SetCameraIntroPlayed(true);
+	}
+	else
+	{
+		g_waitingIntroBeforeTransformSelect = false;
+
+		g_selectionPhase = 0;
+		SetTransformUi_SelectNum(0);
+		SetTransformUi_IsUsed(true, 0);
+		SetTransformUi_IsUsed(false, 1);
+
+		g_transformMngr.StartSelection(WeaponTerrain::NONE, WeaponTerrain::NONE);
+
+		Camera_Update();
+		Camera2_Update();
+	}
+
+	
 	HitEffectManager::GetInstance().Initialize(pDevice, pContext);
 	//===========UI===========
 	Score_Initialize(pDevice, pContext);

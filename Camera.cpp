@@ -123,6 +123,9 @@ void Camera_Update()
 
 			// 追従差分暴れ防止
 			g_PlayerPosOld = GetPlayerPosition();
+
+			// ★武器選択カメラの注視点を固定
+			CameraObject.AtPosition = XMFLOAT3(0.0f, 0.0f, 0.0f);
 		}
 
 		// Game画面に入った瞬間だけ初期化
@@ -145,7 +148,31 @@ void Camera_Update()
 		g_PlayerPosOld = GetPlayerPosition();
 		return;
 	}
+	if (sceneNow == SCENE_SELECT_WT)
+	{
+		// 武器選択用の注視点（中央）
+		CameraObject.AtPosition = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
+		// nowYaw / nowPitch / nowDistance は上でシーン切替時にセット済み
+		XMMATRIX matRot = XMMatrixRotationRollPitchYaw(
+			XMConvertToRadians(nowPitch),
+			XMConvertToRadians(nowYaw),
+			0.0f
+		);
+
+		XMVECTOR vOffset = XMVectorSet(0.0f, 0.0f, -nowDistance, 0.0f);
+		vOffset = XMVector3TransformNormal(vOffset, matRot);
+
+		XMVECTOR vAt = XMLoadFloat3(&CameraObject.AtPosition);
+		XMVECTOR vNewPos = XMVectorAdd(vAt, vOffset);
+		vNewPos = XMVectorSetY(vNewPos, XMVectorGetY(vNewPos) + 1.0f);
+
+		XMStoreFloat3(&CameraObject.Position, vNewPos);
+
+		// 次シーンで差分暴れしないよう同期しておく
+		g_PlayerPosOld = GetPlayerPosition();
+		return;
+	}
 	//========================
 	// プレイヤー追従移動
 	//========================

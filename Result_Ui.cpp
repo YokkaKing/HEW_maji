@@ -386,7 +386,23 @@ void Result_Ui_Update()
             {
                 if (g_Score_Ui.score < Player_GetScore())
                 {
-                    g_Score_Ui.score += 2;
+                    if (Player_GetScore() < 200)
+                    {
+                        g_Score_Ui.score += 2;
+                    }
+                    else if (Player_GetScore() < 500)
+                    {
+                        g_Score_Ui.score += 5;
+					}
+                    else if (Player_GetScore() < 1000)
+                    {
+                        g_Score_Ui.score += 10;
+                    }
+                    else
+                    {
+                        g_Score_Ui.score += 20;
+					}
+                    
                 }
                 else
                 {
