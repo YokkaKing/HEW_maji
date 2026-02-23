@@ -11,6 +11,7 @@
 //================================================================
 #include"Audio.h"
 #include"arrow.h"
+#include "Entry.h"
 #include"debug_ostream.h"
 #include"model.h"
 #include"Camera.h"
@@ -76,6 +77,9 @@ void Arrow::Attack()
 
 void Arrow::Update()
 {
+	int controlIdx = GetControllerIndexFromPlayerNo(m_selectPlayer);
+	if (controlIdx == -1) return;
+
 	if (m_coolTime > 0.0f)
 	{
 		{
@@ -90,7 +94,7 @@ void Arrow::Update()
 
 	if (!m_selectPlayer)
 	{
-		if (Keyboard_IsKeyDown(KK_C) || g_Controller[0].IsButtonDown(ControllerButton::X_BUTTON))
+		if (Keyboard_IsKeyDown(KK_C) || g_Controller[controlIdx].IsButtonDown(ControllerButton::X_BUTTON))
 		{
 			// 攻撃中じゃなければチャージできる
 			if (!m_isAttacking && m_coolTime <= 0.0f)
@@ -106,7 +110,7 @@ void Arrow::Update()
 		}
 		else if (m_isCharging)
 		{
-			if (g_Controller[0].IsConnected()) g_Controller[0].SetVibration(0.0f, 0.0f);
+			if (g_Controller[controlIdx].IsConnected()) g_Controller[controlIdx].SetVibration(0.0f, 0.0f);
 			// キーを離した瞬間に投げる
 			Throw(m_chargePower, m_selectPlayer);
 			m_isCharging = false;
@@ -119,7 +123,7 @@ void Arrow::Update()
 
 	if (m_selectPlayer)
 	{
-		if (Keyboard_IsKeyDown(KK_P) || g_Controller[1].IsButtonDown(ControllerButton::X_BUTTON))
+		if (Keyboard_IsKeyDown(KK_P) || g_Controller[controlIdx].IsButtonDown(ControllerButton::X_BUTTON))
 		{
 			// 攻撃中じゃなければチャージできる
 			if (!m_isAttacking && m_coolTime <= 0.0f)
@@ -135,7 +139,7 @@ void Arrow::Update()
 		}
 		else if (m_isCharging)
 		{
-			if (g_Controller[1].IsConnected()) g_Controller[1].SetVibration(0.0f, 0.0f);
+			if (g_Controller[controlIdx].IsConnected()) g_Controller[controlIdx].SetVibration(0.0f, 0.0f);
 			// キーを離した瞬間に投げる
 			Throw(m_chargePower, m_selectPlayer);
 			m_isCharging = false;

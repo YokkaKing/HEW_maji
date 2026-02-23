@@ -46,4 +46,3 @@ bool selectWT_IsP2Ready();
 
 int GetPlayer1SelectedIndex();
 int GetPlayer2SelectedIndex();
-

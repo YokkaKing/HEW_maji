@@ -39,6 +39,8 @@
 #include "Select_Transform_Ui.h"
 #include "countdown.h"
 #include "HitEffect.h"
+#include "PlayerUI.h"
+#include "Guide.h"
 //================================================================
 //	グローバル変数
 //================================================================
@@ -134,6 +136,8 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, const
 	Hp_Initialize(pDevice, pContext);
 	Hp2_Initialize(pDevice, pContext);
 	CountdownUI_Initialize(pDevice);
+	PlayerUI::Initialize(pDevice, pContext);
+	Guide::Initialize(pDevice);
 	//========================
 	//ビューポートの初期化
 	//Viewport_Initialize(Direct3D_GetWindowHandle());
@@ -185,6 +189,8 @@ void Game_Finalize()
 	g_transformMngr.Finalize();
 	SelectTransformUi_Finalize();
 	CountdownUI_Finalize();
+	PlayerUI::Finalize();
+	Guide::Finalize();
 	//=====================
 	ManagerCollider::ClearCollider();
 	//UnloadAudio(g_BgmID);//サウンドの解放
@@ -325,6 +331,7 @@ void Game_Update()
 		}
 		PlayerUpdate();
 		Player2Update();
+		PlayerUI::Update();
 		Field_Update();
 		g_sponer.Update();
 		HitEffectManager::GetInstance().Update(1.0f / 60.0f);
@@ -412,6 +419,8 @@ void Game_Draw_Player1()
 	Shader_SetLight(Light.Light);	//ライト構造体をシェーダーへセット
 	SetDepthTest(FALSE);
 	//===UI描画========
+	PlayerUI::Draw(true);
+	Guide::Draw(true);
 	if (!g_transformMngr.IsActive()&&!CountdownUI_IsBlockingGameplay() && !g_waitingIntroBeforeTransformSelect)
 	{
 		Hp_Draw();
@@ -467,6 +476,9 @@ void Game_Draw_Player2()
 	Shader_SetLight(Light.Light);	//ライト構造体をシェーダーへセット
 	SetDepthTest(FALSE);
 
+
+	PlayerUI::Draw(false);
+	Guide::Draw(false);
 	if (!g_transformMngr.IsActive() && !CountdownUI_IsBlockingGameplay()&& !g_waitingIntroBeforeTransformSelect)
 	{
 		Hp2_Draw();

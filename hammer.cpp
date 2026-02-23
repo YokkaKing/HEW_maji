@@ -11,6 +11,7 @@
 //================================================================
 #include"Audio.h"
 #include"hammer.h"
+#include "Entry.h"
 #include"debug_ostream.h"
 #include"model.h"
 #include"Camera.h"
@@ -129,6 +130,9 @@ void Hammer::Attack()
 
 void Hammer::Update()
 {
+	int controlIdx = GetControllerIndexFromPlayerNo(m_selectPlayer);
+	if (controlIdx == -1) return;
+
 	if (m_coolTime > 0.0f) {
 		m_coolTime -= 1.0f / 60.0f;
 		if (m_coolTime < 0.0f) m_coolTime = 0.0f;

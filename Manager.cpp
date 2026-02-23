@@ -16,6 +16,7 @@
 #include "Controller.h"
 #include"Game.h"
 #include"Title.h"
+#include "Entry.h"
 #include"Result.h"
 #include "Score.h"
 #include "Player.h"
@@ -93,6 +94,9 @@ void Manager_Update()
 			break;
 		case SCENE_TITLE:
 			Title_Update();	
+			break;
+		case SCENE_ENTRY:
+			Entry_Update();
 			break;
 		case SCENE_SELECT_WT:
 			selectWT_Update();
@@ -337,6 +341,9 @@ void Manager_Draw_Player1()
 		case SCENE_TITLE:
 			Title_Draw();	
 			break;
+		case SCENE_ENTRY:
+			Entry_Draw();
+			break;
 		case SCENE_SELECT_WT:
 			
 			selectWT_Draw(0);
@@ -363,6 +370,9 @@ void Manager_Draw_Player2()
 		break;
 	case SCENE_TITLE:
 		Title_Draw();
+		break;
+	case SCENE_ENTRY:
+		Entry_Draw();
 		break;
 	case SCENE_SELECT_WT:
 
@@ -404,6 +414,9 @@ void SetScene(SCENE scene) //シーンを切り替える
 		case SCENE_TITLE:
 			Title_Finalize();	
 			break;
+		case SCENE_ENTRY:
+			Entry_Finalize();
+			break;
 		case SCENE_SELECT_WT:
 			selectWT_Finalize();
 			Selectweaponui3d_Finalize();
@@ -427,6 +440,9 @@ void SetScene(SCENE scene) //シーンを切り替える
 			break;
 		case SCENE_TITLE:
 			Title_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
+			break;
+		case SCENE_ENTRY:
+			Entry_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
 			break;
 		case SCENE_GAME:
 			StopAudio(g_title);

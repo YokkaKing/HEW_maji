@@ -17,6 +17,7 @@
 #include"keyboard.h"
 #include"controller.h"
 #include"Player2.h"
+#include "Entry.h"
 #include"Camera.h"
 #include"shader.h"
 #include"Transform.h"
@@ -49,6 +50,7 @@ static bool g_Player2JumpPlaying = false; // ジャンプワンショット再�
 static int g_Player2CurrentAnim = 0; // 0: idle, 1: move, 2: attack 3:jump
 bool g_isChangeP2;
 XMFLOAT3 gp2_slopeSpeed;
+bool gp2_roundReset;
 
 static const float HIT_ANIM_DURATION = 0.35f;
 
@@ -106,6 +108,8 @@ void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 	auto collider = g_Player2.AddComponent<BoxCollider>(&g_Player2, g_Player2.m_scale);
 	ManagerCollider::AddCollider(collider);
 
+	gp2_roundReset = false; // ラウンドがリセットされる
+
 	// のちのちセレクト画面から分岐できるようにする
 	// 自分をownerとして武器を生成
 	g_changeP2 = 0;
@@ -145,6 +149,26 @@ void Player2Finalize()
 }
 void	Player2Update()
 {
+	int controllerIdx = GetControllerIndexFromPlayerNo(1);
+
+	// --- 揺れ処理の追加 ---
+	// ダメージを検知
+	float damage = g_Player2.m_lastHp - g_Player2.m_currentHp;
+	if (damage > 0.0f)
+	{
+		// ダメージ量に応じて揺れの強さを設定 (例: ダメージの 0.05倍)
+		g_Player2.m_shakeIntensity += damage * 0.02f;
+		if (g_Player2.m_shakeIntensity > 1.0f)
+		{
+			g_Player2.m_shakeIntensity = 1.0f;
+		}
+	}
+	g_Player2.m_lastHp = g_Player2.m_currentHp; // HPを保存
+
+	// 揺れの減衰 (毎フレーム 90% に減らすなど)
+	g_Player2.m_shakeIntensity *= 0.9f;
+	if (g_Player2.m_shakeIntensity < 0.001f) g_Player2.m_shakeIntensity = 0.0f;
+
 	TransformPlayer2();           // Eキーで進化タイプを選択
 	ApplyTransformEffect2();   // 進化タイプに応じたパラメータを適用
 	if (g_Player2.m_isAttacked && !g_Player2.m_isDead)
@@ -182,7 +206,16 @@ void	Player2Update()
 //	攻撃処理
 //================================================================
 	// CキーかAボタンで
-	if (Keyboard_IsKeyDownTrigger(KK_P) || g_Controller[1].IsButtonPushed(ControllerButton::X_BUTTON))
+	bool bAttackTrigger = Keyboard_IsKeyDownTrigger(KK_P); // キーボード(Pキー)
+	if (controllerIdx != -1)
+	{
+		// コントローラーのXボタンもチェック
+		if (g_Controller[controllerIdx].IsButtonPushed(ControllerButton::X_BUTTON))
+		{
+			bAttackTrigger = true;
+		}
+	}
+	if (bAttackTrigger)
 	{
 		// 武器があるか
 		if (g_Player2.m_currentWeapon && !g_Player2AttackPlaying&&g_Player2.m_currentWeapon->GetCoolTime() ==0.0f&& !g_Player2.m_hitAnimPlaying)
@@ -504,6 +537,11 @@ void	Player2Update()
 
 void Player2_ManualMove()
 {
+	int controllerIdx = GetControllerIndexFromPlayerNo(1);
+//	if (controllerIdx == -1) return;
+
+	Controller& ctrl = g_Controller[controllerIdx];
+
 	// カメラの前方向ベクトル
 	float forwardX = GetCamera2AtPosition().x - GetCamera2Position().x;
 	float forwardZ = GetCamera2AtPosition().z - GetCamera2Position().z;
@@ -550,57 +588,34 @@ void Player2_ManualMove()
 	// 移動量初期化
 	float moveX = 0.0f;
 	float moveZ = 0.0f;
-
-	bool allowInput = true;
-	// ★ヒットストップ中 / 被弾アニメ中 / 死亡中 は入力を無効化
-	if (g_Player2.m_hitAction.IsStopping() || g_Player2.m_hitAnimPlaying || g_Player2.m_isDead)
+	float speed = 0.0f;
+	
+	float stickY = ctrl.GetLeftStickY();
+	if (fabs(stickY) > 0.05f) // デッドゾーンを設定 (必要に応じて調整)
 	{
-		allowInput = false;
+		speed = stickY * 0.1f;
 	}
-
-
-	if (allowInput)
-	{
-		float speed = 0.0f;
-		float stickY = g_Controller[1].GetLeftStickY();
-		if (fabs(stickY) > 0.05f) // デッドゾーンを設定 (必要に応じて調整)
-		{
-			// ベクトルが逆だから移動が逆になる
-			// 左スティック上方向 (+1.0f) で前進 (speed = -0.1f) に対応
-			speed = stickY * 0.1f;
-		}
-		if (Keyboard_IsKeyDown(KK_U))
-		{
-			speed = +0.1f;
-		}
-		if (Keyboard_IsKeyDown(KK_J))
-		{
-			speed = -0.1f;
-		}
+	if (Keyboard_IsKeyDown(KK_U)) speed = +0.1f;
+	if (Keyboard_IsKeyDown(KK_J)) speed = -0.1f;
 
 		moveX += forwardX * speed;
 		moveZ += forwardZ * speed;
 
-		// 横移動
-		float strafe = 0.0f;
-		float stickX = g_Controller[1].GetLeftStickX();
-		if (fabs(stickX) > 0.05f) // デッドゾーンを設定 (必要に応じて調整)
-		{
-			// 左スティック左方向 (-1.0f) で左移動 (strafe = +0.1f) に対応
-			strafe = stickX * 0.1f;
-		}
-		if (Keyboard_IsKeyDown(KK_H))
-		{
-			strafe = -0.1f;  // 左
-		}
-		if (Keyboard_IsKeyDown(KK_K))
-		{
-			strafe = +0.1f;  // 右
-		}
-		moveX += rightX * strafe;
-		moveZ += rightZ * strafe;
-
+	// 横移動
+	float strafe = 0.0f;
+	float stickX = ctrl.GetLeftStickX();
+	if (fabs(stickX) > 0.05f) // デッドゾーンを設定 (必要に応じて調整)
+	{
+		// 左スティック左方向 (-1.0f) で左移動 (strafe = +0.1f) に対応
+		strafe = stickX * 0.1f;
 	}
+	if (Keyboard_IsKeyDown(KK_H)) strafe = -0.1f;
+	if (Keyboard_IsKeyDown(KK_K)) strafe = +0.1f;
+
+	moveX += rightX * strafe;
+	moveZ += rightZ * strafe;
+
+	
 
 	if (g_Player2.m_isGround)
 	{
@@ -650,8 +665,9 @@ void Player2_ManualMove()
 		g_Player2.m_rotation.y = atan2f(moveDir.x, moveDir.z); // atan2f(X,Z)でY回転
 	}
 	// スペース押した && コヨーテタイムが0.0fより大きい
-	//if (Keyboard_IsKeyDownTrigger(KK_SPACE) && g_Player2.m_koyoteTime > 0.0f)
-	if (g_Controller[1].IsButtonPushed(ControllerButton::A_BUTTON) && g_Player2.m_koyoteTime > 0.0f) //Aボタン**
+	bool jumpPushed = Keyboard_IsKeyDown(KK_SPACE);
+	if (controllerIdx != -1 && g_Controller[controllerIdx].IsButtonPushed(ControllerButton::A_BUTTON)) jumpPushed = true;
+	if (jumpPushed && g_Player2.m_koyoteTime > 0.0f) //Aボタン**
 	{
 		g_Player2.m_velocity.y = g_Player2.m_jumpForce;
 		g_Player2.m_isGround = false;
@@ -728,20 +744,29 @@ void Player2_ManualMove()
 
 void	Player2Draw()
 {
-	//ワールド行列作成
-	XMMATRIX	scale = XMMatrixScaling(
-		0.01f,
-		0.01f,
-		0.01f);
-	XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
+	// --- 揺れオフセットの計算 ---
+	float offsetX = 0.0f;
+	float offsetY = 0.0f;
+	if (g_Player2.m_shakeIntensity > 0.0f)
+	{
+		// -1.0 ～ 1.0 のランダム値 * 強度
+		offsetX = ((float)rand() / RAND_MAX * 2.0f - 1.0f) * g_Player2.m_shakeIntensity;
+		offsetY = ((float)rand() / RAND_MAX * 2.0f - 1.0f) * g_Player2.m_shakeIntensity;
+	}
+
+	// ワールド行列作成
+	XMMATRIX scale = XMMatrixScaling(0.01f, 0.01f, 0.01f);
+	XMMATRIX rotation = XMMatrixRotationRollPitchYaw(
 		g_Player2.m_rotation.x,
 		g_Player2.m_rotation.y + XM_PI,
 		g_Player2.m_rotation.z);
 
-	XMMATRIX	translation = XMMatrixTranslation(
-		g_Player2.m_position.x,
-		g_Player2.m_position.y - 1.0f,
+	// ★ translation の計算時に offsetX, offsetY を加える
+	XMMATRIX translation = XMMatrixTranslation(
+		g_Player2.m_position.x + offsetX,
+		g_Player2.m_position.y - 1.0f + offsetY,
 		g_Player2.m_position.z);
+
 	if (g_Player2.m_position.y < g_Player2.m_position.y - 1.0f)
 	{
 		g_Player2.m_position.y = g_Player2.m_position.y - 0.99f;
@@ -796,6 +821,7 @@ void PLAYER2::OnCollision(const CollisionInfo& info)
 {
 	if (!info.isHit) return;
 	if (m_isDead) return; //死亡していたら衝突処理を無視
+	if (gp2_roundReset) return;
 
 	gp2_koyoteFlag = false; // 基本false
 
@@ -806,7 +832,7 @@ void PLAYER2::OnCollision(const CollisionInfo& info)
 		{
 			// 相手が武器オブジェクト持ってたら
 			if (info.other->m_weaponPtr)
-			{	
+			{
 				// 武器の衝突判定を呼び出す
 				info.other->m_weaponPtr->OnWeaponCollision(this);
 				//g_Player2.m_isAttacked = true;
@@ -946,7 +972,7 @@ void PLAYER2::OnCollision(const CollisionInfo& info)
 				m_velocity.y = CLIMB_SPEED;
 			}
 		}
-		
+
 		if (info.other->m_tag == "Slope")
 		{
 			auto INFO = info;
@@ -1074,9 +1100,70 @@ void PLAYER2::OnCollision(const CollisionInfo& info)
 				gp2_slopeSpeed.z *= 0.5f;
 			}
 		}
+
+		if (info.other->m_tag == "WATER")
+		{
+			XMFLOAT3 bogPos = info.other->m_position;
+
+			float dx = m_position.x - bogPos.x;
+			float dz = m_position.z - bogPos.z;
+			float distance = sqrtf(dx * dx + dz * dz);
+
+			const float effectRadius = 3.0f;
+
+			if (distance < effectRadius)
+			{
+				m_velocity.x *= 0.7f;
+				m_velocity.z *= 0.7f;
+
+				gp2_slopeSpeed.x *= 0.0f;
+				gp2_slopeSpeed.z *= 0.0f;
+			}
+		}
+
+		if (info.other->m_tag == "LAVA")
+		{
+			XMFLOAT3 bogPos = info.other->m_position;
+
+			float dx = m_position.x - bogPos.x;
+			float dz = m_position.z - bogPos.z;
+			float distance = sqrtf(dx * dx + dz * dz);
+
+			const float effectRadius = 3.0f;
+
+			static float coolTime = 0.0f;
+
+			if (distance < effectRadius)
+			{
+				m_velocity.x *= 0.3f;
+				m_velocity.z *= 0.3f;
+
+				gp2_slopeSpeed.x *= 0.5f;
+				gp2_slopeSpeed.z *= 0.5f;
+
+				coolTime += 1.0f / 60.0f;
+
+				if (coolTime > 1.0f)
+				{
+					m_currentHp -= 3.0f;
+					coolTime = 0.0f;
+				}
+			}
+			else
+			{
+				coolTime = 0.0f;
+			}
+			if (info.other->m_tag == "TREEP1")
+			{
+				m_velocity.x *= 0.4f;
+				m_velocity.z *= 0.4f;
+
+				gp2_slopeSpeed.x *= 0.5f;
+				gp2_slopeSpeed.z *= 0.5f;
+			}
+		}
 	}
 }
-
 void PLAYER2::RoundReset(XMFLOAT3 startPos)
 {
 	//物理的な状態のリセット
@@ -1088,6 +1175,7 @@ void PLAYER2::RoundReset(XMFLOAT3 startPos)
 	m_currentHp = m_maxHp; //体力全快
 	m_isDead = false;
 	State = PLAYER2_STATE_IDLE;
+	gp2_roundReset = true;
 
 	//武器と変身状態を「初期武器」に戻す
 	EquipBaseWeapon();

@@ -18,6 +18,7 @@
 #include"keyboard.h"
 #include"Controller.h"
 #include"Player.h"
+#include "Entry.h"
 #include"Camera.h"
 #include"shader.h"
 #include"Transform.h"
@@ -57,6 +58,7 @@ XMFLOAT3 gp1_slopeSpeed;
 static const float HIT_ANIM_DURATION = 0.35f;
 bool gp1_move; // プレイヤーが動いているかのフラグ
 bool gp1_koyoteFlag; // コヨーテタイムを回復するかどうか
+bool gp1_roundReset; // ラウンドがリセットされたかどうか
 
 
 void PlayerDie()
@@ -119,6 +121,8 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 	auto collider = g_Player.AddComponent<BoxCollider>(&g_Player, g_Player.m_scale);
 	ManagerCollider::AddCollider(collider);
 
+	gp1_roundReset = false; // ラウンドがリセットされる
+
 	// のちのちセレクト画面から分岐できるようにする
 	// 自分をownerとして武器を生成
 
@@ -169,6 +173,26 @@ void PlayerFinalize()
 }
 void	PlayerUpdate()
 {
+	int ctrlIdx = GetControllerIndexFromPlayerNo(0);
+
+	// --- 揺れ処理の追加 ---
+	// ダメージを検知
+	float damage = g_Player.m_lastHp - g_Player.m_currentHp;
+	if (damage > 0.0f)
+	{
+		// ダメージ量に応じて揺れの強さを設定 (例: ダメージの 0.05倍)
+		g_Player.m_shakeIntensity += damage * 0.02f;
+		if (g_Player.m_shakeIntensity > 1.0f)
+		{
+			g_Player.m_shakeIntensity = 1.0f;
+		}
+	}
+	g_Player.m_lastHp = g_Player.m_currentHp; // HPを保存
+
+	// 揺れの減衰 (毎フレーム 90% に減らすなど)
+	g_Player.m_shakeIntensity *= 0.9f;
+	if (g_Player.m_shakeIntensity < 0.001f) g_Player.m_shakeIntensity = 0.0f;
+
 	TransformPlayer();
 	
 	ApplyTransformEffect();   
@@ -267,8 +291,9 @@ void	PlayerUpdate()
 //================================================================
 //	攻撃処理(変身前)
 //================================================================
+	bool attackPushed = (ctrlIdx != -1 && g_Controller[ctrlIdx].IsButtonPushed(ControllerButton::X_BUTTON));
 
-	if (Keyboard_IsKeyDownTrigger(KK_C) || g_Controller[0].IsButtonPushed(ControllerButton::X_BUTTON))
+	if (Keyboard_IsKeyDownTrigger(KK_C) || attackPushed)
 	{
 		// 武器が存在し攻撃中でなければ攻撃開始
 		if (g_Player.m_currentWeapon && !g_Player1AttackPlaying && g_Player.m_currentWeapon->GetCoolTime()==0.0f&& !g_Player.m_hitAnimPlaying)
@@ -585,6 +610,8 @@ void	PlayerUpdate()
 
 void Player_ManualMove() // 新しい手動移動関数として作成
 {
+	int ctrlIdx = GetControllerIndexFromPlayerNo(0);
+
 	// カメラの前方向ベクトル
 	float forwardX = GetCameraAtPosition().x - GetCameraPosition().x;
 	float forwardZ = GetCameraAtPosition().z - GetCameraPosition().z;
@@ -611,17 +638,13 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 	}
 
 	float len = sqrtf(forwardX * forwardX + forwardZ * forwardZ);
-	if (len > 0.0f)
-	{
+	if (len > 0.001f) {
 		forwardX /= len;
 		forwardZ /= len;
 	}
-	else
-	{
-		forwardX = 0.0f;
-		forwardZ = 0.0f;
+	else {
+		forwardX = 0.0f; forwardZ = 1.0f;
 	}
-
 	// カメラの右方向ベクトル
 	float rightX = forwardZ;    // 右方向は前方向ベクトルを90度回転
 	float rightZ = -forwardX;
@@ -629,55 +652,55 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 	// 移動量初期化
 	float moveX = 0.0f;
 	float moveZ = 0.0f;
-	bool allowInput = true;
 
-	// ★ヒットストップ中 / 被弾アニメ中 / 死亡中 は入力を無効化
-	if (g_Player.m_hitAction.IsStopping() || g_Player.m_hitAnimPlaying || g_Player.m_isDead)
-	{
-		allowInput = false;
+	float speed = 0.0f;
+	float strafe = 0.0f;
+	if (ctrlIdx != -1) {
+		float stickY = g_Controller[ctrlIdx].GetLeftStickY();
+		if (fabs(stickY) > 0.05f) speed = stickY * 0.1f;
+
+		float stickX = g_Controller[ctrlIdx].GetLeftStickX();
+		if (fabs(stickX) > 0.05f) strafe = stickX * 0.1f;
 	}
-	if (allowInput)
+	if (Keyboard_IsKeyDown(KK_W)) speed = +0.1f;
+	if (Keyboard_IsKeyDown(KK_S)) speed = -0.1f;
+	if (Keyboard_IsKeyDown(KK_A)) strafe = -0.1f;
+	if (Keyboard_IsKeyDown(KK_D)) strafe = +0.1f;
+
+	moveX = (forwardX * speed) + (rightX * strafe);
+	moveZ = (forwardZ * speed) + (rightZ * strafe);
+
+	if (ctrlIdx != -1)
 	{
-		float speed = 0.0f;
-		float stickY = g_Controller[0].GetLeftStickY();
-		if (fabs(stickY) > 0.05f) // デッドゾーンを設定 (必要に応じて調整)
-		{
-			// ベクトルが逆だから移動が逆になる
-			// 左スティック上方向 (+1.0f) で前進 (speed = -0.1f) に対応
-			speed = stickY * 0.1f;
-		}
-		if (Keyboard_IsKeyDown(KK_W))
-		{
-			speed = +0.1f;
-		}
-		if (Keyboard_IsKeyDown(KK_S))
-		{
-			speed = -0.1f;
-		}
-
-		moveX += forwardX * speed;
-		moveZ += forwardZ * speed;
-
-		// 横移動
-		float strafe = 0.0f;
-		float stickX = g_Controller[0].GetLeftStickX();
-		if (fabs(stickX) > 0.05f) // デッドゾーンを設定 (必要に応じて調整)
-		{
-			// 左スティック左方向 (-1.0f) で左移動 (strafe = +0.1f) に対応
-			strafe = stickX * 0.1f;
-		}
-		if (Keyboard_IsKeyDown(KK_A))
-		{
-			strafe = -0.1f;  // 左
-		}
-		if (Keyboard_IsKeyDown(KK_D))
-		{
-			strafe = +0.1f;  // 右
-		}
-		moveX += rightX * strafe;
-		moveZ += rightZ * strafe;
-		
+		float stickY = g_Controller[ctrlIdx].GetLeftStickY();
+		if (fabs(stickY) > 0.05f) speed = stickY * 0.1f;
 	}
+	if (ctrlIdx != -1)
+	{
+		float stickX = g_Controller[ctrlIdx].GetLeftStickX();
+		if (fabs(stickX) > 0.05f) strafe = stickX * 0.1f;
+	}
+
+	moveX += rightX * strafe;
+	moveZ += rightZ * strafe;
+
+	if (!g_Player.m_isGround) // 地面についてないときに重力発動
+	{
+		g_Player.m_velocity.x += g_Player.m_acceleration.x;
+		g_Player.m_velocity.y += g_Player.m_acceleration.y;
+		g_Player.m_velocity.z += g_Player.m_acceleration.z;
+	}
+
+	// 地面についているときにコヨーテタイムが1.0fになる
+	if (g_Player.m_isGround)
+	{
+		g_Player.m_koyoteTime = 1.0f;
+	}
+	else
+	{
+		g_Player.m_koyoteTime -= 0.1f;
+	}
+
 	// 最終速度
 	if (g_Player.m_isGround)
 	{
@@ -732,8 +755,8 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 	}
 
 	// Aボタンを押した && コヨーテタイムが0.0fより大きい
-	//if (Keyboard_IsKeyDownTrigger(KK_SPACE) && g_Player.m_koyoteTime > 0.0f)
-	if ((g_Controller[0].IsButtonPushed(ControllerButton::A_BUTTON) || Keyboard_IsKeyDown(KK_SPACE))
+	int idx = GetControllerIndexFromPlayerNo(0);
+	if (idx != -1 && g_Controller[idx].IsButtonPushed(ControllerButton::A_BUTTON) || Keyboard_IsKeyDown(KK_SPACE)
 		&& g_Player.m_koyoteTime > 0.0f) //Aボタン**
 	{
 		g_Player.m_velocity.y = g_Player.m_jumpForce;
@@ -811,19 +834,29 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 
 void PlayerDraw() 
 {
-	//ワールド行列作成
-	XMMATRIX	scale = XMMatrixScaling(
-		0.01f,
-		0.01f,
-		0.01f );
-	XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
+	// --- 揺れオフセットの計算 ---
+	float offsetX = 0.0f;
+	float offsetY = 0.0f;
+	if (g_Player.m_shakeIntensity > 0.0f)
+	{
+		// -1.0 ～ 1.0 のランダム値 * 強度
+		offsetX = ((float)rand() / RAND_MAX * 2.0f - 1.0f) * g_Player.m_shakeIntensity;
+		offsetY = ((float)rand() / RAND_MAX * 2.0f - 1.0f) * g_Player.m_shakeIntensity;
+	}
+
+	// ワールド行列作成
+	XMMATRIX scale = XMMatrixScaling(0.01f, 0.01f, 0.01f);
+	XMMATRIX rotation = XMMatrixRotationRollPitchYaw(
 		g_Player.m_rotation.x,
 		g_Player.m_rotation.y + XM_PI,
 		g_Player.m_rotation.z);
-	XMMATRIX	translation = XMMatrixTranslation(
-		g_Player.m_position.x,
-		g_Player.m_position.y - 1.0f,
+
+	// ★ translation の計算時に offsetX, offsetY を加える
+	XMMATRIX translation = XMMatrixTranslation(
+		g_Player.m_position.x + offsetX,
+		g_Player.m_position.y - 1.0f + offsetY,
 		g_Player.m_position.z);
+
 	if (g_Player.m_position.y < g_Player.m_position.y - 1.0f)
 	{
 		g_Player.m_position.y = g_Player.m_position.y - 0.99f;
@@ -888,6 +921,7 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 {
 	if (!info.isHit) return;
 	if (m_isDead) return; //死亡していたら衝突処理を無視
+	if (gp1_roundReset) return;
 
 	gp1_koyoteFlag = false; // 基本false
 
@@ -903,7 +937,7 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 				// 武器の衝突判定を呼び出す
 		//		g_Player.m_isAttacked = true;
 				info.other->m_weaponPtr->OnWeaponCollision(this);
-				
+
 			}
 		}
 
@@ -1012,7 +1046,7 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 				m_velocity.z = 0;
 			}
 		}
-		
+
 		if (info.other->m_tag == "Lift" ||
 			info.other->m_tag == "HILL")
 		{
@@ -1046,10 +1080,10 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 			{
 				m_velocity.x = 0;
 				m_velocity.z = 0;
-				m_velocity.y = CLIMB_SPEED;				
+				m_velocity.y = CLIMB_SPEED;
 			}
 		}
-		
+
 		if (info.other->m_tag == "Slope")
 		{
 			auto INFO = info;
@@ -1177,9 +1211,70 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 				gp1_slopeSpeed.z *= 0.5f;
 			}
 		}
+
+		if (info.other->m_tag == "WATER")
+		{
+			XMFLOAT3 bogPos = info.other->m_position;
+
+			float dx = m_position.x - bogPos.x;
+			float dz = m_position.z - bogPos.z;
+			float distance = sqrtf(dx * dx + dz * dz);
+
+			const float effectRadius = 3.0f;
+
+			if (distance < effectRadius)
+			{
+				m_velocity.x *= 0.7f;
+				m_velocity.z *= 0.7f;
+
+				gp1_slopeSpeed.x *= 0.0f;
+				gp1_slopeSpeed.z *= 0.0f;
+			}
+		}
+
+		if (info.other->m_tag == "LAVA")
+		{
+			XMFLOAT3 bogPos = info.other->m_position;
+
+			float dx = m_position.x - bogPos.x;
+			float dz = m_position.z - bogPos.z;
+			float distance = sqrtf(dx * dx + dz * dz);
+
+			const float effectRadius = 3.0f;
+
+			static float coolTime = 0.0f;
+
+			if (distance < effectRadius)
+			{
+				m_velocity.x *= 0.3f;
+				m_velocity.z *= 0.3f;
+
+				gp1_slopeSpeed.x *= 0.5f;
+				gp1_slopeSpeed.z *= 0.5f;
+
+				coolTime += 1.0f / 60.0f;
+
+				if (coolTime > 1.0f)
+				{
+					m_currentHp -= 3.0f;
+					coolTime = 0.0f;
+				}
+			}
+			else
+			{
+				coolTime = 0.0f;
+			}
+			if (info.other->m_tag == "TREEP2")
+			{
+				m_velocity.x *= 0.4f;
+				m_velocity.z *= 0.4f;
+
+				gp1_slopeSpeed.x *= 0.5f;
+				gp1_slopeSpeed.z *= 0.5f;
+			}
+		}
 	}
 }
-
 void PLAYER::EquipBaseWeapon()
 {
 	m_currentWT = m_baseWT;
@@ -1221,6 +1316,7 @@ void PLAYER::RoundReset(XMFLOAT3 startPos)
     m_currentHp = m_maxHp; //�̗͑S��
     m_isDead = false;
     State = PLAYER_STATE_IDLE;
+	gp1_roundReset = true;
 
     //����ƕϐg��Ԃ��u��������v�ɖ߂�
     EquipBaseWeapon();

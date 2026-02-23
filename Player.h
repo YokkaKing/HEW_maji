@@ -63,6 +63,9 @@ public:
 	float m_moveMul = 1.0f;
 	bool m_isTransformed = false; // 変身中フラグ
 	HitAction m_hitAction;
+
+	float m_shakeIntensity = 0.0f;	// 現在の揺れの強さ
+	float m_lastHp = 0.0f;			// 前フレームのHP
 public:
 	//武器操作関数
 	void EquipWeapon(std::unique_ptr<IWeapon> weapon); // 武器を装備する
