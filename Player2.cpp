@@ -69,7 +69,8 @@ void Player2Die()
 	
 
 	g_Player2.State = PLAYER2_STATE::PLAYER2_STATE_IDLE;
-	PlayAudio(g_change, false);
+	
+	PlayAudio(g_ko, false);
 
 	// ★フェードはManager側で「1秒スロウ後」に開始する
 }
@@ -83,7 +84,7 @@ void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 	else {
 		g_Player2.m_model = ModelLoad(INITIAL_MODEL_PATH_P2);
 	}
-	g_Player2.m_position = XMFLOAT3(10.0f, 0.5f, 1.0f);
+	g_Player2.m_position = XMFLOAT3(10.0f, 1.0f, 1.0f);
 	g_Player2.m_rotation = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	g_Player2.m_velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
@@ -1356,4 +1357,9 @@ static void Player2_StartHitAnim()
 		g_Player2.m_hitAnimPlaying = true;
 		g_Player2.m_hitAnimTimer = 0.0f;
 	}
+}
+void Player2_WarmupVisual()
+{
+	if (!g_Player2.m_model) return;
+	ModelUpdateAnimation(g_Player2.m_model, 0.0f);
 }

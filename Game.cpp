@@ -21,6 +21,7 @@
 #include"fade.h"
 #include"Player.h"
 #include"managerCollider.h"
+#include "CameraIntroSequence.h"
 #include"terrain.h"
 #include"Player2.h"
 #include"Transform.h"
@@ -58,7 +59,8 @@ static float g_timeScale = 1.0f;
 static float g_timeAccum = 0.0f;
 STAGE g_stage;
 static bool g_showScore = false;
-
+static bool g_waitingIntroBeforeTransformSelect = false;
+static bool g_needWarmupPlayerDrawState = false;
 void Game_SetShowScore(bool on) { g_showScore = on; }
 bool Game_IsShowScore() { return g_showScore; }
 
@@ -85,8 +87,47 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, const
 	Camera2_Initialize();	//カメラ初期化
 	SelectTransformUi_Initialize(pDevice, pContext);
 	g_transformMngr.Initialize(pDevice, pContext); //変身先選択の初期化
+	g_transformMngr.Initialize(pDevice, pContext); //変身先選択の初期化
 	g_selectionPhase = 0;
-	g_transformMngr.StartSelection(WeaponTerrain::NONE, WeaponTerrain::NONE);
+
+	// ★ここではまだ変身選択を開始しない
+	g_waitingIntroBeforeTransformSelect = true;
+
+	// 変身UIが前ラウンド状態を残さないように念のためOFF
+	SetTransformUi_IsUsed(false, 0);
+	SetTransformUi_IsUsed(false, 1);
+	SetTransformUi_SelectNum(0);
+
+	// カメラ演出開始（競技場中心は必要なら調整）
+	CameraIntroSequence_Initialize();
+
+	// 競技場中心座標（まずは仮値。ステージ中心に合わせて調整してOK）
+	XMFLOAT3 arenaCenter = XMFLOAT3(0.0f, 0.0f, 0.0f);
+
+	if (!GetCameraIntroPlayed())
+	{
+		// 1回目だけイントロ演出をやる
+		g_waitingIntroBeforeTransformSelect = true;
+		PlayAudio(g_crowd, false);	
+		CameraIntroSequence_Start(arenaCenter, 30.0f, 20.0f, 4.0f, 1.0f);
+		SetCameraIntroPlayed(true);
+	}
+	else
+	{
+		g_waitingIntroBeforeTransformSelect = false;
+
+		g_selectionPhase = 0;
+		SetTransformUi_SelectNum(0);
+		SetTransformUi_IsUsed(true, 0);
+		SetTransformUi_IsUsed(false, 1);
+
+		g_transformMngr.StartSelection(WeaponTerrain::NONE, WeaponTerrain::NONE);
+
+		Camera_Update();
+		Camera2_Update();
+	}
+
+	
 	HitEffectManager::GetInstance().Initialize(pDevice, pContext);
 	//===========UI===========
 	Score_Initialize(pDevice, pContext);
@@ -125,7 +166,7 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, const
 	g_roundEndWaitTimer = 0.0f;
 	g_timeScale = 1.0f;
 	g_timeAccum = 0.0f;
-
+	g_needWarmupPlayerDrawState = true;
 }
 
 void Game_Finalize()
@@ -153,6 +194,8 @@ void Game_Finalize()
 	//=====================
 	ManagerCollider::ClearCollider();
 	//UnloadAudio(g_BgmID);//サウンドの解放
+	CameraIntroSequence_Finalize();
+	g_waitingIntroBeforeTransformSelect = false;
 }
 void Game_SetTimeScale(float s)
 {
@@ -168,6 +211,47 @@ float Game_GetTimeScale()
 void Game_Update()
 {
 	const float dt = 1.0f / 60.0f;
+	//========================================================
+// 武器選択フェード後のカメラ演出中
+// （この間は変身選択をまだ始めない）
+//========================================================
+	if (g_waitingIntroBeforeTransformSelect)
+	{
+		// ★プレイヤーモデルの初期化崩れ対策（1回だけ）
+		if (g_needWarmupPlayerDrawState)
+		{
+			// 1フレーム分だけ更新してモデル状態を確定させる
+			// （アニメ/ボーン/行列の初期化目的）
+			PlayerUpdate();
+			Player2Update();
+
+			// 必要ならカメラ追従差分も同期（Camera側に関数があるなら）
+			// Camera_SyncFollowTargets();
+			// Camera2_SyncFollowTargets();
+
+			g_needWarmupPlayerDrawState = false;
+		}
+
+		// カメラ演出を進める
+		CameraIntroSequence_Update(dt);
+
+		if (!CameraIntroSequence_IsActive() && CameraIntroSequence_IsFinished())
+		{
+			g_waitingIntroBeforeTransformSelect = false;
+
+			g_selectionPhase = 0;
+			SetTransformUi_SelectNum(0);
+			SetTransformUi_IsUsed(true, 0);
+			SetTransformUi_IsUsed(false, 1);
+
+			g_transformMngr.StartSelection(WeaponTerrain::NONE, WeaponTerrain::NONE);
+
+			Camera_Update();
+			Camera2_Update();
+		}
+
+		return;
+	}
 	CountdownUI_Update(dt);
 	//少しの秒がアップデート時間を上げる
 	if (frame > 0) 
@@ -337,7 +421,7 @@ void Game_Draw_Player1()
 	//===UI描画========
 	PlayerUI::Draw(true);
 	Guide::Draw(true);
-	if (!g_transformMngr.IsActive()&&!CountdownUI_IsBlockingGameplay())
+	if (!g_transformMngr.IsActive()&&!CountdownUI_IsBlockingGameplay() && !g_waitingIntroBeforeTransformSelect)
 	{
 		Hp_Draw();
 	}
@@ -392,9 +476,10 @@ void Game_Draw_Player2()
 	Shader_SetLight(Light.Light);	//ライト構造体をシェーダーへセット
 	SetDepthTest(FALSE);
 
+
 	PlayerUI::Draw(false);
 	Guide::Draw(false);
-	if (!g_transformMngr.IsActive() && !CountdownUI_IsBlockingGameplay())
+	if (!g_transformMngr.IsActive() && !CountdownUI_IsBlockingGameplay()&& !g_waitingIntroBeforeTransformSelect)
 	{
 		Hp2_Draw();
 	}

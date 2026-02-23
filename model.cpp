@@ -245,7 +245,36 @@ MODEL* ModelLoad(const char* FileName)
 	return model;
 }
 
+void ModelDrawWithTexture(MODEL* model, ID3D11ShaderResourceView* texture)
+{
+	if (!model) return;
 
+	Direct3D_GetDeviceContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	for (unsigned int m = 0; m < model->AiScene->mNumMeshes; m++)
+	{
+		aiMesh* mesh = model->AiScene->mMeshes[m];
+
+		// ★外部テクスチャを強制使用
+		if (texture)
+		{
+			Direct3D_GetDeviceContext()->PSSetShaderResources(0, 1, &texture);
+		}
+		else
+		{
+			// 念のため解除
+			ID3D11ShaderResourceView* nullSRV[1] = { nullptr };
+			Direct3D_GetDeviceContext()->PSSetShaderResources(0, 1, nullSRV);
+		}
+
+		UINT stride = sizeof(Vertex3D);
+		UINT offset = 0;
+		Direct3D_GetDeviceContext()->IASetVertexBuffers(0, 1, &model->VertexBuffer[m], &stride, &offset);
+		Direct3D_GetDeviceContext()->IASetIndexBuffer(model->IndexBuffer[m], DXGI_FORMAT_R32_UINT, 0);
+
+		Direct3D_GetDeviceContext()->DrawIndexed(mesh->mNumFaces * 3, 0, 0);
+	}
+}
 void ModelRelease(MODEL* model)
 {
 	for (unsigned int m = 0; m < model->AiScene->mNumMeshes; m++)

@@ -1,25 +1,25 @@
 /*
-* ƒtƒ@ƒCƒ‹–¼	Audio.h
-* ƒ^ƒCƒgƒ‹	ƒTƒEƒ“ƒh
-* ì¬Ò		‹v•Û–ØŠ²‘¾
-* ì¬“ú		12Œ02“ú
-* XV“ú		12Œ02“ú
+* ãƒ•ã‚¡ã‚¤ãƒ«å	Audio.h
+* ã‚¿ã‚¤ãƒˆãƒ«	ã‚µã‚¦ãƒ³ãƒ‰
+* ä½œæˆè€…		ä¹…ä¿æœ¨å¹¹å¤ª
+* ä½œæˆæ—¥		12æœˆ02æ—¥
+* æ›´æ–°æ—¥		12æœˆ02æ—¥
 */
 
 #ifndef AUDIO_H
 #define AUDIO_H
 
 //================================================================
-//	ƒCƒ“ƒNƒ‹[ƒh
+//	ã‚¤ãƒ³ã‚¯ãƒ«ãƒ¼ãƒ‰
 //================================================================
 #include<xaudio2.h>
 
-void InitAudio();		//ƒTƒEƒ“ƒh‚Ì‰Šú‰»
-void UninitAudio();		//ƒTƒEƒ“ƒh‚ÌI—¹
+void InitAudio();		//ã‚µã‚¦ãƒ³ãƒ‰ã®åˆæœŸåŒ–
+void UninitAudio();		//ã‚µã‚¦ãƒ³ãƒ‰ã®çµ‚äº†
 
-int LoadAudio(const char* FileName);		//ƒTƒEƒ“ƒhƒf[ƒ^“Ç‚İ‚İ
-void UnloadAudio(int Index);				//ƒTƒEƒ“ƒhƒf[ƒ^‰ğ•úi’â~j
-void PlayAudio(int Index, bool Loop = false);//ƒTƒEƒ“ƒhƒf[ƒ^Ä¶
+int LoadAudio(const char* FileName);		//ã‚µã‚¦ãƒ³ãƒ‰ãƒ‡ãƒ¼ã‚¿èª­ã¿è¾¼ã¿
+void UnloadAudio(int Index);				//ã‚µã‚¦ãƒ³ãƒ‰ãƒ‡ãƒ¼ã‚¿è§£æ”¾ï¼ˆåœæ­¢ï¼‰
+void PlayAudio(int Index, bool Loop = false);//ã‚µã‚¦ãƒ³ãƒ‰ãƒ‡ãƒ¼ã‚¿å†ç”Ÿ
 void StopAudio(int Index);
 void PlayAudioLoopSection(int Index, float loopBeginSec, float loopEndSec);
 void SetAudioVolume(int Index, float volume);
@@ -52,24 +52,25 @@ extern int g_go;
 extern int g_round1;
 extern int g_round2;
 extern int g_result;
-
+extern int g_ko;
+extern int g_score;
 /*
-//ˆÈ‰º‚ÌŠÖ”‚ÍƒvƒƒOƒ‰ƒ€‚ÌÅ‰‚ÆÅŒã‚É1‰ñ‚¸‚ÂŒÄ‚Ño‚¹‚ÎOK
-void InitAudio();		//ƒTƒEƒ“ƒh‚Ì‰Šú‰»
-void UninitAudio();		//ƒTƒEƒ“ƒh‚ÌI—¹
+//ä»¥ä¸‹ã®é–¢æ•°ã¯ãƒ—ãƒ­ã‚°ãƒ©ãƒ ã®æœ€åˆã¨æœ€å¾Œã«1å›ãšã¤å‘¼ã³å‡ºã›ã°OK
+void InitAudio();		//ã‚µã‚¦ãƒ³ãƒ‰ã®åˆæœŸåŒ–
+void UninitAudio();		//ã‚µã‚¦ãƒ³ãƒ‰ã®çµ‚äº†
 
 
-//ˆÈ‰º‚ÍƒV[ƒ“‚²‚Æ‚Ìˆ—
+//ä»¥ä¸‹ã¯ã‚·ãƒ¼ãƒ³ã”ã¨ã®å‡¦ç†
 
-//ƒOƒ[ƒoƒ‹•Ï”
-static int g_BgmID = NULL;//ƒ[ƒh‚·‚éƒf[ƒ^‚Ì”‚¾‚¯•Ï”‚ª•K—v
+//ã‚°ãƒ­ãƒ¼ãƒãƒ«å¤‰æ•°
+static int g_BgmID = NULL;//ãƒ­ãƒ¼ãƒ‰ã™ã‚‹ãƒ‡ãƒ¼ã‚¿ã®æ•°ã ã‘å¤‰æ•°ãŒå¿…è¦
 
-//‰Šú‰»
-g_BgmID = LoadAudio("asset\\Audio\\title.wav");	//ƒTƒEƒ“ƒhƒf[ƒ^“Ç‚İ‚İ
-PlayAudio(g_BgmID, true);	//ƒTƒEƒ“ƒhƒf[ƒ^Ä¶(ƒ‹[ƒv‚ ‚è)
+//åˆæœŸåŒ–æ™‚
+g_BgmID = LoadAudio("asset\\Audio\\title.wav");	//ã‚µã‚¦ãƒ³ãƒ‰ãƒ‡ãƒ¼ã‚¿èª­ã¿è¾¼ã¿
+PlayAudio(g_BgmID, true);	//ã‚µã‚¦ãƒ³ãƒ‰ãƒ‡ãƒ¼ã‚¿å†ç”Ÿ(ãƒ«ãƒ¼ãƒ—ã‚ã‚Š)
 
-//I—¹
-UnloadAudio(g_BgmID);		//ƒTƒEƒ“ƒhƒf[ƒ^‰ğ•úi’â~j
+//çµ‚äº†æ™‚
+UnloadAudio(g_BgmID);		//ã‚µã‚¦ãƒ³ãƒ‰ãƒ‡ãƒ¼ã‚¿è§£æ”¾ï¼ˆåœæ­¢ï¼‰
 */
 
 #endif // AUDIO_H

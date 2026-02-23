@@ -84,4 +84,5 @@ void ModelStopClip(MODEL* model);
 void ModelSetPlaySpeed(MODEL* model, float speed);
 // クリップ完了フラグを取得してクリアするユーティリティ
 bool ModelConsumeClipFinished(MODEL* model);
+void ModelDrawWithTexture(MODEL* model, ID3D11ShaderResourceView* texture);
 #endif 

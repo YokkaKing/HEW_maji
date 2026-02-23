@@ -383,7 +383,22 @@ void Result2_Ui_Update()
             {
                 if (g_Score_Ui2.score < Player2_GetScore())
                 {
-                    g_Score_Ui2.score += 2;
+                    if (Player2_GetScore() < 200)
+                    {
+                        g_Score_Ui2.score += 2;
+                    }
+                    else if (Player2_GetScore() < 500)
+                    {
+                        g_Score_Ui2.score += 5;
+                    }
+                    else if (Player2_GetScore() < 1000)
+                    {
+                        g_Score_Ui2.score += 10;
+                    }
+                    else
+                    {
+                        g_Score_Ui2.score += 20;
+                    }
                 }
                 else
                 {

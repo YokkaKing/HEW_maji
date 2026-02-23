@@ -322,7 +322,14 @@ void Hp2_Update()
     g_Hp.m_Hp = Player_GetHp();
     g_Hp2.m_Hp = Player2_GetHp();
 
-    g_Timer.time -= g_Timer.frame;
+    if (g_Timer.time > 0.0f)
+    {
+        g_Timer.time -= g_Timer.frame;
+    }
+    else
+    {
+        g_Timer.time = 0.0f;
+    }
 
     const float DAMAGE_DELAY = 2.0f;
     const float RED_SHRINK_PER_FRAME = 0.4f;

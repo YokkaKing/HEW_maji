@@ -94,7 +94,7 @@ public:
 };
 
 extern PLAYER g_Player;
-
+void Player_WarmupVisual();
 void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, WeaponTerrain setWTp1);
 void PlayerFinalize();
 void PlayerUpdate();

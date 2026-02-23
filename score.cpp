@@ -50,6 +50,28 @@ static int   g_Winner = 0;
 static float g_ScoreWait = 0.0f;
 static bool  g_ScoreChangeTriggered = false;
 
+//==================== match演出用 ====================
+struct MatchAnim
+{
+	bool  active = false;
+
+	bool  showP1 = false;   // ★追加
+	bool  showP2 = false;   // ★追加
+
+	int   phase = 0;        // 1:左→右出現 2:全体アニメ 3:終了
+	float timer = 0.0f;
+	float revealT = 0.0f;
+	float fullT = 0.0f;
+	float alpha = 1.0f;
+	float scale = 1.0f;
+};
+static MatchAnim g_MatchAnim;
+
+// 調整値（60fps基準）
+static const float MATCH_REVEAL_SPEED = 0.12f;  // 左→右の速さ
+
+
+static const float MATCH_FULL_SPEED = 0.08f;  // 全体アニメ進行
 // 乱数（必要ならそのまま）
 static std::mt19937 g_Rng;
 static std::uniform_real_distribution<float> g_Dist01(0.0f, 1.0f);
@@ -142,8 +164,128 @@ static void UpdateScoreDigit(ScoreDigitAnim& d, int newTarget)
 		break;
 	}
 }
+static void StartMatchAnim(int winner)
+{
+	if (winner != 1 && winner != 2) return;
 
+	g_MatchAnim.active = true;
+	g_MatchAnim.phase = 1;
+	g_MatchAnim.timer = 0.0f;
+	g_MatchAnim.revealT = 0.0f;
+	g_MatchAnim.fullT = 0.0f;
+	g_MatchAnim.alpha = 1.0f;
+	g_MatchAnim.scale = 1.0f;
 
+	// 一旦リセット
+	g_MatchAnim.showP1 = false;
+	g_MatchAnim.showP2 = false;
+
+	// ==============================
+	// 表示先を決める
+	// - 1-1 の時は両方表示
+	// - それ以外は勝った側だけ表示
+	// ==============================
+	if (g_ShowWin[0] == 1 && g_ShowWin[1] == 1)
+	{
+		g_MatchAnim.showP1 = true;
+		g_MatchAnim.showP2 = true;
+	}
+	else
+	{
+		if (winner == 1) g_MatchAnim.showP1 = true;
+		if (winner == 2) g_MatchAnim.showP2 = true;
+	}
+}
+
+static void UpdateMatchAnim()
+{
+	if (!g_MatchAnim.active) return;
+
+	switch (g_MatchAnim.phase)
+	{
+	case 1: // 中央帯を左→右に出現
+		g_MatchAnim.revealT += MATCH_REVEAL_SPEED;
+		if (g_MatchAnim.revealT >= 1.0f)
+		{
+			g_MatchAnim.revealT = 1.0f;
+			g_MatchAnim.phase = 2;
+			g_MatchAnim.timer = 0.0f;
+			g_MatchAnim.fullT = 0.0f;
+		}
+		break;
+
+	case 2: // 全体アニメ（例：少しポップして戻る）
+		g_MatchAnim.fullT += MATCH_FULL_SPEED;
+		g_MatchAnim.timer += SCORE_DT;
+
+		// ちょいポップ演出（好みで調整）
+		// 0→少し大きく→1.0へ戻る
+		if (g_MatchAnim.fullT < 0.4f)
+		{
+			g_MatchAnim.scale = 1.0f + (g_MatchAnim.fullT / 0.4f) * 0.20f; // 最大1.2
+		}
+		else
+		{
+			float t = (g_MatchAnim.fullT - 0.4f) / 0.6f;
+			if (t > 1.0f) t = 1.0f;
+			g_MatchAnim.scale = 1.2f - t * 0.2f; // 1.2 -> 1.0
+		}
+
+		if (g_MatchAnim.fullT >= 1.0f)
+		{
+			g_MatchAnim.fullT = 1.0f;
+			g_MatchAnim.scale = 1.0f;
+			g_MatchAnim.phase = 3;   // 終了（表示維持）
+		}
+		break;
+
+	case 3:
+		// 表示維持したいなら何もしない
+		// しばらくしたら消したいならここで timer加算して active=false にする
+		break;
+	}
+}
+static void DrawMatchOne(XMFLOAT2 matchPos)
+{
+	const float baseMatchW = 230.0f;
+	const float baseMatchH = 55.0f;
+	XMFLOAT2 matchSize(baseMatchW * g_MatchAnim.scale, baseMatchH * g_MatchAnim.scale);
+
+	g_pContext->PSSetShaderResources(0, 1, &g_TextureMatch);
+	SetBlendState(BLENDSTATE_ALFA);
+
+	XMFLOAT4 col = { 1,1,1,g_MatchAnim.alpha };
+
+	if (g_MatchAnim.phase == 1)
+	{
+		float t = g_MatchAnim.revealT;
+		if (t < 0.0f) t = 0.0f;
+		if (t > 1.0f) t = 1.0f;
+
+		XMFLOAT2 revealSize(baseMatchW * t, baseMatchH * g_MatchAnim.scale);
+
+		float leftX = matchPos.x - (baseMatchW * 0.5f);
+		XMFLOAT2 revealPos(leftX + revealSize.x * 0.5f, matchPos.y);
+
+		DrawSpriteUV(
+			revealPos,
+			revealSize,
+			col,
+			0.0f, 0.4f,
+			t, 0.6f,-2.0f
+		);
+	}
+	else
+	{
+		DrawSpriteUV(
+			matchPos,
+			matchSize,
+			col,
+			0.0f, 0.0f,
+			1.0f, 1.0f,-2.0f
+		);
+	}
+}
 //================================================================
 //	初期化
 //================================================================
@@ -277,7 +419,7 @@ void Score_Update()
 				if (g_Winner == 1)      g_ShowWin[0] += 1; // P1
 				else if (g_Winner == 2) g_ShowWin[1] += 1; // P2
 				// draw(3) / continue(0) は増やさない
-
+				StartMatchAnim(g_Winner);
 				g_ScoreChangeTriggered = true;
 			}
 		}
@@ -286,6 +428,7 @@ void Score_Update()
 	// 数字アニメ更新（※ target は必ず g_ShowWin を基準にする）
 	UpdateScoreDigit(g_Digit[0], g_ShowWin[0]);
 	UpdateScoreDigit(g_Digit[1], g_ShowWin[1]);
+	UpdateMatchAnim();
 }
 
 
@@ -345,12 +488,33 @@ void Score_Draw()
 	g_pContext->PSSetShaderResources(0, 1, &g_TextureScoreNumber);
 	SetBlendState(BLENDSTATE_ALFA);
 	DrawSpriteEx(g_Score.pos[3], numSize2, g_Score.col[3], g_Digit[1].current, 4, 1, -2.0f);
+
+	if (g_MatchAnim.active)
+	{
+		// 位置（ここで調整する）
+		XMFLOAT2 p1MatchPos(g_Score.pos[2].x - 380, g_Score.pos[2].y + 90.0f);
+		XMFLOAT2 p2MatchPos(g_Score.pos[3].x + 380, g_Score.pos[3].y + 60.0f);
+
+		// 微調整したいならここで
+		// p1MatchPos.x += 10.0f;
+		// p2MatchPos.x -= 10.0f;
+
+		if (g_MatchAnim.showP1)
+		{
+			DrawMatchOne(p1MatchPos);
+		}
+
+		if (g_MatchAnim.showP2)
+		{
+			DrawMatchOne(p2MatchPos);
+		}
+	}
 }
 void Score_BeginShow(int roundResult)
 {
 	// 勝者を保存（Game_GetRoundResult(): 1=P1,2=P2,3=Draw）
 	g_Winner = roundResult;
-
+	PlayAudio(g_change, false);
 	// 背景アニメを最初から
 	g_Score.frame[0] = 0.0f;
 	g_Score.col[0] = { 1,1,1,1 };
@@ -386,4 +550,15 @@ void Score_BeginShow(int roundResult)
 	g_Digit[0].scale = g_Digit[1].scale = 1.0f;
 	g_Digit[0].state = g_Digit[1].state = 0;
 	g_Digit[0].popReached = g_Digit[1].popReached = false;
+	// match演出リセット
+	g_MatchAnim.active = false;
+	g_MatchAnim.showP1 = false;
+	g_MatchAnim.showP2 = false;
+	g_MatchAnim.phase = 0;
+	g_MatchAnim.timer = 0.0f;
+	g_MatchAnim.revealT = 0.0f;
+	g_MatchAnim.fullT = 0.0f;
+	g_MatchAnim.alpha = 1.0f;
+	g_MatchAnim.scale = 1.0f;
 }
+

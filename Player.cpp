@@ -75,7 +75,9 @@ void PlayerDie()
 	// 入力を受け付けないようにする
 	g_Player.State = PLAYER_STATE::PLAYER_STATE_IDLE;
 	g_Player.m_isDeadFlag = true;
-	PlayAudio(g_change, false);
+	
+	PlayAudio(g_ko, false);
+
 	// ★フェードはManager側で「1秒スロウ後」に開始する
 }
 void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, WeaponTerrain setWTp1)
@@ -96,7 +98,7 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 		g_Player.m_model = ModelLoad(INITIAL_MODEL_PATH_P1);
 	}	//g_modelP1 = ModelLoad("asset\\model\\block.fbx");
 
-	g_Player.m_position = XMFLOAT3(-10.0f, 0.5f, 1.0f);
+	g_Player.m_position = XMFLOAT3(-10.0f, 1.0f, 1.0f);
 	g_Player.m_rotation = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	g_Player.m_velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	
@@ -1465,4 +1467,18 @@ static void Player_StartHitAnim()
 		g_Player.m_hitAnimTimer = 0.0f;
 	}
 }
+void Player_WarmupVisual()
+{
+	if (!g_Player.m_model) return;
 
+	// モデルの内部状態（ボーン行列など）を確定させるための最小更新
+	ModelUpdateAnimation(g_Player.m_model, 0.0f);
+
+	// 必要なら現在モーションを明示再生（初期状態に応じて）
+	// 例: idle クリップが未再生なら再生開始
+	// if (!g_Player1IdlePlaying) {
+	//     ModelPlayClip(g_Player.m_model, 0, 30, 60.0f, true, 1.0f);
+	//     g_Player1IdlePlaying = true;
+	// }
+
+}

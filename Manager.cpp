@@ -484,6 +484,7 @@ void ResetWinCount()
 {
 	g_P1Wins = 0;
 	g_P2Wins = 0;
+	g_RoundCount = 0;
 }
 static void StartDeathSequence(SCENE nextScene, bool useSlow)
 {
