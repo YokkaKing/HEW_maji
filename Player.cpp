@@ -47,6 +47,7 @@ extern Controller g_Controller[2]; //ID 0のコントローラーを使用
 extern const char* INITIAL_MODEL_PATH_P1;
 static MODEL* g_shadowPlaneP1 = nullptr;
 MODEL* g_modelP1;
+MODEL* deadModel;
 WeaponTerrain g_setWTP1; // プレイヤーの武器と地形情報
 unsigned int g_changeP1;
 static bool g_Player1AttackPlaying = false; // 攻撃ワンショット再生中フラグ
@@ -59,23 +60,31 @@ static const float HIT_ANIM_DURATION = 0.35f;
 bool gp1_move; // プレイヤーが動いているかのフラグ
 bool gp1_koyoteFlag; // コヨーテタイムを回復するかどうか
 bool gp1_roundReset; // ラウンドがリセットされたかどうか
-
+static bool  g_Player1DeathAnimPlaying = false;
+static float g_Player1DeathAnimTimer = 0.0f;
+static const float PLAYER1_DEATH_ANIM_LEN = 60.0f / 60.0f;
 
 void PlayerDie()
 {
 	hal::dout << "Player died!" << std::endl;
-	//死亡処理
 
 	//プレイヤーを非表示にする
-	if (g_Player.m_gameObject != nullptr)
-	{
-		g_Player.m_gameObject->m_isEnable = false;
-	}
+	//if (g_Player.m_gameObject != nullptr)
+	//{
+	//	g_Player.m_gameObject->m_isEnable = false;
+	//}
 	
 	// 入力を受け付けないようにする
 	g_Player.State = PLAYER_STATE::PLAYER_STATE_IDLE;
 	g_Player.m_isDeadFlag = true;
-	
+	g_Player.m_model = deadModel;
+	ModelPlayClip(g_Player.m_model, 0, 60, 60.0f, false);
+
+	// 念のため先頭フレーム確定
+	ModelUpdateAnimation(g_Player.m_model, 0.0f);
+
+	g_Player1DeathAnimPlaying = true;
+	g_Player1DeathAnimTimer = 0.0f;
 	PlayAudio(g_ko, false);
 
 	// ★フェードはManager側で「1秒スロウ後」に開始する
@@ -87,7 +96,7 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 	g_shadowPlaneP1 = ModelLoad("asset\\model\\block.fbx");
 	TexMetadata metadata;
 	ScratchImage image;
-
+	deadModel = ModelLoad("asset\\model\\dead.fbx");
 	LoadFromWICFile(L"asset\\texture\\shadow.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
 	CreateShaderResourceView(Direct3D_GetDevice(), image.GetImages(), image.GetImageCount(), metadata, &g_TextureShadowP1);
 	assert(g_TextureShadowP1);
@@ -156,6 +165,16 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 	gp1_koyoteFlag = false; // 最初はフラグをオフ
 
 	g_isChangeP1 = false;
+
+	// ===== 死亡アニメ状態の初期化（ラウンド開始ごと）=====
+	g_Player1DeathAnimPlaying = false;
+	g_Player1DeathAnimTimer = 0.0f;
+
+	// 死亡状態を解除（使っている変数名に合わせて）
+	g_Player.m_isDead = false;
+	g_Player.m_isDeadFlag = false;
+
+	
 }
 void PlayerFinalize()
 {
@@ -219,6 +238,20 @@ void	PlayerUpdate()
 		Player_ManualMove();                         
 		//ModelUpdateAnimation(g_Player.m_model, 1.0f / 60.0f);  
 		return;                                      
+	}
+
+	// ★死亡アニメ再生中は、死亡アニメだけ更新して抜ける
+	if (g_Player.m_isDead && g_Player1DeathAnimPlaying)
+	{
+		ModelUpdateAnimation(g_Player.m_model, 1.0f / 60.0f);
+
+		g_Player1DeathAnimTimer += 1.0f / 60.0f;
+		if (g_Player1DeathAnimTimer >= PLAYER1_DEATH_ANIM_LEN)
+		{
+			g_Player1DeathAnimPlaying = false;
+		}
+		return;
+
 	}
 	if (g_Player.m_isDead)return;	
 
