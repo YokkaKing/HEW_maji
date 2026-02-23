@@ -90,7 +90,7 @@ public:
 };
 
 extern PLAYER2 g_Player2;
-
+void Player2_WarmupVisual();
 void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, WeaponTerrain setWTp2);
 void Player2Finalize();
 void Player2Update();

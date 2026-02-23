@@ -71,7 +71,7 @@ void Selectweaponui3d_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pCo
 		g_Selectweaponui3d[i].m_velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
 		g_Selectweaponui3d[i].m_scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
-		g_Selectweaponui3d[i].m_model = ModelLoad("asset\\model\\default_sword.fbx");
+		g_Selectweaponui3d[i].m_model = ModelLoad("asset\\model\\dead.fbx");
 		g_Selectweaponui3d[i].m_idle = false;
 		g_Selectweaponui3d[i].m_attack = false;
 		g_Selectweaponui3d[i].m_nowCursor = 0;
