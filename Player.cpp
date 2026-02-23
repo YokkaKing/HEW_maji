@@ -240,7 +240,6 @@ void	PlayerUpdate()
 		return;                                      
 	}
 
-	// ★死亡アニメ再生中は、死亡アニメだけ更新して抜ける
 	if (g_Player.m_isDead && g_Player1DeathAnimPlaying)
 	{
 		ModelUpdateAnimation(g_Player.m_model, 1.0f / 60.0f);
@@ -249,9 +248,14 @@ void	PlayerUpdate()
 		if (g_Player1DeathAnimTimer >= PLAYER1_DEATH_ANIM_LEN)
 		{
 			g_Player1DeathAnimPlaying = false;
+
+			// ★最後のフレーム(60)で止める
+			ModelPlayClip(g_Player.m_model, 60, 60, 60.0f, true);
+			ModelUpdateAnimation(g_Player.m_model, 0.0f);    // 行列反映用（必要なら）
+
+	
 		}
 		return;
-
 	}
 	if (g_Player.m_isDead)return;	
 

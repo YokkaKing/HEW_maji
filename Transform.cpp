@@ -282,7 +282,12 @@ void TransformPlayer()
             SetPlayer_IsTransformed(false);
             Player_SetPlayerIsAttaking(false);
             Player_ResetMoveMul();
-            StopAudio(g_charge);
+            StopAudio(g_charge1);
+            StopAudio(g_charge2);
+            StopAudio(g_charge3);
+            StopAudio(g_charge4);
+            StopAudio(g_charge5);
+
 
             ApplyTransformationP1(&g_Player, g_Player.m_baseWT, false); // å≥ÇÃïêäÌÇ…ñﬂÇ∑
             SetWTP1(g_Player.m_baseWT);
@@ -373,7 +378,11 @@ void TransformPlayer2()
             ApplyTransformationP2(&g_Player2, targetWT, true);
             g_Player2.m_isTransformed = true;
             g_Player2.TransformTimer = TRANSFORM_LIMIT_FRAME;
-            StopAudio(g_charge);
+            StopAudio(g_charge1);
+            StopAudio(g_charge2);
+            StopAudio(g_charge3);
+            StopAudio(g_charge4);
+            StopAudio(g_charge5);
             g_Controller[1].SetVibration(0.8f, 0.8f);
 
         }

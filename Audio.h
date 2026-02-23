@@ -26,7 +26,12 @@ void SetAudioVolume(int Index, float volume);
 extern int g_arrow_shuriken;
 extern int g_button;
 extern int g_change;
-extern int g_charge;
+extern int g_charge1;
+extern int g_charge2;
+extern int g_charge3;
+extern int g_charge4;
+extern int g_charge5;
+
 extern int g_crowd;
 extern int g_cursorMove;
 extern int g_damageHammer;

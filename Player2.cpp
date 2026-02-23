@@ -43,6 +43,7 @@ ID3D11DeviceContext* g_pContext2;
 extern Controller g_Controller[2]; //ID 0のコントローラーを使用
 extern const char* INITIAL_MODEL_PATH_P2;
 MODEL* g_modelP2;
+MODEL* deadModel2;
 WeaponTerrain g_setWTP2; // プレイヤーの武器と地形情報
 unsigned int g_changeP2;
 static bool g_Player2AttackPlaying = false; // 攻撃ワンショット再生中フラグ
@@ -56,7 +57,9 @@ static const float HIT_ANIM_DURATION = 0.35f;
 
 bool gp2_move; // プレイヤーが動いているかのフラグ
 bool gp2_koyoteFlag; // コヨーテタイムを回復するかどうか
-
+static bool  g_Player2DeathAnimPlaying = false;
+static float g_Player2DeathAnimTimer = 0.0f;
+static const float PLAYER2_DEATH_ANIM_LEN = 60.0f / 60.0f;
 
 void Player2Die()
 {
@@ -67,18 +70,24 @@ void Player2Die()
 		g_Player2.m_gameObject->m_isEnable = false;
 	}
 	
-
 	g_Player2.State = PLAYER2_STATE::PLAYER2_STATE_IDLE;
-	
-	PlayAudio(g_ko, false);
+	//g_Player2.m_isDeadFlag = true;
+	g_Player2.m_model = deadModel2;
+	ModelPlayClip(g_Player.m_model, 0, 60, 60.0f, false);
 
+	// 念のため先頭フレーム確定
+	ModelUpdateAnimation(g_Player2.m_model, 0.0f);
+
+	g_Player2DeathAnimPlaying = true;
+	g_Player2DeathAnimTimer = 0.0f;
+	PlayAudio(g_ko, false);
 	// ★フェードはManager側で「1秒スロウ後」に開始する
 }
 void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, WeaponTerrain setWTp2)
 {
 	g_pDevice2 = pDevice;
 	g_pContext2 = pContext;
-	MODEL* deadModel = ModelLoad("asset\\model\\dead.fbx");
+	deadModel2 = ModelLoad("asset\\model\\dead.fbx");
 
 	if (INITIAL_MODEL_PATH_P2 == nullptr) {
 		g_Player2.m_model = ModelLoad("asset\\model\\block.fbx"); // 確実に存在するファイル
@@ -144,6 +153,17 @@ void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 	gp2_move = false; // 最初は動いてない
 	gp2_koyoteFlag = false; // 最初はフラグをオフ
 	g_isChangeP2 = false;
+	// ===== 死亡アニメ状態の初期化（ラウンド開始ごと）=====
+	g_Player2DeathAnimPlaying = false;
+	g_Player2DeathAnimTimer = 0.0f;
+
+	// 死亡状態を解除（使っている変数名に合わせて）
+	g_Player2.m_isDead = false;
+	// 描画を再開
+	if (g_Player2.m_gameObject != nullptr)
+	{
+		g_Player2.m_gameObject->m_isEnable = true;
+	}
 }
 void Player2Finalize()
 {
@@ -197,6 +217,23 @@ void	Player2Update()
 	{
 		Player2_ManualMove();
 		//ModelUpdateAnimation(g_Player2.m_model, 1.0f / 60.0f);
+		return;
+	}
+	if (g_Player2.m_isDead && g_Player2DeathAnimPlaying)
+	{
+		ModelUpdateAnimation(g_Player2.m_model, 1.0f / 60.0f);
+
+		g_Player2DeathAnimTimer += 1.0f / 60.0f;
+		if (g_Player2DeathAnimTimer >= PLAYER2_DEATH_ANIM_LEN)
+		{
+			g_Player2DeathAnimPlaying = false;
+
+			// ★最後のフレーム(60)で停止
+			ModelPlayClip(g_Player2.m_model, 60, 60, 60.0f, true);
+			ModelUpdateAnimation(g_Player2.m_model, 0.0f);
+
+			// 非表示にしない
+		}
 		return;
 	}
 	if (g_Player2.m_isDead)return;	//死亡している場合は更新処理をスキップ
@@ -1323,7 +1360,7 @@ static void Player2_StartHitAnim()
 				ModelPlayClip(g_Player2.m_model, 641, 700, 60.0f, false, 2.0f);
 				break;
 			case WeaponTerrain::BOW_HILL: // arrow
-				ModelPlayClip(g_Player2.m_model, 400, 450, 60.0f, false, 1.0f);
+				ModelPlayClip(g_Player2.m_model, 151, 180, 60.0f, false, 1.0f);
 				break;
 			case WeaponTerrain::HAMMER_: // hammer
 				ModelPlayClip(g_Player2.m_model, 541, 600, 60.0f, false, 1.0f);
@@ -1345,7 +1382,7 @@ static void Player2_StartHitAnim()
 				ModelPlayClip(g_Player2.m_model, 641, 700, 60.0f, false, 2.0f);
 				break;
 			case WeaponTerrain::BOW_HILL: // arrow
-				ModelPlayClip(g_Player2.m_model, 400, 450, 60.0f, false, 1.0f);
+				ModelPlayClip(g_Player2.m_model, 150, 180, 60.0f, false, 1.0f);
 				break;
 			case WeaponTerrain::HAMMER_: // hammer
 				ModelPlayClip(g_Player2.m_model, 541, 600, 60.0f, false, 1.0f);

@@ -27,7 +27,12 @@ static IXAudio2MasteringVoice* g_MasteringVoice{};
 int g_arrow_shuriken = -1;
 int g_button = -1;
 int g_change = -1;
-int g_charge = -1;
+int g_charge1 = -1;
+int g_charge2 = -1;
+int g_charge3 = -1;
+int g_charge4 = -1;
+int g_charge5 = -1;
+
 int g_crowd = -1;
 int g_cursorMove = -1;
 int g_damageHammer = -1;
@@ -66,7 +71,12 @@ void InitAudio()
 	g_arrow_shuriken = LoadAudio("asset\\Audio\\arrow_shuriken.wav");
 	g_button = LoadAudio("asset\\Audio\\button.wav");
 	g_change = LoadAudio("asset\\Audio\\change.wav");
-	g_charge = LoadAudio("asset\\Audio\\charge.wav");
+	g_charge1 = LoadAudio("asset\\Audio\\charge_1.wav");
+	g_charge2 = LoadAudio("asset\\Audio\\charge_2.wav");
+	g_charge3 = LoadAudio("asset\\Audio\\charge_3.wav");
+	g_charge4 = LoadAudio("asset\\Audio\\charge_4.wav");
+	g_charge5 = LoadAudio("asset\\Audio\\charge_5.wav");
+
 	g_crowd = LoadAudio("asset\\Audio\\crowd.wav");
 	g_cursorMove = LoadAudio("asset\\Audio\\cursorMove.wav");
 	g_damageHammer = LoadAudio("asset\\Audio\\damageHammer.wav");
@@ -95,7 +105,12 @@ void InitAudio()
 	g_ko = LoadAudio("asset\\Audio\\KO.wav");
 	g_score = LoadAudio("asset\\Audio\\score.wav");
 	SetAudioVolume(g_hammer, 2.0f);
-	SetAudioVolume(g_charge, 2.0f);
+	SetAudioVolume(g_charge1, 2.0f);
+	SetAudioVolume(g_charge2, 2.0f);
+	SetAudioVolume(g_charge3, 2.0f);
+	SetAudioVolume(g_charge4, 2.0f);
+	SetAudioVolume(g_charge5, 2.0f);
+
 	SetAudioVolume(g_sword, 2.0f);
 	SetAudioVolume(g_fade, 2.0f);
 	SetAudioVolume(g_damageHammer, 2.0f);

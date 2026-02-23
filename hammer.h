@@ -54,6 +54,19 @@ public:
         CHARGE_MOVE_LOOP,   // 540->660 loop while moving during charge
         CHARGE_ATTACK_PLAY  // 440->539 playing when releasing (=attack)
     };
+    enum ChargeSoundStage
+    {
+        CHARGE_SOUND_NONE = -1,
+        CHARGE_SOUND_STAGE0 = 0,
+        CHARGE_SOUND_STAGE1,
+        CHARGE_SOUND_STAGE2,
+        CHARGE_SOUND_STAGE3_LOOP
+    };
+
+    int   m_chargeSoundStage = -1;          // 現在の段階
+    bool  m_chargeLoopPlaying = false;      // 2~3秒ループ中か
+    bool  m_charge5Played = false;          // 最大段階突入時の g_charge5 を再生済みか
+    float m_charge5WaitTimer = 0.0f;        // g_charge5 再生待ちタイマー（秒）
     CHARGE_STATE m_chargeState = CHARGE_NONE;
     bool m_wasCharging = false;
 public:
