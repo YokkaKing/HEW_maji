@@ -11,6 +11,7 @@
 //================================================================
 #define TERRAIN_SIZE (0.5f)
 #define ANTLION_POS_Y (2.7f)
+#define ANTLION_POS_Y_ (-1.9f)
 #define BOG_POS_Y (-0.3f)
 #define TREE_POS_Y (1.0f)
 
@@ -47,17 +48,17 @@ int Trand = 0;
 // 蟻地獄のためのデータ(endPositionのみ)他は共通のため
 XMFLOAT3 g_antlionData[4] =
 {
-	{ 0.0f, 0.5f, 0.6f },
-	{ 0.6f, 0.5f, 0.0f },
-	{ 0.0f, 0.5f, -0.6f },
-	{ -0.6f, 0.5f, 0.0f }
+	{ 0.0f, 0.5f, 0.4f },
+	{ 0.4f, 0.5f, 0.0f },
+	{ 0.0f, 0.5f, -0.4f },
+	{ -0.4f, 0.5f, 0.0f }
 };
 XMFLOAT3 g_antlionBoxData[4] =
 {
-	{ 9.5f, 1.2f, 1.3f },
-	{ 1.3f, 1.2f, 9.5f },
-	{ 9.5f, 1.2f, 1.3f },
-	{ 1.3f, 1.2f, 9.5f }
+	{ 9.5f, 1.0f, 1.3f },
+	{ 1.3f, 1.0f, 9.5f },
+	{ 9.5f, 1.0f, 1.3f },
+	{ 1.3f, 1.0f, 9.5f }
 };
 XMFLOAT2 g_antlionData2[4] =
 {
@@ -72,6 +73,21 @@ XMFLOAT2 g_antlionBoxData2[4] =
 	{ +4.2f, 0.0f },
 	{ 0.0f, -4.2f },
 	{ -4.2f, -0.0f }
+};
+// 蟻地獄のためのデータ(endPositionのみ)他は共通のため
+XMFLOAT3 g_antlionData3[4] =
+{
+	{ 0.0f, 0.5f, 0.4f },
+	{ 0.4f, 0.5f, 0.0f },
+	{ 0.0f, 0.5f, -0.4f },
+	{ -0.4f, 0.5f, 0.0f }
+};
+XMFLOAT2 g_antlionData4[4] =
+{
+	{ 0.0f, -7.3f },
+	{ -7.3f, 0.0f },
+	{ 0.0f, 7.3f },
+	{ 7.3f, 0.0f }
 };
 
 std::string otherModel[2][3] =
@@ -194,93 +210,93 @@ std::string g_otherTag[2][6] =
 //	a -> 当たり判定
 //================================================================
 // 地形::丘 の座標データ
-const std::vector<std::vector<std::vector<std::string>>> Hill =
-{
-	{ // Y = 0 // Z->+ // X↓+
-		{"anananananan"},
-		{"nnnnnnnnnnna"},
-		{"annnnnnnnnnn"},
-		{"nnnnnnnnnnna"},
-		{"annnnnnnnnnn"},
-		{"nnnnnnnnnnna"},
-		{"annnnnnnnnnn"},
-		{"nnnnnnnnnnna"},
-		{"annnnnnnnnnn"},
-		{"nnnnnnnnnnna"},
-		{"annnnnnnnnnn"},
-		{"nananananana"},
-	},
-	{ // Y = 0.25
-		{"nnnnnnnnnnnn"},
-		{"nananananann"},
-		{"nnnnnnnnnnan"},
-		{"nannnnnnnnnn"},
-		{"nnnnnnnnnnan"},
-		{"nannnnnnnnnn"},
-		{"nnnnnnnnnnan"},
-		{"nannnnnnnnnn"},
-		{"nnnnnnnnnnan"},
-		{"nannnnnnnnnn"},
-		{"nnananananan"},
-		{"nnnnnnnnnnnn"},
-	},
-	{ // Y = 0.5
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnanananannn"},
-		{"nnnnnnnnnann"},
-		{"nnannnnnnnnn"},
-		{"nnnnnnnnnann"},
-		{"nnannnnnnnnn"},
-		{"nnnnnnnnnann"},
-		{"nnannnnnnnnn"},
-		{"nnnanananann"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-	},
-	{ // Y = 0.75
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnananannnn"},
-		{"nnnnnnnnannn"},
-		{"nnnannnnnnnn"},
-		{"nnnnnnnnannn"},
-		{"nnnannnnnnnn"},
-		{"nnnnananannn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-	},
-	{ // Y = 0.75
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnanannnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnanannnn"},
-		{"nnnnnnannnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-	},
-	{ // Y = 1
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnannnnn"},
-		{"nnnnnnannnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-	},
-};
+//const std::vector<std::vector<std::vector<std::string>>> Hill =
+//{
+//	{ // Y = 0 // Z->+ // X↓+
+//		{"anananananan"},
+//		{"nnnnnnnnnnna"},
+//		{"annnnnnnnnnn"},
+//		{"nnnnnnnnnnna"},
+//		{"annnnnnnnnnn"},
+//		{"nnnnnnnnnnna"},
+//		{"annnnnnnnnnn"},
+//		{"nnnnnnnnnnna"},
+//		{"annnnnnnnnnn"},
+//		{"nnnnnnnnnnna"},
+//		{"annnnnnnnnnn"},
+//		{"nananananana"},
+//	},
+//	{ // Y = 0.25
+//		{"nnnnnnnnnnnn"},
+//		{"nananananann"},
+//		{"nnnnnnnnnnan"},
+//		{"nannnnnnnnnn"},
+//		{"nnnnnnnnnnan"},
+//		{"nannnnnnnnnn"},
+//		{"nnnnnnnnnnan"},
+//		{"nannnnnnnnnn"},
+//		{"nnnnnnnnnnan"},
+//		{"nannnnnnnnnn"},
+//		{"nnananananan"},
+//		{"nnnnnnnnnnnn"},
+//	},
+//	{ // Y = 0.5
+//		{"nnnnnnnnnnnn"},
+//		{"nnnnnnnnnnnn"},
+//		{"nnanananannn"},
+//		{"nnnnnnnnnann"},
+//		{"nnannnnnnnnn"},
+//		{"nnnnnnnnnann"},
+//		{"nnannnnnnnnn"},
+//		{"nnnnnnnnnann"},
+//		{"nnannnnnnnnn"},
+//		{"nnnanananann"},
+//		{"nnnnnnnnnnnn"},
+//		{"nnnnnnnnnnnn"},
+//	},
+//	{ // Y = 0.75
+//		{"nnnnnnnnnnnn"},
+//		{"nnnnnnnnnnnn"},
+//		{"nnnnnnnnnnnn"},
+//		{"nnnananannnn"},
+//		{"nnnnnnnnannn"},
+//		{"nnnannnnnnnn"},
+//		{"nnnnnnnnannn"},
+//		{"nnnannnnnnnn"},
+//		{"nnnnananannn"},
+//		{"nnnnnnnnnnnn"},
+//		{"nnnnnnnnnnnn"},
+//		{"nnnnnnnnnnnn"},
+//	},
+//	{ // Y = 0.75
+//		{"nnnnnnnnnnnn"},
+//		{"nnnnnnnnnnnn"},
+//		{"nnnnnnnnnnnn"},
+//		{"nnnnnnnnnnnn"},
+//		{"nnnnnanannnn"},
+//		{"nnnnnnnnnnnn"},
+//		{"nnnnnanannnn"},
+//		{"nnnnnnannnnn"},
+//		{"nnnnnnnnnnnn"},
+//		{"nnnnnnnnnnnn"},
+//		{"nnnnnnnnnnnn"},
+//		{"nnnnnnnnnnnn"},
+//	},
+//	{ // Y = 1
+//		{"nnnnnnnnnnnn"},
+//		{"nnnnnnnnnnnn"},
+//		{"nnnnnnnnnnnn"},
+//		{"nnnnnnnnnnnn"},
+//		{"nnnnnnnnnnnn"},
+//		{"nnnnnnannnnn"},
+//		{"nnnnnnannnnn"},
+//		{"nnnnnnnnnnnn"},
+//		{"nnnnnnnnnnnn"},
+//		{"nnnnnnnnnnnn"},
+//		{"nnnnnnnnnnnn"},
+//		{"nnnnnnnnnnnn"},
+//	},
+//};
 
 //================================================================
 //	同じ文字は絶対に4文字入力すること
@@ -288,362 +304,6 @@ const std::vector<std::vector<std::vector<std::string>>> Hill =
 //	n -> 何もなし
 //	文字は分かりやすいやつでa,b,cとか
 //================================================================
-const std::vector<std::vector<std::vector<std::string>>> Hills =
-{// -> プレイヤーの初期視点
-	// 16個
-	{
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-	},
-	{
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-	},
-	{
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-	},
-	{
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-	},
-	{
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-	},
-	{
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-	},
-	{
-		{"annnnnnnnnnnnnnnnnna"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"annnnnnnnnnnnnnnnnna"},
-	},
-	{
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nbnnnnnnnnnnnnnnnnbn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nbnnnnnnnnnnnnnnnnbn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-	},
-	{
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nncnnnnnnnnnnnnnncnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nncnnnnnnnnnnnnnncnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-	},
-	{
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnndnnnnnnnnnnnndnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnndnnnnnnnnnnnndnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-	},
-	{
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnennnnnnnnnnennnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnennnnnnnnnnennnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-	},
-	{
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnfnnnnnnnnfnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnfnnnnnnnnfnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-	},
-	{
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnngnnnnnngnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnngnnnnnngnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-	},
-	{
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnhnnnnhnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnhnnnnhnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-	},
-	{
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnninninnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnninninnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-	},
-	{
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnjjnnnnnnnnn"},
-		{"nnnnnnnnnjjnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-	},
-};
 
 // 壁の当たり判定
 const std::vector<std::vector<std::vector<std::string>>> Walls =
@@ -1715,38 +1375,20 @@ void TERRAIN::UpdateObject(std::vector<GameObject*> terrain, XMFLOAT3 motherPosi
 		{
 			if (obj->m_tag == "SlopeP1" || obj->m_tag == "SlopeP2")
 			{
-				if (obj->m_position.y < -0.5f)
+				if (obj->m_position.y < ANTLION_POS_Y_)
 				{
 					obj->m_position.y += 0.1f; // 上昇
 				}
 				
-				if (obj->m_position.y >= -0.5f)
+				if (obj->m_position.y >= ANTLION_POS_Y_)
 				{
-					obj->m_position.y = -0.4f;
+					obj->m_position.y = ANTLION_POS_Y_;
 				}
-
-				/*hal::dout << "SLOPE position (" << obj->m_position.x <<
-					"," << obj->m_position.y << "," << obj->m_position.z << "\n";*/
 			}
 			else
 			{
 				obj->m_position.y += 0.1f; // 上昇
-				/*hal::dout << "NORMAL position (" << obj->m_position.x <<
-					"," << obj->m_position.y << "," << obj->m_position.z << "\n";*/
 			}
-			// キー入力で動くのと同じように、直接 position を更新
-
-			/*if (obj->m_tag == "SlopeP1")
-			{
-				hal::dout << "ANTS1 position (" << ants[0][0]->m_position.x << "," <<
-					ants[0][0]->m_position.y << "," << ants[0][0]->m_position.z << ")\n";
-			}
-
-			if (obj->m_tag == "SlopeP2")
-			{
-				hal::dout << "ANTS2 position (" << ants[1][0]->m_position.x << "," <<
-					ants[1][0]->m_position.y << "," << ants[1][0]->m_position.z << ")\n";
-			}*/
 		}
 	}
 }
@@ -1836,25 +1478,53 @@ void TERRAIN::CreateAnt(XMFLOAT3 motherPosition, int select)
 		tag = "SlopeP2"; // 専用のタグをつける
 	}
 
-	// 四方分坂を作る
+	//// 四方分坂を作る
+	//for (int i = 0; i < 4; i++)
+	//{
+	//	// ファクトリの戻り値 (生のポインタ) を unique_ptr で受け取り、所有権を確保
+	//	std::unique_ptr<GameObject> antObj(
+	//		ColliderFactory::CreateTrapezoidSlopeObject(
+	//			{ 0.0f, 0.0f, 0.0f },
+	//			g_antlionData[i],
+	//			7.5f,
+	//			7.5f,
+	//			0.4f,
+	//			tag,
+	//			0
+	//		)
+	//	);
+
+	//	antObj->m_position = motherPosition;
+	//	antObj->m_velocity.x = g_antlionData2[i].x; // dataの数値を代入
+	//	antObj->m_velocity.z = g_antlionData2[i].y; // dataの数値を代入
+	//	GameObject* raw_ptr = antObj.get(); // 生のポインタを取得（参照用）
+
+	//	if (raw_ptr != nullptr)
+	//	{
+	//		ants[select].push_back(raw_ptr);
+	//		terrainObjects.push_back(std::move(antObj));
+	//	}
+	//}
+
+	// 四方分坂を作る(外から上る方)
 	for (int i = 0; i < 4; i++)
 	{
 		// ファクトリの戻り値 (生のポインタ) を unique_ptr で受け取り、所有権を確保
 		std::unique_ptr<GameObject> antObj(
 			ColliderFactory::CreateTrapezoidSlopeObject(
 				{ 0.0f, 0.0f, 0.0f },
-				g_antlionData[i],
-				7.5f,
-				7.5f,
-				0.5f,
+				g_antlionData3[i],
+				10.0f,
+				10.0f,
+				0.4f,
 				tag,
 				0
 			)
 		);
 
 		antObj->m_position = motherPosition;
-		antObj->m_velocity.x = g_antlionData2[i].x; // dataの数値を代入
-		antObj->m_velocity.z = g_antlionData2[i].y; // dataの数値を代入
+		antObj->m_position.z += g_antlionData4[i].y;
+		antObj->m_position.x += g_antlionData4[i].x;
 		GameObject* raw_ptr = antObj.get(); // 生のポインタを取得（参照用）
 
 		if (raw_ptr != nullptr)
@@ -1864,36 +1534,36 @@ void TERRAIN::CreateAnt(XMFLOAT3 motherPosition, int select)
 		}
 	}
 
-	// 四方分の壁を作る
-	for (int i = 0; i < 4; i++)
-	{
-		// ファクトリの戻り値 (生のポインタ) を unique_ptr で受け取り、所有権を確保
-		std::unique_ptr<GameObject> antObj(
-			ColliderFactory::CreateBoxObject(
-				{ 0.0f, 0.0f, 0.0f },
-				g_antlionBoxData[i],
-				"WALL",
-				0
-			)
-		);
+	//// 四方分の壁を作る
+	//for (int i = 0; i < 4; i++)
+	//{
+	//	// ファクトリの戻り値 (生のポインタ) を unique_ptr で受け取り、所有権を確保
+	//	std::unique_ptr<GameObject> antObj(
+	//		ColliderFactory::CreateBoxObject(
+	//			{ 0.0f, 0.0f, 0.0f },
+	//			g_antlionBoxData[i],
+	//			"WALL",
+	//			0
+	//		)
+	//	);
 
-		antObj->m_position = motherPosition;
-		antObj->m_position.y -= 1.0f;
-		antObj->m_velocity.y = -1.0f;
+	//	antObj->m_position = motherPosition;
+	//	antObj->m_position.y -= 1.0f;
+	//	antObj->m_velocity.y = -1.0f;
 
-		antObj->m_position.x += g_antlionBoxData2[i].x;
-		antObj->m_velocity.x = g_antlionBoxData2[i].x;
-		antObj->m_position.z += g_antlionBoxData2[i].y;
-		antObj->m_velocity.z = g_antlionBoxData2[i].y;
+	//	antObj->m_position.x += g_antlionBoxData2[i].x;
+	//	antObj->m_velocity.x = g_antlionBoxData2[i].x;
+	//	antObj->m_position.z += g_antlionBoxData2[i].y;
+	//	antObj->m_velocity.z = g_antlionBoxData2[i].y;
 
-		//antObj->m_velocity.x = g_antlionData2[i].x; // dataの数値を代入
-		//antObj->m_velocity.z = g_antlionData2[i].y; // dataの数値を代入
-		GameObject* raw_ptr = antObj.get(); // 生のポインタを取得（参照用）
+	//	//antObj->m_velocity.x = g_antlionData2[i].x; // dataの数値を代入
+	//	//antObj->m_velocity.z = g_antlionData2[i].y; // dataの数値を代入
+	//	GameObject* raw_ptr = antObj.get(); // 生のポインタを取得（参照用）
 
-		if (raw_ptr != nullptr)
-		{
-			ants[select].push_back(raw_ptr);
-			terrainObjects.push_back(std::move(antObj));
-		}
-	}
+	//	if (raw_ptr != nullptr)
+	//	{
+	//		ants[select].push_back(raw_ptr);
+	//		terrainObjects.push_back(std::move(antObj));
+	//	}
+	//}
 }

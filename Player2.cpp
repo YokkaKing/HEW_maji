@@ -1060,7 +1060,7 @@ void PLAYER2::OnCollision(const CollisionInfo& info)
 				m_koyoteTime = 0.0f; // ジャンプできなくする
 
 				// --- gp_speed への計算 ---
-				const float slideFriction = 0.25f;
+				const float slideFriction = 0.05f;
 				float slopeSeverity = 1.0f - info.normal.y;
 				float slidePower = slopeSeverity * slideFriction;
 				const float gravityEffect = 0.02f;
