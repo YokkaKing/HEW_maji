@@ -78,6 +78,8 @@ void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 {
 	g_pDevice2 = pDevice;
 	g_pContext2 = pContext;
+	MODEL* deadModel = ModelLoad("asset\\model\\dead.fbx");
+
 	if (INITIAL_MODEL_PATH_P2 == nullptr) {
 		g_Player2.m_model = ModelLoad("asset\\model\\block.fbx"); // 確実に存在するファイル
 	}

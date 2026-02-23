@@ -98,8 +98,8 @@ static ClipRange GetAttackRange_Base(WeaponTerrain wt)
     {
     case WeaponTerrain::SWORD_WALL: return { 167,227,60.0f };
     case WeaponTerrain::SHURIKEN_:  return { 151,210,60.0f };
-    case WeaponTerrain::SPEAR_HILL: return { 301,420,60.0f };
-    case WeaponTerrain::BOW_HILL:   return { 240,360,60.0f };
+    case WeaponTerrain::SPEAR_HILL: return { 420, 479,60.0f };
+    case WeaponTerrain::BOW_HILL:   return { 301,420,60.0f };
     case WeaponTerrain::HAMMER_:    return { 241,420,60.0f };
     default:                        return { 80,150,60.0f };
     }
@@ -110,7 +110,7 @@ static ClipRange GetAttackRange_Transform(WeaponTerrain wt)
     {
     case WeaponTerrain::SWORD_WALL: return { 167,227,60.0f };
     case WeaponTerrain::SHURIKEN_:  return { 151,210,60.0f };
-    case WeaponTerrain::SPEAR_HILL: return { 361,379,60.0f };
+    case WeaponTerrain::SPEAR_HILL: return { 420, 479,60.0f };
     case WeaponTerrain::BOW_HILL:   return { 301,420,60.0f };
     case WeaponTerrain::HAMMER_:    return { 241,420,60.0f };
     default:                        return { 80,150,60.0f };
@@ -173,7 +173,7 @@ struct ResultDisplay
         {
         case WeaponTerrain::SWORD_WALL: ModelPlayClip(base, 0, 60, 60.0f, true); break;
         case WeaponTerrain::SPEAR_HILL: ModelPlayClip(base, 0, 120, 60.0f, true); break;
-        case WeaponTerrain::BOW_HILL:   ModelPlayClip(base, 0, 120, 60.0f, true); break;
+        case WeaponTerrain::BOW_HILL:   ModelPlayClip(base, 0, 60, 60.0f, true); break;
         case WeaponTerrain::HAMMER_:    ModelPlayClip(base, 0, 120, 60.0f, true); break;
         case WeaponTerrain::SHURIKEN_:  ModelPlayClip(base, 0, 60, 60.0f, true); break;
         }
@@ -185,7 +185,7 @@ struct ResultDisplay
         {
         case WeaponTerrain::SWORD_WALL: ModelPlayClip(a, 0, 60, 60.0f, true); break;
         case WeaponTerrain::SPEAR_HILL: ModelPlayClip(a, 0, 120, 60.0f, true); break;
-        case WeaponTerrain::BOW_HILL:   ModelPlayClip(a, 0, 120, 60.0f, true); break;
+        case WeaponTerrain::BOW_HILL:   ModelPlayClip(a, 0, 60, 60.0f, true); break;
         case WeaponTerrain::HAMMER_:    ModelPlayClip(a, 0, 120, 60.0f, true); break;
         case WeaponTerrain::SHURIKEN_:  ModelPlayClip(a, 0, 60, 60.0f, true); break;
         }
@@ -197,7 +197,7 @@ struct ResultDisplay
         {
         case WeaponTerrain::SWORD_WALL: ModelPlayClip(b, 0, 60, 60.0f, true); break;
         case WeaponTerrain::SPEAR_HILL: ModelPlayClip(b, 0, 120, 60.0f, true); break;
-        case WeaponTerrain::BOW_HILL:   ModelPlayClip(b, 0, 120, 60.0f, true); break;
+        case WeaponTerrain::BOW_HILL:   ModelPlayClip(b, 0, 60, 60.0f, true); break;
         case WeaponTerrain::HAMMER_:    ModelPlayClip(b, 0, 120, 60.0f, true); break;
         case WeaponTerrain::SHURIKEN_:  ModelPlayClip(b, 0, 60, 60.0f, true); break;
         }
