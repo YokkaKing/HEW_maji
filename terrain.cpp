@@ -1478,33 +1478,33 @@ void TERRAIN::CreateAnt(XMFLOAT3 motherPosition, int select)
 		tag = "SlopeP2"; // 専用のタグをつける
 	}
 
-	//// 四方分坂を作る
-	//for (int i = 0; i < 4; i++)
-	//{
-	//	// ファクトリの戻り値 (生のポインタ) を unique_ptr で受け取り、所有権を確保
-	//	std::unique_ptr<GameObject> antObj(
-	//		ColliderFactory::CreateTrapezoidSlopeObject(
-	//			{ 0.0f, 0.0f, 0.0f },
-	//			g_antlionData[i],
-	//			7.5f,
-	//			7.5f,
-	//			0.4f,
-	//			tag,
-	//			0
-	//		)
-	//	);
+	// 四方分坂を作る
+	for (int i = 0; i < 4; i++)
+	{
+		// ファクトリの戻り値 (生のポインタ) を unique_ptr で受け取り、所有権を確保
+		std::unique_ptr<GameObject> antObj(
+			ColliderFactory::CreateTrapezoidSlopeObject(
+				{ 0.0f, 0.0f, 0.0f },
+				g_antlionData[i],
+				7.5f,
+				7.5f,
+				0.4f,
+				tag,
+				0
+			)
+		);
 
-	//	antObj->m_position = motherPosition;
-	//	antObj->m_velocity.x = g_antlionData2[i].x; // dataの数値を代入
-	//	antObj->m_velocity.z = g_antlionData2[i].y; // dataの数値を代入
-	//	GameObject* raw_ptr = antObj.get(); // 生のポインタを取得（参照用）
+		antObj->m_position = motherPosition;
+		antObj->m_velocity.x = g_antlionData2[i].x; // dataの数値を代入
+		antObj->m_velocity.z = g_antlionData2[i].y; // dataの数値を代入
+		GameObject* raw_ptr = antObj.get(); // 生のポインタを取得（参照用）
 
-	//	if (raw_ptr != nullptr)
-	//	{
-	//		ants[select].push_back(raw_ptr);
-	//		terrainObjects.push_back(std::move(antObj));
-	//	}
-	//}
+		if (raw_ptr != nullptr)
+		{
+			ants[select].push_back(raw_ptr);
+			terrainObjects.push_back(std::move(antObj));
+		}
+	}
 
 	// 四方分坂を作る(外から上る方)
 	for (int i = 0; i < 4; i++)
