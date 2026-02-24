@@ -12,7 +12,7 @@
 //================================================================
 //	マクロ定義
 //================================================================
-#define MOVE_TERRAIN_TYPE (5)
+#define MOVE_TERRAIN_TYPE (6)
 #define CHANGE_FLAG (2)
  
 //================================================================
@@ -41,6 +41,7 @@ enum class TERRAIN_TYPE
 	WALL,
 	TREE,
 	BOG,
+	FANCE,
 
 	MAX
 };
@@ -69,6 +70,7 @@ public:
 	std::vector<std::unique_ptr<GameObject>> terrainObjects;
 	std::vector<GameObject*> hills[2];	// 丘の当たり判定の全て
 	std::vector<GameObject*> walls[2];	// 壁の当たり判定の全て
+	std::vector<GameObject*> fances[2];	// 塀の当たり判定の全て
 	std::vector<GameObject*> trees[2];	// 木の当たり判定の全て
 	std::vector<GameObject*> ants[2];	// 蟻地獄の当たり判定の全て
 	std::vector<GameObject*> bogs[2];	// 沼地の当たり判定の全て
