@@ -586,8 +586,6 @@ int Game_GetRoundResult()
 	{//時間切れ時、残りHPで勝敗を判定
 		float P1_hp = Player_GetHp();
 		float P2_hp = Player2_GetHp();
-		if(p1Dead || p2Dead)
-
 
 		if (P1_hp > P2_hp)
 		{

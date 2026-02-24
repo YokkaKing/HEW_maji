@@ -317,7 +317,7 @@ void Arrow::Throw(float power, bool select)
 	shot->m_chargePower = power;
 
 	// 飛ばす方向を計算
-	float baseSpeed = 0.3f;
+	float baseSpeed = 0.4f;
 	float finalSpeed = baseSpeed * (1.0f + power);
 	float ry = shot->m_rotation.y;
 	shot->m_velocity.x = sinf(ry) * finalSpeed;
@@ -412,12 +412,12 @@ void ArrowShot::Draw()
 		m_scale.y*0.1f,
 		m_scale.z*0.1f);
 	XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
-		m_rotation.x,
+		m_rotation.x * -8.0f,
 		m_rotation.y + XM_PI,
 		m_rotation.z);
 	XMMATRIX	translation = XMMatrixTranslation(
 		m_position.x,
-		m_position.y,
+		m_position.y - 0.5f,
 		m_position.z);
 	XMMATRIX	world = scale * rotation * translation;
 
@@ -440,6 +440,10 @@ void ArrowShot::OnCollision(const CollisionInfo& info)
 	if (info.other->m_tag == "Slope2") return;
 	if (info.other->m_tag == "BOGP1") return;
 	if (info.other->m_tag == "BOGP2") return;
+	if (info.other->m_tag == "TREEP1") return;
+	if (info.other->m_tag == "TREEP2") return;
+	if (info.other->m_tag == "WATER") return;
+	if (info.other->m_tag == "LAVA") return;
 
 	m_velocity = { 0.0f, 0.0f, 0.0f };
 	m_isStuck = true;

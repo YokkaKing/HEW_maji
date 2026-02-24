@@ -813,54 +813,53 @@ void TerrainInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 	//	下のスイッチ文はそれっぽいので活用してもいいよ
 	//======================================================
 
-	//選択された武器・地形データに応じて地形を生成
-	switch (p1Set)
-	{
-	case WeaponTerrain::SWORD_WALL:
-		//g_Terrain.SimpleObjects(Trees, { 0.25f, 2.0f, 0.25f }, TERRAIN_TYPE::TREE, g_Terrain.m_motherPosition[1], 0); // 相手を中心に生えるから
-		g_Terrain.PixelObjects(Trees, TERRAIN_TYPE::TREE, g_Terrain.m_motherPosition[1], 0);
-		break;
-	case WeaponTerrain::SPEAR_HILL:
-		//g_Terrain.SimpleObjects(Hills, { 0.25f, 0.25f, 0.25f }, TERRAIN_TYPE::HILL, g_Terrain.m_motherPosition[0], 0);
-		g_Terrain.CreateAnt(g_Terrain.m_motherPosition[0], 0);
-		break;
-	case WeaponTerrain::BOW_HILL:
-		g_Terrain.SimpleObjects(Bogs, { 1.0f, 2.5f, 1.0f }, TERRAIN_TYPE::BOG, g_Terrain.m_motherPosition[0], 0);
-		break;
-	case WeaponTerrain::HAMMER_:
-		g_Terrain.SimpleObjects(Walls, { 1.0f, 1.0f, 1.0f }, TERRAIN_TYPE::HILL, g_Terrain.m_motherPosition[1], 1);
-		break;
-	case WeaponTerrain::SHURIKEN_:
-		g_Terrain.SimpleObjects(Walls, { 1.0f, 1.0f, 1.0f }, TERRAIN_TYPE::WALL, g_Terrain.m_motherPosition[0], 0);
-		break;
-
-	default:
-		break;
-	}
-	//プレイヤー2
-	switch (p2Set)
-	{
-	case WeaponTerrain::SWORD_WALL:
-		//g_Terrain.SimpleObjects(Trees, { 0.25f, 2.0f, 0.25f }, TERRAIN_TYPE::TREE, g_Terrain.m_motherPosition[0], 1); // 相手を中心に生えるから
-		g_Terrain.PixelObjects(Trees, TERRAIN_TYPE::TREE, g_Terrain.m_motherPosition[0], 1);
-		break;
-	case WeaponTerrain::SPEAR_HILL:
-		//g_Terrain.SimpleObjects(Hills, { 0.25f, 0.25f, 0.25f }, TERRAIN_TYPE::HILL, g_Terrain.m_motherPosition[1], 1);
-		g_Terrain.CreateAnt(g_Terrain.m_motherPosition[1], 1);
-		break;
-	case WeaponTerrain::BOW_HILL:
-		g_Terrain.SimpleObjects(Bogs, { 1.0f, 2.5f, 1.0f }, TERRAIN_TYPE::BOG, g_Terrain.m_motherPosition[1], 1);
-		//g_Terrain.PixelObjects(Hills, TERRAIN_TYPE::HILL, initPosHill);
-		break;
-	case WeaponTerrain::HAMMER_:
-		g_Terrain.SimpleObjects(Walls, { 1.0f, 1.0f, 1.0f }, TERRAIN_TYPE::HILL, g_Terrain.m_motherPosition[1], 1);
-		break;
-	case WeaponTerrain::SHURIKEN_:
-		g_Terrain.SimpleObjects(Walls, { 1.0f, 1.0f, 1.0f }, TERRAIN_TYPE::WALL, g_Terrain.m_motherPosition[1], 1);
-		break;
-	default:
-		break;
-	}
+	// 選択された武器・地形データに応じて地形を生成
+	//switch (p1Set)
+	//{
+	//case WeaponTerrain::SWORD_WALL:
+	//	//g_Terrain.SimpleObjects(Trees, { 0.25f, 2.0f, 0.25f }, TERRAIN_TYPE::TREE, g_Terrain.m_motherPosition[1], 0); // 相手を中心に生えるから
+	//	g_Terrain.PixelObjects(Trees, TERRAIN_TYPE::TREE, g_Terrain.m_motherPosition[1], 0);
+	//	break;
+	//case WeaponTerrain::SPEAR_HILL:
+	//	//g_Terrain.SimpleObjects(Hills, { 0.25f, 0.25f, 0.25f }, TERRAIN_TYPE::HILL, g_Terrain.m_motherPosition[0], 0);
+	//	g_Terrain.CreateAnt(g_Terrain.m_motherPosition[0], 0);
+	//	break;
+	//case WeaponTerrain::BOW_HILL:
+	//	g_Terrain.SimpleObjects(Bogs, { 1.0f, 2.5f, 1.0f }, TERRAIN_TYPE::BOG, g_Terrain.m_motherPosition[0], 0);
+	//	break;
+	//case WeaponTerrain::HAMMER_:
+	//	g_Terrain.SimpleObjects(Walls, { 1.0f, 1.0f, 1.0f }, TERRAIN_TYPE::HILL, g_Terrain.m_motherPosition[1], 1);
+	//	break;
+	//case WeaponTerrain::SHURIKEN_:
+	//	g_Terrain.SimpleObjects(Walls, { 1.0f, 1.0f, 1.0f }, TERRAIN_TYPE::WALL, g_Terrain.m_motherPosition[0], 0);
+	//	break;
+	//default:
+	//	break;
+	//}
+	////プレイヤー2
+	//switch (p2Set)
+	//{
+	//case WeaponTerrain::SWORD_WALL:
+	//	//g_Terrain.SimpleObjects(Trees, { 0.25f, 2.0f, 0.25f }, TERRAIN_TYPE::TREE, g_Terrain.m_motherPosition[0], 1); // 相手を中心に生えるから
+	//	g_Terrain.PixelObjects(Trees, TERRAIN_TYPE::TREE, g_Terrain.m_motherPosition[0], 1);
+	//	break;
+	//case WeaponTerrain::SPEAR_HILL:
+	//	//g_Terrain.SimpleObjects(Hills, { 0.25f, 0.25f, 0.25f }, TERRAIN_TYPE::HILL, g_Terrain.m_motherPosition[1], 1);
+	//	g_Terrain.CreateAnt(g_Terrain.m_motherPosition[1], 1);
+	//	break;
+	//case WeaponTerrain::BOW_HILL:
+	//	g_Terrain.SimpleObjects(Bogs, { 1.0f, 2.5f, 1.0f }, TERRAIN_TYPE::BOG, g_Terrain.m_motherPosition[1], 1);
+	//	//g_Terrain.PixelObjects(Hills, TERRAIN_TYPE::HILL, initPosHill);
+	//	break;
+	//case WeaponTerrain::HAMMER_:
+	//	g_Terrain.SimpleObjects(Walls, { 1.0f, 1.0f, 1.0f }, TERRAIN_TYPE::HILL, g_Terrain.m_motherPosition[1], 1);
+	//	break;
+	//case WeaponTerrain::SHURIKEN_:
+	//	g_Terrain.SimpleObjects(Walls, { 1.0f, 1.0f, 1.0f }, TERRAIN_TYPE::WALL, g_Terrain.m_motherPosition[1], 1);
+	//	break;
+	//default:
+	//	break;
+	//}
 }
 void TerrainFinalize()
 {
@@ -910,9 +909,15 @@ void TerrainUpdate()
 		if (g_Terrain.m_coolTime[0] <= 0)
 		{
 			g_Terrain.m_isChange[0] = true; // 1Pの変身を確認
-			g_Terrain.m_coolTime[0] = 20.0f;
+			g_Terrain.m_coolTime[0] = 45.0f;
 			g_pos[0] = g_Terrain.m_motherPosition[1];
 		}
+	}
+	else
+	{
+		g_Terrain.m_coolTime[0] = 0.0f;
+		g_Terrain.m_isChange[0] = false;
+		g_pos[0] = {};
 	}
 
 	if (GetPlayer2_IsTransformed())
@@ -922,16 +927,16 @@ void TerrainUpdate()
 		if (g_Terrain.m_coolTime[1] <= 0)
 		{
 			g_Terrain.m_isChange[1] = true; // 2Pの変身を確認
-			g_Terrain.m_coolTime[1] = 20.0f;
+			g_Terrain.m_coolTime[1] = 45.0f;
 			g_pos[1] = g_Terrain.m_motherPosition[0];
 		}
 	}
-
-	//if (Keyboard_IsKeyDown(KK_L))
-	//{
-	//	g_Terrain.m_isChange[0] = true; // 2Pの変身を確認
-	//	g_Terrain.m_coolTime[0] = 20.0f;
-	//}
+	else
+	{
+		g_Terrain.m_coolTime[1] = 0.0f;	// クールタイムをなくす
+		g_Terrain.m_isChange[1] = false; // 変身を解く
+		g_pos[1] = {};
+	}
 
 	// 変身したら-する
 	if (g_Terrain.m_isChange[0])
@@ -1180,7 +1185,6 @@ void TerrainDraw()
 			g_Terrain.m_motherPosition[0].z);
 		if (no == 4)
 		{
-
 			translation = XMMatrixTranslation(
 				g_pos[0].x,
 				g_Terrain.m_motherPosition[0].y,
@@ -1702,10 +1706,20 @@ void TERRAIN::UpdateObject(std::vector<GameObject*> terrain, XMFLOAT3 motherPosi
 		// 変身前：プレイヤーに追従させる（ここを同期させる）
 		for (auto& obj : terrain)
 		{
-			// velocityを「初期の相対距離」として保持しているなら、これでOK
-			obj->m_position.x = motherPosition.x + obj->m_velocity.x;
-			obj->m_position.y = motherPosition.y + obj->m_velocity.y;
-			obj->m_position.z = motherPosition.z + obj->m_velocity.z;
+			if (obj->m_tag == "TREEP1" || obj->m_tag == "TREEP2")
+			{
+				// velocityを「初期の相対距離」として保持しているなら、これでOK
+				obj->m_position.x = motherPosition.x + obj->m_velocity.x;
+				obj->m_position.y = -5.0f + obj->m_velocity.y;
+				obj->m_position.z = motherPosition.z + obj->m_velocity.z;
+			}
+			else
+			{
+				// velocityを「初期の相対距離」として保持しているなら、これでOK
+				obj->m_position.x = motherPosition.x + obj->m_velocity.x;
+				obj->m_position.y = motherPosition.y + obj->m_velocity.y;
+				obj->m_position.z = motherPosition.z + obj->m_velocity.z;
+			}
 		}
 	}
 	else
@@ -1728,25 +1742,22 @@ void TERRAIN::UpdateObject(std::vector<GameObject*> terrain, XMFLOAT3 motherPosi
 				/*hal::dout << "SLOPE position (" << obj->m_position.x <<
 					"," << obj->m_position.y << "," << obj->m_position.z << "\n";*/
 			}
+			else if (obj->m_tag == "TREEP1" || obj->m_tag == "TREEP2")
+			{
+				if (obj->m_position.y < 0.5f)
+				{
+					obj->m_position.y += 0.1f; // 上昇
+				}
+
+				if (obj->m_position.y >= 0.5f)
+				{
+					obj->m_position.y = 0.5f;
+				}
+			}
 			else
 			{
 				obj->m_position.y += 0.1f; // 上昇
-				/*hal::dout << "NORMAL position (" << obj->m_position.x <<
-					"," << obj->m_position.y << "," << obj->m_position.z << "\n";*/
 			}
-			// キー入力で動くのと同じように、直接 position を更新
-
-			/*if (obj->m_tag == "SlopeP1")
-			{
-				hal::dout << "ANTS1 position (" << ants[0][0]->m_position.x << "," <<
-					ants[0][0]->m_position.y << "," << ants[0][0]->m_position.z << ")\n";
-			}
-
-			if (obj->m_tag == "SlopeP2")
-			{
-				hal::dout << "ANTS2 position (" << ants[1][0]->m_position.x << "," <<
-					ants[1][0]->m_position.y << "," << ants[1][0]->m_position.z << ")\n";
-			}*/
 		}
 	}
 }
