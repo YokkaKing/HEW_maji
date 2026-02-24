@@ -59,6 +59,8 @@ extern int g_round2;
 extern int g_result;
 extern int g_ko;
 extern int g_score;
+extern int g_titleSword;
+
 /*
 //以下の関数はプログラムの最初と最後に1回ずつ呼び出せばOK
 void InitAudio();		//サウンドの初期化

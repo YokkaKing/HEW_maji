@@ -26,6 +26,7 @@
 #include "Result_Ui.h"
 #include "ResultSystem.h"
 #include "selectWeaponUi3D.h"
+#include "TeamLogo.h"
 //================================================================
 //	グローバル変数
 //================================================================
@@ -70,8 +71,10 @@ void Manager_Initialize()
 	//SetFade(60.0f, color, FADE_STATE::FADE_IN, SCENE_GAME);
 	//SetScene(SCENE_GAME);	//最初に動かすシーンに切り替える
 
-
-	SetScene(SCENE_TITLE);	//最初に動かすシーンに切り替える
+	//SetScene(SCENE_TITLE);
+	TeamLogo_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
+	//Title_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
+	g_Scene = SCENE_TEAMLOGO;
 
 }
 
@@ -91,6 +94,9 @@ void Manager_Update()
 	{
 		
 		case SCENE_NONE:
+			break;
+		case SCENE_TEAMLOGO:
+			TeamLogo_Update();
 			break;
 		case SCENE_TITLE:
 			Title_Update();	
@@ -338,6 +344,9 @@ void Manager_Draw_Player1()
 	{
 		case SCENE_NONE:
 			break;
+		case SCENE_TEAMLOGO:
+			TeamLogo_Draw();
+			break;
 		case SCENE_TITLE:
 			Title_Draw();	
 			break;
@@ -367,6 +376,9 @@ void Manager_Draw_Player2()
 	switch (g_Scene)	//現在シーンの描画関数を呼び出す
 	{
 	case SCENE_NONE:
+		break;
+	case SCENE_TEAMLOGO:
+		TeamLogo_Draw();
 		break;
 	case SCENE_TITLE:
 		Title_Draw();
@@ -411,6 +423,9 @@ void SetScene(SCENE scene) //シーンを切り替える
 	{
 		case SCENE_NONE:
 			break;
+		case SCENE_TEAMLOGO:
+			TeamLogo_Finalize();
+			break;
 		case SCENE_TITLE:
 			Title_Finalize();	
 			break;
@@ -437,6 +452,9 @@ void SetScene(SCENE scene) //シーンを切り替える
 	switch (g_Scene)	//現在シーンの初期化関数を呼び出す
 	{
 		case SCENE_NONE:
+			break;
+		case SCENE_TEAMLOGO:
+			TeamLogo_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
 			break;
 		case SCENE_TITLE:
 			Title_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
