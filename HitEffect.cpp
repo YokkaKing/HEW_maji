@@ -41,6 +41,17 @@ void HitEffectManager::Initialize(ID3D11Device* device, ID3D11DeviceContext* con
 
     }
 
+    m_columns[(int)EffectType::TRANSFORM] = 5;
+    m_rows[(int)EffectType::TRANSFORM] = 7;
+
+    {
+        TexMetadata		metadata;
+        ScratchImage	image;
+        LoadFromWICFile(L"asset\\texture\\TransformAnim2D.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(device, image.GetImages(), image.GetImageCount(), metadata, &m_pTextureRV[(int)EffectType::TRANSFORM]);
+        assert(&m_pTextureRV[(int)EffectType::TRANSFORM]);
+    }
+
 }
 
 void HitEffectManager::Update(float deltaTime)
@@ -141,8 +152,14 @@ void HitEffectManager::Draw(const XMMATRIX& viewMat, const XMMATRIX& projectionM
         {
             DrawSpriteEx(drawPos, effectSize, color, effect.currentFrame, m_columns[typeIndex], m_rows[typeIndex]);
         }
-        
-       
+        if (typeIndex == (int)EffectType::TRANSFORM)
+        {
+            float transformScale = 2.0f;
+            DrawSpriteEx(
+                drawPos, XMFLOAT2(effectSize.x * transformScale, effectSize.y * transformScale),
+                color, (float)effect.currentFrame, m_columns[typeIndex], m_rows[typeIndex]
+            );
+        }
     }
 }
 

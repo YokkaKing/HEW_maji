@@ -24,7 +24,7 @@
 #include "arrow.h" 
 #include "syuriken.h"
 #include <memory>
-
+#include "HitEffect.h"
 //================================================================
 //	グローバル変数
 //================================================================
@@ -235,6 +235,11 @@ void TransformPlayer()
 
         if ((Keyboard_IsKeyDownTrigger(KK_D1) || ctrl.IsButtonPushed(ControllerButton::L_SHOULDER)) && !g_IsUsedA_P1)
         {
+            //エフェクトアニメーション
+            XMFLOAT3 effectPos = g_Player.m_position;
+            effectPos.y -= 0.5f;
+            HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::TRANSFORM);
+
             g_Player.TransformType = TRANSFORM_TYPE::TRANSFORM_TYPE_A;
             targetWT = g_TransformA_P1;
             Player_PlusTransformCount();
@@ -247,6 +252,11 @@ void TransformPlayer()
         }
         else if ((Keyboard_IsKeyDownTrigger(KK_D0) || ctrl.IsButtonPushed(ControllerButton::R_SHOULDER)) && !g_IsUsedB_P1)
         {
+            //エフェクトアニメーション
+            XMFLOAT3 effectPos = g_Player.m_position;
+            effectPos.y -= 0.5f;
+            HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::TRANSFORM);
+
             g_Player.TransformType = TRANSFORM_TYPE::TRANSFORM_TYPE_B;
             targetWT = g_TransformB_P1;
             Player_PlusTransformCount();
@@ -277,6 +287,11 @@ void TransformPlayer()
         if (g_Player.TransformType == TRANSFORM_TYPE::TRANSFORM_TYPE_B && ctrl.GetRightTrigger() >= 0.9f) unevolve = true;
 
         if (unevolve) {
+            //エフェクトアニメーション
+            XMFLOAT3 effectPos = g_Player.m_position;
+            effectPos.y -= 0.5f;
+            HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::TRANSFORM);
+
             g_Controller[controllerIdx].SetVibration(0.0f, 0.0f);
             g_Player.TransformType = TRANSFORM_TYPE::TRANSFORM_TYPE_NONE;
             SetPlayer_IsTransformed(false);
@@ -352,6 +367,11 @@ void TransformPlayer2()
 
         if ((Keyboard_IsKeyDownTrigger(KK_D2) || ctrl.IsButtonPushed(ControllerButton::L_SHOULDER)) && !g_IsUsedA_P2)
         {
+            //エフェクトアニメーション
+            XMFLOAT3 effectPos = g_Player2.m_position;
+            effectPos.y -= 0.5f;
+            HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::TRANSFORM);
+
             g_Player2.TransformType = TRANSFORM_TYPE2::TRANSFORM_TYPE_A;
             targetWT = g_TransformA_P2;
             g_IsUsedA_P2 = true;
@@ -364,6 +384,11 @@ void TransformPlayer2()
         }
         else if ((Keyboard_IsKeyDownTrigger(KK_D9) || ctrl.IsButtonPushed(ControllerButton::R_SHOULDER)) && !g_IsUsedB_P2)
         {
+            //エフェクトアニメーション
+            XMFLOAT3 effectPos = g_Player2.m_position;
+            effectPos.y -= 0.5f;
+            HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::TRANSFORM);
+
             g_Player2.TransformType = TRANSFORM_TYPE2::TRANSFORM_TYPE_B;
             targetWT = g_TransformB_P2;
             g_IsUsedB_P2 = true;
@@ -394,6 +419,11 @@ void TransformPlayer2()
         if (g_Player2.TransformType == TRANSFORM_TYPE2::TRANSFORM_TYPE_B && ctrl.GetRightTrigger() >= 0.9f) unevolve = true;
 
         if (unevolve) {
+            //エフェクトアニメーション
+            XMFLOAT3 effectPos = g_Player2.m_position;
+            effectPos.y -= 0.5f;
+            HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::TRANSFORM);
+
             g_Controller[controllerIdx].SetVibration(0.0f, 0.0f);
             g_Player2.TransformType = TRANSFORM_TYPE2::TRANSFORM_TYPE_NONE;
             g_Player2.m_isTransformed = false;
