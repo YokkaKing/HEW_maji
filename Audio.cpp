@@ -60,6 +60,7 @@ int g_round2 = -1;
 int g_result = -1;
 int g_ko = -1;
 int g_score = -1;
+int g_titleSword = -1;
 
 void InitAudio()
 {
@@ -104,13 +105,15 @@ void InitAudio()
 	g_result = LoadAudio("asset\\Audio\\result.wav");
 	g_ko = LoadAudio("asset\\Audio\\KO.wav");
 	g_score = LoadAudio("asset\\Audio\\score.wav");
+	g_titleSword = LoadAudio("asset\\Audio\\title_sword.wav");
+
 	SetAudioVolume(g_hammer, 2.0f);
 	SetAudioVolume(g_charge1, 2.0f);
 	SetAudioVolume(g_charge2, 2.0f);
 	SetAudioVolume(g_charge3, 2.0f);
 	SetAudioVolume(g_charge4, 2.0f);
 	SetAudioVolume(g_charge5, 2.0f);
-
+	SetAudioVolume(g_teamLogo, 2.0f);
 	SetAudioVolume(g_sword, 2.0f);
 	SetAudioVolume(g_fade, 2.0f);
 	SetAudioVolume(g_damageHammer, 2.0f);
