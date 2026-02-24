@@ -1,26 +1,27 @@
-/*
-* �t�@�C����	Player.cpp
-* �^�C�g��	�v���C���[
-* �쐬��		�v�ۖ؊���
-* �쐬��		12��02��
-* �X�V��		12��02��
+
+/* ファイル名	Player.cpp
+* タイトル	プレイヤー
+* 作成者		久保木幹太
+* 作成日		12月02日
+* 更新日		12月02日
 */
 
 //================================================================
-//	�}�N����`
+//	マクロ定義
 //================================================================
-#define JUMP_FORCE (0.15f)
-#define CLIMB_SPEED (JUMP_FORCE / 2.0f)
+//#define JUMP_FORCE (0.15f)
+#define CLIMB_SPEED (m_jumpForce / 2.0f)
 
 //================================================================
-//	�C���N���[�h
+//	インクルード
 //================================================================
 #include"keyboard.h"
 #include"Controller.h"
 #include"Player.h"
+#include "Entry.h"
 #include"Camera.h"
 #include"shader.h"
-#include"Evolution.h"
+#include"Transform.h"
 #include"colliderFactory.h"
 #include"debug_ostream.h"
 #include"fade.h"
@@ -29,150 +30,614 @@
 #include"hammer.h"
 #include"arrow.h"
 #include"syuriken.h"
+#include"terrain.h"
 #include<memory>
-
+#include"generateWT.h"
+#include"Audio.h"
+#include"selectWeaponTerrain.h"
+#include"Item.h"
 //================================================================
-//	�O���[�o���ϐ�
+//	グローバル変数
 //================================================================
-//�{�[���I�u�W�F�N�g
 PLAYER	g_Player;
 ID3D11Device* g_pDevice;
+static ID3D11ShaderResourceView* g_TextureShadowP1 = NULL;
 ID3D11DeviceContext* g_pContext;
-Controller g_Controller(0); //ID 0�̃R���g���[���[���g�p
+extern Controller g_Controller[2]; //ID 0のコントローラーを使用
+extern const char* INITIAL_MODEL_PATH_P1;
+static MODEL* g_shadowPlaneP1 = nullptr;
 MODEL* g_modelP1;
+MODEL* deadModel;
+WeaponTerrain g_setWTP1; // プレイヤーの武器と地形情報
 unsigned int g_changeP1;
+static bool g_Player1AttackPlaying = false; // 攻撃ワンショット再生中フラグ
+static bool g_Player1JumpPlaying = false; // ジャンプワンショット再生中フラグ
+static int g_Player1CurrentAnim = 0; // 0: idle, 1: move, 2: attack 3:jump
+bool g_isChangeP1;
+ITEM_SPONER gp_itemSponer;
+XMFLOAT3 gp1_slopeSpeed;
+static const float HIT_ANIM_DURATION = 0.35f;
+bool gp1_move; // プレイヤーが動いているかのフラグ
+bool gp1_koyoteFlag; // コヨーテタイムを回復するかどうか
+bool gp1_roundReset; // ラウンドがリセットされたかどうか
+static bool  g_Player1DeathAnimPlaying = false;
+static float g_Player1DeathAnimTimer = 0.0f;
+static const float PLAYER1_DEATH_ANIM_LEN = 60.0f / 60.0f;
 
 void PlayerDie()
 {
 	hal::dout << "Player died!" << std::endl;
-	//���S����
 
-	//�v���C���[���\���ɂ���
-	if (g_Player.m_gameObject != nullptr)
-	{
-		g_Player.m_gameObject->m_isEnable = false;
-	}
-
-	// ��: ���͂��󂯕t���Ȃ��悤�ɂ���i��Ԃ�IDLE�ɂ���Ȃǁj
+	//プレイヤーを非表示にする
+	//if (g_Player.m_gameObject != nullptr)
+	//{
+	//	g_Player.m_gameObject->m_isEnable = false;
+	//}
+	
+	// 入力を受け付けないようにする
 	g_Player.State = PLAYER_STATE::PLAYER_STATE_IDLE;
+	g_Player.m_isDeadFlag = true;
+	g_Player.m_model = deadModel;
+	ModelPlayClip(g_Player.m_model, 0, 60, 60.0f, false);
 
+	// 念のため先頭フレーム確定
+	ModelUpdateAnimation(g_Player.m_model, 0.0f);
 
-	//�t�F�[�h�A�E�g�����ăV�[����؂�ւ���
-	XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
-	SetFade(40.0f, color, FADE_OUT, SCENE_RESULT);
+	g_Player1DeathAnimPlaying = true;
+	g_Player1DeathAnimTimer = 0.0f;
+	PlayAudio(g_ko, false);
+
+	// ★フェードはManager側で「1秒スロウ後」に開始する
 }
-
-void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
+void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, WeaponTerrain setWTp1)
 {
 	g_pDevice = pDevice;
 	g_pContext = pContext;
+	g_shadowPlaneP1 = ModelLoad("asset\\model\\block.fbx");
+	TexMetadata metadata;
+	ScratchImage image;
+	deadModel = ModelLoad("asset\\model\\dead.fbx");
+	LoadFromWICFile(L"asset\\texture\\shadow.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+	CreateShaderResourceView(Direct3D_GetDevice(), image.GetImages(), image.GetImageCount(), metadata, &g_TextureShadowP1);
+	assert(g_TextureShadowP1);
+	if (INITIAL_MODEL_PATH_P1 == nullptr) {
+		g_Player.m_model = ModelLoad("asset\\model\\block.fbx"); // 確実に存在するファイル
+	}
+	else {
+		g_Player.m_model = ModelLoad(INITIAL_MODEL_PATH_P1);
+	}	//g_modelP1 = ModelLoad("asset\\model\\block.fbx");
 
-	g_Player.m_model = ModelLoad("asset\\model\\char_hammer.fbx");
-	g_modelP1 = ModelLoad("asset\\model\\block.fbx");
-
-	g_Player.m_position = XMFLOAT3(0.0f, 0.5f, 1.0f);
+	g_Player.m_position = XMFLOAT3(-10.0f, 1.0f, 1.0f);
 	g_Player.m_rotation = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	g_Player.m_velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	
-	g_Player.m_scale = XMFLOAT3(0.6f, 1.0f, 0.6f);
+	g_Player.m_scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
 	g_Player.m_tag = "Player";
 	g_Player.m_layer = 0;
-
+	g_Player1AttackPlaying = false;
 	g_Player.State = PLAYER_STATE::PLAYER_STATE_MOVE;
 
 	g_Player.m_acceleration = XMFLOAT3(0.0f, -9.8f / 600.0f * 0.5f, 0.0f);
 	g_Player.FrictionRate = 0.98f;
-	g_Player.EvolutionType = EVOLUTION_TYPE::EVOLUTION_TYPE_NONE;
+	g_Player.TransformType = TRANSFORM_TYPE::TRANSFORM_TYPE_NONE;
 	g_Player.m_currentHp = g_Player.m_maxHp;
 	g_Player.m_isDead = false;
-
-	// �v���C���[�̓����蔻��̒ǉ�
+	g_Player.m_baseWT = setWTp1;
+	g_Player.m_isAttacked = false;
+	g_Player.m_isTransformed = false;
+	g_Player.m_isDeadFlag = false;
+	g_Player.m_moveMul = 1.0f;
 	auto collider = g_Player.AddComponent<BoxCollider>(&g_Player, g_Player.m_scale);
 	ManagerCollider::AddCollider(collider);
 
-	// �̂��̂��Z���N�g��ʂ��番��ł���悤�ɂ���
-	// ������owner�Ƃ��ĕ���𐶐�
-	g_Player.m_currentWeapon = std::make_unique<Sword>(&g_Player, FALSE); // 1P�ł�
-	g_changeP1 = 0;
+	gp1_roundReset = false; // ラウンドがリセットされる
 
-	EvolutionInitialize();
+	// のちのちセレクト画面から分岐できるようにする
+	// 自分をownerとして武器を生成
+
+	g_changeP1 = 3;
+	g_setWTP1 = setWTp1;
+	if (g_setWTP1 == WeaponTerrain::SWORD_WALL)
+	{
+		g_Player.m_model = ModelLoad("asset\\model\\default_sword.fbx");
+	}
+	else if (g_setWTP1 == WeaponTerrain::SPEAR_HILL)
+	{
+		g_Player.m_model = ModelLoad("asset\\model\\default_spear.fbx");
+	}
+	else if (g_setWTP1 == WeaponTerrain::BOW_HILL)
+	{
+		g_Player.m_model = ModelLoad("asset\\model\\default_bow.fbx");
+	}
+	else if (g_setWTP1 == WeaponTerrain::HAMMER_)
+	{
+		g_Player.m_model = ModelLoad("asset\\model\\default_hammer.fbx");
+	}
+	else if (g_setWTP1 == WeaponTerrain::SHURIKEN_)
+	{
+		g_Player.m_model = ModelLoad("asset\\model\\default_shuriken.fbx");
+	}
+
+	g_Player.EquipBaseWeapon();
+	
+	gp1_slopeSpeed = { 0.0f, 0.0f, 0.0f };
+	gp1_move = false; // 最初は動いてない
+	gp1_koyoteFlag = false; // 最初はフラグをオフ
+
+	g_isChangeP1 = false;
+
+	// ===== 死亡アニメ状態の初期化（ラウンド開始ごと）=====
+	g_Player1DeathAnimPlaying = false;
+	g_Player1DeathAnimTimer = 0.0f;
+
+	// 死亡状態を解除（使っている変数名に合わせて）
+	g_Player.m_isDead = false;
+	g_Player.m_isDeadFlag = false;
+
+	
 }
 void PlayerFinalize()
 {
 	ModelRelease(g_Player.m_model);
+	if (g_shadowPlaneP1)
+	{
+		ModelRelease(g_shadowPlaneP1);
+		g_shadowPlaneP1 = nullptr;
+	}
+	if (g_TextureShadowP1)
+	{
+		g_TextureShadowP1->Release();
+		g_TextureShadowP1 = NULL;
+	}
 }
 void	PlayerUpdate()
 {
-	g_Controller.Update();//���t���[���R���g���[���[�̏�Ԃ��X�V
-	EvolvePlayer3();
-	// �����̒���scale��1.0f�ɌŒ肳��Ă���
-	ApplyEvolutionEffect3();   // �i���^�C�v�ɉ������p�����[�^��K�p
-	if (g_Player.m_isDead)return;	//���S���Ă���ꍇ�͍X�V�������X�L�b�v
+	int ctrlIdx = GetControllerIndexFromPlayerNo(0);
 
-//================================================================
-//	����ύX����(��U)
-//================================================================
-	if (Keyboard_IsKeyDownTrigger(KK_D1))
+	// --- 揺れ処理の追加 ---
+	// ダメージを検知
+	float damage = g_Player.m_lastHp - g_Player.m_currentHp;
+	if (damage > 0.0f)
 	{
-		g_changeP1++;
-
-		if (g_changeP1 >= 5)
+		// ダメージ量に応じて揺れの強さを設定 (例: ダメージの 0.05倍)
+		g_Player.m_shakeIntensity += damage * 0.02f;
+		if (g_Player.m_shakeIntensity > 1.0f)
 		{
-			g_changeP1 = 0;
+			g_Player.m_shakeIntensity = 1.0f;
+		}
+	}
+	g_Player.m_lastHp = g_Player.m_currentHp; // HPを保存
+
+	// 揺れの減衰 (毎フレーム 90% に減らすなど)
+	g_Player.m_shakeIntensity *= 0.9f;
+	if (g_Player.m_shakeIntensity < 0.001f) g_Player.m_shakeIntensity = 0.0f;
+
+	TransformPlayer();
+	
+	ApplyTransformEffect();   
+	if (g_Player.m_isAttacked && !g_Player.m_isDead)
+	{
+		Player_StartHitAnim();
+		g_Player.m_isAttacked = false;
+	}
+	if (g_Player.m_hitAnimPlaying)
+	{
+		g_Player.m_hitAnimTimer += 1.0f / 60.0f;
+		if (g_Player.m_hitAnimTimer >= HIT_ANIM_DURATION)
+		{
+			g_Player.m_hitAnimPlaying = false;
+			g_Player1AttackPlaying = false;
+			g_Player1JumpPlaying = false;
+		}
+	}
+	g_Player.m_hitAction.Update(g_Player.m_position);
+
+
+	if (g_Player.m_hitAction.IsStopping())
+	{
+		Player_ManualMove();                         
+		//ModelUpdateAnimation(g_Player.m_model, 1.0f / 60.0f);  
+		return;                                      
+	}
+
+	if (g_Player.m_isDead && g_Player1DeathAnimPlaying)
+	{
+		ModelUpdateAnimation(g_Player.m_model, 1.0f / 60.0f);
+
+		g_Player1DeathAnimTimer += 1.0f / 60.0f;
+		if (g_Player1DeathAnimTimer >= PLAYER1_DEATH_ANIM_LEN)
+		{
+			g_Player1DeathAnimPlaying = false;
+
+			// ★最後のフレーム(60)で止める
+			ModelPlayClip(g_Player.m_model, 60, 60, 60.0f, true);
+			ModelUpdateAnimation(g_Player.m_model, 0.0f);    // 行列反映用（必要なら）
+
+	
+		}
+		return;
+	}
+	if (g_Player.m_isDead)return;	
+
+	//ヒットアクション
+
+	//ヒットストップ中ならこの関数自体を抜けるため今後の処理がすべてスキップされる
+	
+//================================================================
+//	武器変更処理(一旦)
+//================================================================
+	/*
+	int slotToUse = -1; 
+
+	if (Keyboard_IsKeyDownTrigger(KK_D1) && !GetIsUsedA_P1())
+	{
+		slotToUse = 0;
+		g_isChangeP1 = true;
+	}
+	if (Keyboard_IsKeyDownTrigger(KK_D0) && !GetIsUsedB_P1())
+	{
+		slotToUse = 1;
+		g_isChangeP1 = true;
+	}
+
+
+	if (slotToUse != -1)
+	{
+		WeaponTerrain reserved = g_Player.GetReservedWT(slotToUse);
+
+		if (reserved != WeaponTerrain::NONE)
+		{
+			inGameWTselect data;
+			data.player1 = reserved;       
+			data.player2 = g_Player2.GetCurrentWT();
+
+			// generateWT_Apply
+			//generateWT_Apply(data, &g_Player, &g_Player2, g_pDevice, g_pContext);
+			TerrainSet(reserved, FALSE);
+
+			switch (reserved) {
+			case WeaponTerrain::SWORD_WALL: 
+				g_changeP1 = 1;
+				g_Player.m_model = ModelLoad("asset\\model\\sword.fbx"); break;
+				g_Player.EquipWeapon(std::make_unique<Sword>(&g_Player, FALSE));
+			case WeaponTerrain::SPEAR_HILL:
+				g_changeP1 = 2;
+				g_Player.m_model = ModelLoad("asset\\model\\spear.fbx"); break;
+				g_Player.EquipWeapon(std::make_unique<Spear>(&g_Player, FALSE));
+			case WeaponTerrain::BOW_HILL:   
+				g_changeP1 = 3;
+				g_Player.m_model = ModelLoad("asset\\model\\bow.fbx"); break;
+				g_Player.EquipWeapon(std::make_unique<Arrow>(&g_Player, FALSE));
+			case WeaponTerrain::HAMMER_:   
+				g_changeP1 = 4;
+				g_Player.m_model = ModelLoad("asset\\model\\hammer.fbx");
+				g_Player.EquipWeapon(std::make_unique<Hammer>(&g_Player, FALSE)); 
+				break;
+			case WeaponTerrain::SHURIKEN_: 
+				g_changeP1 = 5; 
+				g_Player.m_model = ModelLoad("asset\\model\\char_shuriken_motion.fbx");
+				g_Player.EquipWeapon(std::make_unique<Shuriken>(&g_Player, FALSE));
+				break;
+			}
+			g_setWTP1 = reserved;
+			//g_Player.SetCurrentWT(reserved);
+		}
+	}
+	*/
+
+//================================================================
+//	攻撃処理(変身前)
+//================================================================
+	bool attackPushed = (ctrlIdx != -1 && g_Controller[ctrlIdx].IsButtonPushed(ControllerButton::X_BUTTON));
+
+	if (Keyboard_IsKeyDownTrigger(KK_C) || attackPushed)
+	{
+		// 武器が存在し攻撃中でなければ攻撃開始
+		if (g_Player.m_currentWeapon && !g_Player1AttackPlaying && g_Player.m_currentWeapon->GetCoolTime()==0.0f&& !g_Player.m_hitAnimPlaying)
+		{
+			g_Player.m_currentWeapon->Attack();
+			if (g_Player.m_isTransformed)
+			{		
+				switch (g_Player.m_currentWT)
+				{
+				case WeaponTerrain::SWORD_WALL: // Sword
+					ModelPlayClip(g_Player.m_model, 167, 227, 60.0f, false, 2.0f);
+					break;
+				case WeaponTerrain::SPEAR_HILL: // spear
+					ModelPlayClip(g_Player.m_model, 500, 600, 60.0f, false, 4.0f);
+					break;
+				case WeaponTerrain::BOW_HILL: // arrow
+					ModelPlayClip(g_Player.m_model, 240, 360, 60.0f, false, 4.0f);
+					break;
+				case WeaponTerrain::HAMMER_: // hammer
+					ModelPlayClip(g_Player.m_model, 360, 539, 60.0f, false, 2.0f);
+					break;
+				case WeaponTerrain::SHURIKEN_: //shuriken
+					ModelPlayClip(g_Player.m_model, 151, 210, 60.0f, false, 4.0f);
+					break;
+				}
+				
+			}
+			else
+			{
+				switch (g_setWTP1)
+				{
+				case WeaponTerrain::SWORD_WALL: // Sword
+					ModelPlayClip(g_Player.m_model, 167, 227, 60.0f, false, 2.0f);
+					break;
+				case WeaponTerrain::SPEAR_HILL: // spear
+					ModelPlayClip(g_Player.m_model, 500, 600, 60.0f, false, 4.0f);
+					break;
+				case WeaponTerrain::BOW_HILL: // arrow
+					ModelPlayClip(g_Player.m_model, 240, 360, 60.0f, false, 4.0f);
+					break;
+				case WeaponTerrain::HAMMER_: // hammer
+					ModelPlayClip(g_Player.m_model, 360, 539, 60.0f, false, 2.0f);
+					break;
+				case WeaponTerrain::SHURIKEN_: //shuriken
+					ModelPlayClip(g_Player.m_model, 151, 210, 60.0f, false, 4.0f);
+					break;
+				}
+			}
+			g_Player1AttackPlaying = true;
+			g_Player1CurrentAnim = 2; // attack 状態
 		}
 
-		switch (g_changeP1)
-		{
-		case 0:
-			g_Player.EquipWeapon(std::make_unique<Sword>(&g_Player, FALSE));
-			break;
-
-		case 1:
-			g_Player.EquipWeapon(std::make_unique<Spear>(&g_Player, FALSE));
-			break;
-
-		case 2:
-			// g_Player.EquipWeapon(std::make_unique<Hammer>(&g_Player, FALSE));
-			break;
-
-		case 3:
-			// g_Player.EquipWeapon(std::make_unique<Arrow>(&g_Player, FALSE));
-			break;
-
-		case 4:
-			// g_Player.EquipWeapon(std::make_unique<Shuriken>(&g_Player, FALSE));
-			break;
-
-		default:
-			break;
-		}
+		hal::dout << "Player 攻撃入力検出\n";
 	}
 
 //================================================================
-//	�U������
-//================================================================
-	// C�L�[��A�{�^����
-	if (Keyboard_IsKeyDownTrigger(KK_C) || g_Controller.IsButtonPushed(ControllerButton::A_BUTTON))
-	{
-		// ���킪���邩
-		if (g_Player.m_currentWeapon)
-		{
-			g_Player.m_currentWeapon->Attack(); // �U��
-		}
-
-		hal::dout << "Player����U�������I\n";
-	}
-
-//================================================================
-//	����̍X�V
+//	武器の更新
 //================================================================
 	if (g_Player.m_currentWeapon)
 	{
 		g_Player.m_currentWeapon->Update();
 	}
+	if (!g_Player.m_hitAction.IsStopping())
+	{
+		Player_ManualMove();
+	}
 
-	Player_ManualMove();
-	//���S����
+	//死亡判定
+	if (g_Player.m_currentHp <= 0.0f && !g_Player.m_isDead)
+	{
+		g_Player.m_isDead = true;
+		PlayerDie();
+	}
+	//================================================================
+	// アニメーション処理
+	// ================================================================
+	// 移動速度判定
+	float moveSpeed = sqrtf(g_Player.m_velocity.x * g_Player.m_velocity.x +
+		g_Player.m_velocity.z * g_Player.m_velocity.z);
+	bool isMoving = (moveSpeed > 0.001f);
+
+	// アニメーション状態管理：
+	//  - 攻撃ワンショット再生中はその完了を監視し、完了したら移動/待機ループへ復帰
+	//  - 攻撃中でなければ移動/待機のループアニメを確実に再生しておく
+	if ((g_Player1AttackPlaying||g_Player1JumpPlaying)&& !g_Player.m_hitAnimPlaying)
+	{
+		// ワンショットクリップが終了したか確認
+		if (ModelConsumeClipFinished(g_Player.m_model))
+		{
+			// 攻撃アニメ完了: フラグ解除して適切なループへ戻す
+			g_Player1AttackPlaying = false;
+			g_Player1JumpPlaying = false;
+			if (isMoving)
+			{
+				// 移動ループ
+				if (g_Player1CurrentAnim != 1)
+				{
+					if (g_Player.m_isTransformed)
+					{
+						switch (g_Player.m_currentWT)
+						{
+						case WeaponTerrain::SWORD_WALL:
+							ModelPlayClip(g_Player.m_model, 120, 165, 60.0f, true, 1.0f);
+							break;
+						case WeaponTerrain::SPEAR_HILL:
+							ModelPlayClip(g_Player.m_model, 240, 360, 60.0f, true, 1.0f);
+							break;
+						case WeaponTerrain::BOW_HILL:
+							ModelPlayClip(g_Player.m_model, 121, 150, 60.0f, true, 1.0f);
+							break;
+						case WeaponTerrain::HAMMER_:
+							ModelPlayClip(g_Player.m_model, 180, 240, 60.0f, true, 1.0f);
+							break;
+						case WeaponTerrain::SHURIKEN_:
+							ModelPlayClip(g_Player.m_model, 121, 150, 60.0f, true, 1.0f);
+							break;
+						}
+						
+					}
+					else
+					{
+						switch (g_setWTP1) //移動
+						{
+						case WeaponTerrain::SWORD_WALL:
+							ModelPlayClip(g_Player.m_model, 120, 165, 60.0f, true, 1.0f);
+							break;
+						case WeaponTerrain::SPEAR_HILL:
+							ModelPlayClip(g_Player.m_model, 240, 360, 60.0f, true, 1.0f);
+							break;
+						case WeaponTerrain::BOW_HILL:
+							ModelPlayClip(g_Player.m_model, 121, 150, 60.0f, true, 1.0f);
+							break;
+						case WeaponTerrain::HAMMER_:
+							ModelPlayClip(g_Player.m_model, 180, 240, 60.0f, true, 1.0f);
+							break;
+						case WeaponTerrain::SHURIKEN_:
+							ModelPlayClip(g_Player.m_model, 121, 150, 60.0f, true, 1.0f);
+							break;
+						}
+					}
+					
+					g_Player1CurrentAnim = 1;
+				}
+			}
+			else
+			{
+				// 待機ループ（0~60）
+				if (g_Player1CurrentAnim != 0)
+				{
+					if (g_Player.m_isTransformed)
+					{
+						switch (g_Player.m_currentWT)
+						{
+						case WeaponTerrain::SWORD_WALL:
+							ModelPlayClip(g_Player.m_model, 0, 60, 60.0f, true);
+							break;
+						case WeaponTerrain::SPEAR_HILL:
+							ModelPlayClip(g_Player.m_model, 0, 120, 60.0f, true);
+							break;
+						case WeaponTerrain::BOW_HILL:
+							ModelPlayClip(g_Player.m_model, 0,60, 60.0f, true);
+							break;
+						case WeaponTerrain::HAMMER_:
+							ModelPlayClip(g_Player.m_model, 0, 120, 60.0f, true);
+							break;
+						case WeaponTerrain::SHURIKEN_:
+							ModelPlayClip(g_Player.m_model, 0, 60, 60.0f, true);
+							break;
+						}
+					}
+					else
+					{
+						switch (g_setWTP1) //移動
+						{
+						case WeaponTerrain::SWORD_WALL:
+							ModelPlayClip(g_Player.m_model, 0, 60, 60.0f, true);
+							break;
+						case WeaponTerrain::SPEAR_HILL:
+							ModelPlayClip(g_Player.m_model, 0, 120, 60.0f, true);
+							break;
+						case WeaponTerrain::BOW_HILL:
+							ModelPlayClip(g_Player.m_model, 0, 60, 60.0f, true);
+							break;
+						case WeaponTerrain::HAMMER_:
+							ModelPlayClip(g_Player.m_model, 0, 120, 60.0f, true);
+							break;
+						case WeaponTerrain::SHURIKEN_:
+							ModelPlayClip(g_Player.m_model, 0, 60, 60.0f, true);
+							break;
+						}
+						
+					}
+					g_Player1CurrentAnim = 0;
+				}
+			}
+		}
+		// 攻撃中は移動による切替を行わない（攻撃優先）
+	}
+	else
+	{
+		// 攻撃中でなければ移動/待機を維持
+		if (isMoving)
+		{
+			if (g_Player1CurrentAnim != 1)
+			{
+				if (g_Player.m_isTransformed)
+				{
+					switch (g_Player.m_currentWT)
+					{
+					case WeaponTerrain::SWORD_WALL:
+						ModelPlayClip(g_Player.m_model, 120, 165, 60.0f, true, 1.5f);
+						break;
+					case WeaponTerrain::SPEAR_HILL: // spear
+						ModelPlayClip(g_Player.m_model, 240, 360, 60.0f, true, 1.5f);
+						break;
+					case WeaponTerrain::BOW_HILL: // hammer
+						ModelPlayClip(g_Player.m_model, 121, 150, 60.0f, true, 1.0f);
+						break;
+					case WeaponTerrain::HAMMER_: // arrow
+						ModelPlayClip(g_Player.m_model, 180, 240, 60.0f, true, 1.0f);
+						break;
+					case WeaponTerrain::SHURIKEN_:
+						ModelPlayClip(g_Player.m_model, 121, 150, 60.0f, true, 1.0f);
+						break;
+					}
+				}
+				else
+				{
+					switch (g_setWTP1) //移動
+					{
+					case WeaponTerrain::SWORD_WALL:
+						ModelPlayClip(g_Player.m_model, 120, 165, 60.0f, true, 1.5f);
+						break;
+					case WeaponTerrain::SPEAR_HILL: // spear
+						ModelPlayClip(g_Player.m_model, 240, 360, 60.0f, true, 1.5f);
+						break;
+					case WeaponTerrain::BOW_HILL: // hammer
+						ModelPlayClip(g_Player.m_model, 121, 150, 60.0f, true, 1.0f);
+						break;
+					case WeaponTerrain::HAMMER_: // arrow
+						ModelPlayClip(g_Player.m_model, 180, 240, 60.0f, true, 1.0f);
+						break;
+					case WeaponTerrain::SHURIKEN_:
+						ModelPlayClip(g_Player.m_model, 121, 150, 60.0f, true, 1.0f);
+						break;
+					}
+				}
+				
+				g_Player1CurrentAnim = 1;
+			}
+		}
+		else
+		{
+			if (g_Player1CurrentAnim != 0)
+			{
+				if (g_Player.m_isTransformed)
+				{
+					switch (g_Player.m_currentWT)
+					{
+					case WeaponTerrain::SWORD_WALL:
+						ModelPlayClip(g_Player.m_model, 0, 60, 60.0f, true);
+						break;
+					case WeaponTerrain::SPEAR_HILL: // spear
+						ModelPlayClip(g_Player.m_model, 0, 120, 60.0f, true);
+						break;
+					case WeaponTerrain::BOW_HILL: // hammer
+						ModelPlayClip(g_Player.m_model, 0, 60, 60.0f, true);
+						break;
+					case WeaponTerrain::HAMMER_: // arrow
+						ModelPlayClip(g_Player.m_model, 0, 120, 60.0f, true);
+						break;
+					case WeaponTerrain::SHURIKEN_:
+						ModelPlayClip(g_Player.m_model, 0, 60, 60.0f, true);
+						break;
+					}
+				}
+				else
+				{
+					switch (g_setWTP1) //待機
+					{
+					case WeaponTerrain::SWORD_WALL:
+						ModelPlayClip(g_Player.m_model, 0, 60, 60.0f, true);
+						break;
+					case WeaponTerrain::SPEAR_HILL: // spear
+						ModelPlayClip(g_Player.m_model, 0, 120, 60.0f, true);
+						break;
+					case WeaponTerrain::BOW_HILL: // hammer
+						ModelPlayClip(g_Player.m_model, 0, 60, 60.0f, true);
+						break;
+					case WeaponTerrain::HAMMER_: // arrow
+						ModelPlayClip(g_Player.m_model, 0, 120, 60.0f, true);
+						break;
+					case WeaponTerrain::SHURIKEN_:
+						ModelPlayClip(g_Player.m_model, 0, 60, 60.0f, true);
+						break;
+					}
+				}
+				g_Player1CurrentAnim = 0;
+			}
+		}
+	}
+
+	// アニメーション時間の進行は Update 側で一度だけ行う（フレーム固定レート環境を想定して 1/60 を使用）
+	// deltaTime が利用可能ならそちらを使ってください（例: ModelUpdateAnimation(g_Player.m_model, deltaTime);）
+	ModelUpdateAnimation(g_Player.m_model, 1.0f / 60.0f);
+
+	// 死亡判定
 	if (g_Player.m_currentHp <= 0.0f && !g_Player.m_isDead)
 	{
 		g_Player.m_isDead = true;
@@ -180,21 +645,27 @@ void	PlayerUpdate()
 	}
 }
 
-void Player_ManualMove() // �V�����蓮�ړ��֐��Ƃ��č쐬
+void Player_ManualMove() // 新しい手動移動関数として作成
 {
-	// �J�����̑O�����x�N�g��
+	int ctrlIdx = GetControllerIndexFromPlayerNo(0);
+
+	// カメラの前方向ベクトル
 	float forwardX = GetCameraAtPosition().x - GetCameraPosition().x;
 	float forwardZ = GetCameraAtPosition().z - GetCameraPosition().z;
 
-	if (!g_Player.m_isGround) // �n�ʂɂ��ĂȂ��Ƃ��ɏd�͔���
+	gp1_move = false; // 常に動いていないと更新
+
+	if (!g_Player.m_isGround) // 地面についてないときに重力発動
 	{
 		g_Player.m_velocity.x += g_Player.m_acceleration.x;
 		g_Player.m_velocity.y += g_Player.m_acceleration.y;
 		g_Player.m_velocity.z += g_Player.m_acceleration.z;
 	}
 
-	// �n�ʂɂ��Ă���Ƃ��ɃR���[�e�^�C����1.0f�ɂȂ�
-	if (g_Player.m_isGround)
+	// 地面についているときにコヨーテタイムが1.0fになる
+	// フラグがオフの時に1.0fになる
+	if (g_Player.m_isGround &&
+		!gp1_koyoteFlag)
 	{
 		g_Player.m_koyoteTime = 1.0f;
 	}
@@ -204,145 +675,245 @@ void Player_ManualMove() // �V�����蓮�ړ��֐��Ƃ��č쐬
 	}
 
 	float len = sqrtf(forwardX * forwardX + forwardZ * forwardZ);
-	if (len > 0.0f)
-	{
+	if (len > 0.001f) {
 		forwardX /= len;
 		forwardZ /= len;
 	}
-	else
-	{
-		forwardX = 0.0f;
-		forwardZ = 0.0f;
+	else {
+		forwardX = 0.0f; forwardZ = 1.0f;
 	}
-
-	// �J�����̉E�����x�N�g��
-	float rightX = forwardZ;    // �E�����͑O�����x�N�g����90�x��]
+	// カメラの右方向ベクトル
+	float rightX = forwardZ;    // 右方向は前方向ベクトルを90度回転
 	float rightZ = -forwardX;
 
-	// �ړ��ʏ�����
+	// 移動量初期化
 	float moveX = 0.0f;
 	float moveZ = 0.0f;
 
 	float speed = 0.0f;
-	float stickY = g_Controller.GetLeftStickY();
-	if (fabs(stickY) > 0.05f) // �f�b�h�]�[����ݒ� (�K�v�ɉ����Ē���)
-	{
-		// �x�N�g�����t������ړ����t�ɂȂ�
-		// ���X�e�B�b�N����� (+1.0f) �őO�i (speed = -0.1f) �ɑΉ�
-		speed = stickY * 0.1f;
-	}
-
-
-	if (Keyboard_IsKeyDown(KK_W))
-	{
-		speed = +0.1f;
-	}
-	if (Keyboard_IsKeyDown(KK_S))
-	{
-		speed = -0.1f;
-	}
-
-	moveX += forwardX * speed;
-	moveZ += forwardZ * speed;
-
-	// ���ړ�
 	float strafe = 0.0f;
-	float stickX = g_Controller.GetLeftStickX();
-	if (fabs(stickX) > 0.05f) // �f�b�h�]�[����ݒ� (�K�v�ɉ����Ē���)
+	if (ctrlIdx != -1) {
+		float stickY = g_Controller[ctrlIdx].GetLeftStickY();
+		if (fabs(stickY) > 0.05f) speed = stickY * 0.1f;
+
+		float stickX = g_Controller[ctrlIdx].GetLeftStickX();
+		if (fabs(stickX) > 0.05f) strafe = stickX * 0.1f;
+	}
+	if (Keyboard_IsKeyDown(KK_W)) speed = +0.1f;
+	if (Keyboard_IsKeyDown(KK_S)) speed = -0.1f;
+	if (Keyboard_IsKeyDown(KK_A)) strafe = -0.1f;
+	if (Keyboard_IsKeyDown(KK_D)) strafe = +0.1f;
+
+	moveX = (forwardX * speed) + (rightX * strafe);
+	moveZ = (forwardZ * speed) + (rightZ * strafe);
+
+	if (ctrlIdx != -1)
 	{
-		// ���X�e�B�b�N������ (-1.0f) �ō��ړ� (strafe = +0.1f) �ɑΉ�
-		strafe = stickX * 0.1f;
+		float stickY = g_Controller[ctrlIdx].GetLeftStickY();
+		if (fabs(stickY) > 0.05f) speed = stickY * 0.1f;
+	}
+	if (ctrlIdx != -1)
+	{
+		float stickX = g_Controller[ctrlIdx].GetLeftStickX();
+		if (fabs(stickX) > 0.05f) strafe = stickX * 0.1f;
 	}
 
-	if (Keyboard_IsKeyDown(KK_A))
-	{
-		strafe = -0.1f;  // ��
-	}
-	if (Keyboard_IsKeyDown(KK_D))
-	{
-		strafe = +0.1f;  // �E
-	}
 	moveX += rightX * strafe;
 	moveZ += rightZ * strafe;
 
-	// �ŏI���x
-	g_Player.m_velocity.x = moveX;
-	g_Player.m_velocity.z = moveZ;
-
-	// ���f���̌������ړ������ɍ��킹��
-	XMFLOAT3 moveDir = { g_Player.m_velocity.x, 0.0f, g_Player.m_velocity.z };
-	float length = sqrtf(moveDir.x * moveDir.x + moveDir.z * moveDir.z);
-	if (length > 0.001f) // �ړ����Ă���Ƃ�����������ς���
+	if (!g_Player.m_isGround) // 地面についてないときに重力発動
 	{
-		// Y����]�p���v�Z
-		g_Player.m_rotation.y = atan2f(moveDir.x, moveDir.z); // atan2f(X,Z)��Y��]
+		g_Player.m_velocity.x += g_Player.m_acceleration.x;
+		g_Player.m_velocity.y += g_Player.m_acceleration.y;
+		g_Player.m_velocity.z += g_Player.m_acceleration.z;
 	}
 
-	// A�{�^���������� && �R���[�e�^�C����0.0f���傫��
-	if (Keyboard_IsKeyDownTrigger(KK_SPACE) && g_Player.m_koyoteTime > 0.0f)
-	//if (g_Controller.IsButtonPushed(ControllerButton::A_BUTTON) && g_Player.m_koyoteTime > 0.0f) //A�{�^��**
+	// 地面についているときにコヨーテタイムが1.0fになる
+	if (g_Player.m_isGround)
 	{
-		g_Player.m_velocity.y = JUMP_FORCE;
+		g_Player.m_koyoteTime = 1.0f;
+	}
+	else
+	{
+		g_Player.m_koyoteTime -= 0.1f;
+	}
+
+	// 最終速度
+	if (g_Player.m_isGround)
+	{
+		// 地面にいるときは、入力方向へクイックに速度を合わせる
+		// ただし、完全に上書きせず、現在の速度（滑り成分など）に加算する形にするのがベターです
+
+		// 入力がないときは、今の速度を少しずつ減衰させる（摩擦の表現）
+		if (fabs(moveX) < 0.001f && fabs(moveZ) < 0.001f)
+		{
+			g_Player.m_velocity.x *= 0.45f; // 摩擦で止まる
+			g_Player.m_velocity.z *= 0.45f;
+		}
+		else
+		{
+			// 入力があるときは、入力方向に速度をセットする
+			// ただし、滑っている力を消さないために「加算」に近い形にする
+			g_Player.m_velocity.x += moveX * 0.3f; // 加速度的に足す
+			g_Player.m_velocity.z += moveZ * 0.3f;
+
+			// 最高速制限（これがないと無限に加速する）
+			float maxSpeed = 0.15f * g_Player.m_moveMul;
+			float currSpeed = sqrtf(g_Player.m_velocity.x * g_Player.m_velocity.x + g_Player.m_velocity.z * g_Player.m_velocity.z);
+			if (currSpeed > maxSpeed)
+			{
+				g_Player.m_velocity.x = (g_Player.m_velocity.x / currSpeed) * maxSpeed;
+				g_Player.m_velocity.z = (g_Player.m_velocity.z / currSpeed) * maxSpeed;
+			}
+		}
+	}
+	else
+	{
+		// 空中にいるときは制御を弱くする（または慣性を維持）
+		g_Player.m_velocity.x += moveX * 0.05f;
+		g_Player.m_velocity.z += moveZ * 0.05f;
+
+		float maxSpeed = 0.1f * g_Player.m_moveMul;
+		float currSpeed = sqrtf(g_Player.m_velocity.x * g_Player.m_velocity.x + g_Player.m_velocity.z * g_Player.m_velocity.z);
+		if (currSpeed > maxSpeed)
+		{
+			g_Player.m_velocity.x = (g_Player.m_velocity.x / currSpeed) * maxSpeed;
+			g_Player.m_velocity.z = (g_Player.m_velocity.z / currSpeed) * maxSpeed;
+		}
+	}
+
+	// モデルの向きを移動方向に合わせる
+	XMFLOAT3 moveDir = { g_Player.m_velocity.x, 0.0f, g_Player.m_velocity.z };
+	float length = sqrtf(moveDir.x * moveDir.x + moveDir.z * moveDir.z);
+	if (length > 0.001f) // 移動しているときだけ向きを変える
+	{
+		// Y軸回転角を計算
+		g_Player.m_rotation.y = atan2f(moveDir.x, moveDir.z); // atan2f(X,Z)でY回転
+	}
+
+	// Aボタンを押した && コヨーテタイムが0.0fより大きい
+	int idx = GetControllerIndexFromPlayerNo(0);
+	if (idx != -1 && g_Controller[idx].IsButtonPushed(ControllerButton::A_BUTTON) || Keyboard_IsKeyDown(KK_SPACE)
+		&& g_Player.m_koyoteTime > 0.0f) //Aボタン**
+	{
+		g_Player.m_velocity.y = g_Player.m_jumpForce;
 		g_Player.m_isGround = false;
 		g_Player.m_koyoteTime = 0.0f;
+		if(g_Player.m_isTransformed)
+		{
+			switch (g_Player.m_currentWT)
+			{
+			case WeaponTerrain::SWORD_WALL: // Sword
+				ModelPlayClip(g_Player.m_model, 300, 334, 60.0f, false, 1.0f);
+				break;
+			case WeaponTerrain::SPEAR_HILL: // spear
+				ModelPlayClip(g_Player.m_model, 361, 420, 60.0f, false, 2.0f);
+				break;
+			case WeaponTerrain::BOW_HILL: // arrow
+				ModelPlayClip(g_Player.m_model, 181, 240, 60.0f, false, 1.0f);
+				break;
+			case WeaponTerrain::HAMMER_: // hammer
+				ModelPlayClip(g_Player.m_model, 601,660, 60.0f, false, 1.0f);
+				break;
+
+			case WeaponTerrain::SHURIKEN_: //shuriken
+				ModelPlayClip(g_Player.m_model, 280, 350, 60.0f, false, 1.0f);
+				break;
+			}
+		}
+		else
+		{	
+			switch (g_setWTP1)
+			{
+			case WeaponTerrain::SWORD_WALL: // Sword
+				ModelPlayClip(g_Player.m_model, 300, 334, 60.0f, false, 1.0f);
+				break;
+			case WeaponTerrain::SPEAR_HILL: // spear
+				ModelPlayClip(g_Player.m_model, 361, 420, 60.0f, false, 2.0f);
+				break;
+			case WeaponTerrain::BOW_HILL: // arrow
+				ModelPlayClip(g_Player.m_model, 181, 240, 60.0f, false, 1.0f);
+				break;
+			case WeaponTerrain::HAMMER_: // hammer
+				ModelPlayClip(g_Player.m_model, 601, 660, 60.0f, false, 1.0f);
+				break;
+
+			case WeaponTerrain::SHURIKEN_: //shuriken
+				ModelPlayClip(g_Player.m_model, 280, 350, 60.0f, false, 1.0f);
+				break;
+			}
+		}
+		g_Player1JumpPlaying = true;
+		g_Player1CurrentAnim = 3; // ジャンプ 状態
 	}
 	else
 	{
 		g_Player.m_isGround = false;
 	}
 
-	g_Player.m_position.x += g_Player.m_velocity.x;
-	g_Player.m_position.z += g_Player.m_velocity.z;
-	g_Player.m_position.y += g_Player.m_velocity.y;
+	if (!g_Player.m_isGround)
+	{
+		gp1_slopeSpeed.x *= 0.3f;
+		gp1_slopeSpeed.z *= 0.3f;
+		gp1_slopeSpeed.y *= 0.3f;
+	}
+	// 地面にいても、入力をしているときは少し滑りを抑えるなどの調整も可能
+	if (fabs(moveX) > 0.01f || fabs(moveZ) > 0.01f)
+	{
+		gp1_slopeSpeed.x *= 0.95f;
+		gp1_slopeSpeed.z *= 0.95f;
+	}
+
+	g_Player.m_position.x += (g_Player.m_velocity.x + gp1_slopeSpeed.x);
+	g_Player.m_position.z += (g_Player.m_velocity.z + gp1_slopeSpeed.y);
+	g_Player.m_position.y += (g_Player.m_velocity.y + gp1_slopeSpeed.z);
 }
 
 void PlayerDraw() 
 {
-	//���[���h�s��쐬
-	XMMATRIX	scale = XMMatrixScaling(
-		0.05f,
-		0.05f,
-		0.05f);
-	XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
+	// --- 揺れオフセットの計算 ---
+	float offsetX = 0.0f;
+	float offsetY = 0.0f;
+	if (g_Player.m_shakeIntensity > 0.0f)
+	{
+		// -1.0 ～ 1.0 のランダム値 * 強度
+		offsetX = ((float)rand() / RAND_MAX * 2.0f - 1.0f) * g_Player.m_shakeIntensity;
+		offsetY = ((float)rand() / RAND_MAX * 2.0f - 1.0f) * g_Player.m_shakeIntensity;
+	}
+
+	// ワールド行列作成
+	XMMATRIX scale = XMMatrixScaling(0.01f, 0.01f, 0.01f);
+	XMMATRIX rotation = XMMatrixRotationRollPitchYaw(
 		g_Player.m_rotation.x,
-		g_Player.m_rotation.y,
+		g_Player.m_rotation.y + XM_PI,
 		g_Player.m_rotation.z);
-	XMMATRIX	translation = XMMatrixTranslation(
-		g_Player.m_position.x,
-		g_Player.m_position.y - 0.25f,
+
+	// ★ translation の計算時に offsetX, offsetY を加える
+	XMMATRIX translation = XMMatrixTranslation(
+		g_Player.m_position.x + offsetX,
+		g_Player.m_position.y - 1.0f + offsetY,
 		g_Player.m_position.z);
+
+	if (g_Player.m_position.y < g_Player.m_position.y - 1.0f)
+	{
+		g_Player.m_position.y = g_Player.m_position.y - 0.99f;
+	}
+	
+
 	XMMATRIX	world = scale * rotation * translation;
 
-	//�V�F�[�_�[�֍s����Z�b�g
+	//シェーダーへ行列をセット
 	Shader_SetWorldMatrix(world);
 
-	//���f���̕`�惊�N�G�X�g
+	Shader_SetBones(g_Player.m_model);
+	//モデルの描画リクエスト
 	ModelDraw(g_Player.m_model);
 
 	if (g_Player.m_currentWeapon)
 	{
 		g_Player.m_currentWeapon->Draw();
 	}
-
-	//���[���h�s��쐬
-	scale = XMMatrixScaling(
-		0.6f,
-		1.0f,
-		0.6f);
-	rotation = XMMatrixRotationRollPitchYaw(
-		g_Player.m_rotation.x,
-		g_Player.m_rotation.y,
-		g_Player.m_rotation.z);
-	translation = XMMatrixTranslation(
-		g_Player.m_position.x,
-		g_Player.m_position.y,
-		g_Player.m_position.z);
-	world = scale * rotation * translation;
-
-	//�V�F�[�_�[�֍s����Z�b�g
-	Shader_SetWorldMatrix(world);
-
-	ModelDraw(g_modelP1);
+	//ModelDraw(g_modelP1);
 }
 
 
@@ -360,7 +931,7 @@ PLAYER* GetPlayer()
 {
 	return &g_Player;
 }
-float Player_GetHP() 
+float Player_GetHp() 
 {
 	return g_Player.m_currentHp; 
 }
@@ -368,56 +939,109 @@ float Player_GetMaxHp()
 {
 	return g_Player.m_maxHp;
 }
-
-//����𑕔�����
+bool GetPlayer_IsAttacked()
+{
+	return g_Player.m_isAttacked;
+}
+void SetPlayer_IsAttacked(bool isAttacked)
+{
+    g_Player.m_isAttacked = isAttacked;
+}
+//武器を装備する
 void PLAYER::EquipWeapon(std::unique_ptr<IWeapon> weapon)
 {
+	m_currentWeapon = nullptr;
 	m_currentWeapon = std::move(weapon);
 }
 
 void PLAYER::OnCollision(const CollisionInfo& info)
 {
 	if (!info.isHit) return;
-	if (m_isDead) return; //���S���Ă�����Փˏ����𖳎�
+	if (m_isDead) return; //死亡していたら衝突処理を無視
+	if (gp1_roundReset) return;
 
-	// --- �܂��^�O�ő�������� ---
+	gp1_koyoteFlag = false; // 基本false
+
+	// --- まずタグで相手を識別 ---
 	if (info.other)
 	{
-		// �U���̎�
+		// 攻撃の時
 		if (info.other->m_tag == "Attack")
 		{
-			// ���肪����I�u�W�F�N�g�����Ă���
+			// 相手が武器オブジェクト持ってたら
 			if (info.other->m_weaponPtr)
 			{
-				// ����̏Փ˔�����Ăяo��
+				// 武器の衝突判定を呼び出す
+		//		g_Player.m_isAttacked = true;
 				info.other->m_weaponPtr->OnWeaponCollision(this);
+
 			}
 		}
 
-		// �Ⴆ�ΕǁE�؂����R���W�����L��
+		// 例えば壁・木だけコリジョン有効
 		if (info.other->m_tag == "Wall" ||
-			info.other->m_tag == "Tree")
+			info.other->m_tag == "Tree" ||
+			info.other->m_tag == "WallA")
 		{
-			//================================================================
-			//	�����߂�
-			//================================================================
-			m_position.x += info.normal.x * info.penetration;
-			m_position.y += info.normal.y * info.penetration;
-			m_position.z += info.normal.z * info.penetration;
+			auto INFO = info;
 
 			//================================================================
-			//	�n�ʔ���
+			//	押し戻し
 			//================================================================
-			if (info.normal.y > 0.7f)
+			m_position.x += INFO.normal.x * INFO.penetration;
+			m_position.y += INFO.normal.y * INFO.penetration;
+			m_position.z += INFO.normal.z * INFO.penetration;
+
+			//================================================================
+			//	地面判定
+			//================================================================
+			if (INFO.normal.y > 0.7f)
 			{
 				m_isGround = true;
 				m_velocity.y = 0;
 			}
 
 			//================================================================
-			//	�ǔ���
+			//	壁判定
 			//================================================================
-			float horiz = fabs(info.normal.x) + fabs(info.normal.z);
+			float horiz = fabs(INFO.normal.x) + fabs(INFO.normal.z);
+			if (horiz > 0.7f)
+			{
+				m_velocity.x = 0;
+				m_velocity.z = 0;
+			}
+		}
+
+		// 例えば壁・木だけコリジョン有効
+		if (info.other->m_tag == "WALL" ||
+			info.other->m_tag == "TREE")
+		{
+			auto INFO = info;
+
+			INFO.normal.x *= -1;
+			INFO.normal.y *= -1;
+			INFO.normal.z *= -1;
+
+			//================================================================
+			//	押し戻し
+			//================================================================
+			m_position.x += INFO.normal.x * INFO.penetration;
+			m_position.y += INFO.normal.y * INFO.penetration;
+			m_position.z += INFO.normal.z * INFO.penetration;
+
+			//================================================================
+			//	地面判定
+			//================================================================
+			if (INFO.normal.y > 0.7f)
+			{
+				m_isGround = true;
+				m_velocity.y = 0;
+			}
+
+			//================================================================
+			//	壁判定
+			//================================================================
+			float horiz = fabs(INFO.normal.x) + fabs(INFO.normal.z);
 			if (horiz > 0.7f)
 			{
 				m_velocity.x = 0;
@@ -434,14 +1058,14 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 			INFO.normal.z *= -1;
 
 			//================================================================
-			//	�����߂�
+			//	押し戻し
 			//================================================================
 			m_position.x += INFO.normal.x * INFO.penetration;
 			m_position.y += INFO.normal.y * INFO.penetration;
 			m_position.z += INFO.normal.z * INFO.penetration;
 
 			//================================================================
-			//	�n�ʔ���
+			//	地面判定
 			//================================================================
 			if (INFO.normal.y > 0.7f)
 			{
@@ -450,7 +1074,7 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 			}
 
 			//================================================================
-			//	�ǔ���
+			//	壁判定
 			//================================================================
 			float horiz = fabs(INFO.normal.x) + fabs(INFO.normal.z);
 			if (horiz > 0.7f)
@@ -459,40 +1083,439 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 				m_velocity.z = 0;
 			}
 		}
-		
+
 		if (info.other->m_tag == "Lift" ||
 			info.other->m_tag == "HILL")
 		{
-			//================================================================
-			//	�����߂�
-			//================================================================
-			m_position.x += info.normal.x * info.penetration;
-			m_position.y += info.normal.y * info.penetration;
-			m_position.z += info.normal.z * info.penetration;
+			auto INFO = info;
+
+			INFO.normal.x *= -1;
+			INFO.normal.y *= -1;
+			INFO.normal.z *= -1;
 
 			//================================================================
-			//	�n�ʔ���
+			//	押し戻し
 			//================================================================
-			if (info.normal.y > 0.7f)
+			m_position.x += INFO.normal.x * INFO.penetration;
+			m_position.y += INFO.normal.y * INFO.penetration;
+			m_position.z += INFO.normal.z * INFO.penetration;
+
+			//================================================================
+			//	地面判定
+			//================================================================
+			if (INFO.normal.y > 0.7f)
 			{
 				m_isGround = true;
 				m_velocity.y = 0;
 			}
 
 			//================================================================
-			//	�ǔ���
+			//	壁判定
 			//================================================================
-			float horiz = fabs(info.normal.x) + fabs(info.normal.z);
+			float horiz = fabs(INFO.normal.x) + fabs(INFO.normal.z);
 			if (horiz > 0.7f)
 			{
 				m_velocity.x = 0;
 				m_velocity.z = 0;
-				m_velocity.y = CLIMB_SPEED;				
+				m_velocity.y = CLIMB_SPEED;
+			}
+		}
+
+		if (info.other->m_tag == "Slope")
+		{
+			auto INFO = info;
+			// 法線が自分を押し出す方向に向くように反転
+			INFO.normal.x *= -1;
+			INFO.normal.y *= -1;
+			INFO.normal.z *= -1;
+
+			m_position.x += INFO.normal.x * INFO.penetration;
+			m_position.y += INFO.normal.y * INFO.penetration;
+			m_position.z += INFO.normal.z * INFO.penetration;
+
+			// 坂道なら normal.y が 0 より大きければ地面とみなす
+			if (INFO.normal.y > 0.1f)
+			{
+				m_isGround = true;
+				if (m_velocity.y < 0) m_velocity.y = 0.0f;
+
+				// --- gp_speed への計算 ---
+				const float slideFriction = 0.15f;
+				float slopeSeverity = 1.0f - INFO.normal.y;
+				float slidePower = slopeSeverity * slideFriction;
+				const float gravityEffect = 0.02f;
+
+				// m_velocity ではなく gp_speed に加算
+				gp1_slopeSpeed.x += INFO.normal.x * (slidePower + gravityEffect);
+				gp1_slopeSpeed.z += INFO.normal.z * (slidePower + gravityEffect);
+
+				// リミッター
+				float maxSlide = 0.08f;
+				float speedXZ = sqrtf(gp1_slopeSpeed.x * gp1_slopeSpeed.x + gp1_slopeSpeed.z * gp1_slopeSpeed.z);
+				if (speedXZ > maxSlide)
+				{
+					gp1_slopeSpeed.x = (gp1_slopeSpeed.x / speedXZ) * maxSlide;
+					gp1_slopeSpeed.z = (gp1_slopeSpeed.z / speedXZ) * maxSlide;
+				}
+
+				m_velocity.x *= 0.0f;
+				m_velocity.z *= 0.0f;
+			}
+		}
+
+		if (info.other->m_tag == "SlopeP1")
+		{
+			// 1. 押し出し（めり込み防止の基本）
+			m_position.x += info.normal.x * info.penetration;
+			m_position.y += info.normal.y * info.penetration;
+			m_position.z += info.normal.z * info.penetration;
+
+			if (info.normal.y > 0.1f)
+			{
+				m_isGround = true;
+				if (m_velocity.y < 0) m_velocity.y = 0.0f;
+
+				float climbResistance = 0.7f; // 0.8〜0.9 くらいで調整（小さいほど遅くなる）
+
+				// 入力によって進もうとしている速度にブレーキをかける
+				m_velocity.x *= climbResistance;
+				m_velocity.z *= climbResistance;
+
+				if (gp1_move)
+				{
+					m_position.y += 0.1f;
+				}
+
+				// 滑り計算（gp1_slopeSpeed）は使わないので 0 にリセット
+				gp1_slopeSpeed = { 0.0f, 0.0f, 0.0f };
+			}
+		}
+
+		if (info.other->m_tag == "SlopeP2")
+		{
+			m_position.x += info.normal.x * info.penetration;
+			m_position.y += info.normal.y * info.penetration;
+			m_position.z += info.normal.z * info.penetration;
+
+			// 坂道なら normal.y が 0 より大きければ地面とみなす
+			if (info.normal.y > 0.1f)
+			{
+				m_isGround = true;
+				if (m_velocity.y < 0) m_velocity.y = 0.0f;
+				gp1_koyoteFlag = true; // フラグをオンにする
+				m_koyoteTime = 0.0f; // ジャンプできなくする
+
+				// --- gp_speed への計算 ---
+				const float slideFriction = 0.25f;
+				float slopeSeverity = 1.0f - info.normal.y;
+				float slidePower = slopeSeverity * slideFriction;
+				const float gravityEffect = 0.02f;
+
+				// m_velocity ではなく gp_speed に加算
+				gp1_slopeSpeed.x += info.normal.x * (slidePower + gravityEffect);
+				gp1_slopeSpeed.z += info.normal.z * (slidePower + gravityEffect);
+
+				// リミッター
+				float maxSlide = 0.08f;
+				float speedXZ = sqrtf(gp1_slopeSpeed.x * gp1_slopeSpeed.x + gp1_slopeSpeed.z * gp1_slopeSpeed.z);
+				if (speedXZ > maxSlide)
+				{
+					gp1_slopeSpeed.x = (gp1_slopeSpeed.x / speedXZ) * maxSlide;
+					gp1_slopeSpeed.z = (gp1_slopeSpeed.z / speedXZ) * maxSlide;
+				}
+
+				m_velocity.x *= 0.0f;
+				m_velocity.z *= 0.0f;
+			}
+		}
+
+		if (info.other->m_tag == "BOGP2")
+		{
+			XMFLOAT3 bogPos = info.other->m_position;
+
+			float dx = m_position.x - bogPos.x;
+			float dz = m_position.z - bogPos.z;
+			float distance = sqrtf(dx * dx + dz * dz);
+
+			const float effectRadius = 5.0f;
+
+			if (distance < effectRadius)
+			{
+				m_velocity.x *= 0.3f;
+				m_velocity.z *= 0.3f;
+
+				gp1_slopeSpeed.x *= 0.5f;
+				gp1_slopeSpeed.z *= 0.5f;
+			}
+		}
+
+		if (info.other->m_tag == "WATER")
+		{
+			XMFLOAT3 bogPos = info.other->m_position;
+
+			float dx = m_position.x - bogPos.x;
+			float dz = m_position.z - bogPos.z;
+			float distance = sqrtf(dx * dx + dz * dz);
+
+			const float effectRadius = 3.0f;
+
+			if (distance < effectRadius)
+			{
+				m_velocity.x *= 0.7f;
+				m_velocity.z *= 0.7f;
+
+				gp1_slopeSpeed.x *= 0.0f;
+				gp1_slopeSpeed.z *= 0.0f;
+			}
+		}
+
+		if (info.other->m_tag == "LAVA")
+		{
+			XMFLOAT3 bogPos = info.other->m_position;
+
+			float dx = m_position.x - bogPos.x;
+			float dz = m_position.z - bogPos.z;
+			float distance = sqrtf(dx * dx + dz * dz);
+
+			const float effectRadius = 3.0f;
+
+			static float coolTime = 0.0f;
+
+			if (distance < effectRadius)
+			{
+				m_velocity.x *= 0.3f;
+				m_velocity.z *= 0.3f;
+
+				gp1_slopeSpeed.x *= 0.5f;
+				gp1_slopeSpeed.z *= 0.5f;
+
+				coolTime += 1.0f / 60.0f;
+
+				if (coolTime > 1.0f)
+				{
+					m_currentHp -= 3.0f;
+					coolTime = 0.0f;
+				}
+			}
+			else
+			{
+				coolTime = 0.0f;
+			}
+			if (info.other->m_tag == "TREEP2")
+			{
+				m_velocity.x *= 0.4f;
+				m_velocity.z *= 0.4f;
+
+				gp1_slopeSpeed.x *= 0.5f;
+				gp1_slopeSpeed.z *= 0.5f;
+			}
+		}
+	}
+}
+void PLAYER::EquipBaseWeapon()
+{
+	m_currentWT = m_baseWT;
+	m_reservedWT[0] = WeaponTerrain::NONE;
+	m_reservedWT[1] = WeaponTerrain::NONE;
+
+	switch (m_baseWT)
+	{
+	case WeaponTerrain::SWORD_WALL:
+		EquipWeapon(std::make_unique<Sword>(this, FALSE));
+		g_changeP1 = 1;
+		break;
+	case WeaponTerrain::SPEAR_HILL:
+		EquipWeapon(std::make_unique<Spear>(this, FALSE));
+		g_changeP1 = 2;
+		break;
+	case WeaponTerrain::BOW_HILL:
+		EquipWeapon(std::make_unique<Arrow>(this, FALSE));
+		g_changeP1 = 3;
+		break;
+	case WeaponTerrain::HAMMER_:
+		EquipWeapon(std::make_unique<Hammer>(this, FALSE));
+		g_changeP1 = 4;
+		break;
+	case WeaponTerrain::SHURIKEN_:
+		EquipWeapon(std::make_unique<Shuriken>(this, FALSE));
+		g_changeP1 = 5;
+		break;
+	}
+}
+void PLAYER::RoundReset(XMFLOAT3 startPos)
+{
+	//�����I�ȏ�Ԃ̃��Z�b�g
+    m_position = startPos;
+    m_velocity = XMFLOAT3(0, 0, 0);
+    m_rotation = XMFLOAT3(0, 0, 0); //�K�v�ɉ�����Y��]�������l��
+
+    //�p�����[�^�̃��Z�b�g
+    m_currentHp = m_maxHp; //�̗͑S��
+    m_isDead = false;
+    State = PLAYER_STATE_IDLE;
+	gp1_roundReset = true;
+
+    //����ƕϐg��Ԃ��u��������v�ɖ߂�
+    EquipBaseWeapon();
+
+	g_Player1AttackPlaying = false;
+	g_Player.SetReservedWT(0, WeaponTerrain::NONE);
+	g_Player.SetReservedWT(1, WeaponTerrain::NONE);
+
+	gp_itemSponer.ResetItem();
+}
+
+void SetWTP1(WeaponTerrain wt)
+{
+	g_setWTP1 = wt;
+}
+WeaponTerrain GetSetWTP1()
+{
+	return g_setWTP1;
+}
+
+bool GetChangeP1()
+{
+	return g_isChangeP1;
+}
+
+
+
+WeaponTerrain GetPlayerCurrentWT()
+{
+	return g_Player.m_currentWT;
+}
+void SetPlayer_IsTransformed(bool isTransformed)
+{
+	g_Player.m_isTransformed = isTransformed;
+}
+bool GetPlayer_IsTransformed()
+{
+	return g_Player.m_isTransformed;
+}
+int Player_GetTransformCount()
+{
+	return g_Player.m_transformCount;
+}
+int Player_GetItemCount()
+{
+	return g_Player.m_itemCount;
+
+}
+int Player_GetLoseCount()
+{
+	return g_Player.m_loseCount;
+
+}
+void Player_PlusTransformCount()
+{
+	g_Player.m_transformCount += 1;
+}
+void Player_PlusGetItemCount()
+{
+	g_Player.m_itemCount += 1;
+
+}
+void Player_PlusLoseCount()
+{
+	g_Player.m_loseCount += 1;
+
+}
+void Player_AllCountReset()
+{
+	g_Player.m_transformCount = 0;
+	g_Player.m_itemCount = 0;
+	g_Player.m_loseCount = 0;
+	g_Player.m_score = 0;
+}
+void Player_PlusScore(int score)
+{
+	g_Player.m_score += score;
+}
+int Player_GetScore()
+{
+	return g_Player.m_score;
+}
+
+void Player_SetPlayerIsAttaking(int flg)
+{
+	g_Player1AttackPlaying = flg;
+}
+void Player_ResetMoveMul()
+{
+	g_Player.m_moveMul = 1.0f;
+}
+static void Player_StartHitAnim()
+{
+	if (!g_Player.m_model) return;
+
+	// ★ここを“被弾アニメのフレーム範囲”にする（仮の例）
+	const int HIT_START = 600;
+	const int HIT_END = 660;
+
+	// 1回だけ開始（毎フレーム呼ぶと最初のフレームに戻る可能性がある）
+	if (!g_Player.m_hitAnimPlaying)
+	{
+		if (g_Player.m_isTransformed)
+		{
+			switch (g_Player.m_currentWT)
+			{
+			case WeaponTerrain::SWORD_WALL: // Sword
+				ModelPlayClip(g_Player.m_model, 230, 280, 60.0f, false, 1.0f);
+				break;
+			case WeaponTerrain::SPEAR_HILL: // spear
+				ModelPlayClip(g_Player.m_model, 641, 700, 60.0f, false, 2.0f);
+				break;
+			case WeaponTerrain::BOW_HILL: // arrow
+				ModelPlayClip(g_Player.m_model, 151,180, 60.0f, false, 1.0f);
+				break;
+			case WeaponTerrain::HAMMER_: // hammer
+				ModelPlayClip(g_Player.m_model, 541, 600, 60.0f, false, 1.0f);
+				break;
+
+			case WeaponTerrain::SHURIKEN_: //shuriken
+				ModelPlayClip(g_Player.m_model, 211, 260, 60.0f, false, 1.0f);
+				break;
 			}
 		}
 		else
 		{
-			return; // ���͖���
+			switch (g_setWTP1)
+			{
+			case WeaponTerrain::SWORD_WALL: // Sword
+				ModelPlayClip(g_Player.m_model, 230, 280, 60.0f, false, 1.0f);
+				break;
+			case WeaponTerrain::SPEAR_HILL: // spear
+				ModelPlayClip(g_Player.m_model, 641, 700, 60.0f, false, 2.0f);
+				break;
+			case WeaponTerrain::BOW_HILL: // arrow
+				ModelPlayClip(g_Player.m_model, 151, 180, 60.0f, false, 1.0f);
+				break;
+			case WeaponTerrain::HAMMER_: // hammer
+				ModelPlayClip(g_Player.m_model, 541, 600, 60.0f, false, 1.0f);
+				break;
+
+			case WeaponTerrain::SHURIKEN_: //shuriken
+				ModelPlayClip(g_Player.m_model, 211, 260, 60.0f, false, 1.0f);
+				break;
+			}
 		}
+		g_Player.m_hitAnimPlaying = true;
+		g_Player.m_hitAnimTimer = 0.0f;
 	}
+}
+void Player_WarmupVisual()
+{
+	if (!g_Player.m_model) return;
+
+	// モデルの内部状態（ボーン行列など）を確定させるための最小更新
+	ModelUpdateAnimation(g_Player.m_model, 0.0f);
+
+	// 必要なら現在モーションを明示再生（初期状態に応じて）
+	// 例: idle クリップが未再生なら再生開始
+	// if (!g_Player1IdlePlaying) {
+	//     ModelPlayClip(g_Player.m_model, 0, 30, 60.0f, true, 1.0f);
+	//     g_Player1IdlePlaying = true;
+	// }
+
 }

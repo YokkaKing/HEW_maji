@@ -67,7 +67,6 @@ public:
 public:
     static const std::vector<std::shared_ptr<Collider>>& GetColliders(); // collider‚Ì“Ç‚İæ‚èê—p
 
-
 private:
     static std::vector<std::shared_ptr<Collider>> colliders;
 
@@ -79,9 +78,15 @@ private:
     static CollisionInfo CheckBoxBox(const BoxCollider* box1, const BoxCollider* box2);
     static CollisionInfo CheckSphereSphere(const SphereCollider* sphere1, const SphereCollider* sphere2);
     static CollisionInfo CheckBoxSphere(const BoxCollider* box, const SphereCollider* sphere);
+    static CollisionInfo CheckTrapezoidSlopeSphere(const TrapezoidSlopeCollider* slope, const SphereCollider* sphere);
+    static CollisionInfo CheckBoxTrapezoidSlope(const BoxCollider* box, const TrapezoidSlopeCollider* slope);
+    static CollisionInfo CheckTrapezoidSlopeTrapezoidSlope(const TrapezoidSlopeCollider* slope1, const TrapezoidSlopeCollider* slope2);
 
     // Õ“Ë”»’è(‰ñ“]‘Î‰)
     static CollisionInfo CheckBoxBoxOBB(const BoxCollider* box1, const BoxCollider* box2);
+
+    // Õ“Ë”»’è(radius‚ÍüˆÍ‰½ƒ[ƒgƒ‹‚Ì”»’è‚ğæ‚é‚©)
+    static void CheckCollisionWithMap(GameObject* obj, float radius);
 };
 
 #endif // MANAGER_COLLIDER_H

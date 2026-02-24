@@ -16,6 +16,7 @@
 #include"IWeapon.h"
 #include"collider.h"
 #include"model.h"
+#include "effect_anim.h"
 #include<d3d11.h>
 #include<DirectXMath.h>
 using namespace DirectX;
@@ -35,7 +36,7 @@ public:
     XMFLOAT3 m_animePosition = { 0.0f, 0.0f, 0.5f };
     XMFLOAT3 m_animeRotation = { 0.0f, 0.0f, 0.0f };
 
-    FLOAT m_coolTime = 0.0f;
+    //FLOAT m_coolTime = 0.0f;
 public:
     Sword(GameObject* player, bool select);
     virtual ~Sword();
@@ -45,6 +46,9 @@ public:
     void Attack() override;
 
     void OnWeaponCollision(GameObject* target) override;
+
+private:
+    EffectAnim m_fxAnim;
 };
 
 #endif // SWORD_H

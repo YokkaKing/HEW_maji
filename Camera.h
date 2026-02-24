@@ -33,12 +33,18 @@ class CAMERA
 		float		FarClip;		//遠面クリップ距離
 };
 
-void	Camera_Initialize();
-void	Camera_Finalize();
-void	Camera_Update();
-void    Camera2_Update();
-void	Camera_Draw();
-void    Camera2_Draw();
+
+void Camera_Initialize();
+void Camera2_Initialize();
+
+void Camera_Finalize();
+void Camera2_Finalize();
+
+void Camera_Update();
+void Camera2_Update();
+void Camera_Draw();
+void Camera2_Draw();
+
 
 void	SetCameraFov(float);
 void	SetCameraAspect(float);
@@ -55,7 +61,10 @@ void	SetCameraUpVector(XMFLOAT3);
 void	SetCamera2Position(XMFLOAT3);
 void	SetCamera2AtPosition(XMFLOAT3);
 void	SetCamera2UpVector(XMFLOAT3);
+void Camera_ResultRequestTurn120(float durationSec = 0.6f);
 
+// Result用：回転中かどうか（Enter連打防止）
+bool Camera_IsResultMoving();
 XMMATRIX	GetViewMatrix();
 XMMATRIX	GetProjectionMatrix();
 

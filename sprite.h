@@ -1,37 +1,46 @@
-/*
-* ƒtƒ@ƒCƒ‹–¼	sprite.h
-* ƒ^ƒCƒgƒ‹	ƒXƒvƒ‰ƒCƒg
-* ì¬Ò		‹v•Û–ØŠ²‘¾
-* ì¬“ú		12Œ02“ú
-* XV“ú		12Œ02“ú
+ï»¿/*
+* ãƒ•ã‚¡ã‚¤ãƒ«å	sprite.h
+* ã‚¿ã‚¤ãƒˆãƒ«	ã‚¹ãƒ—ãƒ©ã‚¤ãƒˆ
+* ä½œæˆè€…		ä¹…ä¿æœ¨å¹¹å¤ª
+* ä½œæˆæ—¥		12æœˆ02æ—¥
+* æ›´æ–°æ—¥		12æœˆ02æ—¥
 */
 
 #ifndef SPRITE_H
 #define SPRITE_H
 
 //================================================================
-//	ƒCƒ“ƒNƒ‹[ƒh
+//	ã‚¤ãƒ³ã‚¯ãƒ«ãƒ¼ãƒ‰
 //================================================================
 #include<d3d11.h>
 #include"direct3d.h"
 #include<DirectXMath.h>
 using namespace DirectX;
 
+void DrawSpriteUV(
+    XMFLOAT2 pos,
+    XMFLOAT2 size,
+    XMFLOAT4 col,
+    float u0, float v0,
+    float u1, float v1,float angle);
 
 void DrawSprite(XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 col);
 void DrawSpriteEx(XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 col, int bno, int wc, int hc);
-void InitializeSprite();	//ƒXƒvƒ‰ƒCƒg‰Šú‰»
-void FinalizeSprite();	//ƒXƒvƒ‰ƒCƒgI—¹
+void InitializeSprite();	//ã‚¹ãƒ—ãƒ©ã‚¤ãƒˆåˆæœŸåŒ–
+void FinalizeSprite();	//ã‚¹ãƒ—ãƒ©ã‚¤ãƒˆçµ‚äº†
 void DrawSpriteScroll(XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 col, XMFLOAT2 texcoord);
 void DrawSpriteExRotation(XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 col, int bno, int wc, int hc, float radian);
-void DrawSprite(XMFLOAT2 size, XMFLOAT4 col, int bno, int wc, int hc);//s—ñg—p”Å
-
-// ’¸“_\‘¢‘Ì
+void DrawSprite(XMFLOAT2 size, XMFLOAT4 col, int bno, int wc, int hc);//è¡Œåˆ—ä½¿ç”¨ç‰ˆ
+void DrawSpriteEx(XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 col, float hp, bool isPlayer1);
+void DrawSpriteAnimation(XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 col,
+	XMFLOAT2 texcoord);
+void DrawSpriteEx(XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 col, int bno, int wc, int hc, float angle);
+// é ‚ç‚¹æ§‹é€ ä½“
 struct Vertex
 {
-	XMFLOAT3 position; // ’¸“_À•W  //XMFLOAT3‚Ö•ÏX
-	XMFLOAT4 color;		//’¸“_ƒJƒ‰[iR,G,B,Aj
-	XMFLOAT2 texCoord;	//ƒeƒNƒXƒ`ƒƒÀ•W
+	XMFLOAT3 position; // é ‚ç‚¹åº§æ¨™  //XMFLOAT3ã¸å¤‰æ›´
+	XMFLOAT4 color;		//é ‚ç‚¹ã‚«ãƒ©ãƒ¼ï¼ˆR,G,B,Aï¼‰
+	XMFLOAT2 texCoord;	//ãƒ†ã‚¯ã‚¹ãƒãƒ£åº§æ¨™
 };
 
 #endif // SPRITE_H

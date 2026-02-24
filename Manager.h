@@ -9,10 +9,14 @@
 #ifndef MANAGER_H
 #define MANAGER_H
 
+#include "selectWeaponTerrain.h"
+
 enum SCENE
 {
 	SCENE_NONE = 0,		//何もなし
 	SCENE_TITLE,		//タイトルシーン
+	SCENE_ENTRY,		//コントローラー割り当てシーン
+	SCENE_SELECT_WT,    //武器・地形選択
 	SCENE_GAME,			//ゲームシーン
 	SCENE_RESULT,		//リザルトルシーン
 
@@ -21,8 +25,16 @@ enum SCENE
 void	Manager_Initialize();
 void	Manager_Finalize();
 void	Manager_Update();
-void	Manager_Draw();
+void	Manager_Draw_Player1();
+void	Manager_Draw_Player2();
 
+inGameWTselect Manager_GetWTselect();
+void	Manager_SetWTselect(const inGameWTselect& select);
+int GetRoundCount();
 void	SetScene(SCENE scene);
+int GetP1WinCount();
+int GetP2WinCount();
+void ResetWinCount();
+SCENE GetScene();
 
 #endif // MANAGER_H

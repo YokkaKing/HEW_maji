@@ -1,13 +1,13 @@
 /*
-* ƒtƒ@ƒCƒ‹–¼	Audio.cpp
-* ƒ^ƒCƒgƒ‹	ƒTƒEƒ“ƒh
-* ì¬Ò		‹v•Û–ØŠ²‘¾
-* ì¬“ú		12Œ02“ú
-* XV“ú		12Œ02“ú
+* ãƒ•ã‚¡ã‚¤ãƒ«å	Audio.cpp
+* ã‚¿ã‚¤ãƒˆãƒ«	ã‚µã‚¦ãƒ³ãƒ‰
+* ä½œæˆè€…		ä¹…ä¿æœ¨å¹¹å¤ª
+* ä½œæˆæ—¥		12æœˆ02æ—¥
+* æ›´æ–°æ—¥		12æœˆ02æ—¥
 */
 
 //================================================================
-//	ƒCƒ“ƒNƒ‹[ƒh
+//	ã‚¤ãƒ³ã‚¯ãƒ«ãƒ¼ãƒ‰
 //================================================================
 #include<d3d11.h>
 #include<DirectXMath.h>
@@ -19,19 +19,111 @@ using namespace DirectX;
 #include"audio.h"
 
 //================================================================
-//	ƒOƒ[ƒoƒ‹•Ï”
+//	ã‚°ãƒ­ãƒ¼ãƒãƒ«å¤‰æ•°
 //================================================================
 static IXAudio2* g_Xaudio{};
 static IXAudio2MasteringVoice* g_MasteringVoice{};
 
+int g_arrow_shuriken = -1;
+int g_button = -1;
+int g_change = -1;
+int g_charge1 = -1;
+int g_charge2 = -1;
+int g_charge3 = -1;
+int g_charge4 = -1;
+int g_charge5 = -1;
+
+int g_crowd = -1;
+int g_cursorMove = -1;
+int g_damageHammer = -1;
+int g_damageSharp = -1;
+int g_down = -1;
+int g_fade = -1;
+int g_gameStart = -1;
+int g_hammer = -1;
+int g_health = -1;
+int g_item = -1;
+int g_map = -1;
+int g_roundEnd = -1;
+int g_spear = -1;
+int g_start = -1;
+int g_sword = -1;
+int g_teamLogo = -1;
+int g_terrain = -1;
+int g_title = -1;
+int g_winner = -1;
+int g_select_transform = -1;
+int g_countdown = -1;
+int g_go = -1;
+int g_round1 = -1;
+int g_round2 = -1;
+int g_result = -1;
+int g_ko = -1;
+int g_score = -1;
 
 void InitAudio()
 {
-	// XAudio¶¬
+	// XAudioç”Ÿæˆ
 	XAudio2Create(&g_Xaudio, 0);
-
-	// ƒ}ƒXƒ^ƒŠƒ“ƒOƒ{ƒCƒX¶¬
+	// ãƒã‚¹ã‚¿ãƒªãƒ³ã‚°ãƒœã‚¤ã‚¹ç”Ÿæˆ
 	g_Xaudio->CreateMasteringVoice(&g_MasteringVoice);
+
+	g_arrow_shuriken = LoadAudio("asset\\Audio\\arrow_shuriken.wav");
+	g_button = LoadAudio("asset\\Audio\\button.wav");
+	g_change = LoadAudio("asset\\Audio\\change.wav");
+	g_charge1 = LoadAudio("asset\\Audio\\charge_1.wav");
+	g_charge2 = LoadAudio("asset\\Audio\\charge_2.wav");
+	g_charge3 = LoadAudio("asset\\Audio\\charge_3.wav");
+	g_charge4 = LoadAudio("asset\\Audio\\charge_4.wav");
+	g_charge5 = LoadAudio("asset\\Audio\\charge_5.wav");
+
+	g_crowd = LoadAudio("asset\\Audio\\crowd.wav");
+	g_cursorMove = LoadAudio("asset\\Audio\\cursorMove.wav");
+	g_damageHammer = LoadAudio("asset\\Audio\\damageHammer.wav");
+	g_damageSharp = LoadAudio("asset\\Audio\\damageSharp.wav");
+	g_down = LoadAudio("asset\\Audio\\down.wav");
+	g_fade = LoadAudio("asset\\Audio\\fade.wav");
+	g_gameStart = LoadAudio("asset\\Audio\\gameStart.wav");
+	g_hammer = LoadAudio("asset\\Audio\\hammer.wav");
+	g_health = LoadAudio("asset\\Audio\\health.wav");
+	g_item = LoadAudio("asset\\Audio\\item.wav");
+	g_map = LoadAudio("asset\\Audio\\map.wav");
+	g_roundEnd = LoadAudio("asset\\Audio\\roundEnd.wav");
+	g_spear = LoadAudio("asset\\Audio\\spear.wav");
+	g_start = LoadAudio("asset\\Audio\\start.wav");
+	g_sword = LoadAudio("asset\\Audio\\sword.wav");
+	g_teamLogo = LoadAudio("asset\\Audio\\teamLogo.wav");
+	g_terrain = LoadAudio("asset\\Audio\\terrain.wav");
+	g_title = LoadAudio("asset\\Audio\\title.wav");
+	g_winner = LoadAudio("asset\\Audio\\winner.wav");
+	g_select_transform = LoadAudio("asset\\Audio\\select_transform.wav");
+	g_countdown = LoadAudio("asset\\Audio\\countdown.wav");
+	g_go = LoadAudio("asset\\Audio\\go.wav");
+	g_round1 = LoadAudio("asset\\Audio\\round_1.wav");
+	g_round2 = LoadAudio("asset\\Audio\\round_2.wav");
+	g_result = LoadAudio("asset\\Audio\\result.wav");
+	g_ko = LoadAudio("asset\\Audio\\KO.wav");
+	g_score = LoadAudio("asset\\Audio\\score.wav");
+	SetAudioVolume(g_hammer, 2.0f);
+	SetAudioVolume(g_charge1, 2.0f);
+	SetAudioVolume(g_charge2, 2.0f);
+	SetAudioVolume(g_charge3, 2.0f);
+	SetAudioVolume(g_charge4, 2.0f);
+	SetAudioVolume(g_charge5, 2.0f);
+
+	SetAudioVolume(g_sword, 2.0f);
+	SetAudioVolume(g_fade, 2.0f);
+	SetAudioVolume(g_damageHammer, 2.0f);
+	SetAudioVolume(g_damageSharp, 2.0f);
+	SetAudioVolume(g_arrow_shuriken, 2.0f);
+	SetAudioVolume(g_ko, 2.0f);
+	SetAudioVolume(g_score, 2.0f);
+
+
+
+
+
+
 }
 
 void UninitAudio()
@@ -42,11 +134,14 @@ void UninitAudio()
 
 struct AUDIO
 {
-	IXAudio2SourceVoice*	SourceVoice{};
-	BYTE*					SoundData{};
+	IXAudio2SourceVoice* SourceVoice{};
+	BYTE* SoundData{};
 
-	int						Length{};
-	int						PlayLength{};
+	int Length{};
+	int PlayLength{};
+	int SamplesPerSec{};
+
+	float Volume = 1.0f;   // â˜…è¿½åŠ ï¼šã“ã®éŸ³IDã®éŸ³é‡
 };
 
 #define AUDIO_MAX 100
@@ -68,7 +163,7 @@ int LoadAudio(const char *FileName)
 	if (index == -1)
 		return -1;
 
-	// ƒTƒEƒ“ƒhƒf[ƒ^“Ç
+	// ã‚µã‚¦ãƒ³ãƒ‰ãƒ‡ãƒ¼ã‚¿èª­è¾¼
 	WAVEFORMATEX wfx = { 0 };
 
 	{
@@ -79,7 +174,6 @@ int LoadAudio(const char *FileName)
 		MMCKINFO mmckinfo = { 0 };
 		UINT32 buflen;
 		LONG readlen;
-
 
 		hmmio = mmioOpen((LPSTR)FileName, &mmioinfo, MMIO_READ);
 		assert(hmmio);
@@ -107,27 +201,35 @@ int LoadAudio(const char *FileName)
 		datachunkinfo.ckid = mmioFOURCC('d', 'a', 't', 'a');
 		mmioDescend(hmmio, &datachunkinfo, &riffchunkinfo, MMIO_FINDCHUNK);
 
-
-
 		buflen = datachunkinfo.cksize;
 		g_Audio[index].SoundData = new unsigned char[buflen];
 		readlen = mmioRead(hmmio, (HPSTR)g_Audio[index].SoundData, buflen);
 
-
 		g_Audio[index].Length = readlen;
 		g_Audio[index].PlayLength = readlen / wfx.nBlockAlign;
-
-
+		g_Audio[index].SamplesPerSec = (int)wfx.nSamplesPerSec;
 		mmioClose(hmmio, 0);
 	}
 
-
-	// ƒTƒEƒ“ƒhƒ\[ƒX¶¬
+	// ã‚µã‚¦ãƒ³ãƒ‰ã‚½ãƒ¼ã‚¹ç”Ÿæˆ
 	g_Xaudio->CreateSourceVoice(&g_Audio[index].SourceVoice, &wfx);
+	g_Audio[index].Volume = 1.0f;
+	g_Audio[index].SourceVoice->SetVolume(g_Audio[index].Volume);
 	assert(g_Audio[index].SourceVoice);
 
-
 	return index;
+}
+void SetAudioVolume(int Index, float volume)
+{
+	if (Index < 0 || Index >= AUDIO_MAX || g_Audio[Index].SourceVoice == nullptr)
+		return;
+
+	// clampï¼ˆstd::maxä½¿ã‚ãªã„ï¼‰
+	if (volume < 0.0f) volume = 0.0f;
+	if (volume > 4.0f) volume = 4.0f;
+
+	g_Audio[Index].Volume = volume;
+	g_Audio[Index].SourceVoice->SetVolume(volume);
 }
 
 void UnloadAudio(int Index)
@@ -141,20 +243,19 @@ void UnloadAudio(int Index)
 
 void PlayAudio(int Index, bool Loop)
 {
+	if (Index < 0 || Index >= AUDIO_MAX || g_Audio[Index].SourceVoice == nullptr)
+		return;
+
 	g_Audio[Index].SourceVoice->Stop();
 	g_Audio[Index].SourceVoice->FlushSourceBuffers();
 
-
-	// ƒoƒbƒtƒ@İ’è
 	XAUDIO2_BUFFER bufinfo;
-
 	memset(&bufinfo, 0x00, sizeof(bufinfo));
 	bufinfo.AudioBytes = g_Audio[Index].Length;
 	bufinfo.pAudioData = g_Audio[Index].SoundData;
 	bufinfo.PlayBegin = 0;
 	bufinfo.PlayLength = g_Audio[Index].PlayLength;
 
-	// ƒ‹[ƒvİ’è
 	if (Loop)
 	{
 		bufinfo.LoopBegin = 0;
@@ -164,8 +265,74 @@ void PlayAudio(int Index, bool Loop)
 
 	g_Audio[Index].SourceVoice->SubmitSourceBuffer(&bufinfo, NULL);
 
+	// â˜…è¿½åŠ ï¼šã“ã®éŸ³IDã®éŸ³é‡ã‚’åæ˜ 
+	g_Audio[Index].SourceVoice->SetVolume(g_Audio[Index].Volume);
 
-	// Ä¶
 	g_Audio[Index].SourceVoice->Start();
+}
 
+
+void StopAudio(int Index)
+{
+	if (Index < 0 || Index >= AUDIO_MAX || g_Audio[Index].SourceVoice == nullptr)
+	{
+		return;
+	}
+
+	// å†ç”Ÿã‚’åœæ­¢
+	g_Audio[Index].SourceVoice->Stop();
+
+	// æ¬¡å›å†ç”Ÿæ™‚ã«æœ€åˆã‹ã‚‰æµã‚Œã‚‹ã‚ˆã†ã«ãƒãƒƒãƒ•ã‚¡ã‚’ã‚¯ãƒªã‚¢
+	g_Audio[Index].SourceVoice->FlushSourceBuffers();
+}
+void PlayAudioLoopSection(int Index, float loopBeginSec, float loopEndSec)
+{
+    if (Index < 0 || Index >= AUDIO_MAX || g_Audio[Index].SourceVoice == nullptr)
+
+        return;
+
+    g_Audio[Index].SourceVoice->Stop();
+    g_Audio[Index].SourceVoice->FlushSourceBuffers();
+
+    XAUDIO2_BUFFER bufinfo;
+    memset(&bufinfo, 0, sizeof(bufinfo));
+
+    bufinfo.AudioBytes = g_Audio[Index].Length;
+    bufinfo.pAudioData = g_Audio[Index].SoundData;
+
+    // å…¨ä½“ã¯å…ˆé ­ã‹ã‚‰å†ç”Ÿ
+    bufinfo.PlayBegin  = 0;
+    bufinfo.PlayLength = g_Audio[Index].PlayLength;
+
+    // ç§’â†’ã‚µãƒ³ãƒ—ãƒ«ï¼ˆãƒ•ãƒ¬ãƒ¼ãƒ ï¼‰å¤‰æ›
+    unsigned int loopBegin = (unsigned int)(loopBeginSec * (float)g_Audio[Index].SamplesPerSec);
+    unsigned int loopEnd   = (unsigned int)(loopEndSec   * (float)g_Audio[Index].SamplesPerSec);
+
+    // ç¯„å›²ãƒã‚§ãƒƒã‚¯
+    if (loopBegin >= (unsigned int)g_Audio[Index].PlayLength)
+    {
+        // ãƒ«ãƒ¼ãƒ—ç„¡ã—ã§å†ç”Ÿã ã‘
+		g_Audio[Index].SourceVoice->SubmitSourceBuffer(&bufinfo, NULL);
+		g_Audio[Index].SourceVoice->SetVolume(g_Audio[Index].Volume); // â˜…è¿½åŠ 
+		g_Audio[Index].SourceVoice->Start();
+        return;
+    }
+    if (loopEnd > (unsigned int)g_Audio[Index].PlayLength)
+        loopEnd = (unsigned int)g_Audio[Index].PlayLength;
+
+    if (loopEnd <= loopBegin + 1)
+    {
+        // ãƒ«ãƒ¼ãƒ—åŒºé–“ãŒçŸ­ã™ãã‚‹ â†’ ãƒ«ãƒ¼ãƒ—ç„¡ã—ã§å†ç”Ÿ
+		g_Audio[Index].SourceVoice->SubmitSourceBuffer(&bufinfo, NULL);
+		g_Audio[Index].SourceVoice->SetVolume(g_Audio[Index].Volume); // â˜…è¿½åŠ 
+		g_Audio[Index].SourceVoice->Start();
+        return;
+    }
+
+    bufinfo.LoopBegin  = loopBegin;                 // ä¾‹ï¼š2ç§’
+    bufinfo.LoopLength = (loopEnd - loopBegin);     // ä¾‹ï¼š1ç§’(2â†’3)
+    bufinfo.LoopCount  = XAUDIO2_LOOP_INFINITE;
+
+    g_Audio[Index].SourceVoice->SubmitSourceBuffer(&bufinfo, NULL);
+    g_Audio[Index].SourceVoice->Start();
 }

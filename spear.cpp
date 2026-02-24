@@ -1,120 +1,341 @@
 /*
-* ƒtƒ@ƒCƒ‹–¼	spear.cpp
-* ƒ^ƒCƒgƒ‹	Œ•
-* ì¬Ò		O‹´‘ñ“l
-* ì¬“ú		12Œ09“ú
-* XV“ú		12Œ09“ú
+* ãƒ•ã‚¡ã‚¤ãƒ«å	spear.cpp
+* ã‚¿ã‚¤ãƒˆãƒ«	å‰£
+* ä½œæˆè€…		ä¸‰æ©‹æ‹“æ–—
+* ä½œæˆæ—¥		12æœˆ09æ—¥
+* æ›´æ–°æ—¥		12æœˆ09æ—¥
 */
 
 //================================================================
-//	ƒCƒ“ƒNƒ‹[ƒh
+//	ã‚¤ãƒ³ã‚¯ãƒ«ãƒ¼ãƒ‰
 //================================================================
+#include"Audio.h"
 #include"spear.h"
+#include "Entry.h"
 #include"debug_ostream.h"
-
-/*********** ƒeƒXƒgƒR[ƒh **********/
 #include"model.h"
 #include"Camera.h"
 #include"Player.h"
 #include"Player2.h"
 #include"keyboard.h"
+#include "HitEffect.h"
+#include"controller.h"
 /*********************************/
 
+
 //================================================================
-//	ƒOƒ[ƒoƒ‹•Ï”
+//	ã‚°ãƒ­ãƒ¼ãƒãƒ«å¤‰æ•°
 //================================================================
 MODEL* g_modelSpear[2] = { NULL, NULL };
 PLAYER* g_PlayerSpear1;
 PLAYER2* g_PlayerSpear2;
-XMFLOAT3 g_moveSpear[2]; // ŠÈˆÕƒAƒjƒ[ƒVƒ‡ƒ“
+
+XMFLOAT3 g_moveSpear[2]; // ï¿½ÈˆÕƒAï¿½jï¿½ï¿½ï¿½[ï¿½Vï¿½ï¿½ï¿½ï¿½
+extern Controller g_Controller[2];
 
 Spear::Spear(GameObject* player, bool select) : IWeapon(player)
 {
 	g_PlayerSpear1 = GetPlayer();
 	g_PlayerSpear2 = GetPlayer2();
 
-	// •Ší‚Ì“–‚½‚è”»’è‚Ìì¬
+	// æ­¦å™¨ã®å½“ãŸã‚Šåˆ¤å®šã®ä½œæˆ
 	m_weapon = std::make_unique<GameObject>();
-	m_weapon->m_tag = "Attack";	// ƒ^ƒO
-	m_weapon->m_layer = 0;		// ƒŒƒCƒ„[
+	m_weapon->m_tag = "Attack";	// ã‚¿ã‚°
+	m_weapon->m_layer = 0;		// ãƒ¬ã‚¤ãƒ¤ãƒ¼
 
-	m_selectPlayer = select; // ƒvƒŒƒCƒ„[İ’è 1P‚©2P‚©
 
-	// •Ší‚Ée‚Ö‚Ìƒ|ƒCƒ“ƒ^‚ğİ’è
+	m_selectPlayer = select; // ï¿½vï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½[ï¿½İ’ï¿½ 1Pï¿½ï¿½2Pï¿½ï¿½
+	m_playerIndex = (m_selectPlayer == FALSE) ? 0 : 1;
+	m_chargeKey = (m_playerIndex == 0) ? KK_C : KK_P;
+	m_chargeButton = ControllerButton::X_BUTTON;
+
+
+	// æ­¦å™¨ã«è¦ªã¸ã®ãƒã‚¤ãƒ³ã‚¿ã‚’è¨­å®š
 	m_weapon->m_weaponPtr = this;
 
-	XMFLOAT3 scale = { 0.3f, 0.3f, 1.0f };
+	XMFLOAT3 scale = { 0.45f, 0.45f, 1.0f };
 	m_collider = m_weapon->AddComponent<BoxCollider>(m_weapon.get(), scale);
 
 	m_weapon->m_scale = scale;
 	m_weapon->m_rotation = { 0.0f, 0.0f, 0.0f };
 
-	ManagerCollider::AddCollider(m_collider); // “o˜^
+	ManagerCollider::AddCollider(m_collider); // ç™»éŒ²
 
-	m_collider->SetEnable(false); // Å‰‚Í“–‚½‚è”»’è‚ğ–³Œø‰»
+	m_collider->SetEnable(false); // æœ€åˆã¯å½“ãŸã‚Šåˆ¤å®šã‚’ç„¡åŠ¹åŒ–
 
 	m_attackTimer = 0.0f;
 
 	g_moveSpear[m_selectPlayer] = { 0.0f, 0.0f, 0.0f };
 	m_coolTime = 0.0f;
 
-	/*********** ƒeƒXƒgƒR[ƒh **********/
-	g_modelSpear[0] = ModelLoad("asset\\model\\block.fbx");
+	m_damageFCount = 0.0f; // ãƒ€ãƒ¡ãƒ¼ã‚¸ã®çµŒéæ™‚é–“
+	m_damageFrame = { 0.2f, 0.35f }; // ãƒ€ãƒ¡ãƒ¼ã‚¸ã®æœ‰åŠ¹ãƒ•ãƒ¬ãƒ¼ãƒ 
+
+	/*********** ãƒ†ã‚¹ãƒˆã‚³ãƒ¼ãƒ‰ **********/
+	g_modelSpear[0] = ModelLoad("asset\\model\\weapon_spear.fbx");
+	m_fxAnim.Bind(g_modelSpear[0]);
 	g_modelSpear[1] = ModelLoad("asset\\model\\block2.fbx");
 	/*********************************/
 }
 
 Spear::~Spear()
 {
-	ManagerCollider::RemoveCollider(m_collider); // íœ
+	ManagerCollider::RemoveCollider(m_collider); // å‰Šé™¤
 }
 
 void Spear::Attack()
 {
-	if (m_isAttacking) return; // UŒ‚‚µ‚Ä‚½‚çI‚í‚è
+	if (m_isAttacking) return; // æ”»æ’ƒã—ã¦ãŸã‚‰çµ‚ã‚ã‚Š
 	if (m_coolTime > 0.0f) return;
-
-	m_isAttacking = true; // UŒ‚‚µ‚Ä‚¢‚é
-	m_attackTimer = 0.0f; // UŒ‚ƒ^ƒCƒ}[‰Šú‰»
+	if (!m_isAttack) return;
+	m_damageFCount = 0.0f; // ãƒ€ãƒ¡ãƒ¼ã‚¸çµŒéæ™‚é–“ã‚’ãƒªã‚»ãƒƒãƒˆ
+	PlayAudio(g_spear, false);
+	m_weapon->m_scale.x = 0.1f;
+	m_weapon->m_scale.y = 0.1f;
+	m_weapon->m_scale.z = 0.1f;
+	m_isAttacking = true; // æ”»æ’ƒã—ã¦ã„ã‚‹
+	m_attackTimer = 0.0f; // æ”»æ’ƒã‚¿ã‚¤ãƒãƒ¼åˆæœŸåŒ–
 	g_moveSpear[m_selectPlayer] = {0.0f, 0.0f, 0.0f};
 	m_coolTime = 1.5f;
+	m_fxAnim.PlayFrames(1, 60, 60.0f, false, 1.0f);
+	m_collider->SetEnable(true); // å½“ãŸã‚Šåˆ¤å®šã®æœ‰åŠ¹
+	m_weapon->m_delay = 0.1f;
+	m_isAttack = false;
 
-	m_collider->SetEnable(true); // “–‚½‚è”»’è‚Ì—LŒø
+	MODEL* model = nullptr;
+	bool isMoving = false;
 
-	// ‘½dƒqƒbƒg–XqƒŠƒXƒg‚ğƒŠƒZƒbƒg
+	if (m_selectPlayer == FALSE)
+	{
+		PLAYER* player = g_PlayerSpear1;
+		if (player)
+		{
+			model = player->m_model;
+
+			float mv = sqrtf(player->m_velocity.x * player->m_velocity.x +
+				player->m_velocity.z * player->m_velocity.z);
+			isMoving = (mv > 0.001f);
+			ModelPlayClip(model, 420, 479, 60.0f, false, 3.0f);
+		}
+	}
+	else
+	{
+		PLAYER2* player = g_PlayerSpear2;
+		if (player)
+		{
+			model = player->m_model;
+
+			float mv = sqrtf(player->m_velocity.x * player->m_velocity.x +
+				player->m_velocity.z * player->m_velocity.z);
+			isMoving = (mv > 0.001f);
+				ModelPlayClip(model, 420, 479, 60.0f, false, 3.0f);
+
+		}
+	}
+	// å¤šé‡ãƒ’ãƒƒãƒˆå¸½å­ãƒªã‚¹ãƒˆã‚’ãƒªã‚»ãƒƒãƒˆ
 	m_hitTargets.clear();
 }
 
 void Spear::Update()
 {
+	int controlIdx = GetControllerIndexFromPlayerNo(m_selectPlayer);
+	if (controlIdx == -1) return;
+
+	m_fxAnim.Update(1.0f / 60.0f);
 	if (m_coolTime > 0.0f)
 	{
 		{
 			m_coolTime -= 1.0f / 60.0f;
 		}
 	}
-
-	if (Keyboard_IsKeyDown(KK_RIGHTSHIFT))
+	else
 	{
-		// UŒ‚’†‚¶‚á‚È‚¯‚ê‚Îƒ`ƒƒ[ƒW‚Å‚«‚é
-		if (!m_isAttacking && m_coolTime <= 0.0f)
+		m_coolTime = 0.0f;
+	}
+
+	if (m_isAttacking)
+	{
+		m_damageFCount += 1.0f / 60.0f;
+	}
+	else
+	{
+		m_damageFCount = 0.0f;
+	}
+
+	// ãƒ€ãƒ¡ãƒ¼ã‚¸çµŒéæ™‚é–“ãŒç¯„å›²å†…ãªã‚‰æ”»æ’ƒã§ãã‚‹
+	if (m_damageFCount > m_damageFrame.x &&
+		m_damageFCount < m_damageFrame.y)
+	{
+		if (!m_collider.get()->IsEnable())
 		{
-			m_isCharging = true;
-			m_chargePower += (1.0f / 60.0f);
-			if (m_chargePower > MAX_CHARGE) m_chargePower = MAX_CHARGE;
+			m_collider.get()->SetEnable(true); // æ”»æ’ƒæœ‰åŠ¹	
 		}
 	}
-	else if (m_isCharging)
+	else
 	{
-		// ƒL[‚ğ—£‚µ‚½uŠÔ‚É“Š‚°‚é
-		Throw(m_chargePower, m_selectPlayer);
-		m_isCharging = false;
-		m_chargePower = 0.0f;
-
-		// “Š‚°‚½Œã‚ÌƒN[ƒ‹ƒ^ƒCƒ€
-		m_coolTime = 1.5f;
+		if (m_collider.get()->IsEnable())
+		{
+			m_collider.get()->SetEnable(false); // æ”»æ’ƒç„¡åŠ¹
+		}
 	}
 
+	bool inputCharge = false;
+
+	if (Keyboard_IsKeyDown(m_chargeKey) || Keyboard_IsKeyDown(KK_C)) {
+		inputCharge = true;
+
+	}
+	// ï¿½Rï¿½ï¿½ï¿½gï¿½ï¿½ï¿½[ï¿½ï¿½ï¿½[ï¿½`ï¿½Fï¿½bï¿½N
+	if (g_Controller[m_playerIndex].IsConnected()) {
+		if (g_Controller[m_playerIndex].IsButtonDown(m_chargeButton)) {
+			inputCharge = true;
+
+
+		}
+	}
+	if (!m_selectPlayer)
+	{
+		if (Keyboard_IsKeyDown(KK_C) || g_Controller[0].IsButtonDown(ControllerButton::X_BUTTON))
+		{
+			// æ”»æ’ƒä¸­ã˜ã‚ƒãªã‘ã‚Œã°ãƒãƒ£ãƒ¼ã‚¸ã§ãã‚‹
+			if (!m_isAttacking && m_coolTime <= 0.0f)
+			{
+				m_isCharging = true;
+				m_chargePower += (1.0f / 60.0f);
+				if (m_chargePower > MAX_CHARGE) m_chargePower = MAX_CHARGE;
+			}
+		}
+		else if (m_isCharging)
+		{
+			if (m_chargePower <= 1.0f)
+			{
+				m_isAttack = true;
+				Attack();
+				m_isCharging = false;
+			}
+			else
+			{
+				// ã‚­ãƒ¼ã‚’é›¢ã—ãŸç¬é–“ã«æŠ•ã’ã‚‹
+				Throw(m_chargePower, m_selectPlayer);
+				m_isCharging = false;
+				m_chargePower = 0.0f;
+
+				// æŠ•ã’ãŸå¾Œã®ã‚¯ãƒ¼ãƒ«ã‚¿ã‚¤ãƒ 
+				m_coolTime = 1.5f;
+			}
+		}
+	}
+
+	if (m_selectPlayer)
+	{
+		if (Keyboard_IsKeyDown(KK_P) || g_Controller[1].IsButtonPushed(ControllerButton::X_BUTTON))
+		{
+			// æ”»æ’ƒä¸­ã˜ã‚ƒãªã‘ã‚Œã°ãƒãƒ£ãƒ¼ã‚¸ã§ãã‚‹
+			if (!m_isAttacking && m_coolTime <= 0.0f)
+			{
+				m_isCharging = true;
+				m_chargePower += (1.0f / 60.0f);
+				if (m_chargePower > MAX_CHARGE) m_chargePower = MAX_CHARGE;
+			}
+		}
+		else if (m_isCharging)
+		{
+			if (m_chargePower <= 1.0f)
+			{
+				m_isAttack = true;
+				Attack();
+				m_isCharging = false;
+			}
+			else
+			{
+				// ã‚­ãƒ¼ã‚’é›¢ã—ãŸç¬é–“ã«æŠ•ã’ã‚‹
+				Throw(m_chargePower, m_selectPlayer);
+				m_isCharging = false;
+				m_chargePower = 0.0f;
+
+				// æŠ•ã’ãŸå¾Œã®ã‚¯ãƒ¼ãƒ«ã‚¿ã‚¤ãƒ 
+				m_coolTime = 1.5f;
+			}
+		}
+	}
+	const float mul = (m_isCharging || m_isAttacking) ? 0.3f : 1.0f;
+	if (m_selectPlayer == FALSE)
+	{
+		if (g_PlayerSpear1) g_PlayerSpear1->m_moveMul = mul;
+	}
+	else
+	{
+		if (g_PlayerSpear2) g_PlayerSpear2->m_moveMul = mul;
+	}
+	MODEL* model = nullptr;
+	bool isMoving = false;
+	if (m_playerIndex == 0)
+	{
+		PLAYER* p = g_PlayerSpear1;
+		if (p)
+		{
+			model = p->m_model;
+			float mv = sqrtf(p->m_velocity.x * p->m_velocity.x + p->m_velocity.z * p->m_velocity.z);
+			isMoving = (mv > 0.001f);
+		}
+	}
+	else
+	{
+		PLAYER2* p = g_PlayerSpear2;
+		if (p)
+		{
+			model = p->m_model;
+			float mv = sqrtf(p->m_velocity.x * p->m_velocity.x + p->m_velocity.z * p->m_velocity.z);
+			isMoving = (mv > 0.001f);
+		}
+	}
+
+	if (m_isCharging && !m_wasCharging)
+	{
+		if (model) 
+		{
+			ModelPlayClip(model, 761, 810, 60.0f, false, 1.0f);
+		}
+		m_chargeState = CHARGE_IN;
+	}
+	if (m_isCharging && isMoving)
+	{
+		if (m_chargeState != CHARGE_MOVE_LOOP)
+		{
+			if (model)
+			{
+				ModelPlayClip(model, 500, 640, 60.0f, true, 1.0f);
+			}
+			m_chargeState = CHARGE_MOVE_LOOP;
+		}
+	}
+	if (m_isCharging && !isMoving)
+	{
+		if (m_chargeState == CHARGE_MOVE_LOOP)
+		{
+			if (model) {
+				ModelPlayClip(model, 810, 810, 60.0f, true, 1.0f);
+			}
+			m_chargeState = CHARGE_HOLD;
+		}
+		else if (m_chargeState == CHARGE_IN)
+		{
+
+			if (model && ModelConsumeClipFinished(model))
+			{
+				ModelPlayClip(model, 810, 810, 60.0f, true, 1.0f);
+				m_chargeState = CHARGE_HOLD;
+			}
+		}
+		else if (m_chargeState == CHARGE_NONE)
+		{
+			// nothing
+		}
+	}
+
+	// ï¿½ï¿½ï¿½ï¿½pï¿½tï¿½ï¿½ï¿½Oï¿½ï¿½ï¿½gï¿½ï¿½ï¿½Äƒ`ï¿½ï¿½ï¿½[ï¿½Wï¿½ï¿½ï¿½ï¿½
+
+	m_wasCharging = m_isCharging;
 	if (m_attackTimer < (ATTACK_DURATION / 2) && m_isAttacking)
 	{
 		float progress = m_attackTimer / (ATTACK_DURATION / 2.0f);
@@ -184,59 +405,72 @@ void Spear::Update()
 		break;
 	}
 
-	// UŒ‚‚µ‚Ä‚é‚Æ‚«
+	// æ”»æ’ƒã—ã¦ã‚‹ã¨ã
 	if (m_isAttacking)
 	{
-		m_attackTimer += (1.0f / 60.0f);
-
-		// UŒ‚‚Ì—LŒøŠÔ‚ªI‚í‚Á‚½‚ç
-		if (m_attackTimer >= ATTACK_DURATION)
+		if (m_weapon->m_delay <= 0)
 		{
-			m_isAttacking = false; // UŒ‚I—¹
-			m_collider->SetEnable(false); // “–‚½‚è”»’è~‚ß‚é
+			m_attackTimer += (1.0f / 60.0f);
+			// æ”»æ’ƒã®æœ‰åŠ¹æ™‚é–“ãŒçµ‚ã‚ã£ãŸã‚‰
+			if (m_attackTimer >= ATTACK_DURATION)
+			{
+				m_isAttacking = false; // æ”»æ’ƒçµ‚äº†
+				m_collider->SetEnable(false); // å½“ãŸã‚Šåˆ¤å®šæ­¢ã‚ã‚‹
+			}
+			if (m_weapon->m_scale.x <= 0.5)
+			{
+				m_weapon->m_scale.x += 0.1f; // æ”»æ’ƒä¸­ã¯å°‘ã—ç´°ãã™ã‚‹
+				m_weapon->m_scale.y += 0.1f; // æ”»æ’ƒä¸­ã¯å°‘ã—ç´°ãã™ã‚‹
+				m_weapon->m_scale.z += 0.1f; // æ”»æ’ƒä¸­ã¯å°‘ã—ç´°ãã™ã‚‹
+			}
+		}
+		else
+		{
+			m_weapon->m_delay -= m_weapon->m_frame;
+			m_weapon->m_scale.x = 0.0f;
+			m_weapon->m_scale.y = 0.0f;
+			m_weapon->m_scale.z = 0.0f;
 		}
 	}
+
 }
 
 void Spear::Draw()
 {
-	//ƒ[ƒ‹ƒhs—ñì¬
-	XMMATRIX	scale = XMMatrixScaling(
-		m_weapon->m_scale.x,
-		m_weapon->m_scale.y,
-		m_weapon->m_scale.z);
-	XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
-		m_weapon->m_rotation.x,
-		m_weapon->m_rotation.y,
-		m_weapon->m_rotation.z);
-	XMMATRIX	translation = XMMatrixTranslation(
-		m_weapon->m_position.x,
-		m_weapon->m_position.y,
-		m_weapon->m_position.z);
-	XMMATRIX	world = scale * rotation * translation;
-
-	//ƒVƒF[ƒ_[‚Ös—ñ‚ğƒZƒbƒg
-	Shader_SetWorldMatrix(world);
-
 	if (m_isAttacking)
 	{
-		ModelDraw(g_modelSpear[1]);
-	}
-	else
-	{
+		XMMATRIX	scale = XMMatrixScaling(
+			m_weapon->m_scale.x * 0.03f,
+			m_weapon->m_scale.y * 0.03f,
+			m_weapon->m_scale.z * 0.03f);
+		XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
+			m_weapon->m_rotation.x,
+			m_weapon->m_rotation.y + XM_PI,
+			m_weapon->m_rotation.z);
+		XMMATRIX	translation = XMMatrixTranslation(
+			m_weapon->m_position.x,
+			m_weapon->m_position.y,
+			m_weapon->m_position.z);
+		XMMATRIX world = scale * rotation * translation;
+
+
+		XMMATRIX fxWorld = m_fxAnim.GetDeltaMatrix() * world;
+
+		Shader_SetWorldMatrix(fxWorld);
 		ModelDraw(g_modelSpear[0]);
 	}
+	
 }
 
 void Spear::OnWeaponCollision(GameObject* target)
 {
-	// ©•ª‚ÌƒI[ƒi[‚¾‚Á‚½‚ç”ò‚Î‚·
+	// è‡ªåˆ†ã®ã‚ªãƒ¼ãƒŠãƒ¼ã ã£ãŸã‚‰é£›ã°ã™
 	if (target == owner)
 	{
 		return;
 	}
 
-	// ‘½dƒqƒbƒg–h~AŠù‚Éˆê‰ñ‚ÌUŒ‚‚Åƒ_ƒ[ƒW‚ğ—^‚¦‚Ä‚½‚ç
+	// å¤šé‡ãƒ’ãƒƒãƒˆé˜²æ­¢ã€æ—¢ã«ä¸€å›ã®æ”»æ’ƒã§ãƒ€ãƒ¡ãƒ¼ã‚¸ã‚’ä¸ãˆã¦ãŸã‚‰
 	if (m_hitTargets.count(target) > 0)
 	{
 		return;
@@ -244,22 +478,66 @@ void Spear::OnWeaponCollision(GameObject* target)
 
 	if (m_isAttacking)
 	{
-		// 1P‚©2P‚©
+		//ãƒ’ãƒƒãƒˆã‚¹ãƒˆãƒƒãƒ—ç”¨P1,P2å…±é€šå¤‰æ•°
+		float stopTime = 0.5f;
+		// 1Pã‹2Pã‹
 		switch (m_selectPlayer)
 		{
-		case FALSE: // 1P‚¾‚Á‚½‚ç
-			if (target->m_tag == "Player2") // ‘Šè‚ªPlayer2‚Ì‚Ì‚İ
+		case FALSE: // æ”»æ’ƒè€…ãŒ1Pã ã£ãŸã‚‰
+			if (target->m_tag == "Player2") // ç›¸æ‰‹ãŒPlayer2ã®æ™‚ã®ã¿
 			{
+				SetPlayer2_IsAttacked(true);
+				PlayAudio(g_damageSharp);
 				m_hitTargets.insert(target);
-				target->TakeDamage(20.0f); // ‰¼‚É20ƒ_ƒ[ƒW
+				target->TakeDamage(100.0f); // ä»®ã«20ãƒ€ãƒ¡ãƒ¼ã‚¸
+
+				//ãƒ’ãƒƒãƒˆã‚¨ãƒ•ã‚§ã‚¯ãƒˆ
+				XMFLOAT3 effectPos = target->m_position;
+				effectPos.y -= 1.0f;
+				HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::ZANGEKI);
+
+				//ãƒ’ãƒƒãƒˆãƒãƒƒã‚¯è¨ˆç®—å¼
+				XMFLOAT3 dir = {
+					target->m_position.x - owner->m_position.x,
+					0.1f,
+					target->m_position.z - owner->m_position.z
+				};
+				//P2ã«å¯¾ã—ã¦ãƒ’ãƒƒãƒˆã‚¢ã‚¯ã‚·ãƒ§ãƒ³ã‚’ç™ºå‹•
+				//å¼•æ•°:æ–¹å‘vec, HSæ™‚é–“, KBè·é›¢
+				g_Player2.m_hitAction.triggerHA(dir, stopTime, 0.1);
+				//æ”»æ’ƒæ™‚ã«æ”»æ’ƒè€…å´ã«ã‚‚ãƒ’ãƒƒãƒˆã‚¹ãƒˆãƒƒãƒ—ã‚’å…¥ã‚Œã‚‹
+				//æ™‚é–“ã ã‘ã‚’æ­¢ã‚ãŸã„ãŸã‚ã€æ–¹å‘ãƒ™ã‚¯ãƒˆãƒ«ã¨ãƒ‘ãƒ¯ãƒ¼ã®å€¤ã¯0ã«
+				g_Player.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime, 0.0f);
 			}
 			break;
 
-		case TRUE: // 2P‚¾‚Á‚½‚ç
-			if (target->m_tag == "Player") // ‘Šè‚ªPlayer‚Ì‚Ì‚İ
+		case TRUE: // æ”»æ’ƒè€…ãŒ2Pã ã£ãŸã‚‰
+			if (target->m_tag == "Player") // ç›¸æ‰‹ãŒPlayerã®æ™‚ã®ã¿
 			{
+				SetPlayer_IsAttacked(true);
+				PlayAudio(g_damageSharp);
+
 				m_hitTargets.insert(target);
-				target->TakeDamage(20.0f);
+				target->TakeDamage(100.0f);
+
+				//ãƒ’ãƒƒãƒˆã‚¨ãƒ•ã‚§ã‚¯ãƒˆ
+				XMFLOAT3 effectPos = target->m_position;
+				effectPos.y -= 1.0f;
+				HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::ZANGEKI);
+
+				//ãƒ’ãƒƒãƒˆãƒãƒƒã‚¯è¨ˆç®—å¼
+				XMFLOAT3 dir = {
+					target->m_position.x - owner->m_position.x,
+					0.1f,
+					target->m_position.z - owner->m_position.z
+				};
+
+				//P1ã«å¯¾ã—ã¦ãƒ’ãƒƒãƒˆã‚¢ã‚¯ã‚·ãƒ§ãƒ³ã‚’ç™ºå‹•
+				//å¼•æ•°:æ–¹å‘vec, HSæ™‚é–“, KBè·é›¢
+				g_Player.m_hitAction.triggerHA(dir, stopTime, 0.1f);
+				//æ”»æ’ƒæ™‚ã«æ”»æ’ƒè€…å´ã«ã‚‚ãƒ’ãƒƒãƒˆã‚¹ãƒˆãƒƒãƒ—ã‚’å…¥ã‚Œã‚‹
+				//æ™‚é–“ã ã‘ã‚’æ­¢ã‚ãŸã„ãŸã‚ã€æ–¹å‘ãƒ™ã‚¯ãƒˆãƒ«ã¨ãƒ‘ãƒ¯ãƒ¼ã®å€¤ã¯0ã«
+				g_Player2.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime, 0.0f);
 			}
 			break;
 		}
@@ -268,33 +546,64 @@ void Spear::OnWeaponCollision(GameObject* target)
 
 void Spear::Throw(float power, bool select)
 {
+	PlayAudio(g_spear, false);
+
 	SpearShot* shot = new SpearShot();
 
 	shot->m_position = m_weapon->m_position;
 	shot->m_rotation = m_weapon->m_rotation;
 	shot->m_selectPlayer = select;
 
-	// ”ò‚Î‚·•ûŒü‚ğŒvZ
+	// é£›ã°ã™æ–¹å‘ã‚’è¨ˆç®—
 	float baseSpeed = 0.25f;
 	float finalSpeed = baseSpeed * (1.0f + power);
 	float ry = shot->m_rotation.y;
 	shot->m_velocity.x = sinf(ry) * finalSpeed;
 	shot->m_velocity.y = 0.0f;
 	shot->m_velocity.z = cosf(ry) * finalSpeed;
+	MODEL* model = nullptr;
+	bool isMoving = false;
 
+	if (m_selectPlayer == FALSE)
+	{
+		PLAYER* player = g_PlayerSpear1;
+		if (player)
+		{
+			model = player->m_model;
+
+			float mv = sqrtf(player->m_velocity.x * player->m_velocity.x +
+				player->m_velocity.z * player->m_velocity.z);
+			isMoving = (mv > 0.001f);
+			ModelPlayClip(model, 810, 879, 60.0f, false, 2.0f);
+		}
+	}
+	else
+	{
+		PLAYER2* player = g_PlayerSpear2;
+		if (player)
+		{
+			model = player->m_model;
+
+			float mv = sqrtf(player->m_velocity.x * player->m_velocity.x +
+				player->m_velocity.z * player->m_velocity.z);
+			isMoving = (mv > 0.001f);
+			ModelPlayClip(model, 810, 880, 60.0f, false, 2.0f);
+
+		}
+	}
 	extern std::vector<GameObject*> g_gameObjects;
 	g_gameObjects.push_back(shot);
 	shot->Start();
 }
 
 //================================================================
-//	SpearShotƒNƒ‰ƒX
+//	SpearShotã‚¯ãƒ©ã‚¹
 //================================================================
 void SpearShot::Start()
 {
 	m_tag = "Attack";
 
-	XMFLOAT3 scale = { 0.3f, 0.3f, 1.0f };
+	XMFLOAT3 scale = {1.0f,1.0f,1.0f };
 	m_scale = scale;
 	m_collider = AddComponent<BoxCollider>(this, scale);
 	ManagerCollider::AddCollider(m_collider);
@@ -302,47 +611,47 @@ void SpearShot::Start()
 
 void SpearShot::Update()
 {
-	// ‘„‚ªh‚³‚Á‚Ä‚½‚ç
+	// æ§ãŒåˆºã•ã£ã¦ãŸã‚‰
 	if (m_isStuck)
 	{
 		m_stuckLife -= (1.0f / 60.0f);
-		// ƒ^ƒCƒ}[‚ğŒ¸‚ç‚·
+		// ã‚¿ã‚¤ãƒãƒ¼ã‚’æ¸›ã‚‰ã™
 		if (m_stuckLife <= 0.0f)
 		{
 			m_isDead = true;
 		}
 	}
-	else // ‚Ü‚¾”ò‚ñ‚Å‚½‚ç
+	else // ã¾ã é£›ã‚“ã§ãŸã‚‰
 	{
-		// ”ò‚Î‚µ‚Ä‚©‚ç‚Ìõ–½
+		// é£›ã°ã—ã¦ã‹ã‚‰ã®å¯¿å‘½
 		m_flyTimer -= (1.0f / 60.0f);
 		if (m_flyTimer <= 0.0f)
 		{
 			m_isDead = true;
 		}
 
-		m_velocity.y -= 0.0025f; // d—Í
-		// ‘å‚«‚¢‚Æd‚¢A¬‚³‚¢‚Æ‚Ó‚í‚Á‚Æ‚·‚é
+		m_velocity.y -= 0.0025f; // é‡åŠ›
+		// å¤§ãã„ã¨é‡ã„ã€å°ã•ã„ã¨ãµã‚ã£ã¨ã™ã‚‹
 
 		m_position.x += m_velocity.x;
 		m_position.y += m_velocity.y;
 		m_position.z += m_velocity.z;
 
-		// í‚Éæ’[‚ª”ò‚ñ‚Å‚é•ûŒü‚ğŒü‚­
+		// å¸¸ã«å…ˆç«¯ãŒé£›ã‚“ã§ã‚‹æ–¹å‘ã‚’å‘ã
 		m_rotation.x = atan2f(-m_velocity.y, sqrtf(m_velocity.x * m_velocity.x + m_velocity.z * m_velocity.z));
 	}
 }
 
 void SpearShot::Draw()
 {
-	//ƒ[ƒ‹ƒhs—ñì¬
+	//ãƒ¯ãƒ¼ãƒ«ãƒ‰è¡Œåˆ—ä½œæˆ
 	XMMATRIX	scale = XMMatrixScaling(
-		m_scale.x,
-		m_scale.y,
-		m_scale.z);
+		m_scale.x*0.015f,
+		m_scale.y * 0.015f,
+		m_scale.z * 0.015f);
 	XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
 		m_rotation.x,
-		m_rotation.y,
+		m_rotation.y + XM_PI,
 		m_rotation.z);
 	XMMATRIX	translation = XMMatrixTranslation(
 		m_position.x,
@@ -350,7 +659,7 @@ void SpearShot::Draw()
 		m_position.z);
 	XMMATRIX	world = scale * rotation * translation;
 
-	//ƒVƒF[ƒ_[‚Ös—ñ‚ğƒZƒbƒg
+	//ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã¸è¡Œåˆ—ã‚’ã‚»ãƒƒãƒˆ
 	Shader_SetWorldMatrix(world);
 
 	ModelDraw(g_modelSpear[0]);
@@ -358,32 +667,80 @@ void SpearShot::Draw()
 
 void SpearShot::OnCollision(const CollisionInfo& info)
 {
-	// h‚³‚Á‚Ä‚½‚ç‰½‚à‚È‚µ
+	// åˆºã•ã£ã¦ãŸã‚‰ä½•ã‚‚ãªã—
 	if (m_isStuck) return;
 
-	if (info.other->m_tag == "Attack") return; // •Ší‚É“–‚½‚Á‚Ä‚à–³‹
-	if (!m_selectPlayer && info.other->m_tag == "Player") return; // •Ší‚Í‚È‚Á‚½–{l‚Í–³‹
-	if (m_selectPlayer && info.other->m_tag == "Player2") return; // •Ší‚Í‚È‚Á‚½–{l‚Í–³‹
+	if (info.other->m_tag == "Attack") return; // æ­¦å™¨ã«å½“ãŸã£ã¦ã‚‚ç„¡è¦–
+	if (!m_selectPlayer && info.other->m_tag == "Player") return; // æ­¦å™¨ã¯ãªã£ãŸæœ¬äººã¯ç„¡è¦–
+	if (m_selectPlayer && info.other->m_tag == "Player2") return; // æ­¦å™¨ã¯ãªã£ãŸæœ¬äººã¯ç„¡è¦–
+	if (info.other->m_tag == "Item") return;
+	if (info.other->m_tag == "Slope1") return;
+	if (info.other->m_tag == "Slope2") return;
+	if (info.other->m_tag == "BOGP1") return;
+	if (info.other->m_tag == "BOGP2") return;
 
 	m_velocity = { 0.0f, 0.0f, 0.0f };
 	m_isStuck = true;
 
-	// 1P‚©2P‚©
+	//ãƒ’ãƒƒãƒˆã‚¹ãƒˆãƒƒãƒ—æ™‚é–“
+	float stopTime = 0.2f;
+
+	// 1Pã‹2Pã‹
 	switch (m_selectPlayer)
 	{
-	case FALSE: // 1P‚¾‚Á‚½‚ç
-		if (info.other->m_tag == "Player2") // ‘Šè‚ªPlayer2‚Ì‚Ì‚İ
+	case FALSE: // 1Pã ã£ãŸã‚‰
+		if (info.other->m_tag == "Player2") // ç›¸æ‰‹ãŒPlayer2ã®æ™‚ã®ã¿
 		{
-			info.other->TakeDamage(20.0f); // ‰¼‚É20ƒ_ƒ[ƒW
+			SetPlayer2_IsAttacked(true);
+
+			PlayAudio(g_damageSharp, false);
+			info.other->TakeDamage(15.0f); // ä»®ã«20ãƒ€ãƒ¡ãƒ¼ã‚¸
+			Player_PlusScore(15.0f);
 			m_isDead = true;
+
+			//ãƒ’ãƒƒãƒˆã‚¨ãƒ•ã‚§ã‚¯ãƒˆ
+			XMFLOAT3 effectPos = info.other->m_position;
+			effectPos.y -= 1.0f;
+			HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::ZANGEKI);
+
+			//ãƒ’ãƒƒãƒˆãƒãƒƒã‚¯è¨ˆç®—å¼
+			XMFLOAT3 dir = {
+				info.other->m_position.x - this->m_position.x,
+				0.1f,
+				info.other->m_position.z - this->m_position.z
+			};
+
+			//P2ã«å¯¾ã—ã¦ãƒ’ãƒƒãƒˆã‚¢ã‚¯ã‚·ãƒ§ãƒ³ã‚’ç™ºå‹•
+			//å¼•æ•°:æ–¹å‘vec, HSæ™‚é–“, KBè·é›¢
+			g_Player2.m_hitAction.triggerHA(dir, stopTime, 0.1f);
 		}
 		break;
 
-	case TRUE: // 2P‚¾‚Á‚½‚ç
-		if (info.other->m_tag == "Player") // ‘Šè‚ªPlayer‚Ì‚Ì‚İ
+	case TRUE: // 2Pã ã£ãŸã‚‰
+		if (info.other->m_tag == "Player") // ç›¸æ‰‹ãŒPlayerã®æ™‚ã®ã¿
 		{
-			info.other->TakeDamage(20.0f);
+			PlayAudio(g_damageSharp, false);
+			info.other->TakeDamage(15.0f);
+			Player2_PlusScore(15.0f);
+			SetPlayer_IsAttacked(true);
+
 			m_isDead = true;
+
+			//ãƒ’ãƒƒãƒˆã‚¨ãƒ•ã‚§ã‚¯ãƒˆ
+			XMFLOAT3 effectPos = info.other->m_position;
+			effectPos.y -= 1.0f;
+			HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::ZANGEKI);
+
+			//ãƒ’ãƒƒãƒˆãƒãƒƒã‚¯è¨ˆç®—å¼
+			XMFLOAT3 dir = {
+				info.other->m_position.x - this->m_position.x,
+				0.1f,
+				info.other->m_position.z - this->m_position.z
+			};
+
+			//P1ã«å¯¾ã—ã¦ãƒ’ãƒƒãƒˆã‚¢ã‚¯ã‚·ãƒ§ãƒ³ã‚’ç™ºå‹•
+			//å¼•æ•°:æ–¹å‘vec, HSæ™‚é–“, KBè·é›¢
+			g_Player.m_hitAction.triggerHA(dir, stopTime, 0.1f);
 		}
 		break;
 	}

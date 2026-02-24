@@ -1,142 +1,122 @@
+
+#pragma comment(lib, "runtimeobject.lib")
+
 #include "Controller.h"
-#include <cstdlib>
 #include <algorithm>
 
-// ƒRƒ“ƒgƒ[ƒ‰[ID‚ğ“n‚µ‚Ä‰Šú‰»
-Controller::Controller(DWORD controllerId)
-    : m_controllerId(controllerId)
+Controller g_Controller[2] = { Controller(0), Controller(1) };
+
+Controller::Controller(DWORD id) : m_id(id), m_isConnected(false)
 {
-    // ‰Šúó‘Ô‚ğƒNƒŠƒA
-    ZeroMemory(&m_currentState, sizeof(XINPUT_STATE));
-    ZeroMemory(&m_prevState, sizeof(XINPUT_STATE));
+    m_currentState = {};
+    m_prevState = {};
 }
 
-// –ˆƒtƒŒ[ƒ€ŒÄ‚Ño‚·‚±‚Æ‚Åó‘Ô‚ğXV
 void Controller::Update()
 {
-    // Œ»İ‚Ìó‘Ô‚ğ‘O‚Ìó‘Ô‚Æ‚µ‚Ä•Û‘¶
     m_prevState = m_currentState;
 
-    // XInputGetState‚ÅŒ»İ‚Ìó‘Ô‚ğæ“¾
-    DWORD result = XInputGetState(m_controllerId, &m_currentState);
+    ComPtr<IGamepadStatics> gamepadStatics;
+    HRESULT hr = ABI::Windows::Foundation::GetActivationFactory(
+        HStringReference(RuntimeClass_Windows_Gaming_Input_Gamepad).Get(),
+        &gamepadStatics);
 
-    // Ú‘±‚ªØ‚ê‚Ä‚¢‚éê‡‚Íó‘Ô‚ğƒNƒŠƒAiƒfƒoƒbƒO–Ú“Ij
-    if (result != ERROR_SUCCESS)
+    if (FAILED(hr)) return;
+
+    ComPtr<ABI::Windows::Foundation::Collections::IVectorView<Gamepad*>> gamepads;
+    if (FAILED(gamepadStatics->get_Gamepads(&gamepads))) return;
+
+    unsigned int count = 0;
+    gamepads->get_Size(&count);
+
+    if (count > m_id)
     {
-        ZeroMemory(&m_currentState, sizeof(XINPUT_STATE));
-    }
-}
-
-// --- ƒ{ƒ^ƒ“‚Ìó‘Ôæ“¾ŠÖ” ---
-
-// Œ»İ‰Ÿ‚³‚ê‚Ä‚¢‚é‚© (Keyboard_IsKeyDown‚É‘Š“–)
-bool Controller::IsButtonDown(ControllerButton::Button button) const
-{
-    // Ú‘±‚³‚ê‚Ä‚¢‚ÄAŒ»İ‚Ìó‘Ô‚Ìƒ{ƒ^ƒ“ƒtƒ‰ƒO‚ª—§‚Á‚Ä‚¢‚é‚©
-    return IsConnected() && (m_currentState.Gamepad.wButtons & button);
-}
-
-// ‰Ÿ‚³‚ê‚½uŠÔ‚© (Keyboard_IsKeyPushed‚É‘Š“–)
-bool Controller::IsButtonPushed(ControllerButton::Button button) const
-{
-    // Ú‘±‚³‚ê‚Ä‚¢‚Ä
-    // Œ»İ‚Í‰Ÿ‚³‚ê‚Ä‚¢‚ÄA‚©‚ÂA‘OƒtƒŒ[ƒ€‚Å‚Í‰Ÿ‚³‚ê‚Ä‚¢‚È‚©‚Á‚½
-    return IsConnected() &&
-        (m_currentState.Gamepad.wButtons & button) &&
-        !(m_prevState.Gamepad.wButtons & button);
-}
-
-// —£‚³‚ê‚½uŠÔ‚© (Keyboard_IsKeyReleased‚É‘Š“–)
-bool Controller::IsButtonReleased(ControllerButton::Button button) const
-{
-    // Ú‘±‚³‚ê‚Ä‚¢‚Ä
-    // Œ»İ‚Í‰Ÿ‚³‚ê‚Ä‚¢‚È‚­‚ÄA‚©‚ÂA‘OƒtƒŒ[ƒ€‚Å‚Í‰Ÿ‚³‚ê‚Ä‚¢‚½
-    return IsConnected() &&
-        !(m_currentState.Gamepad.wButtons & button) &&
-        (m_prevState.Gamepad.wButtons & button);
-}
-
-// --- ƒXƒeƒBƒbƒN‚Ìó‘Ôæ“¾ŠÖ” (³‹K‰»‚Æƒfƒbƒhƒ][ƒ“ˆ—) ---
-
-// ƒXƒeƒBƒbƒN‚Ì¶‚Ì’l (-32768`32767) ‚ğ -1.0f`1.0f ‚É³‹K‰»‚µAƒfƒbƒhƒ][ƒ“‚ğˆ—
-static float NormalizeAndDeadZone(SHORT value, SHORT deadZone)
-{
-    if (std::abs(value) < deadZone)
-    {
-        return 0.0f;
-    }
-
-    // ƒfƒbƒhƒ][ƒ“‚ğ’´‚¦‚½•”•ª‚ğ³‹K‰»
-    if (value > 0)
-    {
-        return (float)(value - deadZone) / (32767.0f - deadZone);
+        // æ¯å› GetAt ã§æœ€æ–°ã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’å–å¾—ã—ç›´ã™
+        ComPtr<IGamepad> currentGamepad;
+        if (SUCCEEDED(gamepads->GetAt(m_id, &currentGamepad)))
+        {
+            m_gamepad = currentGamepad;
+            m_gamepad->GetCurrentReading(&m_currentState);
+            m_isConnected = true;
+        }
     }
     else
     {
-        return (float)(value + deadZone) / (32768.0f - deadZone);
+        m_isConnected = false;
+        m_gamepad = nullptr;
+    }
+
+    // ãƒ‡ãƒãƒƒã‚°ç”¨å‡ºåŠ›ï¼šã“ã‚Œã§ Buttons: ã®å¾Œã®æ•°å­—ãŒå¤‰ã‚ã‚‹ã‹ç¢ºèªã—ã¦ãã ã•ã„
+    if (m_isConnected) {
+        char buf[128];
+        sprintf_s(buf, "ID:%d Buttons:%u\n", m_id, (unsigned int)m_currentState.Buttons);
+        OutputDebugStringA(buf);
     }
 }
-
-float Controller::GetLeftStickX() const
+// ãƒœã‚¿ãƒ³æŠ¼ä¸‹åˆ¤å®šï¼ˆãƒ“ãƒƒãƒˆæ¼”ç®—ï¼‰
+bool Controller::IsButtonDown(ControllerButton::Button button) const
 {
-    return NormalizeAndDeadZone(m_currentState.Gamepad.sThumbLX, XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE);
+    if (!m_isConnected) return false;
+    return (static_cast<unsigned int>(m_currentState.Buttons) & button);
 }
 
-float Controller::GetLeftStickY() const
+// æŠ¼ã—ãŸç¬é–“
+bool Controller::IsButtonPushed(ControllerButton::Button button) const
 {
-    return NormalizeAndDeadZone(m_currentState.Gamepad.sThumbLY, XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE);
+    if (!m_isConnected) return false;
+    unsigned int btn = (unsigned int)button;
+    unsigned int current = (unsigned int)m_currentState.Buttons;
+    unsigned int prev = (unsigned int)m_prevState.Buttons;
+
+    // ä»Šå›æŠ¼ã•ã‚Œã¦ã„ã¦ã€å‰å›æŠ¼ã•ã‚Œã¦ã„ãªã‘ã‚Œã°ã€ŒæŠ¼ã—ãŸç¬é–“ã€
+    return ((current & btn) != 0) && ((prev & btn) == 0);
+}
+// é›¢ã—ãŸç¬é–“
+bool Controller::IsButtonReleased(ControllerButton::Button button) const
+{
+    if (!m_isConnected) return false;
+    return !(static_cast<unsigned int>(m_currentState.Buttons) & button) &&
+        (static_cast<unsigned int>(m_prevState.Buttons) & button);
 }
 
-float Controller::GetRightStickX() const
-{
-    return NormalizeAndDeadZone(m_currentState.Gamepad.sThumbRX, XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE);
+// ã‚¹ãƒ†ã‚£ãƒƒã‚¯ã®å€¤å–å¾—ï¼ˆãƒ‡ãƒƒãƒ‰ã‚¾ãƒ¼ãƒ³å‡¦ç†ã‚’è¿½åŠ ï¼‰
+float Controller::GetLeftStickX() const {
+    if (!m_isConnected) return 0.0f;
+    float val = (float)m_currentState.LeftThumbstickX;
+    return (fabs(val) < 0.1f) ? 0.0f : val; // 0.1(10%)æœªæº€ã®å‚¾ãã¯0ã«ã™ã‚‹
 }
 
-float Controller::GetRightStickY() const
-{
-    return NormalizeAndDeadZone(m_currentState.Gamepad.sThumbRY, XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE);
+float Controller::GetLeftStickY() const {
+    if (!m_isConnected) return 0.0f;
+    float val = (float)m_currentState.LeftThumbstickY;
+    return (fabs(val) < 0.1f) ? 0.0f : val;
 }
 
-
-// --- ƒgƒŠƒK[‚Ìó‘Ôæ“¾ŠÖ” (³‹K‰») ---
-
-// ƒgƒŠƒK[‚Ì¶‚Ì’l (0`255) ‚ğ 0.0f`1.0f ‚É³‹K‰»
-static float NormalizeTrigger(BYTE value, BYTE deadZone)
-{
-    if (value < deadZone)
-    {
-        return 0.0f;
-    }
-    // ƒfƒbƒhƒ][ƒ“‚ğ’´‚¦‚½•”•ª‚ğ³‹K‰»
-    return (float)(value - deadZone) / (255.0f - deadZone);
+float Controller::GetRightStickX() const {
+    if (!m_isConnected) return 0.0f;
+    float val = (float)m_currentState.RightThumbstickX;
+    return (fabs(val) < 0.1f) ? 0.0f : val;
 }
 
-float Controller::GetLeftTrigger() const
-{
-    return NormalizeTrigger(m_currentState.Gamepad.bLeftTrigger, XINPUT_GAMEPAD_TRIGGER_THRESHOLD);
+float Controller::GetRightStickY() const {
+    if (!m_isConnected) return 0.0f;
+    float val = (float)m_currentState.RightThumbstickY;
+    return (fabs(val) < 0.1f) ? 0.0f : val;
 }
+// ãƒˆãƒªã‚¬ãƒ¼ã®å€¤å–å¾—ï¼ˆWGIã¯ 0.0ï½1.0ï¼‰
+float Controller::GetLeftTrigger() const { return m_isConnected ? (float)m_currentState.LeftTrigger : 0.0f; }
+float Controller::GetRightTrigger() const { return m_isConnected ? (float)m_currentState.RightTrigger : 0.0f; }
 
-float Controller::GetRightTrigger() const
-{
-    return NormalizeTrigger(m_currentState.Gamepad.bRightTrigger, XINPUT_GAMEPAD_TRIGGER_THRESHOLD);
-}
-
-
-// --- Ú‘±ó‘Ôƒ`ƒFƒbƒN ---
-bool Controller::IsConnected() const
-{
-    // XInputGetState‚ğs‚µAERROR_SUCCESS‚ª•Ô‚é‚©ƒ`ƒFƒbƒN
-    XINPUT_STATE state;
-    return XInputGetState(m_controllerId, &state) == ERROR_SUCCESS;
-}
-
-
-// --- ƒoƒCƒuƒŒ[ƒVƒ‡ƒ“‹@”\ ---
-// leftMotor: ’áü”gƒ‚[ƒ^[ (0.0f`1.0f), rightMotor: ‚ü”gƒ‚[ƒ^[ (0.0f`1.0f)
+// æŒ¯å‹•ã®è¨­å®š
 void Controller::SetVibration(float leftMotor, float rightMotor)
 {
-    XINPUT_VIBRATION vibration;
-    vibration.wLeftMotorSpeed = (WORD)((std::min)(1.0f, (std::max)(0.0f, leftMotor)) * 65535.0f);
-    vibration.wRightMotorSpeed = (WORD)((std::min)(1.0f, (std::max)(0.0f, rightMotor)) * 65535.0f);
-    XInputSetState(m_controllerId, &vibration);
+    if (!m_isConnected || !m_gamepad) return;
+
+    GamepadVibration vibration;
+    vibration.LeftMotor = (double)leftMotor;
+    vibration.RightMotor = (double)rightMotor;
+    vibration.LeftTrigger = 0.0;
+    vibration.RightTrigger = 0.0;
+
+    m_gamepad->put_Vibration(vibration);
 }

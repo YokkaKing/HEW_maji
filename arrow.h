@@ -1,6 +1,6 @@
 ﻿/*
 * ファイル名	arrow.h
-* タイトル	剣
+* タイトル	弓
 * 作成者		三橋拓斗
 * 作成日		12月09日
 * 更新日		12月09日
@@ -28,13 +28,21 @@ public:
     const float ATTACK_DURATION = 0.5f;   // 攻撃の有効時間
 
     // プレイヤーから見てどこに位置するか
-    XMFLOAT3 m_offset = { 0.2f, 0.0f, 0.8f };
+    XMFLOAT3 m_offset = { 0.0f, 0.0f, 0.0f };
     // 攻撃したときにどう動くか
     XMFLOAT3 m_animePosition = { 0.0f, 0.0f, 0.5f };
     XMFLOAT3 m_animeRotation = { 0.0f, 0.0f, 0.0f };
 
-    FLOAT m_coolTime = 0.0f;
-
+    enum CHARGE_STATE {
+        CHARGE_NONE = 0,
+        CHARGE_IN,
+        CHARGE_HOLD,
+        CHARGE_MOVE_LOOP,
+        CHARGE_ATTACK_PLAY
+    };
+    CHARGE_STATE m_chargeState = CHARGE_NONE;
+   // FLOAT m_coolTime = 0.0f;
+    bool m_wasCharging = false;
     float m_chargePower = 0.0f; // チャージ
     bool m_isCharging = false; // チャージしてるか
     const float MAX_CHARGE = 4.0f; // 最大4倍の飛距離

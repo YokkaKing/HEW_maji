@@ -40,8 +40,10 @@ enum FIELD
 class MAPDATA
 {
 	public:
-		XMFLOAT3	pos;	//ブロックの座標
-		FIELD		no;		//ブロックの種類
+		XMFLOAT3	pos;		//ブロックの座標
+		FIELD		no;			//ブロックの種類
+		float		rotation;	//ブロックの角度
+		XMFLOAT3	scale;		// ブロックの大きさ
 		//その他必要な物は追加する
 };
 void Field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
@@ -54,4 +56,4 @@ void SetObject(XMFLOAT3 pos, float radius, std::string tag, int lay);
 
 MAPDATA* GetFieldMap();
 
-#endif // FIELD_H
+#endif // FIELD	_H

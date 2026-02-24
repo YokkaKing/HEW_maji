@@ -9,8 +9,11 @@
 //================================================================
 //	マクロ定義
 //================================================================
-#define		CLASS_NAME	"DX21 Window"
-#define		WINDOW_CAPTION	"ポリゴン描画"
+//#define		CLASS_NAME	"DX21 Window"
+//#define		WINDOW_CAPTION	"ポリゴン描画"
+#define		CLASS_NAME	"Duelists"
+#define		WINDOW_CAPTION_P1	"Player1"
+#define		WINDOW_CAPTION_P2	"Player2"
 #define		SCREEN_WIDTH	(1920)
 #define		SCREEN_HEIGHT	(1080)
 
@@ -84,10 +87,10 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	int window_width = window_rect.right - window_rect.left;
 	int window_height = window_rect.bottom - window_rect.top;
 
-	//ウィンドウの作成
+	//Player1ウィンドウの作成
 	HWND	hWnd = CreateWindow(
 		CLASS_NAME,	
-		WINDOW_CAPTION,
+		WINDOW_CAPTION_P1,
 		window_style,
 		CW_USEDEFAULT,
 		CW_USEDEFAULT,
@@ -99,14 +102,63 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 		NULL
 	);
 
+	if (!hWnd) return 0;
+
+	//1つ目のウィンドウの位置を取得
+	RECT rect1;
+	GetWindowRect(hWnd, &rect1);
+
+	//2つ目のウィンドウを1つ目のウィンドウの右側に配置
+	int window2_x = rect1.right;
+	int window2_y = rect1.top;
+
+	//画面の幅を取得して、画面外に出ないように調整
+	int screenWidth = GetSystemMetrics(SM_CXSCREEN);
+	if (window2_x + window_width > screenWidth)
+	{
+		//画面外に出る場合は、１つ目のウィンドウの下に配置
+		window2_x = rect1.left;
+		window2_y = rect1.bottom;
+		//それでも外に出る場合は、画面の左上に配置
+		if (window2_y + window_height > GetSystemMetrics(SM_CYSCREEN))
+		{
+			window2_x = 0;
+			window2_y = 0;
+		}
+	}
+
+	//Player2ウィンドウ作成(座標を右側にずらす)
+	//メインモニターの横幅分右にずらすことで2枚目のモニターに表示される
+	HWND	hWnd2 = CreateWindow(
+		CLASS_NAME,
+		WINDOW_CAPTION_P2,
+		window_style,
+		window2_x,
+		window2_y,
+		window_width,
+		window_height,
+		NULL,
+		NULL,
+		hInstance,
+		NULL
+	);
+
+	if (!hWnd2) return 0;
+
 	//作成したウィンドウを表示する
 	ShowWindow(hWnd, nCmdShow);//引数に従って表示、または非表示
 	//ウィンドウ内部の更新要求
 	UpdateWindow(hWnd);
 
+
+	//ウィンドウ2
+	ShowWindow(hWnd2, nCmdShow);
+	UpdateWindow(hWnd2);
+
 	//Viewport_Initialize(hWnd);
 
-	Direct3D_Initialize(hWnd);
+	//Direct3D_Initialize(hWnd);
+	Direct3D_Initialize(hWnd, hWnd2);
 	Keyboard_Initialize();
 	Shader_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext()); // シェーダの初期化
 	InitializeSprite();//スプライトの初期化
@@ -153,7 +205,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 				dwExecLastTime = dwCurrentTime;//現在のタイマーと保存
 #ifdef _DEBUG
 				//ウィンドウキャプションへ現在のFPSを表示
-				wsprintf(g_DebugStr, "DX21 プロジェクト ");
+				wsprintf(g_DebugStr, "Duelists");
 				wsprintf(&g_DebugStr[strlen(g_DebugStr)],
 									" FPS : %d", g_CountFPS);
 				SetWindowText(hWnd, g_DebugStr);
@@ -161,11 +213,17 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 
 				//更新処理
 				Manager_Update();
+				//描画処理:ウィンドウ1
+				Direct3D_Clear(DX_WINDOW_ID_1);
+				Direct3D_SetRenderTarget(DX_WINDOW_ID_1);
+				Manager_Draw_Player1();
+				Direct3D_Present(DX_WINDOW_ID_1);
 
-				//描画処理
-				Direct3D_Clear();
-				Manager_Draw();
-				Direct3D_Present();
+				//描画処理:ウィンドウ2
+				Direct3D_Clear(DX_WINDOW_ID_2);
+				Direct3D_SetRenderTarget(DX_WINDOW_ID_2);
+				Manager_Draw_Player2();
+				Direct3D_Present(DX_WINDOW_ID_2);
 				keycopy();
 
 				dwFrameCount++;		//処理回数更新
@@ -177,7 +235,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	Manager_Finalize();
 
 
-	//UninitAudio();		//サウンドの終了
+	UninitAudio();		//サウンドの終了
 
 	Shader_Finalize(); // シェーダの終了処理
 	FinalizeSprite();	//スプライトの終了処理
