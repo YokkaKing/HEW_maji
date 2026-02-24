@@ -305,6 +305,10 @@ void ShurikenShot::OnCollision(const CollisionInfo& info)
 	if (info.other->m_tag == "Slope2") return;
 	if (info.other->m_tag == "BOGP1") return;
 	if (info.other->m_tag == "BOGP2") return;
+	if (info.other->m_tag == "TREEP1") return;
+	if (info.other->m_tag == "TREEP2") return;
+	if (info.other->m_tag == "WATER") return;
+	if (info.other->m_tag == "LAVA") return;
 
 	m_velocity = { 0.0f, 0.0f, 0.0f };
 	m_isStuck = true;

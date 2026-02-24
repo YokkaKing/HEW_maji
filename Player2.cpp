@@ -1192,14 +1192,15 @@ void PLAYER2::OnCollision(const CollisionInfo& info)
 			{
 				coolTime = 0.0f;
 			}
-			if (info.other->m_tag == "TREEP1")
-			{
-				m_velocity.x *= 0.4f;
-				m_velocity.z *= 0.4f;
+		}
 
-				gp2_slopeSpeed.x *= 0.5f;
-				gp2_slopeSpeed.z *= 0.5f;
-			}
+		if (info.other->m_tag == "TREEP1")
+		{
+			m_velocity.x *= 0.4f;
+			m_velocity.z *= 0.4f;
+
+			gp2_slopeSpeed.x *= 0.5f;
+			gp2_slopeSpeed.z *= 0.5f;
 		}
 	}
 }
