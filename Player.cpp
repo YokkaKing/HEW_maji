@@ -1206,7 +1206,7 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 				m_koyoteTime = 0.0f; // ジャンプできなくする
 
 				// --- gp_speed への計算 ---
-				const float slideFriction = 0.25f;
+				const float slideFriction = 0.05f;
 				float slopeSeverity = 1.0f - info.normal.y;
 				float slidePower = slopeSeverity * slideFriction;
 				const float gravityEffect = 0.02f;
@@ -1244,8 +1244,8 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 				m_velocity.x *= 0.3f;
 				m_velocity.z *= 0.3f;
 
-				gp1_slopeSpeed.x *= 0.5f;
-				gp1_slopeSpeed.z *= 0.5f;
+				gp1_slopeSpeed.x *= 0.3f;
+				gp1_slopeSpeed.z *= 0.3f;
 			}
 		}
 
@@ -1264,8 +1264,8 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 				m_velocity.x *= 0.7f;
 				m_velocity.z *= 0.7f;
 
-				gp1_slopeSpeed.x *= 0.0f;
-				gp1_slopeSpeed.z *= 0.0f;
+				gp1_slopeSpeed.x *= 0.7f;
+				gp1_slopeSpeed.z *= 0.7f;
 			}
 		}
 
@@ -1286,8 +1286,8 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 				m_velocity.x *= 0.3f;
 				m_velocity.z *= 0.3f;
 
-				gp1_slopeSpeed.x *= 0.5f;
-				gp1_slopeSpeed.z *= 0.5f;
+				gp1_slopeSpeed.x *= 0.3f;
+				gp1_slopeSpeed.z *= 0.3f;
 
 				coolTime += 1.0f / 60.0f;
 
