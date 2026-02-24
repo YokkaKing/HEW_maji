@@ -555,7 +555,7 @@ void Spear::Throw(float power, bool select)
 	shot->m_selectPlayer = select;
 
 	// 飛ばす方向を計算
-	float baseSpeed = 0.25f;
+	float baseSpeed = 0.4f;
 	float finalSpeed = baseSpeed * (1.0f + power);
 	float ry = shot->m_rotation.y;
 	shot->m_velocity.x = sinf(ry) * finalSpeed;
@@ -646,16 +646,16 @@ void SpearShot::Draw()
 {
 	//ワールド行列作成
 	XMMATRIX	scale = XMMatrixScaling(
-		m_scale.x*0.015f,
+		m_scale.x * 0.015f,
 		m_scale.y * 0.015f,
 		m_scale.z * 0.015f);
 	XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
-		m_rotation.x,
+		m_rotation.x * -10.0f,
 		m_rotation.y + XM_PI,
 		m_rotation.z);
 	XMMATRIX	translation = XMMatrixTranslation(
 		m_position.x,
-		m_position.y,
+		m_position.y - 0.6f,
 		m_position.z);
 	XMMATRIX	world = scale * rotation * translation;
 
@@ -678,6 +678,10 @@ void SpearShot::OnCollision(const CollisionInfo& info)
 	if (info.other->m_tag == "Slope2") return;
 	if (info.other->m_tag == "BOGP1") return;
 	if (info.other->m_tag == "BOGP2") return;
+	if (info.other->m_tag == "TREEP1") return;
+	if (info.other->m_tag == "TREEP2") return;
+	if (info.other->m_tag == "WATER") return;
+	if (info.other->m_tag == "LAVA") return;
 
 	m_velocity = { 0.0f, 0.0f, 0.0f };
 	m_isStuck = true;
