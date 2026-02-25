@@ -634,8 +634,8 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 	if (Keyboard_IsKeyDown(KK_A)) strafe = -0.1f;
 	if (Keyboard_IsKeyDown(KK_D)) strafe = +0.1f;
 
-	moveX = (forwardX * speed) + (rightX * strafe);
-	moveZ = (forwardZ * speed) + (rightZ * strafe);
+	moveX = (forwardX * speed);
+	moveZ = (forwardZ * speed);
 
 	if (ctrlIdx != -1)
 	{
@@ -650,23 +650,6 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 
 	moveX += rightX * strafe;
 	moveZ += rightZ * strafe;
-
-	if (!g_Player.m_isGround) // 地面についてないときに重力発動
-	{
-		g_Player.m_velocity.x += g_Player.m_acceleration.x;
-		g_Player.m_velocity.y += g_Player.m_acceleration.y;
-		g_Player.m_velocity.z += g_Player.m_acceleration.z;
-	}
-
-	// 地面についているときにコヨーテタイムが1.0fになる
-	if (g_Player.m_isGround)
-	{
-		g_Player.m_koyoteTime = 1.0f;
-	}
-	else
-	{
-		g_Player.m_koyoteTime -= 0.1f;
-	}
 
 	// 最終速度
 	if (g_Player.m_isGround)
@@ -798,8 +781,8 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 	}
 
 	g_Player.m_position.x += (g_Player.m_velocity.x + gp1_slopeSpeed.x);
-	g_Player.m_position.z += (g_Player.m_velocity.z + gp1_slopeSpeed.y);
-	g_Player.m_position.y += (g_Player.m_velocity.y + gp1_slopeSpeed.z);
+	g_Player.m_position.z += (g_Player.m_velocity.z + gp1_slopeSpeed.z);
+	g_Player.m_position.y += (g_Player.m_velocity.y + gp1_slopeSpeed.y);
 }
 
 void PlayerDraw() 
@@ -1226,7 +1209,7 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 			float dz = m_position.z - bogPos.z;
 			float distance = sqrtf(dx * dx + dz * dz);
 
-			const float effectRadius = 3.0f;
+			const float effectRadius = 5.5f;
 
 			if (distance < effectRadius)
 			{

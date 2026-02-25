@@ -636,8 +636,8 @@ void Player2_ManualMove()
 	if (Keyboard_IsKeyDown(KK_U)) speed = +0.1f;
 	if (Keyboard_IsKeyDown(KK_J)) speed = -0.1f;
 
-		moveX += forwardX * speed;
-		moveZ += forwardZ * speed;
+	moveX += forwardX * speed;
+	moveZ += forwardZ * speed;
 
 	// 横移動
 	float strafe = 0.0f;
@@ -652,8 +652,6 @@ void Player2_ManualMove()
 
 	moveX += rightX * strafe;
 	moveZ += rightZ * strafe;
-
-	
 
 	if (g_Player2.m_isGround)
 	{
@@ -776,8 +774,8 @@ void Player2_ManualMove()
 	}
 
 	g_Player2.m_position.x += (g_Player2.m_velocity.x + gp2_slopeSpeed.x);
-	g_Player2.m_position.z += (g_Player2.m_velocity.z + gp2_slopeSpeed.y);
-	g_Player2.m_position.y += (g_Player2.m_velocity.y + gp2_slopeSpeed.z);
+	g_Player2.m_position.z += (g_Player2.m_velocity.z + gp2_slopeSpeed.z);
+	g_Player2.m_position.y += (g_Player2.m_velocity.y + gp2_slopeSpeed.y);
 }
 
 void	Player2Draw()
@@ -1183,7 +1181,7 @@ void PLAYER2::OnCollision(const CollisionInfo& info)
 			float dz = m_position.z - bogPos.z;
 			float distance = sqrtf(dx * dx + dz * dz);
 
-			const float effectRadius = 3.0f;
+			const float effectRadius = 5.5f;
 
 			if (distance < effectRadius)
 			{
