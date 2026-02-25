@@ -449,7 +449,7 @@ void Spear::Draw()
 			m_weapon->m_rotation.z);
 		XMMATRIX	translation = XMMatrixTranslation(
 			m_weapon->m_position.x,
-			m_weapon->m_position.y,
+			m_weapon->m_position.y - 0.3f,
 			m_weapon->m_position.z);
 		XMMATRIX world = scale * rotation * translation;
 
@@ -489,7 +489,7 @@ void Spear::OnWeaponCollision(GameObject* target)
 				SetPlayer2_IsAttacked(true);
 				PlayAudio(g_damageSharp);
 				m_hitTargets.insert(target);
-				target->TakeDamage(100.0f); // 仮に20ダメージ
+				target->TakeDamage(15.0f); // 仮に20ダメージ
 
 				//ヒットエフェクト
 				XMFLOAT3 effectPos = target->m_position;
@@ -518,7 +518,7 @@ void Spear::OnWeaponCollision(GameObject* target)
 				PlayAudio(g_damageSharp);
 
 				m_hitTargets.insert(target);
-				target->TakeDamage(100.0f);
+				target->TakeDamage(15.0f);
 
 				//ヒットエフェクト
 				XMFLOAT3 effectPos = target->m_position;
@@ -554,13 +554,55 @@ void Spear::Throw(float power, bool select)
 	shot->m_rotation = m_weapon->m_rotation;
 	shot->m_selectPlayer = select;
 
-	// 飛ばす方向を計算
+	// --- エイムアシスト実装開始 ---
+	// 1. ターゲット（敵プレイヤー）を特定
+	GameObject* target = nullptr;
+	if (select == false) { // 1Pが投げた場合
+		target = (GameObject*)g_PlayerSpear2;
+	}
+	else {               // 2Pが投げた場合
+		target = (GameObject*)g_PlayerSpear1;
+	}
+
+	if (target) {
+		// 2. 自分から敵への方向ベクトルを計算 (XZ平面)
+		XMVECTOR myPos = XMLoadFloat3(&shot->m_position);
+		XMVECTOR targetPos = XMLoadFloat3(&target->m_position);
+		XMVECTOR toTarget = XMVectorSubtract(targetPos, myPos);
+		toTarget = XMVectorSetY(toTarget, 0.0f); // 高低差は無視
+
+		XMVECTOR lengthSq = XMVector3LengthSq(toTarget);
+		float lenSq;
+		XMStoreFloat(&lenSq, lengthSq);
+
+		if (lenSq > 0.0001f) {
+			toTarget = XMVector3Normalize(toTarget);
+
+			// 3. 自分の現在の正面ベクトルを計算
+			float currentRy = shot->m_rotation.y;
+			XMVECTOR myForward = XMVectorSet(sinf(currentRy), 0.0f, cosf(currentRy), 0.0f);
+
+			// 4. 角度差（ドット積）を計算 (cos(15度) ≒ 0.9659)
+			XMVECTOR dotVec = XMVector3Dot(myForward, toTarget);
+			float dot = 0.0f;
+			XMStoreFloat(&dot, dotVec);
+
+			if (dot > 0.9659f) {
+				// 5. エイムアシスト発動：槍の回転角を敵の方向へ書き換える
+				shot->m_rotation.y = atan2f(XMVectorGetX(toTarget), XMVectorGetZ(toTarget));
+			}
+		}
+	}
+	// --- エイムアシスト実装終了 ---
+
+	// 飛ばす方向を計算 (補正された shot->m_rotation.y を使用)
 	float baseSpeed = 0.4f;
 	float finalSpeed = baseSpeed * (1.0f + power);
 	float ry = shot->m_rotation.y;
 	shot->m_velocity.x = sinf(ry) * finalSpeed;
 	shot->m_velocity.y = 0.0f;
 	shot->m_velocity.z = cosf(ry) * finalSpeed;
+
 	MODEL* model = nullptr;
 	bool isMoving = false;
 
@@ -630,7 +672,7 @@ void SpearShot::Update()
 			m_isDead = true;
 		}
 
-		m_velocity.y -= 0.0025f; // 重力
+		m_velocity.y -= 0.0015f; // 重力
 		// 大きいと重い、小さいとふわっとする
 
 		m_position.x += m_velocity.x;
