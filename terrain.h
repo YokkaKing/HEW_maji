@@ -18,10 +18,10 @@
 //================================================================
 //	インクルード
 //================================================================
-#include <d3d11.h>
-#include <DirectXMath.h>
-#include "direct3d.h"
-#include "sprite.h"
+#include<d3d11.h>
+#include<DirectXMath.h>
+#include"direct3d.h"
+#include"sprite.h"
 using namespace DirectX;
 #include"gameObject.h"
 #include<string>
@@ -84,9 +84,9 @@ public:
 	FLOAT m_coolTime[2] = {}; // 変身時間(仮) 今後は他のファイルから持ってくる予定
 
 	std::vector<GameObject*> other;		// 色々な当たり判定の全て
-	XMFLOAT3 m_otherScale[6];
-	XMFLOAT3 m_otherModelScale[6];
-	XMFLOAT3 m_otherPosition[6];
+	XMFLOAT3 m_otherScale[10];
+	XMFLOAT3 m_otherModelScale[10];
+	XMFLOAT3 m_otherPosition[10];
 	MODEL* m_otherModel[3];
 public:
 	void SetObject(XMFLOAT3 pos, XMFLOAT3 scl, std::string tag, int lay, int select);

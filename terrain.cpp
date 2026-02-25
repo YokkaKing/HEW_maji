@@ -16,6 +16,7 @@
 #define TREE_POS_Y (1.0f)
 #define FANCE_POS_Y (2.0f)
 #define FANCE_POS_Y_ (0.0f)
+#define OTHER_TERRAIN_SIZE (10)
 
 //================================================================
 //	インクルード
@@ -31,12 +32,14 @@
 #include"Player2.h"
 #include"Transform.h"
 #include<string>
+#include"Stage.h"
 
 //================================================================
 //	グローバル変数
 //================================================================
 // 地形オブジェクト
 TERRAIN g_Terrain;
+unsigned int g_stageType = 0; // ステージの種類
 
 static ID3D11Device* g_pDevice;
 static ID3D11DeviceContext* g_pContext;
@@ -44,8 +47,6 @@ static ID3D11DeviceContext* g_pContext;
 MODEL* blockModel = nullptr;
 MODEL* slopeModel = nullptr;
 XMFLOAT3 g_pos[2];
-
-int Trand = 0;
 
 // 蟻地獄のためのデータ(endPositionのみ)他は共通のため
 XMFLOAT3 g_antlionData[4] =
@@ -94,59 +95,70 @@ XMFLOAT2 g_antlionData4[4] =
 
 std::string otherModel[2][3] =
 {
-	/*{"asset\\model\\tree.fbx", "asset\\model\\rock.fbx", "asset\\model\\water.fbx" },
-	{"asset\\model\\tree.fbx", "asset\\model\\tree.fbx", "asset\\model\\lava.fbx" }*/
 	{ "asset\\model\\tree.fbx", "asset\\model\\rock.fbx", "asset\\model\\water.fbx" },
 	{ "asset\\model\\rock.fbx", "asset\\model\\rock.fbx", "asset\\model\\lava.fbx" }
 };
 
-int otherM[2][6] =
+int otherM[2][OTHER_TERRAIN_SIZE] =
 {
-	{ 0, 0, 1, 1, 1, 2 },
-	{ 0, 0, 0, 0, 2, 2 }
+	{ 0, 0, 0, 0, 0, 1, 1, 1, 2 },
+	{ 0, 0, 0, 2, 2, 0, 0, 0, 0 }
 };
 
-XMFLOAT3 g_otherPos[2][6] =
+// 初期地形の座標
+XMFLOAT3 g_otherPos[2][OTHER_TERRAIN_SIZE] =
 {
 	{
-		{ -5.0f, 0.5f, -2.0f },
-		{ -1.0f, 0.5f, -4.0f },
-		{ 5.0f, 0.5f, -2.0f },
-		{ 3.0f, 0.5f, 1.0f },
-		{ 6.0f, 0.5f, 7.0f },
+		{ -2.0f, 0.5f, 5.0f },
+		{ 6.0f, 0.5f, 6.0f },
+		{ -3.0f, 0.5f, -5.0f },
+		{ 4.8f, 0.5f, -4.8f },
+		{ 8.0f, 0.5f, -9.0f },
+		{ 2.0f, 0.5f, 1.0f },
+		{ -8.0f, 0.5f, 9.0f },
+		{ -4.5f, 0.5f, -9.0f },
 		{ 0.0f, 0.5f, 0.0f },
 	},
 	{
-		{ 1.0f, 0.5f, 7.0f },
-		{ 2.0f, 0.5f, -5.0f },
-		{ -1.0f, 0.5f, -3.0f },
-		{ -2.0f, 0.5f, 3.0f },
-		{ 5.0f, 0.5f, -2.0f },
-		{ 2.0f, 0.5f, 3.0f },
+		{ -1.0f, 0.5f, 1.0f },
+		{ 4.5f, 0.5f, 7.5f },
+		{ -6.0f, 0.5f, -6.0f },
+		{ -5.0f, 0.5f, 6.0f },
+		{ 5.0f, 0.5f, -6.0f },
+		{ 0.0f, -5.0f, 0.0f },
+		{ 0.0f, -5.0f, 0.0f },
+		{ 0.0f, -5.0f, 0.0f },
+		{ 0.0f, -5.0f, 0.0f },
 	}
 };
 
-XMFLOAT3 g_otherScale[2][6] =
+XMFLOAT3 g_otherScale[2][OTHER_TERRAIN_SIZE] =
 {
 	{
-		{ 0.5f, 2.0f, 0.5f },
-		{ 0.5f, 2.0f, 0.5f },
-		{ 1.4f, 2.0f, 1.4f },
-		{ 1.4f, 2.0f, 1.4f },
-		{ 1.4f, 2.0f, 1.4f },
-		{ 4.0f, 0.5f, 4.0f },
+		{ 0.5f, 5.5f, 0.5f },
+		{ 0.5f, 5.5f, 0.5f },
+		{ 0.5f, 5.5f, 0.5f },
+		{ 0.5f, 5.5f, 0.5f },
+		{ 0.5f, 5.5f, 0.5f },
+		{ 1.4f, 2.7f, 1.4f },
+		{ 1.4f, 2.7f, 1.4f },
+		{ 1.4f, 2.7f, 1.4f },
+		{ 8.0f, 0.5f, 8.0f },
 	},
 	{
-		{ 1.4f, 2.0f, 1.4f },
-		{ 1.4f, 2.0f, 1.4f },
-		{ 1.4f, 2.0f, 1.4f },
-		{ 1.4f, 2.0f, 1.4f },
+		{ 1.4f, 2.7f, 1.4f },
+		{ 1.4f, 2.7f, 1.4f },
+		{ 1.4f, 2.7f, 1.4f },
 		{ 4.0f, 0.5f, 4.0f },
 		{ 4.0f, 0.5f, 4.0f },
+		{ 0.01f, 0.01f, 0.01f },
+		{ 0.01f, 0.01f, 0.01f },
+		{ 0.01f, 0.01f, 0.01f },
+		{ 0.01f, 0.01f, 0.01f },
 	}
 };
 
-XMFLOAT3 g_otherModelScale[2][6] =
+XMFLOAT3 g_otherModelScale[2][OTHER_TERRAIN_SIZE] =
 {
 	{
 		{ 1.0f, 1.0f, 1.0f },
@@ -155,6 +167,9 @@ XMFLOAT3 g_otherModelScale[2][6] =
 		{ 1.0f, 1.0f, 1.0f },
 		{ 1.0f, 1.0f, 1.0f },
 		{ 1.0f, 1.0f, 1.0f },
+		{ 1.0f, 1.0f, 1.0f },
+		{ 1.0f, 1.0f, 1.0f },
+		{ 2.0f, 2.0f, 2.0f },
 	},
 	{
 		{ 1.0f, 1.0f, 1.0f },
@@ -162,33 +177,45 @@ XMFLOAT3 g_otherModelScale[2][6] =
 		{ 1.0f, 1.0f, 1.0f },
 		{ 1.0f, 1.0f, 1.0f },
 		{ 1.0f, 1.0f, 1.0f },
-		{ 1.0f, 1.0f, 1.0f },
+		{ 0.01f, 0.01f, 0.01f },
+		{ 0.01f, 0.01f, 0.01f },
+		{ 0.01f, 0.01f, 0.01f },
+		{ 0.01f, 0.01f, 0.01f },
 	}
 };
 
-XMFLOAT3 g_otherOffset[2][6] =
+XMFLOAT3 g_otherOffset[2][OTHER_TERRAIN_SIZE] =
 {
 	{
 		{ 0.0f, 0.5f, 0.0f },
 		{ 0.0f, 0.5f, 0.0f },
+		{ 0.0f, 0.5f, 0.0f },
+		{ 0.0f, 0.5f, 0.0f },
+		{ 0.0f, 0.5f, 0.0f },
+		{ -0.2f, 0.0f, -0.2f },
+		{ -0.2f, 0.0f, -0.2f },
+		{ -0.2f, 0.0f, -0.2f },
+		{ 0.0f, -0.55f, 0.0f },
+	},
+	{
 		{ -0.2f, 0.0f, -0.2f },
 		{ -0.2f, 0.0f, -0.2f },
 		{ -0.2f, 0.0f, -0.2f },
 		{ 0.0f, -0.5f, 0.0f },
-	},
-	{
-		{ -0.2f, 0.0f, -0.2f },
-		{ -0.2f, 0.0f, -0.2f },
-		{ -0.2f, 0.0f, -0.2f },
-		{ -0.2f, 0.0f, -0.2f },
 		{ 0.0f, -0.5f, 0.0f },
-		{ 0.0f, -0.5f, 0.0f },
+		{ 0.0f, 0.0f, 0.0f },
+		{ 0.0f, 0.0f, 0.0f },
+		{ 0.0f, 0.0f, 0.0f },
+		{ 0.0f, 0.0f, 0.0f },
 	}
 };
 
-std::string g_otherTag[2][6] =
+std::string g_otherTag[2][OTHER_TERRAIN_SIZE] =
 {
 	{
+		"WALL",
+		"WALL",
+		"WALL",
 		"WALL",
 		"WALL",
 		"WALL",
@@ -200,9 +227,12 @@ std::string g_otherTag[2][6] =
 		"WALL",
 		"WALL",
 		"WALL",
-		"WALL",
 		"LAVA",
-		"LAVA"
+		"LAVA",
+		"WALL",
+		"WALL",
+		"WALL",
+		"WALL",
 	}
 };
 
@@ -496,7 +526,13 @@ const std::vector<std::vector<std::vector<std::string>>> Trees =
 
 void TerrainInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, WeaponTerrain p1Set, WeaponTerrain p2Set)
 {
-	Trand = rand() % 2; // 乱数
+	g_stageType = 0; // ステージの種類
+
+	// 溶岩ステージだったら
+	if (g_Stage.GetStageType() == STAGE_TYPE::LAVA)
+	{
+		g_stageType = 1; // 溶岩に対応した数字にする
+	}
 
 	//============================================
 	//	新しい引数のp1,2Setはプレイヤーが選択した 
@@ -557,25 +593,25 @@ void TerrainInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 	XMFLOAT3 initPosWall = g_Terrain.m_motherPosition[1];
 	XMFLOAT3 initPosHill = g_Terrain.m_motherPosition[0];
 
-	for (int i = 0; i < 6; i++)
+	for (int i = 0; i < OTHER_TERRAIN_SIZE; i++)
 	{
-		g_Terrain.m_otherScale[i] = g_otherScale[Trand][i];
-		g_Terrain.m_otherModelScale[i] = g_otherModelScale[Trand][i];
-		g_Terrain.m_otherPosition[i] = g_otherPos[Trand][i];
+		g_Terrain.m_otherScale[i] = g_otherScale[g_stageType][i];
+		g_Terrain.m_otherModelScale[i] = g_otherModelScale[g_stageType][i];
+		g_Terrain.m_otherPosition[i] = g_otherPos[g_stageType][i];
 	}
 	for (int i = 0; i < 3; i++)
 	{
-		g_Terrain.m_otherModel[i] = ModelLoad(otherModel[Trand][i].c_str());
+		g_Terrain.m_otherModel[i] = ModelLoad(otherModel[g_stageType][i].c_str());
 	}
 
-	g_Terrain.other.resize(6);
+	g_Terrain.other.resize(OTHER_TERRAIN_SIZE);
 
-	for (int i = 0; i < 6; i++)
+	for (int i = 0; i < OTHER_TERRAIN_SIZE; i++)
 	{
 		g_Terrain.other[i] = ColliderFactory::CreateBoxObject(
 			g_Terrain.m_otherPosition[i],
 			g_Terrain.m_otherScale[i],
-			g_otherTag[Trand][i],
+			g_otherTag[g_stageType][i],
 			0
 		);
 		g_Terrain.other[i]->m_isStatic = true;
@@ -895,7 +931,7 @@ void TerrainUpdate()
 }
 void TerrainDraw()
 {
-	for (int i = 0; i < 6; i++)
+	for (int i = 0; i < OTHER_TERRAIN_SIZE; i++)
 	{
 		//ワールド行列作成
 		XMMATRIX	scale = XMMatrixScaling(
@@ -907,9 +943,9 @@ void TerrainDraw()
 			0.0f,
 			0.0f);
 		XMMATRIX	translation = XMMatrixTranslation(
-			g_Terrain.m_otherPosition[i].x + g_otherOffset[Trand][i].x,
-			g_Terrain.m_otherPosition[i].y + g_otherOffset[Trand][i].y,
-			g_Terrain.m_otherPosition[i].z + g_otherOffset[Trand][i].z);
+			g_Terrain.m_otherPosition[i].x + g_otherOffset[g_stageType][i].x,
+			g_Terrain.m_otherPosition[i].y + g_otherOffset[g_stageType][i].y,
+			g_Terrain.m_otherPosition[i].z + g_otherOffset[g_stageType][i].z);
 		XMMATRIX	world = scale * rotation * translation;
 
 		//シェーダーへ行列をセット
@@ -917,7 +953,7 @@ void TerrainDraw()
 
 		g_Terrain.other[i]->m_position = g_Terrain.m_otherPosition[i];
 
-		ModelDraw(g_Terrain.m_otherModel[otherM[Trand][i]]);
+		ModelDraw(g_Terrain.m_otherModel[otherM[g_stageType][i]]);
 	}
 
 	// 1Pが変身してないときは描画しない
