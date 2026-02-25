@@ -57,6 +57,8 @@ void TransformInitialize(WeaponTerrain selectP1_A, WeaponTerrain selectP1_B, Wea
     g_Player2.TransformTimer = 0;
     g_Player.m_moveSpeed = 0;
     g_Player.m_jumpForce = 0;
+    g_Player2.m_moveSpeed = 0;
+    g_Player2.m_jumpForce = 0;
 
     g_TransformA_P1 = selectP1_A;
     g_TransformB_P1 = selectP1_B;
@@ -317,40 +319,19 @@ void ApplyTransformEffect()
     // 現在の武器情報を取得
     WeaponTerrain weapon = GetSetWTP1();
 
-    // 進化していないとき
-    if (g_Player.TransformType == TRANSFORM_TYPE::TRANSFORM_TYPE_NONE)
-    {
-        switch (weapon) {
-        case WeaponTerrain::SWORD_WALL:
-            g_Player.m_moveSpeed = 0.2f; g_Player.m_jumpForce = 0.1f; break;
-        case WeaponTerrain::SPEAR_HILL:
-            g_Player.m_moveSpeed = 0.18f; g_Player.m_jumpForce = 0.08f; break;
-        case WeaponTerrain::BOW_HILL:
-            g_Player.m_moveSpeed = 0.18f; g_Player.m_jumpForce = 0.11f; break;
-        case WeaponTerrain::SHURIKEN_:
-            g_Player.m_moveSpeed = 0.24f; g_Player.m_jumpForce = 0.12f; break;
-        case WeaponTerrain::HAMMER_:
-            g_Player.m_moveSpeed = 0.18f; g_Player.m_jumpForce = 0.08f; break;
-        default:
-            g_Player.m_moveSpeed = 0.2f; g_Player.m_jumpForce = 0.1f; break;
-        }
-    }
-    else
-    {
-        switch (weapon) {
-        case WeaponTerrain::SWORD_WALL:
-            g_Player.m_moveSpeed = 0.2f; g_Player.m_jumpForce = 0.1f; break;
-        case WeaponTerrain::SPEAR_HILL:
-            g_Player.m_moveSpeed = 0.18f; g_Player.m_jumpForce = 0.08f; break;
-        case WeaponTerrain::BOW_HILL:
-            g_Player.m_moveSpeed = 0.18f; g_Player.m_jumpForce = 0.11f; break;
-        case WeaponTerrain::SHURIKEN_:
-            g_Player.m_moveSpeed = 0.24f; g_Player.m_jumpForce = 0.12f; break;
-        case WeaponTerrain::HAMMER_:
-            g_Player.m_moveSpeed = 0.18f; g_Player.m_jumpForce = 0.08f; break;
-        default:
-            g_Player.m_moveSpeed = 0.2f; g_Player.m_jumpForce = 0.1f; break;
-        }
+    switch (weapon) {
+    case WeaponTerrain::SWORD_WALL:
+        g_Player.m_moveSpeed = 0.2f; g_Player.m_jumpForce = 0.22f; break; // 0.1f からアップ
+    case WeaponTerrain::SPEAR_HILL:
+        g_Player.m_moveSpeed = 0.18f; g_Player.m_jumpForce = 0.20f; break;
+    case WeaponTerrain::BOW_HILL:
+        g_Player.m_moveSpeed = 0.18f; g_Player.m_jumpForce = 0.24f; break;
+    case WeaponTerrain::SHURIKEN_:
+        g_Player.m_moveSpeed = 0.24f; g_Player.m_jumpForce = 0.25f; break;
+    case WeaponTerrain::HAMMER_:
+        g_Player.m_moveSpeed = 0.18f; g_Player.m_jumpForce = 0.20f; break;
+    default:
+        g_Player.m_moveSpeed = 0.2f; g_Player.m_jumpForce = 0.22f; break;
     }
 }
 
@@ -441,40 +422,19 @@ void ApplyTransformEffect2()
     // 現在の武器情報を取得
     WeaponTerrain weapon = GetSetWTP2();
 
-    // 進化していないとき
-    if (g_Player2.TransformType == TRANSFORM_TYPE2::TRANSFORM_TYPE_NONE)
-    {
-        switch (weapon) {
-        case WeaponTerrain::SWORD_WALL:
-            g_Player2.m_moveSpeed = 0.2f; g_Player2.m_jumpForce = 0.1f; break;
-        case WeaponTerrain::SPEAR_HILL:
-            g_Player2.m_moveSpeed = 0.18f; g_Player2.m_jumpForce = 0.08f; break;
-        case WeaponTerrain::BOW_HILL:
-            g_Player2.m_moveSpeed = 0.18f; g_Player2.m_jumpForce = 0.11f; break;
-        case WeaponTerrain::SHURIKEN_:
-            g_Player2.m_moveSpeed = 0.24f; g_Player2.m_jumpForce = 0.12f; break;
-        case WeaponTerrain::HAMMER_:
-            g_Player2.m_moveSpeed = 0.18f; g_Player2.m_jumpForce = 0.08f; break;
-        default:
-            g_Player2.m_moveSpeed = 0.2f; g_Player2.m_jumpForce = 0.1f; break;
-        }
-    }
-    else
-    {
-        switch (weapon) {
-        case WeaponTerrain::SWORD_WALL:
-            g_Player2.m_moveSpeed = 0.2f; g_Player2.m_jumpForce = 0.1f; break;
-        case WeaponTerrain::SPEAR_HILL:
-            g_Player2.m_moveSpeed = 0.18f; g_Player2.m_jumpForce = 0.08f; break;
-        case WeaponTerrain::BOW_HILL:
-            g_Player2.m_moveSpeed = 0.18f; g_Player2.m_jumpForce = 0.11f; break;
-        case WeaponTerrain::SHURIKEN_:
-            g_Player2.m_moveSpeed = 0.24f; g_Player2.m_jumpForce = 0.12f; break;
-        case WeaponTerrain::HAMMER_:
-            g_Player2.m_moveSpeed = 0.18f; g_Player2.m_jumpForce = 0.08f; break;
-        default:
-            g_Player2.m_moveSpeed = 0.2f; g_Player2.m_jumpForce = 0.1f; break;
-        }
+    switch (weapon) {
+    case WeaponTerrain::SWORD_WALL:
+        g_Player2.m_moveSpeed = 0.2f; g_Player2.m_jumpForce = 0.22f; break; // g_Player2 に直し、数値も上げる
+    case WeaponTerrain::SPEAR_HILL:
+        g_Player2.m_moveSpeed = 0.18f; g_Player2.m_jumpForce = 0.20f; break;
+    case WeaponTerrain::BOW_HILL:
+        g_Player2.m_moveSpeed = 0.18f; g_Player2.m_jumpForce = 0.24f; break;
+    case WeaponTerrain::SHURIKEN_:
+        g_Player2.m_moveSpeed = 0.24f; g_Player2.m_jumpForce = 0.25f; break;
+    case WeaponTerrain::HAMMER_:
+        g_Player2.m_moveSpeed = 0.18f; g_Player2.m_jumpForce = 0.20f; break;
+    default:
+        g_Player2.m_moveSpeed = 0.2f; g_Player2.m_jumpForce = 0.22f; break;
     }
 }
 

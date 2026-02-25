@@ -422,6 +422,10 @@ void SetScene(SCENE scene) //シーンを切り替える
 	//実行中のシーンを終了させる
 	switch (g_Scene)	//現在シーンの終了関数を呼び出す
 	{
+		for (int i = 0; i < 2; i++) {
+			extern Controller g_Controller[2];
+			g_Controller[i].SetVibration(0, 0);
+		}
 		case SCENE_NONE:
 			break;
 		case SCENE_TEAMLOGO:

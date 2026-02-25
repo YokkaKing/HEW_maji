@@ -28,6 +28,7 @@ static ID3D11ShaderResourceView* g_ReadyTexture = NULL;
 const float SLOT_WIDTH = 450.0f;
 const float SLOT_HEIGHT = 650.0f;
 static XMFLOAT2 g_SlotPos[2];
+static float g_VibrationTimer[2] = { 0.0f, 0.0f };
 
 void Entry_Initialize(ID3D11Device* device, ID3D11DeviceContext* context) {
     g_pContext = context;
@@ -75,23 +76,36 @@ int GetControllerIndexFromPlayerNo(int playerNo) {
 }
 
 void Entry_Update() {
+
+    for (int i = 0; i < 2; i++) {
+        if (g_VibrationTimer[i] > 0.0f) {
+            g_VibrationTimer[i] -= 1.0f / 60.0f;
+            if (g_VibrationTimer[i] <= 0.0f) {
+                g_Controller[i].SetVibration(0.0f, 0.0f); // 時間が来たら停止
+            }
+        }
+    }
+
     if (GetFadeState() != FADE_NONE) return;
 
     int readyCount = 0;
-
-    int currentReady = 0;
     for (int i = 0; i < 2; i++) {
-        if (g_Cursors[i].isSelected) currentReady++;
+        if (g_Cursors[i].isSelected) readyCount++;
     }
 
-    if (currentReady >= 2) {
+    if (readyCount >= 2) {
+        bool nextSceneRequested = false;
         // Enterキー または コントローラーのYボタンで次へ
-        bool nextScene = Keyboard_IsKeyDownTrigger(KK_ENTER);
+        if(Keyboard_IsKeyDownTrigger(KK_ENTER))nextSceneRequested=true;
         for (int i = 0; i < 2; i++) {
-            if (g_Controller[i].IsButtonPushed(ControllerButton::Y_BUTTON)) nextScene = true;
+            if (g_Controller[i].IsButtonPushed(ControllerButton::Y_BUTTON)) nextSceneRequested = true;
         }
 
-        if (nextScene) {
+        if (nextSceneRequested) {
+            for (int i = 0; i < 2; i++) {
+                g_Controller[i].SetVibration(0.4f, 0.4f); // 振動強さ
+                g_VibrationTimer[i] = 0.3f;              // 振動時間
+            }
             XMFLOAT4 color(0.0f, 0.0f, 0.0f, 1.0f);
             SetFade(40.0f, color, FADE_OUT, SCENE_SELECT_WT);
             return;

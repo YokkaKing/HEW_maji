@@ -686,7 +686,7 @@ void TerrainUpdate()
 		{
 			g_Terrain.m_isChange[0] = true; // 1Pの変身を確認
 			g_Terrain.m_coolTime[0] = 45.0f;
-			g_pos[0] = g_Terrain.m_motherPosition[1];
+			g_pos[0] = GetPlayer2Position(); // プレイヤー2の場所
 		}
 	}
 	else
@@ -704,7 +704,7 @@ void TerrainUpdate()
 		{
 			g_Terrain.m_isChange[1] = true; // 2Pの変身を確認
 			g_Terrain.m_coolTime[1] = 45.0f;
-			g_pos[1] = g_Terrain.m_motherPosition[0];
+			g_pos[1] = GetPlayerPosition();
 		}
 	}
 	else
