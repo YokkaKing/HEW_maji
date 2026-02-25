@@ -729,7 +729,13 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 		&& g_Player.m_koyoteTime > 0.0f) //Aボタン**
 
 	{
+<<<<<<< HEAD
 		g_Player.m_velocity.y = g_Player.m_jumpForce;
+=======
+
+		g_Player.m_velocity.y = g_Player.m_jumpForce;
+
+>>>>>>> d72352c6df40710094179bc2e77530dcee8b3a9c
 		g_Player.m_isGround = false;
 		g_Player.m_koyoteTime = 0.0f;
 		if (g_Player.m_isTransformed)
