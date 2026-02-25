@@ -348,77 +348,79 @@ const std::vector<std::vector<std::vector<std::string>>> Walls =
 	},
 };
 
-// 塀の当たり判定
-//const std::vector<std::vector<std::vector<std::string>>> Fances =
-//{
-//	{
-//		{"nnnnnannnnnnnnannnnn"},
-//		{"nnnnnnnnnnnnnnnnnnnn"},
-//		{"nnnnnnnnnnnnnnnnnnnn"},
-//		{"nnnnnnnnnnnnnnnnnnnn"},
-//		{"nnnnnnnnnnnnnnnnnnnn"},
-//		{"annnnnnnnnnnnnnnnnna"},
-//		{"nnnnnnnnnnnnnnnnnnnn"},
-//		{"nnnnnnnnnnnnnnnnnnnn"},
-//		{"nnnnnnnnnnnnnnnnnnnn"},
-//		{"nnnnnnnnnnnnnnnnnnnn"},
-//		{"nnnnnnnnnnnnnnnnnnnn"},
-//		{"nnnnnnnnnnnnnnnnnnnn"},
-//		{"nnnnnnnnnnnnnnnnnnnn"},
-//		{"nnnnnnnnnnnnnnnnnnnn"},
-//		{"annnnnnnnnnnnnnnnnna"},
-//		{"nnnnnnnnnnnnnnnnnnnn"},
-//		{"nnnnnnnnnnnnnnnnnnnn"},
-//		{"nnnnnnnnnnnnnnnnnnnn"},
-//		{"nnnnnnnnnnnnnnnnnnnn"},
-//		{"nnnnnannnnnnnnannnnn"},
-//	},
-//	{
-//		{"nnnnnannnnnnnnannnnn"},
-//		{"nnnnnnnnnnnnnnnnnnnn"},
-//		{"nnnnnnnnnnnnnnnnnnnn"},
-//		{"nnnnnnnnnnnnnnnnnnnn"},
-//		{"nnnnnnnnnnnnnnnnnnnn"},
-//		{"annnnnnnnnnnnnnnnnna"},
-//		{"nnnnnnnnnnnnnnnnnnnn"},
-//		{"nnnnnnnnnnnnnnnnnnnn"},
-//		{"nnnnnnnnnnnnnnnnnnnn"},
-//		{"nnnnnnnnnnnnnnnnnnnn"},
-//		{"nnnnnnnnnnnnnnnnnnnn"},
-//		{"nnnnnnnnnnnnnnnnnnnn"},
-//		{"nnnnnnnnnnnnnnnnnnnn"},
-//		{"nnnnnnnnnnnnnnnnnnnn"},
-//		{"annnnnnnnnnnnnnnnnna"},
-//		{"nnnnnnnnnnnnnnnnnnnn"},
-//		{"nnnnnnnnnnnnnnnnnnnn"},
-//		{"nnnnnnnnnnnnnnnnnnnn"},
-//		{"nnnnnnnnnnnnnnnnnnnn"},
-//		{"nnnnnannnnnnnnannnnn"},
-//	},
-//	{
-//		{"nnnnnannnnnnnnannnnn"},
-//		{"nnnnnnnnnnnnnnnnnnnn"},
-//		{"nnnnnnnnnnnnnnnnnnnn"},
-//		{"nnnnnnnnnnnnnnnnnnnn"},
-//		{"nnnnnnnnnnnnnnnnnnnn"},
-//		{"annnnnnnnnnnnnnnnnna"},
-//		{"nnnnnnnnnnnnnnnnnnnn"},
-//		{"nnnnnnnnnnnnnnnnnnnn"},
-//		{"nnnnnnnnnnnnnnnnnnnn"},
-//		{"nnnnnnnnnnnnnnnnnnnn"},
-//		{"nnnnnnnnnnnnnnnnnnnn"},
-//		{"nnnnnnnnnnnnnnnnnnnn"},
-//		{"nnnnnnnnnnnnnnnnnnnn"},
-//		{"nnnnnnnnnnnnnnnnnnnn"},
-//		{"annnnnnnnnnnnnnnnnna"},
-//		{"nnnnnnnnnnnnnnnnnnnn"},
-//		{"nnnnnnnnnnnnnnnnnnnn"},
-//		{"nnnnnnnnnnnnnnnnnnnn"},
-//		{"nnnnnnnnnnnnnnnnnnnn"},
-//		{"nnnnnannnnnnnnannnnn"},
-//	},
-//};
-const std::vector<std::vector<std::vector<std::string>>> Fances =
+// プレイヤー用の塀の当たり判定
+const std::vector<std::vector<std::vector<std::string>>> pFances =
+{
+	{
+		{"nnnnnannnnnnnnannnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"cnnnnnnnnnnnnnnnnnnd"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"cnnnnnnnnnnnnnnnnnnd"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnbnnnnnnnnbnnnnn"},
+	},
+	{
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+	},
+	{
+		{"nnnnnannnnnnnnannnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"cnnnnnnnnnnnnnnnnnnd"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"cnnnnnnnnnnnnnnnnnnd"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnbnnnnnnnnbnnnnn"},
+	},
+};
+
+// 手裏剣用の塀の当たり判定
+const std::vector<std::vector<std::vector<std::string>>> sFances =
 {
 	{
 		{"nnannnann"},
@@ -1121,7 +1123,8 @@ void TerrainSet(WeaponTerrain set, bool playerSelect)
 		g_Terrain.SimpleObjects(Walls, { 1.0f, 1.0f, 1.0f }, TERRAIN_TYPE::WALL, g_Terrain.m_motherPosition[select], select);
 		break;
 	case WeaponTerrain::SHURIKEN_:
-		g_Terrain.SimpleObjects(Fances, { 1.2f, 1.2f, 1.2f }, TERRAIN_TYPE::FANCE, g_Terrain.m_motherPosition[select], select);
+		g_Terrain.SimpleObjects(sFances, { 1.2f, 1.2f, 1.2f }, TERRAIN_TYPE::FANCE_S, g_Terrain.m_motherPosition[select], select);
+		g_Terrain.SimpleObjects(pFances, { 0.5f, 0.5f, 0.5f }, TERRAIN_TYPE::FANCE_P, g_Terrain.m_motherPosition[select], select);
 		break;
 	default:
 		break;
@@ -1213,6 +1216,7 @@ void TERRAIN::SetObject(XMFLOAT3 pos, XMFLOAT3 scl, std::string tag, int lay, in
 		if (raw_ptr->m_tag == "HILL") hills[select].push_back(raw_ptr);
 		if (raw_ptr->m_tag == "WALL") walls[select].push_back(raw_ptr);
 		if (raw_ptr->m_tag == "FANCE") fances[select].push_back(raw_ptr);
+		if (raw_ptr->m_tag == "BOUNCE") fances[select].push_back(raw_ptr);
 		if (raw_ptr->m_tag == "TREEP1") trees[0].push_back(raw_ptr);
 		if (raw_ptr->m_tag == "TREEP2") trees[1].push_back(raw_ptr);
 		if (raw_ptr->m_tag == "BOGP1") bogs[0].push_back(raw_ptr);
@@ -1586,8 +1590,15 @@ void TERRAIN::CreateHit(std::vector<TERRAIN_OBJECT> terrain, XMFLOAT3 motherPosi
 			bogs[select][i]->m_scale = terrain[i].m_size;
 			break;
 
-		case TERRAIN_TYPE::FANCE:
+		case TERRAIN_TYPE::FANCE_P:
 			SetObject(pos, terrain[i].m_size, "FANCE", 0, select);
+			fances[select][i]->m_position = pos;	// 座標を格納
+			fances[select][i]->m_velocity = terrain[i].m_distance;
+			fances[select][i]->m_scale = terrain[i].m_size;
+			break;
+
+		case TERRAIN_TYPE::FANCE_S:
+			SetObject(pos, terrain[i].m_size, "BOUNCE", 0, select);
 			fances[select][i]->m_position = pos;	// 座標を格納
 			fances[select][i]->m_velocity = terrain[i].m_distance;
 			fances[select][i]->m_scale = terrain[i].m_size;

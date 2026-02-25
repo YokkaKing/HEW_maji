@@ -303,7 +303,7 @@ void ShurikenShot::OnCollision(const CollisionInfo& info)
 {
 	if (!info.other || m_bounceCooldown > 0.0f) return;
 
-	if (info.other->m_tag == "FANCE")
+	if (info.other->m_tag == "BOUNCE")
 	{
 		if (m_bounceCount < 1)
 		{

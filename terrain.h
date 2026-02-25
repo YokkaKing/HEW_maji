@@ -41,7 +41,8 @@ enum class TERRAIN_TYPE
 	WALL,
 	TREE,
 	BOG,
-	FANCE,
+	FANCE_P,
+	FANCE_S,
 
 	MAX
 };
