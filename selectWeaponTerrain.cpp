@@ -32,6 +32,7 @@ static ID3D11ShaderResourceView* g_TextureUI[selectCount] = { NULL };
 static ID3D11Device* g_pDevice = nullptr;
 static ID3D11DeviceContext* g_pContext = nullptr;
 extern Controller g_Controller[2];
+static float g_SelectVibrationTimer[2] = { 0.0f, 0.0f };
 
 static inGameWTselect g_selectData;
 static int g_cursorP1 = 0;
@@ -510,6 +511,8 @@ void selectWT_Update()
 
         if (Keyboard_IsKeyDownTrigger(KK_LEFTCONTROL) || g_Controller[0].IsButtonPushed(ControllerButton::A_BUTTON))
         {
+            g_Controller[0].SetVibration(0.4f, 0.4f);
+            g_vibrationTimerP1 = 10;
             PlayAudio(g_button, false);
             g_isP1Ready = true;
             g_selectData.player1 = static_cast<WeaponTerrain>(g_cursorP1+1);
@@ -576,6 +579,8 @@ void selectWT_Update()
 
         if (Keyboard_IsKeyDownTrigger(KK_D5) || g_Controller[1].IsButtonPushed(ControllerButton::A_BUTTON))
         {
+            g_Controller[1].SetVibration(0.4f, 0.4f);
+            g_vibrationTimerP2 = 10;
             PlayAudio(g_button, false);
             g_isP2Ready = true;
             g_selectData.player2 = static_cast<WeaponTerrain>(g_cursorP2+1);
@@ -646,11 +651,14 @@ void selectWT_Update()
     else if (g_goState == GO_WAIT_FOR_A)
     {
    
-        if (!g_isStarted && (Keyboard_IsKeyDownTrigger(KK_A)|| g_Controller[0].IsButtonPushed(ControllerButton::A_BUTTON)))
+        bool p1Pressed = Keyboard_IsKeyDownTrigger(KK_A) || g_Controller[0].IsButtonPushed(ControllerButton::A_BUTTON);
+        bool p2Pressed = g_Controller[1].IsButtonPushed(ControllerButton::A_BUTTON); 
+        if (!g_isStarted && (p1Pressed || p2Pressed))
         {
             g_Controller[0].SetVibration(1.0f, 1.0f);
             g_Controller[1].SetVibration(1.0f, 1.0f);
             g_vibrationTimerP1 = 20;
+            g_vibrationTimerP2 = 20;
             PlayAudio(g_gameStart, false);
             XMFLOAT4 fadeColor(0.0f, 0.0f, 0.0f, 1.0f);
             SetFade(40.0f, fadeColor, FADE_STATE::FADE_OUT, SCENE_GAME);
