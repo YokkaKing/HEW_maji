@@ -729,10 +729,12 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 		&& g_Player.m_koyoteTime > 0.0f) //Aボタン**
 
 	{
+
 		g_Player.m_velocity.y = g_Player.m_jumpForce;
+
 		g_Player.m_isGround = false;
 		g_Player.m_koyoteTime = 0.0f;
-		if(g_Player.m_isTransformed)
+		if (g_Player.m_isTransformed)
 		{
 			switch (g_Player.m_currentWT)
 			{
@@ -746,7 +748,7 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 				ModelPlayClip(g_Player.m_model, 181, 240, 60.0f, false, 1.0f);
 				break;
 			case WeaponTerrain::HAMMER_: // hammer
-				ModelPlayClip(g_Player.m_model, 601,660, 60.0f, false, 1.0f);
+				ModelPlayClip(g_Player.m_model, 601, 660, 60.0f, false, 1.0f);
 				break;
 
 			case WeaponTerrain::SHURIKEN_: //shuriken
@@ -755,7 +757,7 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 			}
 		}
 		else
-		{	
+		{
 			switch (g_setWTP1)
 			{
 			case WeaponTerrain::SWORD_WALL: // Sword
@@ -801,6 +803,7 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 	g_Player.m_position.z += (g_Player.m_velocity.z + gp1_slopeSpeed.y);
 	g_Player.m_position.y += (g_Player.m_velocity.y + gp1_slopeSpeed.z);
 }
+
 
 void PlayerDraw() 
 {
@@ -1226,7 +1229,7 @@ void PLAYER::OnCollision(const CollisionInfo& info)
 			float dz = m_position.z - bogPos.z;
 			float distance = sqrtf(dx * dx + dz * dz);
 
-			const float effectRadius = 3.0f;
+			const float effectRadius = 5.5f;
 
 			if (distance < effectRadius)
 			{

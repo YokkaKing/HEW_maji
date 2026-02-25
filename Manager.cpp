@@ -27,6 +27,7 @@
 #include "ResultSystem.h"
 #include "selectWeaponUi3D.h"
 #include "TeamLogo.h"
+#include "SelectMap.h"
 //================================================================
 //	グローバル変数
 //================================================================
@@ -108,7 +109,9 @@ void Manager_Update()
 		case SCENE_SELECT_WT:
 			selectWT_Update();
 			Selectweaponui3d_Update();
-
+			break;
+		case SCENE_SELECT_MAP:
+			SelectMap_Update();
 			break;
 		case SCENE_GAME:
 		{
@@ -355,9 +358,11 @@ void Manager_Draw_Player1()
 			Entry_Draw();
 			break;
 		case SCENE_SELECT_WT:
-			
 			selectWT_Draw(0);
 			Selectweaponui3d_Draw();
+			break;
+		case SCENE_SELECT_MAP:
+			SelectMap_Draw();
 			break;
 		case SCENE_GAME:
 			Game_Draw_Player1();
@@ -391,6 +396,9 @@ void Manager_Draw_Player2()
 
 		selectWT_Draw(1);
 		Selectweaponui3d_Draw();
+		break;
+	case SCENE_SELECT_MAP:
+		SelectMap_Draw();
 		break;
 	case SCENE_GAME:
 		Game_Draw_Player2();
@@ -441,6 +449,9 @@ void SetScene(SCENE scene) //シーンを切り替える
 			selectWT_Finalize();
 			Selectweaponui3d_Finalize();
 			break;
+		case SCENE_SELECT_MAP:
+			SelectMap_Finalize();
+			break;
 		case SCENE_GAME:
 			Game_Finalize();
 			break;
@@ -466,6 +477,9 @@ void SetScene(SCENE scene) //シーンを切り替える
 			break;
 		case SCENE_ENTRY:
 			Entry_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
+			break;
+		case SCENE_SELECT_MAP:
+			SelectMap_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
 			break;
 		case SCENE_GAME:
 			StopAudio(g_title);
