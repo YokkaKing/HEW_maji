@@ -14,6 +14,8 @@
 #define ANTLION_POS_Y_ (-1.9f)
 #define BOG_POS_Y (-0.3f)
 #define TREE_POS_Y (1.0f)
+#define FANCE_POS_Y (2.0f)
+#define FANCE_POS_Y_ (0.0f)
 
 //================================================================
 //	インクルード
@@ -346,6 +348,115 @@ const std::vector<std::vector<std::vector<std::string>>> Walls =
 	},
 };
 
+// プレイヤー用の塀の当たり判定
+const std::vector<std::vector<std::vector<std::string>>> pFances =
+{
+	{
+		{"nnnnnannnnnnnnannnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"cnnnnnnnnnnnnnnnnnnd"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"cnnnnnnnnnnnnnnnnnnd"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnbnnnnnnnnbnnnnn"},
+	},
+	{
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+	},
+	{
+		{"nnnnnannnnnnnnannnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"cnnnnnnnnnnnnnnnnnnd"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"cnnnnnnnnnnnnnnnnnnd"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnbnnnnnnnnbnnnnn"},
+	},
+};
+
+// 手裏剣用の塀の当たり判定
+const std::vector<std::vector<std::vector<std::string>>> sFances =
+{
+	{
+		{"nnannnann"},
+		{"nnnnnnnnn"},
+		{"cnnnnnnnd"},
+		{"nnnnnnnnn"},
+		{"nnnnnnnnn"},
+		{"nnnnnnnnn"},
+		{"cnnnnnnnd"},
+		{"nnnnnnnnn"},
+		{"nnbnnnbnn"},
+	},
+	{
+		{"nnnnnnnnn"},
+		{"nnnnnnnnn"},
+		{"nnnnnnnnn"},
+		{"nnnnnnnnn"},
+		{"nnnnnnnnn"},
+		{"nnnnnnnnn"},
+		{"nnnnnnnnn"},
+		{"nnnnnnnnn"},
+		{"nnnnnnnnn"},
+	},
+	{
+		{"nnannnann"},
+		{"nnnnnnnnn"},
+		{"cnnnnnnnd"},
+		{"nnnnnnnnn"},
+		{"nnnnnnnnn"},
+		{"nnnnnnnnn"},
+		{"cnnnnnnnd"},
+		{"nnnnnnnnn"},
+		{"nnbnnnbnn"},
+	},
+};
+
 // 沼の当たり判定
 const std::vector<std::vector<std::vector<std::string>>> Bogs =
 {
@@ -401,6 +512,7 @@ void TerrainInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 	g_Terrain.m_moveTerrain[2] = ModelLoad("asset\\model\\antlion.fbx");
 	g_Terrain.m_moveTerrain[3] = ModelLoad("asset\\model\\numa.fbx");
 	g_Terrain.m_moveTerrain[4] = ModelLoad("asset\\model\\trees.fbx");
+	g_Terrain.m_moveTerrain[5] = ModelLoad("asset\\model\\fance.fbx");
 	blockModel = ModelLoad("asset\\model\\block.fbx");
 	slopeModel = ModelLoad("asset\\model\\block3.fbx");
 
@@ -411,17 +523,20 @@ void TerrainInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 	g_Terrain.m_terrainScale[2] = { 5.0f, 5.5f, 5.0f };
 	g_Terrain.m_terrainScale[3] = { 5.0f, 5.0f, 5.0f };
 	g_Terrain.m_terrainScale[4] = { 5.0f, 5.0f, 5.0f };
+	g_Terrain.m_terrainScale[5] = { 5.0f, 5.0f, 5.0f };
 	g_Terrain.m_terrainRotation[0] = { 0.0f,0.0f,0.0f };
 	g_Terrain.m_terrainRotation[1] = { 0.0f,0.0f,0.0f };
 	g_Terrain.m_terrainRotation[2] = { 0.0f,0.0f,0.0f };
 	g_Terrain.m_terrainRotation[3] = { 0.0f,0.0f,0.0f };
 	g_Terrain.m_terrainRotation[4] = { 0.0f,0.0f,0.0f };
+	g_Terrain.m_terrainRotation[5] = { 0.0f,0.0f,0.0f };
 
 	g_Terrain.m_terrainScaling[0] = { 5.0f, 5.0f, 5.0f };
 	g_Terrain.m_terrainScaling[1] = { 10.0f, 6.5f, 10.0f };
 	g_Terrain.m_terrainScaling[2] = { 10.0f, 8.0f, 10.0f };
 	g_Terrain.m_terrainScaling[3] = { 10.0f, 5.0f, 10.0f };
 	g_Terrain.m_terrainScaling[4] = { 7.0f, 7.0f, 7.0f };
+	g_Terrain.m_terrainScaling[5] = { 10.0f, 10.0f, 10.0f };
 
 	g_Terrain.m_motherPosition[0].y -= 5.0f;
 	g_Terrain.m_motherPosition[1].y -= 5.0f;
@@ -545,6 +660,7 @@ void TerrainFinalize()
 		g_Terrain.trees[i].clear();
 		g_Terrain.ants[i].clear();
 		g_Terrain.bogs[i].clear();
+		g_Terrain.fances[i].clear();
 	}
 
 	g_Terrain.other.clear();
@@ -649,7 +765,7 @@ void TerrainUpdate()
 			g_Terrain.UpdateObject(g_Terrain.walls[0], g_Terrain.m_motherPosition[1], TRUE); // P1の地形の当たり判定
 			break;
 		case WeaponTerrain::SHURIKEN_:
-			g_Terrain.UpdateObject(g_Terrain.walls[0], g_Terrain.m_motherPosition[0], FALSE); // P1の地形の当たり判定
+			g_Terrain.UpdateObject(g_Terrain.fances[0], g_Terrain.m_motherPosition[0], FALSE); // P1の地形の当たり判定
 			break;
 		}
 	}
@@ -672,7 +788,7 @@ void TerrainUpdate()
 			posY = 0.7f;
 			break;
 		case WeaponTerrain::SHURIKEN_:
-			posY = 0.7f;
+			posY = FANCE_POS_Y;
 			break;
 		default:
 			break;
@@ -697,7 +813,7 @@ void TerrainUpdate()
 				g_Terrain.UpdateObject(g_Terrain.walls[0], g_Terrain.m_motherPosition[1], TRUE); // P1の地形の当たり判定
 				break;
 			case WeaponTerrain::SHURIKEN_:
-				g_Terrain.UpdateObject(g_Terrain.walls[0], g_Terrain.m_motherPosition[0], TRUE); // P1の地形の当たり判定
+				g_Terrain.UpdateObject(g_Terrain.fances[0], g_Terrain.m_motherPosition[0], TRUE); // P1の地形の当たり判定
 				break;
 			}
 		}
@@ -723,7 +839,7 @@ void TerrainUpdate()
 			g_Terrain.UpdateObject(g_Terrain.walls[1], g_Terrain.m_motherPosition[1], TRUE); // P1の地形の当たり判定
 			break;
 		case WeaponTerrain::SHURIKEN_:
-			g_Terrain.UpdateObject(g_Terrain.walls[1], g_Terrain.m_motherPosition[1], FALSE); // P1の地形の当たり判定
+			g_Terrain.UpdateObject(g_Terrain.fances[1], g_Terrain.m_motherPosition[1], FALSE); // P1の地形の当たり判定
 			break;
 		}
 	}
@@ -746,7 +862,7 @@ void TerrainUpdate()
 			posY = 0.7f;
 			break;
 		case WeaponTerrain::SHURIKEN_:
-			posY = 0.7f;
+			posY = FANCE_POS_Y;
 			break;
 		default:
 			break;
@@ -771,7 +887,7 @@ void TerrainUpdate()
 				g_Terrain.UpdateObject(g_Terrain.walls[1], g_Terrain.m_motherPosition[1], TRUE); // P1の地形の当たり判定
 				break;
 			case WeaponTerrain::SHURIKEN_:
-				g_Terrain.UpdateObject(g_Terrain.walls[1], g_Terrain.m_motherPosition[1], TRUE); // P1の地形の当たり判定
+				g_Terrain.UpdateObject(g_Terrain.fances[1], g_Terrain.m_motherPosition[1], TRUE); // P1の地形の当たり判定
 				break;
 			}
 		}
@@ -824,7 +940,7 @@ void TerrainDraw()
 			no = 1;
 			break;
 		case WeaponTerrain::SHURIKEN_:
-			no = 1;
+			no = 5;
 			break;
 		default:
 			break;
@@ -870,7 +986,7 @@ void TerrainDraw()
 			ModelDraw(g_Terrain.m_moveTerrain[1]);
 			break;
 		case WeaponTerrain::SHURIKEN_:
-			ModelDraw(g_Terrain.m_moveTerrain[1]);
+			ModelDraw(g_Terrain.m_moveTerrain[5]);
 			break;
 		default:
 			break;
@@ -896,7 +1012,7 @@ void TerrainDraw()
 			no = 1;
 			break;
 		case WeaponTerrain::SHURIKEN_:
-			no = 1;
+			no = 5;
 			break;
 		default:
 			break;
@@ -942,7 +1058,7 @@ void TerrainDraw()
 			ModelDraw(g_Terrain.m_moveTerrain[1]);
 			break;
 		case WeaponTerrain::SHURIKEN_:
-			ModelDraw(g_Terrain.m_moveTerrain[1]);
+			ModelDraw(g_Terrain.m_moveTerrain[5]);
 			break;
 		default:
 			break;
@@ -1007,7 +1123,8 @@ void TerrainSet(WeaponTerrain set, bool playerSelect)
 		g_Terrain.SimpleObjects(Walls, { 1.0f, 1.0f, 1.0f }, TERRAIN_TYPE::WALL, g_Terrain.m_motherPosition[select], select);
 		break;
 	case WeaponTerrain::SHURIKEN_:
-		g_Terrain.SimpleObjects(Walls, { 1.0f, 1.0f, 1.0f }, TERRAIN_TYPE::WALL, g_Terrain.m_motherPosition[select], select);
+		g_Terrain.SimpleObjects(sFances, { 1.2f, 1.2f, 1.2f }, TERRAIN_TYPE::FANCE_S, g_Terrain.m_motherPosition[select], select);
+		g_Terrain.SimpleObjects(pFances, { 0.5f, 0.5f, 0.5f }, TERRAIN_TYPE::FANCE_P, g_Terrain.m_motherPosition[select], select);
 		break;
 	default:
 		break;
@@ -1039,7 +1156,7 @@ void TERRAIN::ClearPlayerObjects(WeaponTerrain set, int select)
 		targetList = &walls[select];
 		break;
 	case WeaponTerrain::SHURIKEN_:
-		targetList = &walls[select];
+		targetList = &fances[select];
 		break;
 	default:
 		break;
@@ -1098,6 +1215,8 @@ void TERRAIN::SetObject(XMFLOAT3 pos, XMFLOAT3 scl, std::string tag, int lay, in
 	{
 		if (raw_ptr->m_tag == "HILL") hills[select].push_back(raw_ptr);
 		if (raw_ptr->m_tag == "WALL") walls[select].push_back(raw_ptr);
+		if (raw_ptr->m_tag == "FANCE") fances[select].push_back(raw_ptr);
+		if (raw_ptr->m_tag == "BOUNCE") fances[select].push_back(raw_ptr);
 		if (raw_ptr->m_tag == "TREEP1") trees[0].push_back(raw_ptr);
 		if (raw_ptr->m_tag == "TREEP2") trees[1].push_back(raw_ptr);
 		if (raw_ptr->m_tag == "BOGP1") bogs[0].push_back(raw_ptr);
@@ -1469,6 +1588,20 @@ void TERRAIN::CreateHit(std::vector<TERRAIN_OBJECT> terrain, XMFLOAT3 motherPosi
 			bogs[select][i]->m_position = pos;	// 座標を格納
 			bogs[select][i]->m_velocity = terrain[i].m_distance;
 			bogs[select][i]->m_scale = terrain[i].m_size;
+			break;
+
+		case TERRAIN_TYPE::FANCE_P:
+			SetObject(pos, terrain[i].m_size, "FANCE", 0, select);
+			fances[select][i]->m_position = pos;	// 座標を格納
+			fances[select][i]->m_velocity = terrain[i].m_distance;
+			fances[select][i]->m_scale = terrain[i].m_size;
+			break;
+
+		case TERRAIN_TYPE::FANCE_S:
+			SetObject(pos, terrain[i].m_size, "BOUNCE", 0, select);
+			fances[select][i]->m_position = pos;	// 座標を格納
+			fances[select][i]->m_velocity = terrain[i].m_distance;
+			fances[select][i]->m_scale = terrain[i].m_size;
 			break;
 
 		case TERRAIN_TYPE::MAX:
