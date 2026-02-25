@@ -202,7 +202,7 @@ void Camera_Update()
 	float rotX = 0.0f;
 	float rotY = 0.0f;
 
-	float inputX = g_Controller[0].GetRightStickX() * -2.0f;
+	float inputX = g_Controller[0].GetRightStickX() * 2.0f;
 	float inputY = g_Controller[0].GetRightStickY() * 1.5f;
 
 	if (Keyboard_IsKeyDown(KK_Q)) inputX = 1.0f;
@@ -320,7 +320,7 @@ void Camera2_Update()
 	static float nowPitch = 22.0f; // 垂直回転 (上下)
 
 	//コントローラー・キーボードからの入力を取得
-	float inputX = g_Controller[1].GetRightStickX() * -2.0f;
+	float inputX = g_Controller[1].GetRightStickX() * 2.0f;
 	float inputY = g_Controller[1].GetRightStickY() * 1.5f;
 
 	if (Keyboard_IsKeyDown(KK_Y)) inputX = 1.0f;

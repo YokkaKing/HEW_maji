@@ -793,10 +793,10 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 
 	// Aボタンを押した && コヨーテタイムが0.0fより大きい
 	int idx = GetControllerIndexFromPlayerNo(0);
-	if (idx != -1 && g_Controller[idx].IsButtonPushed(ControllerButton::A_BUTTON) || Keyboard_IsKeyDown(KK_SPACE)
+	if ((idx != -1 && g_Controller[idx].IsButtonPushed(ControllerButton::A_BUTTON) || Keyboard_IsKeyDown(KK_SPACE))
 		&& g_Player.m_koyoteTime > 0.0f) //Aボタン**
 	{
-		g_Player.m_velocity.y = g_Player.m_jumpForce;
+		g_Player.m_velocity.y = g_Player.m_jumpForce*2;
 		g_Player.m_isGround = false;
 		g_Player.m_koyoteTime = 0.0f;
 		if(g_Player.m_isTransformed)
