@@ -729,7 +729,7 @@ void Player2_ManualMove()
 				break;
 
 			case WeaponTerrain::SHURIKEN_: //shuriken
-				ModelPlayClip(g_Player2.m_model, 280, 320, 60.0f, false, 1.0f);
+				ModelPlayClip(g_Player2.m_model, 280, 319, 60.0f, false, 1.0f);
 				break;
 			}
 		}
@@ -751,7 +751,7 @@ void Player2_ManualMove()
 				break;
 
 			case WeaponTerrain::SHURIKEN_: //shuriken
-				ModelPlayClip(g_Player2.m_model, 280, 320, 60.0f, false, 1.0f);
+				ModelPlayClip(g_Player2.m_model, 280, 319, 60.0f, false, 1.0f);
 				break;
 			}
 		}
