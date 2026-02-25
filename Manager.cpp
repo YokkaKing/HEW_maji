@@ -9,20 +9,20 @@
 //================================================================
 //	インクルード
 //================================================================
-#include"Audio.h"
-#include"direct3d.h"
-#include"Manager.h"
-#include"keyboard.h"
+#include "Audio.h"
+#include "direct3d.h"
+#include "Manager.h"
+#include "keyboard.h"
 #include "Controller.h"
-#include"Game.h"
-#include"Title.h"
+#include "Game.h"
+#include "Title.h"
 #include "Entry.h"
-#include"Result.h"
+#include "Result.h"
 #include "Score.h"
 #include "Player.h"
 #include "Player2.h"
-#include"fade.h"
-#include"selectWeaponTerrain.h"
+#include "fade.h"
+#include "selectWeaponTerrain.h"
 #include "Result_Ui.h"
 #include "ResultSystem.h"
 #include "selectWeaponUi3D.h"
@@ -75,6 +75,7 @@ void Manager_Initialize()
 	TeamLogo_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
 	//Title_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
 	g_Scene = SCENE_TEAMLOGO;
+	
 
 }
 
