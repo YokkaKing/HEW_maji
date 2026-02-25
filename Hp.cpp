@@ -28,6 +28,10 @@
 //================================================================
 static	ID3D11ShaderResourceView* g_TextureTimer =  NULL ;
 static	ID3D11ShaderResourceView* g_TextureNumber = NULL;
+static	ID3D11ShaderResourceView* g_TextureLowHp = NULL;
+static	ID3D11ShaderResourceView* g_TextureButton[2] = { NULL };
+
+
 static	ID3D11ShaderResourceView* g_TextureHp_1P[4] = { NULL };
 static	ID3D11ShaderResourceView* g_TextureHp_2P[4] = { NULL };
 static	ID3D11ShaderResourceView* g_TextureGuide = NULL;   
@@ -46,7 +50,9 @@ HP_2P g_Hp2;
 TIMER g_Timer;
 STATUS_1P g_Status1;
 STATUS_2P g_Status2;
-
+static float g_HpBlinkTime = 0.0f;
+static float canTransformFrame = 0.0f;
+static bool g_LowHp = false;
 static std::mt19937 g_Rng;
 static std::uniform_real_distribution<float> g_Dist01(0.0f, 1.0f);
 static int WTToUIIndex(WeaponTerrain wt)
@@ -185,6 +191,10 @@ void Hp_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
     LoadFromWICFile(L"asset\\texture\\default_noselect.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
     CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureTransform_1P[5]);
     assert(&g_TextureTransform_1P[5]);
+
+
+ 
+
 #pragma endregion
 
 #pragma region status_2P
@@ -234,10 +244,23 @@ void Hp_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
     CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureTransform_2P[5]);
     assert(&g_TextureTransform_2P[5]);
 #pragma endregion
+
+    LoadFromWICFile(L"asset\\texture\\low_Hp.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureLowHp);
+    assert(&g_TextureLowHp);
+
+    LoadFromWICFile(L"asset\\texture\\L_button.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureButton[0]);
+    assert(&g_TextureButton[0]);
+
+    LoadFromWICFile(L"asset\\texture\\R_button.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureButton[1]);
+    assert(&g_TextureButton[1]);
+
 	//フェードインのセット
     g_Hp.col = { 1.0f, 1.0f, 1.0f, 1.0f };
-    g_Hp.pos = { 500, 1006 };
-    g_Hp.size = { 585*0.5, 41*0.6 };
+    g_Hp.pos = { 400, 1006 };
+    g_Hp.size = { 650*0.6, 41*0.7 };
     g_Hp.m_Hp = 0.0f;
     g_Hp.redHpLen = 100.0f;
 	g_Hp.hpTimer = 2.0f;
@@ -249,28 +272,28 @@ void Hp_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 
 
     g_Hp2.col = { 1.0f, 1.0f, 1.0f, 1.0f };
-    g_Hp2.pos = { 500, 1006 };
-    g_Hp2.size = { 585 * 0.5, 41 * 0.6 };
+    g_Hp2.pos = { 600, 1006 };
+    g_Hp2.size = { 650 * 0.6, 41 * 0.7 };
     g_Hp2.m_Hp = 0.0f;
     g_Hp2.redHpLen = 100.0f;
     g_Hp2.hpTimer = 2.0f;
     g_Hp2.shakeOffset = { 0.0f, 0.0f };
     g_Hp2.shakeTimer = 0.0f;
     g_Hp2.shakeDuration = 0.6f;
-    g_Hp2.shakeMagnitude = 6.0f;
+    g_Hp2.shakeMagnitude = 6.0f;    
     g_Hp2.prevHp = g_Hp2.m_Hp;
 
     g_Timer.pos = XMFLOAT2(0, 0);
-    g_Timer.size = XMFLOAT2(1648*0.5, 117*0.5);
+    g_Timer.size = XMFLOAT2(1648*0.6, 117*0.6);
     g_Timer.col = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
     g_Timer.time = 60.0f;
     g_Timer.frame = 1 / 59.0f;
 
-	g_Status1.pos[0] = XMFLOAT2(620, 100);
-    g_Status1.pos[1] = XMFLOAT2(712, 87);
-    g_Status1.pos[2] = XMFLOAT2(800, 100);
-	g_Status1.size[0] = XMFLOAT2(300 * 0.55, 300 * 0.55); //今の状態
-    g_Status1.size[1] = XMFLOAT2(300 * 0.5, 300 * 0.5); //今の状態じゃない
+	g_Status1.pos[0] = XMFLOAT2(560, 130);
+    g_Status1.pos[1] = XMFLOAT2(680, 117);
+    g_Status1.pos[2] = XMFLOAT2(800, 130);
+	g_Status1.size[0] = XMFLOAT2(300 * 0.65, 300 * 0.65); //今の状態
+    g_Status1.size[1] = XMFLOAT2(300 * 0.6, 300 * 0.6); //今の状態じゃない
 	g_Status1.col = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
     g_Status1.nowType = 5;
     for (int i = 0; i < 2; i++)
@@ -279,11 +302,11 @@ void Hp_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
     }
 
 
-    g_Status2.pos[0] = XMFLOAT2(1110, 100);
-    g_Status2.pos[1] = XMFLOAT2(1198, 87);
-    g_Status2.pos[2] = XMFLOAT2(1290, 100);
-    g_Status2.size[0] = XMFLOAT2(300 * 0.55, 300 * 0.55); //今の状態
-    g_Status2.size[1] = XMFLOAT2(300 * 0.5, 300 * 0.5); //今の状態じゃない
+    g_Status2.pos[0] = XMFLOAT2(1120, 130);
+    g_Status2.pos[1] = XMFLOAT2(1240, 117);
+    g_Status2.pos[2] = XMFLOAT2(1360, 130);
+    g_Status2.size[0] = XMFLOAT2(300 * 0.65, 300 * 0.65); //今の状態
+    g_Status2.size[1] = XMFLOAT2(300 * 0.6, 300 * 0.6); //今の状態じゃない
     g_Status2.col = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
     g_Status2.nowType = 5;
     for (int i = 0; i < 2; i++)
@@ -292,6 +315,9 @@ void Hp_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
     }
     g_UITr1P.inited = false;
     g_UITr2P.inited = false;
+    g_HpBlinkTime = 0.0f;
+    g_LowHp = false;
+    canTransformFrame = 0.0f;
 }
 void Hp_Finalize()
 {
@@ -299,7 +325,13 @@ void Hp_Finalize()
     SAFE_RELEASE(g_TextureTimer);
     SAFE_RELEASE(g_TextureNumber);
     SAFE_RELEASE(g_TextureGuide);
+    SAFE_RELEASE(g_TextureLowHp);
 
+    for (int i = 0; i < 2; i++)
+    {
+        SAFE_RELEASE(g_TextureButton[i]);
+		
+    }
     for (int i = 0; i < 4; i++)
     {
         SAFE_RELEASE(g_TextureHp_1P[i]);
@@ -334,6 +366,16 @@ void Hp_Update()
     const float DAMAGE_DELAY = 2.0f;      // ダメージ後、赤HPが動き出すまで待つ秒数
     const float RED_SHRINK_PER_FRAME = 0.4f; // 赤HPが減る量（1フレームあたり）※元と同じ
 
+    if (g_Hp.m_Hp <= 30)
+    {
+        g_LowHp = true;
+    }
+    if (g_LowHp)
+    {
+        g_HpBlinkTime += 0.04f;
+    }
+
+ 
     //========================
     // 1P 赤HP制御
     //========================
@@ -582,7 +624,7 @@ void Hp_Draw()
     Shader_Begin();
     const float SCREEN_WIDTH = (float)Direct3D_GetBackBufferWidth();
     const float SCREEN_HEIGHT = (float)Direct3D_GetBackBufferHeight();
-    g_Timer.pos = XMFLOAT2(SCREEN_WIDTH / 2, 100);
+    g_Timer.pos = XMFLOAT2(SCREEN_WIDTH / 2, 130);
     Shader_SetMatrix(XMMatrixOrthographicOffCenterLH(
         0.0f,
         SCREEN_WIDTH,
@@ -603,13 +645,13 @@ void Hp_Draw()
 
     for (int i = 0; i < 2; i++)
     {
-        g_Timer.pos = XMFLOAT2(SCREEN_WIDTH / 2 - 20 + i * 40, 100);
+        g_Timer.pos = XMFLOAT2(SCREEN_WIDTH / 2 - 20 + i * 50, 120);
         g_pContext->PSSetShaderResources(0, 1, &g_TextureNumber);
         SetBlendState(BLENDSTATE_ALFA);
-        DrawSpriteEx(g_Timer.pos, XMFLOAT2(156*0.5,156*0.5), g_Timer.col, time[i], 10, 1);
+        DrawSpriteEx(g_Timer.pos, XMFLOAT2(156*0.6,156*0.6), g_Timer.col, time[i], 10, 1);
 	}
 
-    XMFLOAT2 basePos1 = XMFLOAT2(SCREEN_WIDTH / 2 - 240, 160);
+    XMFLOAT2 basePos1 = XMFLOAT2(SCREEN_WIDTH / 2 - 300, 200);
     XMFLOAT2 drawPos1 = XMFLOAT2(basePos1.x + g_Hp.shakeOffset.x, basePos1.y + g_Hp.shakeOffset.y);
 
 
@@ -629,11 +671,11 @@ void Hp_Draw()
 
     g_pContext->PSSetShaderResources(0, 1, &g_TextureHp_1P[3]);
     SetBlendState(BLENDSTATE_ALFA);
-    DrawSpriteEx(XMFLOAT2(drawPos1.x + 125, drawPos1.y - 10), XMFLOAT2(63 * 0.6, 26 * 0.6), g_Hp.col, 1, 1, 1);
+    DrawSpriteEx(XMFLOAT2(drawPos1.x + 150, drawPos1.y - 10), XMFLOAT2(63 * 0.8, 26 * 0.8), g_Hp.col, 1, 1, 1);
 
 
 	//2P体力描画
-    XMFLOAT2 basePos2 = XMFLOAT2(SCREEN_WIDTH / 2 + 240, 160);
+    XMFLOAT2 basePos2 = XMFLOAT2(SCREEN_WIDTH / 2 + 300, 200);
     XMFLOAT2 drawPos2 = XMFLOAT2(basePos2.x + g_Hp2.shakeOffset.x, basePos2.y + g_Hp2.shakeOffset.y);
 
     g_Hp2.pos = basePos2;
@@ -651,13 +693,19 @@ void Hp_Draw()
 
     g_pContext->PSSetShaderResources(0, 1, &g_TextureHp_2P[3]);
     SetBlendState(BLENDSTATE_ALFA);
-    DrawSprite(XMFLOAT2(drawPos2.x - 110, drawPos2.y - 10), XMFLOAT2(102 * 0.6, 26 * 0.6), g_Hp2.col);
+    DrawSprite(XMFLOAT2(drawPos2.x - 135, drawPos2.y - 10), XMFLOAT2(102 * 0.8, 26 * 0.8), g_Hp2.col);
 
     g_pContext->PSSetShaderResources(0, 1, &g_TextureGuide);
     SetBlendState(BLENDSTATE_ALFA);
     DrawSprite(XMFLOAT2(200, SCREEN_HEIGHT - 150), XMFLOAT2(452 * 0.5, 261 * 0.5), g_Hp2.col);
 
+    XMFLOAT2 transformIconScale = XMFLOAT2(g_Status1.size[1].x + 150, g_Status1.size[1].y+60);
+
+
  
+
+
+
     g_pContext->PSSetShaderResources(0, 1, &g_TextureTransform_1P[g_Status1.nextType[0]]);
     SetBlendState(BLENDSTATE_ALFA);
     DrawSprite(g_Status1.pos[0], g_Status1.size[1], g_Hp.col);
@@ -684,6 +732,36 @@ void Hp_Draw()
     g_pContext->PSSetShaderResources(0, 1, &g_TextureTransformNow_2P[g_Status2.nowType]);
     SetBlendState(BLENDSTATE_ALFA);
     DrawSprite(g_Status2.pos[1], g_Status2.size[0], g_Hp.col);
+
+    g_pContext->PSSetShaderResources(0, 1, &g_TextureLowHp);
+    SetBlendState(BLENDSTATE_ALFA);
+    // 色と位置・サイズを設定
+   // cosで0.0～1.0を作る
+    float blink = (cosf(g_HpBlinkTime) + 1.0f) * 0.5f;
+
+    // 完全に消えると見づらいので、0.35～1.0くらいで点滅させる
+    float alpha = 0.1f + blink * 0.9f;
+
+    XMFLOAT4 col = { 1.0f, 1.0f, 1.0f, alpha };
+    XMFLOAT2 pos = { SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2};
+    XMFLOAT2 size = { SCREEN_WIDTH, SCREEN_HEIGHT };
+    if (g_LowHp)
+    {
+        DrawSprite(pos, size, col);
+    }
+    static float scale = 0.3f;
+    if (!GetIsUsedA_P1())
+    {
+        g_pContext->PSSetShaderResources(0, 1, &g_TextureButton[0]);
+        SetBlendState(BLENDSTATE_ALFA);
+        DrawSprite(XMFLOAT2(g_Status1.pos[0].x , g_Status1.pos[0].y - 50), XMFLOAT2(219 * scale, 105 * scale), g_Hp.col);
+    }
+    if (!GetIsUsedB_P1())
+    {
+        g_pContext->PSSetShaderResources(0, 1, &g_TextureButton[1]);
+        SetBlendState(BLENDSTATE_ALFA);
+        DrawSprite(XMFLOAT2(g_Status1.pos[2].x , g_Status1.pos[2].y - 50), XMFLOAT2(219 * scale, 105 * scale), g_Hp.col);
+    }
 }
 
 float Hp_GetTime()

@@ -490,6 +490,8 @@ void Spear::OnWeaponCollision(GameObject* target)
 				PlayAudio(g_damageSharp);
 				m_hitTargets.insert(target);
 				target->TakeDamage(15.0f); // 仮に20ダメージ
+				Player_PlusScore(15); // スコア加算
+
 
 				//ヒットエフェクト
 				XMFLOAT3 effectPos = target->m_position;
@@ -519,7 +521,7 @@ void Spear::OnWeaponCollision(GameObject* target)
 
 				m_hitTargets.insert(target);
 				target->TakeDamage(15.0f);
-
+				Player2_PlusScore(15); // スコア加算
 				//ヒットエフェクト
 				XMFLOAT3 effectPos = target->m_position;
 				effectPos.y -= 1.0f;
