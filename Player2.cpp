@@ -170,7 +170,7 @@ void Player2Finalize()
 }
 void	Player2Update()
 {
-	int controllerIdx = GetControllerIndexFromPlayerNo(1);
+	int ctrlIdx = GetControllerIndexFromPlayerNo(1);
 
 	// --- 揺れ処理の追加 ---
 	// ダメージを検知
@@ -244,16 +244,8 @@ void	Player2Update()
 //	攻撃処理
 //================================================================
 	// CキーかAボタンで
-	bool bAttackTrigger = Keyboard_IsKeyDownTrigger(KK_P); // キーボード(Pキー)
-	if (controllerIdx != -1)
-	{
-		// コントローラーのXボタンもチェック
-		if (g_Controller[controllerIdx].IsButtonPushed(ControllerButton::X_BUTTON))
-		{
-			bAttackTrigger = true;
-		}
-	}
-	if (bAttackTrigger)
+	bool attackPushed = (ctrlIdx != 0 && g_Controller[ctrlIdx].GetRightTrigger() >= 0.9f);
+	if (Keyboard_IsKeyDownTrigger(KK_P) || attackPushed)
 	{
 		// 武器があるか
 		if (g_Player2.m_currentWeapon && !g_Player2AttackPlaying&&g_Player2.m_currentWeapon->GetCoolTime() ==0.0f&& !g_Player2.m_hitAnimPlaying)
@@ -575,10 +567,10 @@ void	Player2Update()
 
 void Player2_ManualMove()
 {
-	int controllerIdx = GetControllerIndexFromPlayerNo(1);
+	int ctrlIdx = GetControllerIndexFromPlayerNo(1);
 //	if (controllerIdx == -1) return;
 
-	Controller& ctrl = g_Controller[controllerIdx];
+	Controller& ctrl = g_Controller[ctrlIdx];
 
 	// カメラの前方向ベクトル
 	float forwardX = GetCamera2AtPosition().x - GetCamera2Position().x;
@@ -604,9 +596,7 @@ void Player2_ManualMove()
 		g_Player2.m_koyoteTime -= 0.1f;
 	}
 
-	//float len = sqrtf(forwardX * forwardX + forwardZ * forwardZ);
-	//forwardX /= len;
-	//forwardZ /= len;
+
 
 	float len = sqrtf(forwardX * forwardX + forwardZ * forwardZ);
 	if (len > 0.0f)
@@ -702,7 +692,7 @@ void Player2_ManualMove()
 	}
 	// スペース押した && コヨーテタイムが0.0fより大きい
 	bool jumpPushed = Keyboard_IsKeyDown(KK_SPACE);
-	if (controllerIdx != -1 && g_Controller[controllerIdx].IsButtonPushed(ControllerButton::A_BUTTON)) jumpPushed = true;
+	if (ctrlIdx != -1 && g_Controller[ctrlIdx].IsButtonPushed(ControllerButton::A_BUTTON)) jumpPushed = true;
 	if (jumpPushed && g_Player2.m_koyoteTime > 0.0f) //Aボタン**
 	{
 		g_Player2.m_velocity.y = g_Player2.m_jumpForce;
