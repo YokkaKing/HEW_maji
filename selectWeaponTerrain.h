@@ -46,3 +46,5 @@ bool selectWT_IsP2Ready();
 
 int GetPlayer1SelectedIndex();
 int GetPlayer2SelectedIndex();
+bool GetPlayerSelected(int playerIndex);
+float GetCounter(int playerIndex);
