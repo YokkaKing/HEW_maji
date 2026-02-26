@@ -31,6 +31,7 @@ static	ID3D11ShaderResourceView* g_TextureSelectMap_Button[2] = { NULL };
 static	ID3D11ShaderResourceView* g_TextureSelectMap_SelectButton = NULL;
 static ID3D11Device* g_pDevice = nullptr;
 static ID3D11DeviceContext* g_pContext = nullptr;
+static bool isSelected = false; // マップが選択されたかどうか
 extern Controller g_Controller[2];
 static int g_selectedMapIndex = 0; // 0: 草原, 1: 溶岩
 static float frame = 0; // フレームカウンター
@@ -85,6 +86,7 @@ void SelectMap_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
     assert(&g_TextureSelectMap_Button[1]);
     g_selectedMapIndex = 0;
     frame = 0;
+    isSelected = false;
 }
 void SelectMap_Finalize()
 {
@@ -102,11 +104,9 @@ void SelectMap_Finalize()
 }
 void SelectMap_Update()
 {
-    int controllerIdx = GetControllerIndexFromPlayerNo(0);
-    if (controllerIdx == -1) return;
+    int controllerIdx = 0;
     Controller& ctrl = g_Controller[controllerIdx];
-    int controllerIdx2 = GetControllerIndexFromPlayerNo(1);
-    if (controllerIdx2 == -1) return;
+    int controllerIdx2 = 1;
     Controller& ctrl2 = g_Controller[controllerIdx2];
     bool isMove = false;
     if (g_selectedMapIndex == 0&&!isMove)
@@ -116,6 +116,8 @@ void SelectMap_Update()
             ctrl2.IsButtonPushed(ControllerButton::L_SHOULDER) || ctrl2.IsButtonPushed(ControllerButton::R_SHOULDER))
         {
             g_selectedMapIndex = 1;
+            PlayAudio(g_cursorMove, false);
+
             isMove = true;
         }
     }
@@ -126,15 +128,20 @@ void SelectMap_Update()
             ctrl2.IsButtonPushed(ControllerButton::L_SHOULDER) || ctrl2.IsButtonPushed(ControllerButton::R_SHOULDER))
         {
             g_selectedMapIndex = 0;
+            PlayAudio(g_cursorMove, false);
+
             isMove = true;
 
         }
     }
         
-    if (Keyboard_IsKeyDown(KK_ENTER)|| g_Controller[controllerIdx].IsButtonPushed(ControllerButton::A_BUTTON)|| g_Controller[controllerIdx2].IsButtonPushed(ControllerButton::A_BUTTON))
+    if (!isSelected&&(Keyboard_IsKeyDown(KK_ENTER)|| g_Controller[controllerIdx].IsButtonPushed(ControllerButton::A_BUTTON)|| g_Controller[controllerIdx2].IsButtonPushed(ControllerButton::A_BUTTON)))
     {
         XMFLOAT4 fadeColor(0.0f, 0.0f, 0.0f, 1.0f);
         SetFade(40.0f, fadeColor, FADE_STATE::FADE_OUT, SCENE_SELECT_WT);
+        PlayAudio(g_button, false);
+
+        isSelected = true;
     }
     if (frame <= 29)
     {
