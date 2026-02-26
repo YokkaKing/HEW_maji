@@ -720,17 +720,7 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 	if (ctrlIdx != -1 && g_Controller[ctrlIdx].IsButtonPushed(ControllerButton::A_BUTTON)) jumpPushed = true;
 	if (jumpPushed && g_Player.m_koyoteTime > 0.0f)
 	{
-<<<<<<< HEAD
-<<<<<<< HEAD
 		g_Player.m_velocity.y = g_Player.m_jumpForce;
-=======
-
-		g_Player.m_velocity.y = g_Player.m_jumpForce;
-
->>>>>>> d72352c6df40710094179bc2e77530dcee8b3a9c
-=======
-		g_Player.m_velocity.y = g_Player.m_jumpForce;
->>>>>>> ee1fcbafdd0445c96b7d068131abf8ca1b40bba6
 		g_Player.m_isGround = false;
 		g_Player.m_koyoteTime = 0.0f;
 		if (g_Player.m_isTransformed)
