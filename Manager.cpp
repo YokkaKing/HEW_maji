@@ -357,6 +357,7 @@ void Manager_Draw_Player1()
 		case SCENE_SELECT_WT:
 			selectWT_Draw(0);
 			Selectweaponui3d_Draw();
+			selectWT_Draw_After3D();
 			break;
 		case SCENE_SELECT_MAP:
 			SelectMap_Draw();

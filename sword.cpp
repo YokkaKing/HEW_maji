@@ -248,7 +248,7 @@ void Sword::Draw()
 
 
 		//Shader_SetBones(g_modelSword[0]);
-		ModelDraw(g_modelSword[0]);
+		//ModelDraw(g_modelSword[0]);
 		
 	}
 
