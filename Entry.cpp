@@ -107,7 +107,7 @@ void Entry_Update() {
                 g_VibrationTimer[i] = 0.3f;              // êUìÆéûä‘
             }
             XMFLOAT4 color(0.0f, 0.0f, 0.0f, 1.0f);
-            SetFade(40.0f, color, FADE_OUT, SCENE_SELECT_WT);
+            SetFade(40.0f, color, FADE_OUT, SCENE_SELECT_MAP);
             return;
         }
     }

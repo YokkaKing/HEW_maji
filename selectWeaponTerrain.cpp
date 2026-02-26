@@ -422,7 +422,7 @@ void selectWT_Update()
             }
             else
             {
-                // 앞 50%: 축소(1.0 -> min), 뒤 50%: 복구(min -> 1.0)
+          
                 if (t < 0.5f)
                 {
                     float tt = t / 0.5f; // 0..1

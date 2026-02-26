@@ -127,4 +127,5 @@ int Player_GetScore();
 void Player_SetPlayerIsAttaking(int flg);
 void Player_ResetMoveMul();
 void Player_StartHitAnim();
+bool Player_GetIsDead();
 #endif // PLAYER_H
