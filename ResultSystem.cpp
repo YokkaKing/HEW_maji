@@ -52,7 +52,7 @@ static bool s_attackStarted[3] = { false,false,false };
 
 // ---------------- Light / Stage ----------------
 static LIGHTOBJECT s_Light;
-static STAGE s_Stage;
+
 
 // ---------------- Model utils ----------------
 static const char* GetBaseModelPath(WeaponTerrain wt)
@@ -489,11 +489,11 @@ void ResultSystem_SetMatchInfo(const RESULT_MATCH_INFO& info)
 
 void ResultSystem_Initialize(ID3D11Device* dev, ID3D11DeviceContext* ctx)
 {
-    s_Stage.Initialize(dev, ctx);
+   // s_Stage.Initialize(dev, ctx);
     Result_Ui_Initialize(dev, ctx);
     Result2_Ui_Initialize(dev, ctx);
 
-
+	//g_Stage.Initialize(dev, ctx);
     // Light
     XMFLOAT4 para;
     para = XMFLOAT4(0.4f, 0.4f, 0.4f, 1.0f);
@@ -562,7 +562,7 @@ void ResultSystem_Finalize()
     Result2_Ui_Finalize();
 
     ResetWinCount();
-    s_Stage.Finalize();
+    
 }
 
 // UI進行に合わせて攻撃を1回だけ開始
@@ -716,7 +716,7 @@ static void DrawCommon3D_P1()
 
     Camera_Draw();
     Shader_SetMatrix(GetViewMatrix() * GetProjectionMatrix());
-    s_Stage.Draw();
+    g_Stage.Draw();
 }
 static void DrawCommon3D_P2()
 {
@@ -726,7 +726,7 @@ static void DrawCommon3D_P2()
 
     Camera2_Draw();
     Shader_SetMatrix(GetViewMatrix2() * GetProjectionMatrix2());
-    s_Stage.Draw();
+    g_Stage.Draw();
 }
 
 static void DrawModels_P1()

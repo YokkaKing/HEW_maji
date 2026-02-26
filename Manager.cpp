@@ -27,6 +27,7 @@
 #include "ResultSystem.h"
 #include "selectWeaponUi3D.h"
 #include "TeamLogo.h"
+#include "Stage.h"
 #include "SelectMap.h"
 //================================================================
 //	グローバル変数
@@ -39,6 +40,7 @@ static int  g_P1Wins = 0;         // 1P勝利数
 static int  g_P2Wins = 0;         // 2P勝利数
 static bool g_roundResultLocked = false; // 決着を1回だけ処理するため
 static int g_lastRoundResult = 0;
+
 static bool g_deathUseSlow = true; // true=STOP→SLOW→SCORE, false=STOP→SCORE
 static void StartDeathSequence(SCENE nextScene);
 static void StartDeathSequence(SCENE nextScene, bool useSlow);
@@ -226,7 +228,7 @@ void Manager_Update()
 				// --- 試合終了判定（2勝で終わり） ---
 				bool isMatchOver = false;
 				if (g_P1Wins >= 2 || g_P2Wins >= 2) isMatchOver = true;
-
+		
 				// --- 死亡決着かどうか（誰か倒れたら演出） ---
 				bool p1Dead = false;
 				bool p2Dead = false;
@@ -456,7 +458,9 @@ void SetScene(SCENE scene) //シーンを切り替える
 			Game_Finalize();
 			break;
 		case SCENE_RESULT:
+			g_Stage.Finalize();
 			Result_Finalize();
+			
 			break;
 		default:
 			break;

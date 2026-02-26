@@ -11,29 +11,34 @@
 //================================================================
 #include"Stage.h"
 #include"managerCollider.h"
-
+#include "SelectMap.h"
 STAGE g_Stage;
-
 void STAGE::Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
 	g_pDevice = pDevice;
 	g_pContext = pContext;
 
-	m_model[0] = ModelLoad("asset\\model\\stadium.fbx");
-	m_model[1] = ModelLoad("asset\\model\\stadium_lava.fbx");
+	g_Stage.m_model[0] = ModelLoad("asset\\model\\stadium.fbx");
+	g_Stage.m_model[1] = ModelLoad("asset\\model\\stadium_lava.fbx");
 
 	m_position = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	m_rotation = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	m_scale = XMFLOAT3(0.0221f, 0.0221f, 0.0221f);
-
-	m_stageType = STAGE_TYPE::PLANE;	// ノーマル
-	//g_Stage.m_stageType = STAGE_TYPE::LAVA;		// 溶岩
+	if (GetSelectedMapIndex()==0)
+	{
+		g_Stage.m_stageType = STAGE_TYPE::PLANE;
+	}
+	else
+	{
+		g_Stage.m_stageType = STAGE_TYPE::LAVA;
+	}
+		
 }
 void STAGE::Finalize()
 {
 	for (int i = 0; i < 2; i++)
 	{
-		ModelRelease(m_model[i]);
+		ModelRelease(g_Stage.m_model[i]);
 	}
 }
 void STAGE::Update()
@@ -67,10 +72,14 @@ void STAGE::Draw()
 		modelType = 1;
 	}
 	//モデルの描画リクエスト
-	ModelDraw(m_model[modelType]);
+	ModelDraw(g_Stage.m_model[modelType]);
 }
 
 const STAGE_TYPE STAGE::GetStageType()
+{
+	return g_Stage.m_stageType;
+}
+STAGE_TYPE GetStage()
 {
 	return g_Stage.m_stageType;
 }

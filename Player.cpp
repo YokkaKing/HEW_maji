@@ -235,7 +235,7 @@ void	PlayerUpdate()
 
 	if (g_Player.m_hitAction.IsStopping())
 	{
-		Player_ManualMove();                         
+		//Player_ManualMove();                         
 		//ModelUpdateAnimation(g_Player.m_model, 1.0f / 60.0f);  
 		return;                                      
 	}
@@ -648,6 +648,7 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 	}
 	if (Keyboard_IsKeyDown(KK_W)) speed = +0.1f;
 	if (Keyboard_IsKeyDown(KK_S)) speed = -0.1f;
+
 
 	moveX += forwardX * speed;
 	moveZ += forwardZ * speed;
@@ -1479,4 +1480,8 @@ void Player_WarmupVisual()
 	//     g_Player1IdlePlaying = true;
 	// }
 
+}
+bool Player_GetIsDead()
+{
+	return g_Player.m_isDead;
 }

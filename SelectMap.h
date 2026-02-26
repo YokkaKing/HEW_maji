@@ -18,5 +18,5 @@ void SelectMap_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
 void SelectMap_Finalize();
 void SelectMap_Update();
 void SelectMap_Draw();
-
+int GetSelectedMapIndex();
 #endif // SELECTMAP_H
