@@ -9,23 +9,25 @@
 //================================================================
 //	インクルード
 //================================================================
-#include"Audio.h"
-#include"direct3d.h"
-#include"Manager.h"
-#include"keyboard.h"
+#include "Audio.h"
+#include "direct3d.h"
+#include "Manager.h"
+#include "keyboard.h"
 #include "Controller.h"
-#include"Game.h"
-#include"Title.h"
+#include "Game.h"
+#include "Title.h"
 #include "Entry.h"
-#include"Result.h"
+#include "Result.h"
 #include "Score.h"
 #include "Player.h"
 #include "Player2.h"
-#include"fade.h"
-#include"selectWeaponTerrain.h"
+#include "fade.h"
+#include "selectWeaponTerrain.h"
 #include "Result_Ui.h"
 #include "ResultSystem.h"
 #include "selectWeaponUi3D.h"
+#include "TeamLogo.h"
+#include "SelectMap.h"
 //================================================================
 //	グローバル変数
 //================================================================
@@ -70,8 +72,11 @@ void Manager_Initialize()
 	//SetFade(60.0f, color, FADE_STATE::FADE_IN, SCENE_GAME);
 	//SetScene(SCENE_GAME);	//最初に動かすシーンに切り替える
 
-
-	SetScene(SCENE_TITLE);	//最初に動かすシーンに切り替える
+	//SetScene(SCENE_TITLE);
+	TeamLogo_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
+	//Title_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
+	g_Scene = SCENE_TEAMLOGO;
+	
 
 }
 
@@ -92,6 +97,9 @@ void Manager_Update()
 		
 		case SCENE_NONE:
 			break;
+		case SCENE_TEAMLOGO:
+			TeamLogo_Update();
+			break;
 		case SCENE_TITLE:
 			Title_Update();	
 			break;
@@ -101,7 +109,9 @@ void Manager_Update()
 		case SCENE_SELECT_WT:
 			selectWT_Update();
 			Selectweaponui3d_Update();
-
+			break;
+		case SCENE_SELECT_MAP:
+			SelectMap_Update();
 			break;
 		case SCENE_GAME:
 		{
@@ -338,6 +348,9 @@ void Manager_Draw_Player1()
 	{
 		case SCENE_NONE:
 			break;
+		case SCENE_TEAMLOGO:
+			TeamLogo_Draw();
+			break;
 		case SCENE_TITLE:
 			Title_Draw();	
 			break;
@@ -345,9 +358,11 @@ void Manager_Draw_Player1()
 			Entry_Draw();
 			break;
 		case SCENE_SELECT_WT:
-			
 			selectWT_Draw(0);
 			Selectweaponui3d_Draw();
+			break;
+		case SCENE_SELECT_MAP:
+			SelectMap_Draw();
 			break;
 		case SCENE_GAME:
 			Game_Draw_Player1();
@@ -368,6 +383,9 @@ void Manager_Draw_Player2()
 	{
 	case SCENE_NONE:
 		break;
+	case SCENE_TEAMLOGO:
+		TeamLogo_Draw();
+		break;
 	case SCENE_TITLE:
 		Title_Draw();
 		break;
@@ -378,6 +396,9 @@ void Manager_Draw_Player2()
 
 		selectWT_Draw(1);
 		Selectweaponui3d_Draw();
+		break;
+	case SCENE_SELECT_MAP:
+		SelectMap_Draw();
 		break;
 	case SCENE_GAME:
 		Game_Draw_Player2();
@@ -409,7 +430,14 @@ void SetScene(SCENE scene) //シーンを切り替える
 	//実行中のシーンを終了させる
 	switch (g_Scene)	//現在シーンの終了関数を呼び出す
 	{
+		for (int i = 0; i < 2; i++) {
+			extern Controller g_Controller[2];
+			g_Controller[i].SetVibration(0, 0);
+		}
 		case SCENE_NONE:
+			break;
+		case SCENE_TEAMLOGO:
+			TeamLogo_Finalize();
 			break;
 		case SCENE_TITLE:
 			Title_Finalize();	
@@ -420,6 +448,9 @@ void SetScene(SCENE scene) //シーンを切り替える
 		case SCENE_SELECT_WT:
 			selectWT_Finalize();
 			Selectweaponui3d_Finalize();
+			break;
+		case SCENE_SELECT_MAP:
+			SelectMap_Finalize();
 			break;
 		case SCENE_GAME:
 			Game_Finalize();
@@ -438,11 +469,17 @@ void SetScene(SCENE scene) //シーンを切り替える
 	{
 		case SCENE_NONE:
 			break;
+		case SCENE_TEAMLOGO:
+			TeamLogo_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
+			break;
 		case SCENE_TITLE:
 			Title_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
 			break;
 		case SCENE_ENTRY:
 			Entry_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
+			break;
+		case SCENE_SELECT_MAP:
+			SelectMap_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
 			break;
 		case SCENE_GAME:
 			StopAudio(g_title);

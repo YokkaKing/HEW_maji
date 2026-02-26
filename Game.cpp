@@ -101,7 +101,7 @@ static void Game_DrawArenaIntroImage()
 	XMFLOAT2 size = XMFLOAT2(SCREEN_WIDTH, SCREEN_HEIGHT);                  // バナーっぽいサイズ
 	XMFLOAT4 col = XMFLOAT4(1, 1, 1, 1);
 
-	DrawSprite(pos, size, col);
+	//DrawSprite(pos, size, col);
 }
 
 void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, const inGameWTselect& select)
@@ -586,8 +586,6 @@ int Game_GetRoundResult()
 	{//時間切れ時、残りHPで勝敗を判定
 		float P1_hp = Player_GetHp();
 		float P2_hp = Player2_GetHp();
-		if(p1Dead || p2Dead)
-
 
 		if (P1_hp > P2_hp)
 		{

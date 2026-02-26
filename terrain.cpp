@@ -11,8 +11,12 @@
 //================================================================
 #define TERRAIN_SIZE (0.5f)
 #define ANTLION_POS_Y (2.7f)
+#define ANTLION_POS_Y_ (-1.9f)
 #define BOG_POS_Y (-0.3f)
 #define TREE_POS_Y (1.0f)
+#define FANCE_POS_Y (2.0f)
+#define FANCE_POS_Y_ (0.0f)
+#define OTHER_TERRAIN_SIZE (10)
 
 //================================================================
 //	インクルード
@@ -28,12 +32,14 @@
 #include"Player2.h"
 #include"Transform.h"
 #include<string>
+#include"Stage.h"
 
 //================================================================
 //	グローバル変数
 //================================================================
 // 地形オブジェクト
 TERRAIN g_Terrain;
+unsigned int g_stageType = 0; // ステージの種類
 
 static ID3D11Device* g_pDevice;
 static ID3D11DeviceContext* g_pContext;
@@ -42,22 +48,20 @@ MODEL* blockModel = nullptr;
 MODEL* slopeModel = nullptr;
 XMFLOAT3 g_pos[2];
 
-int Trand = 0;
-
 // 蟻地獄のためのデータ(endPositionのみ)他は共通のため
 XMFLOAT3 g_antlionData[4] =
 {
-	{ 0.0f, 0.5f, 0.6f },
-	{ 0.6f, 0.5f, 0.0f },
-	{ 0.0f, 0.5f, -0.6f },
-	{ -0.6f, 0.5f, 0.0f }
+	{ 0.0f, 0.5f, 0.4f },
+	{ 0.4f, 0.5f, 0.0f },
+	{ 0.0f, 0.5f, -0.4f },
+	{ -0.4f, 0.5f, 0.0f }
 };
 XMFLOAT3 g_antlionBoxData[4] =
 {
-	{ 9.5f, 1.2f, 1.3f },
-	{ 1.3f, 1.2f, 9.5f },
-	{ 9.5f, 1.2f, 1.3f },
-	{ 1.3f, 1.2f, 9.5f }
+	{ 9.5f, 1.0f, 1.3f },
+	{ 1.3f, 1.0f, 9.5f },
+	{ 9.5f, 1.0f, 1.3f },
+	{ 1.3f, 1.0f, 9.5f }
 };
 XMFLOAT2 g_antlionData2[4] =
 {
@@ -73,62 +77,88 @@ XMFLOAT2 g_antlionBoxData2[4] =
 	{ 0.0f, -4.2f },
 	{ -4.2f, -0.0f }
 };
+// 蟻地獄のためのデータ(endPositionのみ)他は共通のため
+XMFLOAT3 g_antlionData3[4] =
+{
+	{ 0.0f, 0.5f, 0.4f },
+	{ 0.4f, 0.5f, 0.0f },
+	{ 0.0f, 0.5f, -0.4f },
+	{ -0.4f, 0.5f, 0.0f }
+};
+XMFLOAT2 g_antlionData4[4] =
+{
+	{ 0.0f, -7.3f },
+	{ -7.3f, 0.0f },
+	{ 0.0f, 7.3f },
+	{ 7.3f, 0.0f }
+};
 
 std::string otherModel[2][3] =
 {
-	/*{"asset\\model\\tree.fbx", "asset\\model\\rock.fbx", "asset\\model\\water.fbx" },
-	{"asset\\model\\tree.fbx", "asset\\model\\tree.fbx", "asset\\model\\lava.fbx" }*/
 	{ "asset\\model\\tree.fbx", "asset\\model\\rock.fbx", "asset\\model\\water.fbx" },
 	{ "asset\\model\\rock.fbx", "asset\\model\\rock.fbx", "asset\\model\\lava.fbx" }
 };
 
-int otherM[2][6] =
+int otherM[2][OTHER_TERRAIN_SIZE] =
 {
-	{ 0, 0, 1, 1, 1, 2 },
-	{ 0, 0, 0, 0, 2, 2 }
+	{ 0, 0, 0, 0, 0, 1, 1, 1, 2 },
+	{ 0, 0, 0, 2, 2, 0, 0, 0, 0 }
 };
 
-XMFLOAT3 g_otherPos[2][6] =
+// 初期地形の座標
+XMFLOAT3 g_otherPos[2][OTHER_TERRAIN_SIZE] =
 {
 	{
-		{ -5.0f, 0.5f, -2.0f },
-		{ -1.0f, 0.5f, -4.0f },
-		{ 5.0f, 0.5f, -2.0f },
-		{ 3.0f, 0.5f, 1.0f },
-		{ 6.0f, 0.5f, 7.0f },
+		{ -2.0f, 0.5f, 5.0f },
+		{ 6.0f, 0.5f, 6.0f },
+		{ -3.0f, 0.5f, -5.0f },
+		{ 4.8f, 0.5f, -4.8f },
+		{ 8.0f, 0.5f, -9.0f },
+		{ 2.0f, 0.5f, 1.0f },
+		{ -8.0f, 0.5f, 9.0f },
+		{ -4.5f, 0.5f, -9.0f },
 		{ 0.0f, 0.5f, 0.0f },
 	},
 	{
-		{ 1.0f, 0.5f, 7.0f },
-		{ 2.0f, 0.5f, -5.0f },
-		{ -1.0f, 0.5f, -3.0f },
-		{ -2.0f, 0.5f, 3.0f },
-		{ 5.0f, 0.5f, -2.0f },
-		{ 2.0f, 0.5f, 3.0f },
+		{ -1.0f, 0.5f, 1.0f },
+		{ 4.5f, 0.5f, 7.5f },
+		{ -6.0f, 0.5f, -6.0f },
+		{ -5.0f, 0.5f, 6.0f },
+		{ 5.0f, 0.5f, -6.0f },
+		{ 0.0f, -5.0f, 0.0f },
+		{ 0.0f, -5.0f, 0.0f },
+		{ 0.0f, -5.0f, 0.0f },
+		{ 0.0f, -5.0f, 0.0f },
 	}
 };
 
-XMFLOAT3 g_otherScale[2][6] =
+XMFLOAT3 g_otherScale[2][OTHER_TERRAIN_SIZE] =
 {
 	{
-		{ 0.5f, 2.0f, 0.5f },
-		{ 0.5f, 2.0f, 0.5f },
-		{ 1.4f, 2.0f, 1.4f },
-		{ 1.4f, 2.0f, 1.4f },
-		{ 1.4f, 2.0f, 1.4f },
-		{ 4.0f, 0.5f, 4.0f },
+		{ 0.5f, 5.5f, 0.5f },
+		{ 0.5f, 5.5f, 0.5f },
+		{ 0.5f, 5.5f, 0.5f },
+		{ 0.5f, 5.5f, 0.5f },
+		{ 0.5f, 5.5f, 0.5f },
+		{ 1.4f, 2.7f, 1.4f },
+		{ 1.4f, 2.7f, 1.4f },
+		{ 1.4f, 2.7f, 1.4f },
+		{ 8.0f, 0.5f, 8.0f },
 	},
 	{
-		{ 1.4f, 2.0f, 1.4f },
-		{ 1.4f, 2.0f, 1.4f },
-		{ 1.4f, 2.0f, 1.4f },
-		{ 1.4f, 2.0f, 1.4f },
+		{ 1.4f, 2.7f, 1.4f },
+		{ 1.4f, 2.7f, 1.4f },
+		{ 1.4f, 2.7f, 1.4f },
 		{ 4.0f, 0.5f, 4.0f },
 		{ 4.0f, 0.5f, 4.0f },
+		{ 0.01f, 0.01f, 0.01f },
+		{ 0.01f, 0.01f, 0.01f },
+		{ 0.01f, 0.01f, 0.01f },
+		{ 0.01f, 0.01f, 0.01f },
 	}
 };
 
-XMFLOAT3 g_otherModelScale[2][6] =
+XMFLOAT3 g_otherModelScale[2][OTHER_TERRAIN_SIZE] =
 {
 	{
 		{ 1.0f, 1.0f, 1.0f },
@@ -137,6 +167,9 @@ XMFLOAT3 g_otherModelScale[2][6] =
 		{ 1.0f, 1.0f, 1.0f },
 		{ 1.0f, 1.0f, 1.0f },
 		{ 1.0f, 1.0f, 1.0f },
+		{ 1.0f, 1.0f, 1.0f },
+		{ 1.0f, 1.0f, 1.0f },
+		{ 2.0f, 2.0f, 2.0f },
 	},
 	{
 		{ 1.0f, 1.0f, 1.0f },
@@ -144,33 +177,45 @@ XMFLOAT3 g_otherModelScale[2][6] =
 		{ 1.0f, 1.0f, 1.0f },
 		{ 1.0f, 1.0f, 1.0f },
 		{ 1.0f, 1.0f, 1.0f },
-		{ 1.0f, 1.0f, 1.0f },
+		{ 0.01f, 0.01f, 0.01f },
+		{ 0.01f, 0.01f, 0.01f },
+		{ 0.01f, 0.01f, 0.01f },
+		{ 0.01f, 0.01f, 0.01f },
 	}
 };
 
-XMFLOAT3 g_otherOffset[2][6] =
+XMFLOAT3 g_otherOffset[2][OTHER_TERRAIN_SIZE] =
 {
 	{
 		{ 0.0f, 0.5f, 0.0f },
 		{ 0.0f, 0.5f, 0.0f },
+		{ 0.0f, 0.5f, 0.0f },
+		{ 0.0f, 0.5f, 0.0f },
+		{ 0.0f, 0.5f, 0.0f },
+		{ -0.2f, 0.0f, -0.2f },
+		{ -0.2f, 0.0f, -0.2f },
+		{ -0.2f, 0.0f, -0.2f },
+		{ 0.0f, -0.55f, 0.0f },
+	},
+	{
 		{ -0.2f, 0.0f, -0.2f },
 		{ -0.2f, 0.0f, -0.2f },
 		{ -0.2f, 0.0f, -0.2f },
 		{ 0.0f, -0.5f, 0.0f },
-	},
-	{
-		{ -0.2f, 0.0f, -0.2f },
-		{ -0.2f, 0.0f, -0.2f },
-		{ -0.2f, 0.0f, -0.2f },
-		{ -0.2f, 0.0f, -0.2f },
 		{ 0.0f, -0.5f, 0.0f },
-		{ 0.0f, -0.5f, 0.0f },
+		{ 0.0f, 0.0f, 0.0f },
+		{ 0.0f, 0.0f, 0.0f },
+		{ 0.0f, 0.0f, 0.0f },
+		{ 0.0f, 0.0f, 0.0f },
 	}
 };
 
-std::string g_otherTag[2][6] =
+std::string g_otherTag[2][OTHER_TERRAIN_SIZE] =
 {
 	{
+		"WALL",
+		"WALL",
+		"WALL",
 		"WALL",
 		"WALL",
 		"WALL",
@@ -182,9 +227,12 @@ std::string g_otherTag[2][6] =
 		"WALL",
 		"WALL",
 		"WALL",
-		"WALL",
 		"LAVA",
-		"LAVA"
+		"LAVA",
+		"WALL",
+		"WALL",
+		"WALL",
+		"WALL",
 	}
 };
 
@@ -194,93 +242,93 @@ std::string g_otherTag[2][6] =
 //	a -> 当たり判定
 //================================================================
 // 地形::丘 の座標データ
-const std::vector<std::vector<std::vector<std::string>>> Hill =
-{
-	{ // Y = 0 // Z->+ // X↓+
-		{"anananananan"},
-		{"nnnnnnnnnnna"},
-		{"annnnnnnnnnn"},
-		{"nnnnnnnnnnna"},
-		{"annnnnnnnnnn"},
-		{"nnnnnnnnnnna"},
-		{"annnnnnnnnnn"},
-		{"nnnnnnnnnnna"},
-		{"annnnnnnnnnn"},
-		{"nnnnnnnnnnna"},
-		{"annnnnnnnnnn"},
-		{"nananananana"},
-	},
-	{ // Y = 0.25
-		{"nnnnnnnnnnnn"},
-		{"nananananann"},
-		{"nnnnnnnnnnan"},
-		{"nannnnnnnnnn"},
-		{"nnnnnnnnnnan"},
-		{"nannnnnnnnnn"},
-		{"nnnnnnnnnnan"},
-		{"nannnnnnnnnn"},
-		{"nnnnnnnnnnan"},
-		{"nannnnnnnnnn"},
-		{"nnananananan"},
-		{"nnnnnnnnnnnn"},
-	},
-	{ // Y = 0.5
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnanananannn"},
-		{"nnnnnnnnnann"},
-		{"nnannnnnnnnn"},
-		{"nnnnnnnnnann"},
-		{"nnannnnnnnnn"},
-		{"nnnnnnnnnann"},
-		{"nnannnnnnnnn"},
-		{"nnnanananann"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-	},
-	{ // Y = 0.75
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnananannnn"},
-		{"nnnnnnnnannn"},
-		{"nnnannnnnnnn"},
-		{"nnnnnnnnannn"},
-		{"nnnannnnnnnn"},
-		{"nnnnananannn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-	},
-	{ // Y = 0.75
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnanannnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnanannnn"},
-		{"nnnnnnannnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-	},
-	{ // Y = 1
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnannnnn"},
-		{"nnnnnnannnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-		{"nnnnnnnnnnnn"},
-	},
-};
+//const std::vector<std::vector<std::vector<std::string>>> Hill =
+//{
+//	{ // Y = 0 // Z->+ // X↓+
+//		{"anananananan"},
+//		{"nnnnnnnnnnna"},
+//		{"annnnnnnnnnn"},
+//		{"nnnnnnnnnnna"},
+//		{"annnnnnnnnnn"},
+//		{"nnnnnnnnnnna"},
+//		{"annnnnnnnnnn"},
+//		{"nnnnnnnnnnna"},
+//		{"annnnnnnnnnn"},
+//		{"nnnnnnnnnnna"},
+//		{"annnnnnnnnnn"},
+//		{"nananananana"},
+//	},
+//	{ // Y = 0.25
+//		{"nnnnnnnnnnnn"},
+//		{"nananananann"},
+//		{"nnnnnnnnnnan"},
+//		{"nannnnnnnnnn"},
+//		{"nnnnnnnnnnan"},
+//		{"nannnnnnnnnn"},
+//		{"nnnnnnnnnnan"},
+//		{"nannnnnnnnnn"},
+//		{"nnnnnnnnnnan"},
+//		{"nannnnnnnnnn"},
+//		{"nnananananan"},
+//		{"nnnnnnnnnnnn"},
+//	},
+//	{ // Y = 0.5
+//		{"nnnnnnnnnnnn"},
+//		{"nnnnnnnnnnnn"},
+//		{"nnanananannn"},
+//		{"nnnnnnnnnann"},
+//		{"nnannnnnnnnn"},
+//		{"nnnnnnnnnann"},
+//		{"nnannnnnnnnn"},
+//		{"nnnnnnnnnann"},
+//		{"nnannnnnnnnn"},
+//		{"nnnanananann"},
+//		{"nnnnnnnnnnnn"},
+//		{"nnnnnnnnnnnn"},
+//	},
+//	{ // Y = 0.75
+//		{"nnnnnnnnnnnn"},
+//		{"nnnnnnnnnnnn"},
+//		{"nnnnnnnnnnnn"},
+//		{"nnnananannnn"},
+//		{"nnnnnnnnannn"},
+//		{"nnnannnnnnnn"},
+//		{"nnnnnnnnannn"},
+//		{"nnnannnnnnnn"},
+//		{"nnnnananannn"},
+//		{"nnnnnnnnnnnn"},
+//		{"nnnnnnnnnnnn"},
+//		{"nnnnnnnnnnnn"},
+//	},
+//	{ // Y = 0.75
+//		{"nnnnnnnnnnnn"},
+//		{"nnnnnnnnnnnn"},
+//		{"nnnnnnnnnnnn"},
+//		{"nnnnnnnnnnnn"},
+//		{"nnnnnanannnn"},
+//		{"nnnnnnnnnnnn"},
+//		{"nnnnnanannnn"},
+//		{"nnnnnnannnnn"},
+//		{"nnnnnnnnnnnn"},
+//		{"nnnnnnnnnnnn"},
+//		{"nnnnnnnnnnnn"},
+//		{"nnnnnnnnnnnn"},
+//	},
+//	{ // Y = 1
+//		{"nnnnnnnnnnnn"},
+//		{"nnnnnnnnnnnn"},
+//		{"nnnnnnnnnnnn"},
+//		{"nnnnnnnnnnnn"},
+//		{"nnnnnnnnnnnn"},
+//		{"nnnnnnannnnn"},
+//		{"nnnnnnannnnn"},
+//		{"nnnnnnnnnnnn"},
+//		{"nnnnnnnnnnnn"},
+//		{"nnnnnnnnnnnn"},
+//		{"nnnnnnnnnnnn"},
+//		{"nnnnnnnnnnnn"},
+//	},
+//};
 
 //================================================================
 //	同じ文字は絶対に4文字入力すること
@@ -288,362 +336,6 @@ const std::vector<std::vector<std::vector<std::string>>> Hill =
 //	n -> 何もなし
 //	文字は分かりやすいやつでa,b,cとか
 //================================================================
-const std::vector<std::vector<std::vector<std::string>>> Hills =
-{// -> プレイヤーの初期視点
-	// 16個
-	{
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-	},
-	{
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-	},
-	{
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-	},
-	{
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-	},
-	{
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-	},
-	{
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-	},
-	{
-		{"annnnnnnnnnnnnnnnnna"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"annnnnnnnnnnnnnnnnna"},
-	},
-	{
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nbnnnnnnnnnnnnnnnnbn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nbnnnnnnnnnnnnnnnnbn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-	},
-	{
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nncnnnnnnnnnnnnnncnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nncnnnnnnnnnnnnnncnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-	},
-	{
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnndnnnnnnnnnnnndnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnndnnnnnnnnnnnndnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-	},
-	{
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnennnnnnnnnnennnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnennnnnnnnnnennnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-	},
-	{
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnfnnnnnnnnfnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnfnnnnnnnnfnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-	},
-	{
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnngnnnnnngnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnngnnnnnngnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-	},
-	{
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnhnnnnhnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnhnnnnhnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-	},
-	{
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnninninnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnninninnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-	},
-	{
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnjjnnnnnnnnn"},
-		{"nnnnnnnnnjjnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-		{"nnnnnnnnnnnnnnnnnnnn"},
-	},
-};
 
 // 壁の当たり判定
 const std::vector<std::vector<std::vector<std::string>>> Walls =
@@ -686,6 +378,115 @@ const std::vector<std::vector<std::vector<std::string>>> Walls =
 	},
 };
 
+// プレイヤー用の塀の当たり判定
+const std::vector<std::vector<std::vector<std::string>>> pFances =
+{
+	{
+		{"nnnnnannnnnnnnannnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"cnnnnnnnnnnnnnnnnnnd"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"cnnnnnnnnnnnnnnnnnnd"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnbnnnnnnnnbnnnnn"},
+	},
+	{
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+	},
+	{
+		{"nnnnnannnnnnnnannnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"cnnnnnnnnnnnnnnnnnnd"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"cnnnnnnnnnnnnnnnnnnd"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnnnnnnnnnnnnnnnn"},
+		{"nnnnnbnnnnnnnnbnnnnn"},
+	},
+};
+
+// 手裏剣用の塀の当たり判定
+const std::vector<std::vector<std::vector<std::string>>> sFances =
+{
+	{
+		{"nnannnann"},
+		{"nnnnnnnnn"},
+		{"cnnnnnnnd"},
+		{"nnnnnnnnn"},
+		{"nnnnnnnnn"},
+		{"nnnnnnnnn"},
+		{"cnnnnnnnd"},
+		{"nnnnnnnnn"},
+		{"nnbnnnbnn"},
+	},
+	{
+		{"nnnnnnnnn"},
+		{"nnnnnnnnn"},
+		{"nnnnnnnnn"},
+		{"nnnnnnnnn"},
+		{"nnnnnnnnn"},
+		{"nnnnnnnnn"},
+		{"nnnnnnnnn"},
+		{"nnnnnnnnn"},
+		{"nnnnnnnnn"},
+	},
+	{
+		{"nnannnann"},
+		{"nnnnnnnnn"},
+		{"cnnnnnnnd"},
+		{"nnnnnnnnn"},
+		{"nnnnnnnnn"},
+		{"nnnnnnnnn"},
+		{"cnnnnnnnd"},
+		{"nnnnnnnnn"},
+		{"nnbnnnbnn"},
+	},
+};
+
 // 沼の当たり判定
 const std::vector<std::vector<std::vector<std::string>>> Bogs =
 {
@@ -725,7 +526,13 @@ const std::vector<std::vector<std::vector<std::string>>> Trees =
 
 void TerrainInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, WeaponTerrain p1Set, WeaponTerrain p2Set)
 {
-	Trand = rand() % 2; // 乱数
+	g_stageType = 0; // ステージの種類
+
+	// 溶岩ステージだったら
+	if (g_Stage.GetStageType() == STAGE_TYPE::LAVA)
+	{
+		g_stageType = 1; // 溶岩に対応した数字にする
+	}
 
 	//============================================
 	//	新しい引数のp1,2Setはプレイヤーが選択した 
@@ -741,6 +548,7 @@ void TerrainInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 	g_Terrain.m_moveTerrain[2] = ModelLoad("asset\\model\\antlion.fbx");
 	g_Terrain.m_moveTerrain[3] = ModelLoad("asset\\model\\numa.fbx");
 	g_Terrain.m_moveTerrain[4] = ModelLoad("asset\\model\\trees.fbx");
+	g_Terrain.m_moveTerrain[5] = ModelLoad("asset\\model\\fance.fbx");
 	blockModel = ModelLoad("asset\\model\\block.fbx");
 	slopeModel = ModelLoad("asset\\model\\block3.fbx");
 
@@ -751,17 +559,20 @@ void TerrainInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 	g_Terrain.m_terrainScale[2] = { 5.0f, 5.5f, 5.0f };
 	g_Terrain.m_terrainScale[3] = { 5.0f, 5.0f, 5.0f };
 	g_Terrain.m_terrainScale[4] = { 5.0f, 5.0f, 5.0f };
+	g_Terrain.m_terrainScale[5] = { 5.0f, 5.0f, 5.0f };
 	g_Terrain.m_terrainRotation[0] = { 0.0f,0.0f,0.0f };
 	g_Terrain.m_terrainRotation[1] = { 0.0f,0.0f,0.0f };
 	g_Terrain.m_terrainRotation[2] = { 0.0f,0.0f,0.0f };
 	g_Terrain.m_terrainRotation[3] = { 0.0f,0.0f,0.0f };
 	g_Terrain.m_terrainRotation[4] = { 0.0f,0.0f,0.0f };
+	g_Terrain.m_terrainRotation[5] = { 0.0f,0.0f,0.0f };
 
 	g_Terrain.m_terrainScaling[0] = { 5.0f, 5.0f, 5.0f };
 	g_Terrain.m_terrainScaling[1] = { 10.0f, 6.5f, 10.0f };
 	g_Terrain.m_terrainScaling[2] = { 10.0f, 8.0f, 10.0f };
 	g_Terrain.m_terrainScaling[3] = { 10.0f, 5.0f, 10.0f };
 	g_Terrain.m_terrainScaling[4] = { 7.0f, 7.0f, 7.0f };
+	g_Terrain.m_terrainScaling[5] = { 10.0f, 10.0f, 10.0f };
 
 	g_Terrain.m_motherPosition[0].y -= 5.0f;
 	g_Terrain.m_motherPosition[1].y -= 5.0f;
@@ -782,25 +593,25 @@ void TerrainInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 	XMFLOAT3 initPosWall = g_Terrain.m_motherPosition[1];
 	XMFLOAT3 initPosHill = g_Terrain.m_motherPosition[0];
 
-	for (int i = 0; i < 6; i++)
+	for (int i = 0; i < OTHER_TERRAIN_SIZE; i++)
 	{
-		g_Terrain.m_otherScale[i] = g_otherScale[Trand][i];
-		g_Terrain.m_otherModelScale[i] = g_otherModelScale[Trand][i];
-		g_Terrain.m_otherPosition[i] = g_otherPos[Trand][i];
+		g_Terrain.m_otherScale[i] = g_otherScale[g_stageType][i];
+		g_Terrain.m_otherModelScale[i] = g_otherModelScale[g_stageType][i];
+		g_Terrain.m_otherPosition[i] = g_otherPos[g_stageType][i];
 	}
 	for (int i = 0; i < 3; i++)
 	{
-		g_Terrain.m_otherModel[i] = ModelLoad(otherModel[Trand][i].c_str());
+		g_Terrain.m_otherModel[i] = ModelLoad(otherModel[g_stageType][i].c_str());
 	}
 
-	g_Terrain.other.resize(6);
+	g_Terrain.other.resize(OTHER_TERRAIN_SIZE);
 
-	for (int i = 0; i < 6; i++)
+	for (int i = 0; i < OTHER_TERRAIN_SIZE; i++)
 	{
 		g_Terrain.other[i] = ColliderFactory::CreateBoxObject(
 			g_Terrain.m_otherPosition[i],
 			g_Terrain.m_otherScale[i],
-			g_otherTag[Trand][i],
+			g_otherTag[g_stageType][i],
 			0
 		);
 		g_Terrain.other[i]->m_isStatic = true;
@@ -813,54 +624,53 @@ void TerrainInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 	//	下のスイッチ文はそれっぽいので活用してもいいよ
 	//======================================================
 
-	//選択された武器・地形データに応じて地形を生成
-	switch (p1Set)
-	{
-	case WeaponTerrain::SWORD_WALL:
-		//g_Terrain.SimpleObjects(Trees, { 0.25f, 2.0f, 0.25f }, TERRAIN_TYPE::TREE, g_Terrain.m_motherPosition[1], 0); // 相手を中心に生えるから
-		g_Terrain.PixelObjects(Trees, TERRAIN_TYPE::TREE, g_Terrain.m_motherPosition[1], 0);
-		break;
-	case WeaponTerrain::SPEAR_HILL:
-		//g_Terrain.SimpleObjects(Hills, { 0.25f, 0.25f, 0.25f }, TERRAIN_TYPE::HILL, g_Terrain.m_motherPosition[0], 0);
-		g_Terrain.CreateAnt(g_Terrain.m_motherPosition[0], 0);
-		break;
-	case WeaponTerrain::BOW_HILL:
-		g_Terrain.SimpleObjects(Bogs, { 1.0f, 2.5f, 1.0f }, TERRAIN_TYPE::BOG, g_Terrain.m_motherPosition[0], 0);
-		break;
-	case WeaponTerrain::HAMMER_:
-		g_Terrain.SimpleObjects(Walls, { 1.0f, 1.0f, 1.0f }, TERRAIN_TYPE::HILL, g_Terrain.m_motherPosition[1], 1);
-		break;
-	case WeaponTerrain::SHURIKEN_:
-		g_Terrain.SimpleObjects(Walls, { 1.0f, 1.0f, 1.0f }, TERRAIN_TYPE::WALL, g_Terrain.m_motherPosition[0], 0);
-		break;
-
-	default:
-		break;
-	}
-	//プレイヤー2
-	switch (p2Set)
-	{
-	case WeaponTerrain::SWORD_WALL:
-		//g_Terrain.SimpleObjects(Trees, { 0.25f, 2.0f, 0.25f }, TERRAIN_TYPE::TREE, g_Terrain.m_motherPosition[0], 1); // 相手を中心に生えるから
-		g_Terrain.PixelObjects(Trees, TERRAIN_TYPE::TREE, g_Terrain.m_motherPosition[0], 1);
-		break;
-	case WeaponTerrain::SPEAR_HILL:
-		//g_Terrain.SimpleObjects(Hills, { 0.25f, 0.25f, 0.25f }, TERRAIN_TYPE::HILL, g_Terrain.m_motherPosition[1], 1);
-		g_Terrain.CreateAnt(g_Terrain.m_motherPosition[1], 1);
-		break;
-	case WeaponTerrain::BOW_HILL:
-		g_Terrain.SimpleObjects(Bogs, { 1.0f, 2.5f, 1.0f }, TERRAIN_TYPE::BOG, g_Terrain.m_motherPosition[1], 1);
-		//g_Terrain.PixelObjects(Hills, TERRAIN_TYPE::HILL, initPosHill);
-		break;
-	case WeaponTerrain::HAMMER_:
-		g_Terrain.SimpleObjects(Walls, { 1.0f, 1.0f, 1.0f }, TERRAIN_TYPE::HILL, g_Terrain.m_motherPosition[1], 1);
-		break;
-	case WeaponTerrain::SHURIKEN_:
-		g_Terrain.SimpleObjects(Walls, { 1.0f, 1.0f, 1.0f }, TERRAIN_TYPE::WALL, g_Terrain.m_motherPosition[1], 1);
-		break;
-	default:
-		break;
-	}
+	// 選択された武器・地形データに応じて地形を生成
+	//switch (p1Set)
+	//{
+	//case WeaponTerrain::SWORD_WALL:
+	//	//g_Terrain.SimpleObjects(Trees, { 0.25f, 2.0f, 0.25f }, TERRAIN_TYPE::TREE, g_Terrain.m_motherPosition[1], 0); // 相手を中心に生えるから
+	//	g_Terrain.PixelObjects(Trees, TERRAIN_TYPE::TREE, g_Terrain.m_motherPosition[1], 0);
+	//	break;
+	//case WeaponTerrain::SPEAR_HILL:
+	//	//g_Terrain.SimpleObjects(Hills, { 0.25f, 0.25f, 0.25f }, TERRAIN_TYPE::HILL, g_Terrain.m_motherPosition[0], 0);
+	//	g_Terrain.CreateAnt(g_Terrain.m_motherPosition[0], 0);
+	//	break;
+	//case WeaponTerrain::BOW_HILL:
+	//	g_Terrain.SimpleObjects(Bogs, { 1.0f, 2.5f, 1.0f }, TERRAIN_TYPE::BOG, g_Terrain.m_motherPosition[0], 0);
+	//	break;
+	//case WeaponTerrain::HAMMER_:
+	//	g_Terrain.SimpleObjects(Walls, { 1.0f, 1.0f, 1.0f }, TERRAIN_TYPE::HILL, g_Terrain.m_motherPosition[1], 1);
+	//	break;
+	//case WeaponTerrain::SHURIKEN_:
+	//	g_Terrain.SimpleObjects(Walls, { 1.0f, 1.0f, 1.0f }, TERRAIN_TYPE::WALL, g_Terrain.m_motherPosition[0], 0);
+	//	break;
+	//default:
+	//	break;
+	//}
+	////プレイヤー2
+	//switch (p2Set)
+	//{
+	//case WeaponTerrain::SWORD_WALL:
+	//	//g_Terrain.SimpleObjects(Trees, { 0.25f, 2.0f, 0.25f }, TERRAIN_TYPE::TREE, g_Terrain.m_motherPosition[0], 1); // 相手を中心に生えるから
+	//	g_Terrain.PixelObjects(Trees, TERRAIN_TYPE::TREE, g_Terrain.m_motherPosition[0], 1);
+	//	break;
+	//case WeaponTerrain::SPEAR_HILL:
+	//	//g_Terrain.SimpleObjects(Hills, { 0.25f, 0.25f, 0.25f }, TERRAIN_TYPE::HILL, g_Terrain.m_motherPosition[1], 1);
+	//	g_Terrain.CreateAnt(g_Terrain.m_motherPosition[1], 1);
+	//	break;
+	//case WeaponTerrain::BOW_HILL:
+	//	g_Terrain.SimpleObjects(Bogs, { 1.0f, 2.5f, 1.0f }, TERRAIN_TYPE::BOG, g_Terrain.m_motherPosition[1], 1);
+	//	//g_Terrain.PixelObjects(Hills, TERRAIN_TYPE::HILL, initPosHill);
+	//	break;
+	//case WeaponTerrain::HAMMER_:
+	//	g_Terrain.SimpleObjects(Walls, { 1.0f, 1.0f, 1.0f }, TERRAIN_TYPE::HILL, g_Terrain.m_motherPosition[1], 1);
+	//	break;
+	//case WeaponTerrain::SHURIKEN_:
+	//	g_Terrain.SimpleObjects(Walls, { 1.0f, 1.0f, 1.0f }, TERRAIN_TYPE::WALL, g_Terrain.m_motherPosition[1], 1);
+	//	break;
+	//default:
+	//	break;
+	//}
 }
 void TerrainFinalize()
 {
@@ -886,6 +696,7 @@ void TerrainFinalize()
 		g_Terrain.trees[i].clear();
 		g_Terrain.ants[i].clear();
 		g_Terrain.bogs[i].clear();
+		g_Terrain.fances[i].clear();
 	}
 
 	g_Terrain.other.clear();
@@ -910,9 +721,15 @@ void TerrainUpdate()
 		if (g_Terrain.m_coolTime[0] <= 0)
 		{
 			g_Terrain.m_isChange[0] = true; // 1Pの変身を確認
-			g_Terrain.m_coolTime[0] = 20.0f;
-			g_pos[0] = g_Terrain.m_motherPosition[1];
+			g_Terrain.m_coolTime[0] = 45.0f;
+			g_pos[0] = GetPlayer2Position(); // プレイヤー2の場所
 		}
+	}
+	else
+	{
+		g_Terrain.m_coolTime[0] = 0.0f;
+		g_Terrain.m_isChange[0] = false;
+		g_pos[0] = {};
 	}
 
 	if (GetPlayer2_IsTransformed())
@@ -922,16 +739,16 @@ void TerrainUpdate()
 		if (g_Terrain.m_coolTime[1] <= 0)
 		{
 			g_Terrain.m_isChange[1] = true; // 2Pの変身を確認
-			g_Terrain.m_coolTime[1] = 20.0f;
-			g_pos[1] = g_Terrain.m_motherPosition[0];
+			g_Terrain.m_coolTime[1] = 45.0f;
+			g_pos[1] = GetPlayerPosition();
 		}
 	}
-
-	//if (Keyboard_IsKeyDown(KK_L))
-	//{
-	//	g_Terrain.m_isChange[0] = true; // 2Pの変身を確認
-	//	g_Terrain.m_coolTime[0] = 20.0f;
-	//}
+	else
+	{
+		g_Terrain.m_coolTime[1] = 0.0f;	// クールタイムをなくす
+		g_Terrain.m_isChange[1] = false; // 変身を解く
+		g_pos[1] = {};
+	}
 
 	// 変身したら-する
 	if (g_Terrain.m_isChange[0])
@@ -984,7 +801,7 @@ void TerrainUpdate()
 			g_Terrain.UpdateObject(g_Terrain.walls[0], g_Terrain.m_motherPosition[1], TRUE); // P1の地形の当たり判定
 			break;
 		case WeaponTerrain::SHURIKEN_:
-			g_Terrain.UpdateObject(g_Terrain.walls[0], g_Terrain.m_motherPosition[0], FALSE); // P1の地形の当たり判定
+			g_Terrain.UpdateObject(g_Terrain.fances[0], g_Terrain.m_motherPosition[0], FALSE); // P1の地形の当たり判定
 			break;
 		}
 	}
@@ -1007,7 +824,7 @@ void TerrainUpdate()
 			posY = 0.7f;
 			break;
 		case WeaponTerrain::SHURIKEN_:
-			posY = 0.7f;
+			posY = FANCE_POS_Y;
 			break;
 		default:
 			break;
@@ -1032,7 +849,7 @@ void TerrainUpdate()
 				g_Terrain.UpdateObject(g_Terrain.walls[0], g_Terrain.m_motherPosition[1], TRUE); // P1の地形の当たり判定
 				break;
 			case WeaponTerrain::SHURIKEN_:
-				g_Terrain.UpdateObject(g_Terrain.walls[0], g_Terrain.m_motherPosition[0], TRUE); // P1の地形の当たり判定
+				g_Terrain.UpdateObject(g_Terrain.fances[0], g_Terrain.m_motherPosition[0], TRUE); // P1の地形の当たり判定
 				break;
 			}
 		}
@@ -1058,7 +875,7 @@ void TerrainUpdate()
 			g_Terrain.UpdateObject(g_Terrain.walls[1], g_Terrain.m_motherPosition[1], TRUE); // P1の地形の当たり判定
 			break;
 		case WeaponTerrain::SHURIKEN_:
-			g_Terrain.UpdateObject(g_Terrain.walls[1], g_Terrain.m_motherPosition[1], FALSE); // P1の地形の当たり判定
+			g_Terrain.UpdateObject(g_Terrain.fances[1], g_Terrain.m_motherPosition[1], FALSE); // P1の地形の当たり判定
 			break;
 		}
 	}
@@ -1081,7 +898,7 @@ void TerrainUpdate()
 			posY = 0.7f;
 			break;
 		case WeaponTerrain::SHURIKEN_:
-			posY = 0.7f;
+			posY = FANCE_POS_Y;
 			break;
 		default:
 			break;
@@ -1106,7 +923,7 @@ void TerrainUpdate()
 				g_Terrain.UpdateObject(g_Terrain.walls[1], g_Terrain.m_motherPosition[1], TRUE); // P1の地形の当たり判定
 				break;
 			case WeaponTerrain::SHURIKEN_:
-				g_Terrain.UpdateObject(g_Terrain.walls[1], g_Terrain.m_motherPosition[1], TRUE); // P1の地形の当たり判定
+				g_Terrain.UpdateObject(g_Terrain.fances[1], g_Terrain.m_motherPosition[1], TRUE); // P1の地形の当たり判定
 				break;
 			}
 		}
@@ -1114,7 +931,7 @@ void TerrainUpdate()
 }
 void TerrainDraw()
 {
-	for (int i = 0; i < 6; i++)
+	for (int i = 0; i < OTHER_TERRAIN_SIZE; i++)
 	{
 		//ワールド行列作成
 		XMMATRIX	scale = XMMatrixScaling(
@@ -1126,9 +943,9 @@ void TerrainDraw()
 			0.0f,
 			0.0f);
 		XMMATRIX	translation = XMMatrixTranslation(
-			g_Terrain.m_otherPosition[i].x + g_otherOffset[Trand][i].x,
-			g_Terrain.m_otherPosition[i].y + g_otherOffset[Trand][i].y,
-			g_Terrain.m_otherPosition[i].z + g_otherOffset[Trand][i].z);
+			g_Terrain.m_otherPosition[i].x + g_otherOffset[g_stageType][i].x,
+			g_Terrain.m_otherPosition[i].y + g_otherOffset[g_stageType][i].y,
+			g_Terrain.m_otherPosition[i].z + g_otherOffset[g_stageType][i].z);
 		XMMATRIX	world = scale * rotation * translation;
 
 		//シェーダーへ行列をセット
@@ -1136,7 +953,7 @@ void TerrainDraw()
 
 		g_Terrain.other[i]->m_position = g_Terrain.m_otherPosition[i];
 
-		ModelDraw(g_Terrain.m_otherModel[otherM[Trand][i]]);
+		ModelDraw(g_Terrain.m_otherModel[otherM[g_stageType][i]]);
 	}
 
 	// 1Pが変身してないときは描画しない
@@ -1159,7 +976,7 @@ void TerrainDraw()
 			no = 1;
 			break;
 		case WeaponTerrain::SHURIKEN_:
-			no = 1;
+			no = 5;
 			break;
 		default:
 			break;
@@ -1180,7 +997,6 @@ void TerrainDraw()
 			g_Terrain.m_motherPosition[0].z);
 		if (no == 4)
 		{
-
 			translation = XMMatrixTranslation(
 				g_pos[0].x,
 				g_Terrain.m_motherPosition[0].y,
@@ -1206,7 +1022,7 @@ void TerrainDraw()
 			ModelDraw(g_Terrain.m_moveTerrain[1]);
 			break;
 		case WeaponTerrain::SHURIKEN_:
-			ModelDraw(g_Terrain.m_moveTerrain[1]);
+			ModelDraw(g_Terrain.m_moveTerrain[5]);
 			break;
 		default:
 			break;
@@ -1232,7 +1048,7 @@ void TerrainDraw()
 			no = 1;
 			break;
 		case WeaponTerrain::SHURIKEN_:
-			no = 1;
+			no = 5;
 			break;
 		default:
 			break;
@@ -1278,7 +1094,7 @@ void TerrainDraw()
 			ModelDraw(g_Terrain.m_moveTerrain[1]);
 			break;
 		case WeaponTerrain::SHURIKEN_:
-			ModelDraw(g_Terrain.m_moveTerrain[1]);
+			ModelDraw(g_Terrain.m_moveTerrain[5]);
 			break;
 		default:
 			break;
@@ -1343,7 +1159,8 @@ void TerrainSet(WeaponTerrain set, bool playerSelect)
 		g_Terrain.SimpleObjects(Walls, { 1.0f, 1.0f, 1.0f }, TERRAIN_TYPE::WALL, g_Terrain.m_motherPosition[select], select);
 		break;
 	case WeaponTerrain::SHURIKEN_:
-		g_Terrain.SimpleObjects(Walls, { 1.0f, 1.0f, 1.0f }, TERRAIN_TYPE::WALL, g_Terrain.m_motherPosition[select], select);
+		g_Terrain.SimpleObjects(sFances, { 1.2f, 1.2f, 1.2f }, TERRAIN_TYPE::FANCE_S, g_Terrain.m_motherPosition[select], select);
+		g_Terrain.SimpleObjects(pFances, { 0.5f, 0.5f, 0.5f }, TERRAIN_TYPE::FANCE_P, g_Terrain.m_motherPosition[select], select);
 		break;
 	default:
 		break;
@@ -1375,7 +1192,7 @@ void TERRAIN::ClearPlayerObjects(WeaponTerrain set, int select)
 		targetList = &walls[select];
 		break;
 	case WeaponTerrain::SHURIKEN_:
-		targetList = &walls[select];
+		targetList = &fances[select];
 		break;
 	default:
 		break;
@@ -1434,6 +1251,8 @@ void TERRAIN::SetObject(XMFLOAT3 pos, XMFLOAT3 scl, std::string tag, int lay, in
 	{
 		if (raw_ptr->m_tag == "HILL") hills[select].push_back(raw_ptr);
 		if (raw_ptr->m_tag == "WALL") walls[select].push_back(raw_ptr);
+		if (raw_ptr->m_tag == "FANCE") fances[select].push_back(raw_ptr);
+		if (raw_ptr->m_tag == "BOUNCE") fances[select].push_back(raw_ptr);
 		if (raw_ptr->m_tag == "TREEP1") trees[0].push_back(raw_ptr);
 		if (raw_ptr->m_tag == "TREEP2") trees[1].push_back(raw_ptr);
 		if (raw_ptr->m_tag == "BOGP1") bogs[0].push_back(raw_ptr);
@@ -1702,10 +1521,20 @@ void TERRAIN::UpdateObject(std::vector<GameObject*> terrain, XMFLOAT3 motherPosi
 		// 変身前：プレイヤーに追従させる（ここを同期させる）
 		for (auto& obj : terrain)
 		{
-			// velocityを「初期の相対距離」として保持しているなら、これでOK
-			obj->m_position.x = motherPosition.x + obj->m_velocity.x;
-			obj->m_position.y = motherPosition.y + obj->m_velocity.y;
-			obj->m_position.z = motherPosition.z + obj->m_velocity.z;
+			if (obj->m_tag == "TREEP1" || obj->m_tag == "TREEP2")
+			{
+				// velocityを「初期の相対距離」として保持しているなら、これでOK
+				obj->m_position.x = motherPosition.x + obj->m_velocity.x;
+				obj->m_position.y = -5.0f + obj->m_velocity.y;
+				obj->m_position.z = motherPosition.z + obj->m_velocity.z;
+			}
+			else
+			{
+				// velocityを「初期の相対距離」として保持しているなら、これでOK
+				obj->m_position.x = motherPosition.x + obj->m_velocity.x;
+				obj->m_position.y = motherPosition.y + obj->m_velocity.y;
+				obj->m_position.z = motherPosition.z + obj->m_velocity.z;
+			}
 		}
 	}
 	else
@@ -1715,38 +1544,32 @@ void TERRAIN::UpdateObject(std::vector<GameObject*> terrain, XMFLOAT3 motherPosi
 		{
 			if (obj->m_tag == "SlopeP1" || obj->m_tag == "SlopeP2")
 			{
-				if (obj->m_position.y < -0.5f)
+				if (obj->m_position.y < ANTLION_POS_Y_)
 				{
 					obj->m_position.y += 0.1f; // 上昇
 				}
 				
-				if (obj->m_position.y >= -0.5f)
+				if (obj->m_position.y >= ANTLION_POS_Y_)
 				{
-					obj->m_position.y = -0.4f;
+					obj->m_position.y = ANTLION_POS_Y_;
+				}
+			}
+			else if (obj->m_tag == "TREEP1" || obj->m_tag == "TREEP2")
+			{
+				if (obj->m_position.y < 0.5f)
+				{
+					obj->m_position.y += 0.1f; // 上昇
 				}
 
-				/*hal::dout << "SLOPE position (" << obj->m_position.x <<
-					"," << obj->m_position.y << "," << obj->m_position.z << "\n";*/
+				if (obj->m_position.y >= 0.5f)
+				{
+					obj->m_position.y = 0.5f;
+				}
 			}
 			else
 			{
 				obj->m_position.y += 0.1f; // 上昇
-				/*hal::dout << "NORMAL position (" << obj->m_position.x <<
-					"," << obj->m_position.y << "," << obj->m_position.z << "\n";*/
 			}
-			// キー入力で動くのと同じように、直接 position を更新
-
-			/*if (obj->m_tag == "SlopeP1")
-			{
-				hal::dout << "ANTS1 position (" << ants[0][0]->m_position.x << "," <<
-					ants[0][0]->m_position.y << "," << ants[0][0]->m_position.z << ")\n";
-			}
-
-			if (obj->m_tag == "SlopeP2")
-			{
-				hal::dout << "ANTS2 position (" << ants[1][0]->m_position.x << "," <<
-					ants[1][0]->m_position.y << "," << ants[1][0]->m_position.z << ")\n";
-			}*/
 		}
 	}
 }
@@ -1803,6 +1626,20 @@ void TERRAIN::CreateHit(std::vector<TERRAIN_OBJECT> terrain, XMFLOAT3 motherPosi
 			bogs[select][i]->m_scale = terrain[i].m_size;
 			break;
 
+		case TERRAIN_TYPE::FANCE_P:
+			SetObject(pos, terrain[i].m_size, "FANCE", 0, select);
+			fances[select][i]->m_position = pos;	// 座標を格納
+			fances[select][i]->m_velocity = terrain[i].m_distance;
+			fances[select][i]->m_scale = terrain[i].m_size;
+			break;
+
+		case TERRAIN_TYPE::FANCE_S:
+			SetObject(pos, terrain[i].m_size, "BOUNCE", 0, select);
+			fances[select][i]->m_position = pos;	// 座標を格納
+			fances[select][i]->m_velocity = terrain[i].m_distance;
+			fances[select][i]->m_scale = terrain[i].m_size;
+			break;
+
 		case TERRAIN_TYPE::MAX:
 			break;
 
@@ -1846,7 +1683,7 @@ void TERRAIN::CreateAnt(XMFLOAT3 motherPosition, int select)
 				g_antlionData[i],
 				7.5f,
 				7.5f,
-				0.5f,
+				0.4f,
 				tag,
 				0
 			)
@@ -1864,30 +1701,25 @@ void TERRAIN::CreateAnt(XMFLOAT3 motherPosition, int select)
 		}
 	}
 
-	// 四方分の壁を作る
+	// 四方分坂を作る(外から上る方)
 	for (int i = 0; i < 4; i++)
 	{
 		// ファクトリの戻り値 (生のポインタ) を unique_ptr で受け取り、所有権を確保
 		std::unique_ptr<GameObject> antObj(
-			ColliderFactory::CreateBoxObject(
+			ColliderFactory::CreateTrapezoidSlopeObject(
 				{ 0.0f, 0.0f, 0.0f },
-				g_antlionBoxData[i],
-				"WALL",
+				g_antlionData3[i],
+				10.0f,
+				10.0f,
+				0.4f,
+				tag,
 				0
 			)
 		);
 
 		antObj->m_position = motherPosition;
-		antObj->m_position.y -= 1.0f;
-		antObj->m_velocity.y = -1.0f;
-
-		antObj->m_position.x += g_antlionBoxData2[i].x;
-		antObj->m_velocity.x = g_antlionBoxData2[i].x;
-		antObj->m_position.z += g_antlionBoxData2[i].y;
-		antObj->m_velocity.z = g_antlionBoxData2[i].y;
-
-		//antObj->m_velocity.x = g_antlionData2[i].x; // dataの数値を代入
-		//antObj->m_velocity.z = g_antlionData2[i].y; // dataの数値を代入
+		antObj->m_position.z += g_antlionData4[i].y;
+		antObj->m_position.x += g_antlionData4[i].x;
 		GameObject* raw_ptr = antObj.get(); // 生のポインタを取得（参照用）
 
 		if (raw_ptr != nullptr)
@@ -1896,4 +1728,37 @@ void TERRAIN::CreateAnt(XMFLOAT3 motherPosition, int select)
 			terrainObjects.push_back(std::move(antObj));
 		}
 	}
+
+	//// 四方分の壁を作る
+	//for (int i = 0; i < 4; i++)
+	//{
+	//	// ファクトリの戻り値 (生のポインタ) を unique_ptr で受け取り、所有権を確保
+	//	std::unique_ptr<GameObject> antObj(
+	//		ColliderFactory::CreateBoxObject(
+	//			{ 0.0f, 0.0f, 0.0f },
+	//			g_antlionBoxData[i],
+	//			"WALL",
+	//			0
+	//		)
+	//	);
+
+	//	antObj->m_position = motherPosition;
+	//	antObj->m_position.y -= 1.0f;
+	//	antObj->m_velocity.y = -1.0f;
+
+	//	antObj->m_position.x += g_antlionBoxData2[i].x;
+	//	antObj->m_velocity.x = g_antlionBoxData2[i].x;
+	//	antObj->m_position.z += g_antlionBoxData2[i].y;
+	//	antObj->m_velocity.z = g_antlionBoxData2[i].y;
+
+	//	//antObj->m_velocity.x = g_antlionData2[i].x; // dataの数値を代入
+	//	//antObj->m_velocity.z = g_antlionData2[i].y; // dataの数値を代入
+	//	GameObject* raw_ptr = antObj.get(); // 生のポインタを取得（参照用）
+
+	//	if (raw_ptr != nullptr)
+	//	{
+	//		ants[select].push_back(raw_ptr);
+	//		terrainObjects.push_back(std::move(antObj));
+	//	}
+	//}
 }

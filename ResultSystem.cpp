@@ -697,7 +697,7 @@ void ResultSystem_Update()
         {
             XMFLOAT4 color(0, 0, 0, 1);
             Player_AllCountReset();
-            SetFade(40.0f, color, FADE_OUT, SCENE_TITLE);
+            SetFadeOutOnly(40.0f, color, SCENE_TEAMLOGO);
         }
     }
 

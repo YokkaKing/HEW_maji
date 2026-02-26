@@ -62,6 +62,9 @@ public:
     std::shared_ptr<BoxCollider> m_collider;
     float m_flyTimer = 3.0f; // 発射してからの寿命
 
+    int m_bounceCount = 0; // 反射した回数を記録
+    float m_bounceCooldown = 0.0f; // 反射してからのクールタイム
+
     bool m_selectPlayer = false;
 public:
     void Start();

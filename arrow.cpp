@@ -316,8 +316,52 @@ void Arrow::Throw(float power, bool select)
 	shot->m_selectPlayer = select;
 	shot->m_chargePower = power;
 
-	// 飛ばす方向を計算
-	float baseSpeed = 0.3f;
+	// --- エイムアシスト実装開始 ---
+	// 1. ターゲット（敵プレイヤー）を特定
+	GameObject* target = nullptr;
+	if (select == false) { // 1Pが投げた場合 (falseは通常1P)
+		target = (GameObject*)g_PlayerArrow2;
+	}
+	else {               // 2Pが投げた場合
+		target = (GameObject*)g_PlayerArrow1;
+	}
+
+	if (target) {
+		// 2. 自分から敵への方向ベクトルを計算 (XZ平面)
+		XMVECTOR myPos = XMLoadFloat3(&shot->m_position);
+		XMVECTOR targetPos = XMLoadFloat3(&target->m_position);
+		XMVECTOR toTarget = XMVectorSubtract(targetPos, myPos);
+		toTarget = XMVectorSetY(toTarget, 0.0f); // 高低差は無視
+
+		// 距離が極端に近くないかチェックしてから正規化
+		XMVECTOR lengthSq = XMVector3LengthSq(toTarget);
+		float lenSq;
+		XMStoreFloat(&lenSq, lengthSq);
+
+		if (lenSq > 0.0001f) {
+			toTarget = XMVector3Normalize(toTarget);
+
+			// 3. 自分の現在の正面ベクトルを計算 (回転角yから算出)
+			float currentRy = shot->m_rotation.y;
+			XMVECTOR myForward = XMVectorSet(sinf(currentRy), 0.0f, cosf(currentRy), 0.0f);
+
+			// 4. 角度差（ドット積）を計算
+			XMVECTOR dotVec = XMVector3Dot(myForward, toTarget);
+			float dot = 0.0f;
+			XMStoreFloat(&dot, dotVec);
+
+			// cos(15度) ≒ 0.9659
+			// ドット積が0.9659より大きければ、敵が正面15度以内にいる
+			if (dot > 0.9659f) {
+				// 5. エイムアシスト発動：矢の回転角をターゲットの方向へ書き換える
+				shot->m_rotation.y = atan2f(XMVectorGetX(toTarget), XMVectorGetZ(toTarget));
+			}
+		}
+	}
+	// --- エイムアシスト実装終了 ---
+
+	// 飛ばす方向を計算 (補正された shot->m_rotation.y を使用)
+	float baseSpeed = 0.4f;
 	float finalSpeed = baseSpeed * (1.0f + power);
 	float ry = shot->m_rotation.y;
 	shot->m_velocity.x = sinf(ry) * finalSpeed;
@@ -327,15 +371,16 @@ void Arrow::Throw(float power, bool select)
 	extern std::vector<GameObject*> g_gameObjects;
 	g_gameObjects.push_back(shot);
 	shot->Start();
+
+	// アニメーション制御
 	MODEL* model = nullptr;
 	bool isMoving = false;
-	if (m_selectPlayer == FALSE)
+	if (m_selectPlayer == false)
 	{
 		PLAYER* player = g_PlayerArrow1;
 		if (player)
 		{
 			model = player->m_model;
-
 			float mv = sqrtf(player->m_velocity.x * player->m_velocity.x +
 				player->m_velocity.z * player->m_velocity.z);
 			isMoving = (mv > 0.001f);
@@ -348,12 +393,10 @@ void Arrow::Throw(float power, bool select)
 		if (player)
 		{
 			model = player->m_model;
-
 			float mv = sqrtf(player->m_velocity.x * player->m_velocity.x +
 				player->m_velocity.z * player->m_velocity.z);
 			isMoving = (mv > 0.001f);
 			ModelPlayClip(model, 374, 420, 60.0f, false, 2.0f);
-
 		}
 	}
 }
@@ -392,7 +435,7 @@ void ArrowShot::Update()
 			m_isDead = true;
 		}
 
-		m_velocity.y -= 0.005f; // 重力
+		m_velocity.y -= 0.001f; // 重力
 		// 大きいと重い、小さいとふわっとする
 
 		m_position.x += m_velocity.x;
@@ -412,12 +455,12 @@ void ArrowShot::Draw()
 		m_scale.y*0.1f,
 		m_scale.z*0.1f);
 	XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
-		m_rotation.x,
+		m_rotation.x * -8.0f,
 		m_rotation.y + XM_PI,
 		m_rotation.z);
 	XMMATRIX	translation = XMMatrixTranslation(
 		m_position.x,
-		m_position.y,
+		m_position.y - 0.5f,
 		m_position.z);
 	XMMATRIX	world = scale * rotation * translation;
 
@@ -440,6 +483,10 @@ void ArrowShot::OnCollision(const CollisionInfo& info)
 	if (info.other->m_tag == "Slope2") return;
 	if (info.other->m_tag == "BOGP1") return;
 	if (info.other->m_tag == "BOGP2") return;
+	if (info.other->m_tag == "TREEP1") return;
+	if (info.other->m_tag == "TREEP2") return;
+	if (info.other->m_tag == "WATER") return;
+	if (info.other->m_tag == "LAVA") return;
 
 	m_velocity = { 0.0f, 0.0f, 0.0f };
 	m_isStuck = true;

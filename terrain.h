@@ -12,16 +12,16 @@
 //================================================================
 //	マクロ定義
 //================================================================
-#define MOVE_TERRAIN_TYPE (5)
+#define MOVE_TERRAIN_TYPE (6)
 #define CHANGE_FLAG (2)
  
 //================================================================
 //	インクルード
 //================================================================
-#include <d3d11.h>
-#include <DirectXMath.h>
-#include "direct3d.h"
-#include "sprite.h"
+#include<d3d11.h>
+#include<DirectXMath.h>
+#include"direct3d.h"
+#include"sprite.h"
 using namespace DirectX;
 #include"gameObject.h"
 #include<string>
@@ -41,6 +41,8 @@ enum class TERRAIN_TYPE
 	WALL,
 	TREE,
 	BOG,
+	FANCE_P,
+	FANCE_S,
 
 	MAX
 };
@@ -69,6 +71,7 @@ public:
 	std::vector<std::unique_ptr<GameObject>> terrainObjects;
 	std::vector<GameObject*> hills[2];	// 丘の当たり判定の全て
 	std::vector<GameObject*> walls[2];	// 壁の当たり判定の全て
+	std::vector<GameObject*> fances[2];	// 塀の当たり判定の全て
 	std::vector<GameObject*> trees[2];	// 木の当たり判定の全て
 	std::vector<GameObject*> ants[2];	// 蟻地獄の当たり判定の全て
 	std::vector<GameObject*> bogs[2];	// 沼地の当たり判定の全て
@@ -81,9 +84,9 @@ public:
 	FLOAT m_coolTime[2] = {}; // 変身時間(仮) 今後は他のファイルから持ってくる予定
 
 	std::vector<GameObject*> other;		// 色々な当たり判定の全て
-	XMFLOAT3 m_otherScale[6];
-	XMFLOAT3 m_otherModelScale[6];
-	XMFLOAT3 m_otherPosition[6];
+	XMFLOAT3 m_otherScale[10];
+	XMFLOAT3 m_otherModelScale[10];
+	XMFLOAT3 m_otherPosition[10];
 	MODEL* m_otherModel[3];
 public:
 	void SetObject(XMFLOAT3 pos, XMFLOAT3 scl, std::string tag, int lay, int select);

@@ -196,7 +196,7 @@ void Shuriken::Throw(bool select)
 	// 飛ばす角度のオフセット（ラジアンに変換）
 	// 45度 = PI / 4
 	float angles[] = { -XM_PIDIV2 / 6, 0.0f, XM_PIDIV2 / 6 };
-	float baseSpeed = 0.3f;
+	float baseSpeed = 0.25f;
 
 	for (int i = 0; i < 3; i++)
 	{
@@ -229,6 +229,7 @@ void Shuriken::Throw(bool select)
 void ShurikenShot::Start()
 {
 	m_tag = "Attack";
+	m_bounceCooldown = 0.0f;
 
 	XMFLOAT3 scale = { 0.25f, 0.125f, 0.25f };
 	m_scale = scale;
@@ -238,7 +239,13 @@ void ShurikenShot::Start()
 
 void ShurikenShot::Update()
 {
-	// 矢が刺さってたら
+	// クールタイムを減らす
+	if (m_bounceCooldown > 0.0f)
+	{
+		m_bounceCooldown -= (1.0f / 60.0f);
+	}
+
+	// 手裏剣が刺さってたら
 	if (m_isStuck)
 	{
 		m_stuckLife -= (1.0f / 60.0f);
@@ -294,8 +301,52 @@ void ShurikenShot::Draw()
 
 void ShurikenShot::OnCollision(const CollisionInfo& info)
 {
-	// 刺さってたら何もなし
-	if (m_isStuck) return;
+	if (!info.other || m_bounceCooldown > 0.0f) return;
+
+	if (info.other->m_tag == "BOUNCE")
+	{
+		if (m_bounceCount < 1)
+		{
+			XMVECTOR V = XMLoadFloat3(&m_velocity);
+			XMVECTOR N = XMLoadFloat3(&info.normal);
+
+			// 手裏剣が進んでいる方向と法線の関係をチェック
+			float dotVal = XMVectorGetX(XMVector3Dot(V, N));
+
+			// 寛容度アップ：法線が自分と同じ向きなら反転させる（これだけで全方位対応）
+			if (dotVal > 0)
+			{
+				N = XMVectorNegate(N);
+				dotVal = -dotVal;
+			}
+
+			// --- 反射計算 ---
+			XMVECTOR R = XMVectorSubtract(V, XMVectorScale(N, 2.0f * dotVal));
+			XMStoreFloat3(&m_velocity, R);
+
+			// --- ★押し出しを「もっと寛容」にする ---
+			// 0.3fだとまだ壁に引っかかることがあるので、少し多めに弾き出す
+			float pushDist = info.penetration + 0.5f;
+			m_position.x += XMVectorGetX(N) * pushDist;
+			m_position.z += XMVectorGetZ(N) * pushDist;
+
+			m_bounceCount++;
+
+			// ★連続反射しやすくするために、クールタイムを少し短く（0.15 -> 0.1）
+			m_bounceCooldown = 0.1f;
+
+			// 反射した瞬間にちょっとだけ速度を上げると「弾いた感」が出ます（お好みで）
+			// V = XMVectorScale(R, 1.1f);
+			// XMStoreFloat3(&m_velocity, V);
+
+			return;
+		}
+		else
+		{
+			m_isDead = true;
+			return;
+		}
+	}
 
 	if (info.other->m_tag == "Attack") return; // 武器に当たっても無視
 	if (!m_selectPlayer && info.other->m_tag == "Player") return; // 武器はなった本人は無視
@@ -305,6 +356,10 @@ void ShurikenShot::OnCollision(const CollisionInfo& info)
 	if (info.other->m_tag == "Slope2") return;
 	if (info.other->m_tag == "BOGP1") return;
 	if (info.other->m_tag == "BOGP2") return;
+	if (info.other->m_tag == "TREEP1") return;
+	if (info.other->m_tag == "TREEP2") return;
+	if (info.other->m_tag == "WATER") return;
+	if (info.other->m_tag == "LAVA") return;
 
 	m_velocity = { 0.0f, 0.0f, 0.0f };
 	m_isStuck = true;

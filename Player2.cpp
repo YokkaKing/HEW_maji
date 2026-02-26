@@ -8,8 +8,7 @@
 //================================================================
 //	マクロ定義
 //================================================================
-//#define JUMP_FORCE (0.15f)
-#define CLIMB_SPEED (m_moveSpeed / 2.0f)
+#define CLIMB_SPEED (m_jumpForce / 2.0f)
 
 //================================================================
 //	インクルード
@@ -637,8 +636,8 @@ void Player2_ManualMove()
 	if (Keyboard_IsKeyDown(KK_U)) speed = +0.1f;
 	if (Keyboard_IsKeyDown(KK_J)) speed = -0.1f;
 
-		moveX += forwardX * speed;
-		moveZ += forwardZ * speed;
+	moveX += forwardX * speed;
+	moveZ += forwardZ * speed;
 
 	// 横移動
 	float strafe = 0.0f;
@@ -653,8 +652,6 @@ void Player2_ManualMove()
 
 	moveX += rightX * strafe;
 	moveZ += rightZ * strafe;
-
-	
 
 	if (g_Player2.m_isGround)
 	{
@@ -729,7 +726,7 @@ void Player2_ManualMove()
 				break;
 
 			case WeaponTerrain::SHURIKEN_: //shuriken
-				ModelPlayClip(g_Player2.m_model, 280, 320, 60.0f, false, 1.0f);
+				ModelPlayClip(g_Player2.m_model, 280, 319, 60.0f, false, 1.0f);
 				break;
 			}
 		}
@@ -751,7 +748,7 @@ void Player2_ManualMove()
 				break;
 
 			case WeaponTerrain::SHURIKEN_: //shuriken
-				ModelPlayClip(g_Player2.m_model, 280, 320, 60.0f, false, 1.0f);
+				ModelPlayClip(g_Player2.m_model, 280, 319, 60.0f, false, 1.0f);
 				break;
 			}
 		}
@@ -777,8 +774,8 @@ void Player2_ManualMove()
 	}
 
 	g_Player2.m_position.x += (g_Player2.m_velocity.x + gp2_slopeSpeed.x);
-	g_Player2.m_position.z += (g_Player2.m_velocity.z + gp2_slopeSpeed.y);
-	g_Player2.m_position.y += (g_Player2.m_velocity.y + gp2_slopeSpeed.z);
+	g_Player2.m_position.z += (g_Player2.m_velocity.z + gp2_slopeSpeed.z);
+	g_Player2.m_position.y += (g_Player2.m_velocity.y + gp2_slopeSpeed.y);
 }
 
 void	Player2Draw()
@@ -912,6 +909,42 @@ void PLAYER2::OnCollision(const CollisionInfo& info)
 		// 例えば壁・木だけコリジョン有効
 		if (info.other->m_tag == "WALL" ||
 			info.other->m_tag == "TREE")
+		{
+			auto INFO = info;
+
+			INFO.normal.x *= -1;
+			INFO.normal.y *= -1;
+			INFO.normal.z *= -1;
+
+			//================================================================
+			//	押し戻し
+			//================================================================
+			m_position.x += INFO.normal.x * INFO.penetration;
+			m_position.y += INFO.normal.y * INFO.penetration;
+			m_position.z += INFO.normal.z * INFO.penetration;
+
+			//================================================================
+			//	地面判定
+			//================================================================
+			if (INFO.normal.y > 0.7f)
+			{
+				m_isGround = true;
+				m_velocity.y = 0;
+			}
+
+			//================================================================
+			//	壁判定
+			//================================================================
+			float horiz = fabs(INFO.normal.x) + fabs(INFO.normal.z);
+			if (horiz > 0.7f)
+			{
+				m_velocity.x = 0;
+				m_velocity.z = 0;
+			}
+		}
+
+		// 例えば壁・木だけコリジョン有効
+		if (info.other->m_tag == "FANCE")
 		{
 			auto INFO = info;
 
@@ -1097,7 +1130,7 @@ void PLAYER2::OnCollision(const CollisionInfo& info)
 				m_koyoteTime = 0.0f; // ジャンプできなくする
 
 				// --- gp_speed への計算 ---
-				const float slideFriction = 0.25f;
+				const float slideFriction = 0.05f;
 				float slopeSeverity = 1.0f - info.normal.y;
 				float slidePower = slopeSeverity * slideFriction;
 				const float gravityEffect = 0.02f;
@@ -1148,7 +1181,7 @@ void PLAYER2::OnCollision(const CollisionInfo& info)
 			float dz = m_position.z - bogPos.z;
 			float distance = sqrtf(dx * dx + dz * dz);
 
-			const float effectRadius = 3.0f;
+			const float effectRadius = 5.5f;
 
 			if (distance < effectRadius)
 			{
@@ -1192,14 +1225,15 @@ void PLAYER2::OnCollision(const CollisionInfo& info)
 			{
 				coolTime = 0.0f;
 			}
-			if (info.other->m_tag == "TREEP1")
-			{
-				m_velocity.x *= 0.4f;
-				m_velocity.z *= 0.4f;
+		}
 
-				gp2_slopeSpeed.x *= 0.5f;
-				gp2_slopeSpeed.z *= 0.5f;
-			}
+		if (info.other->m_tag == "TREEP1")
+		{
+			m_velocity.x *= 0.4f;
+			m_velocity.z *= 0.4f;
+
+			gp2_slopeSpeed.x *= 0.5f;
+			gp2_slopeSpeed.z *= 0.5f;
 		}
 	}
 }

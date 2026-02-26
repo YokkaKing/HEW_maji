@@ -15,8 +15,11 @@
 
 #include "Manager.h"
 #include"shader.h"
-#
-#define ROTATION_X_MAX (45.0f)
+
+#define ROTATION_X_UPMAX (20.0f)
+#define ROTATION_X_DOWNMAX (-10.0f)
+#define ROTATION_X_UPMAXP2 (15.0f)
+#define ROTATION_X_DOWNMAXP2 (-10.0)
 #define ROTATION_Y_MAX (90.0f)
 //================================================================
 //	グローバル変数
@@ -202,7 +205,7 @@ void Camera_Update()
 	float rotX = 0.0f;
 	float rotY = 0.0f;
 
-	float inputX = g_Controller[0].GetRightStickX() * -2.0f;
+	float inputX = g_Controller[0].GetRightStickX() * 2.0f;
 	float inputY = g_Controller[0].GetRightStickY() * 1.5f;
 
 	if (Keyboard_IsKeyDown(KK_Q)) inputX = 1.0f;
@@ -226,8 +229,8 @@ void Camera_Update()
 	//回転制限の適用
 	if (GetScene() != SCENE_RESULT)
 	{
-		if (nowPitch > ROTATION_X_MAX)  nowPitch = ROTATION_X_MAX;
-		if (nowPitch < -ROTATION_X_MAX) nowPitch = -ROTATION_X_MAX;
+		if (nowPitch > ROTATION_X_UPMAX)  nowPitch = ROTATION_X_UPMAX;
+		if (nowPitch < ROTATION_X_DOWNMAX) nowPitch = ROTATION_X_DOWNMAX;
 	}
 
 	//========================
@@ -320,7 +323,7 @@ void Camera2_Update()
 	static float nowPitch = 22.0f; // 垂直回転 (上下)
 
 	//コントローラー・キーボードからの入力を取得
-	float inputX = g_Controller[1].GetRightStickX() * -2.0f;
+	float inputX = g_Controller[1].GetRightStickX() * 2.0f;
 	float inputY = g_Controller[1].GetRightStickY() * 1.5f;
 
 	if (Keyboard_IsKeyDown(KK_Y)) inputX = 1.0f;
@@ -338,8 +341,8 @@ void Camera2_Update()
 	//if (nowYaw < -ROTATION_Y_MAX) nowYaw = -ROTATION_Y_MAX;
 
 	//上下45度制限 (水平を0度として +-45度)
-	if (nowPitch > ROTATION_X_MAX)  nowPitch = ROTATION_X_MAX;
-	if (nowPitch < -ROTATION_X_MAX) nowPitch = -ROTATION_X_MAX;
+	if (nowPitch > ROTATION_X_UPMAXP2)  nowPitch = ROTATION_X_UPMAXP2;
+	if (nowPitch < ROTATION_X_DOWNMAXP2) nowPitch = ROTATION_X_DOWNMAXP2;
 
 	//座標の再計算
 	//プレイヤーからの基本距離 (初期設定 -4.0f に基づき 4.0f)

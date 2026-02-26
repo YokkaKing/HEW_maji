@@ -12,21 +12,29 @@
 #include"Stage.h"
 #include"managerCollider.h"
 
+STAGE g_Stage;
+
 void STAGE::Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
 	g_pDevice = pDevice;
 	g_pContext = pContext;
 
-	m_model[0] = ModelLoad("asset\\model\\stadium_grass.fbx");
-	m_model[1] = ModelLoad("asset\\model\\block.fbx");
+	m_model[0] = ModelLoad("asset\\model\\stadium.fbx");
+	m_model[1] = ModelLoad("asset\\model\\stadium_lava.fbx");
 
 	m_position = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	m_rotation = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	m_scale = XMFLOAT3(0.0221f, 0.0221f, 0.0221f);
+
+	m_stageType = STAGE_TYPE::PLANE;	// ノーマル
+	//g_Stage.m_stageType = STAGE_TYPE::LAVA;		// 溶岩
 }
 void STAGE::Finalize()
 {
-	ModelRelease(m_model[0]);
+	for (int i = 0; i < 2; i++)
+	{
+		ModelRelease(m_model[i]);
+	}
 }
 void STAGE::Update()
 {
@@ -52,6 +60,17 @@ void STAGE::Draw()
 	//シェーダーへ行列をセット
 	Shader_SetWorldMatrix(world);
 
+	unsigned int modelType = 0; // モデルの種類
+
+	if (g_Stage.m_stageType == STAGE_TYPE::LAVA)
+	{
+		modelType = 1;
+	}
 	//モデルの描画リクエスト
-	ModelDraw(m_model[0]);
+	ModelDraw(m_model[modelType]);
+}
+
+const STAGE_TYPE STAGE::GetStageType()
+{
+	return g_Stage.m_stageType;
 }

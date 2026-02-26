@@ -22,7 +22,7 @@ FadeObject	g_Fade;		//フェード処理構造体
 static	ID3D11ShaderResourceView* g_Texture = NULL;	//テクスチャ１枚を表すオブジェクト
 static ID3D11Device* g_pDevice = nullptr;
 static ID3D11DeviceContext* g_pContext = nullptr;
-
+static bool g_FadeOutOnly = false;
 void Fade_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
 	g_pDevice = pDevice;
@@ -41,7 +41,7 @@ void Fade_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_Fade.fadecolor.w = 1.0f;
 	g_Fade.frame = 0.0f;	//60フレームでフェード完了
 	g_Fade.state = FADE_STATE::FADE_NONE;
-
+	g_FadeOutOnly = false;
 }
 
 void Fade_Finalize()
@@ -64,6 +64,7 @@ void Fade_Update()
 	switch (g_Fade.state)
 	{
 	case FADE_STATE::FADE_IN:
+		
 		g_Fade.frame -= STEP;  // 透明へ向かう
 		if (g_Fade.frame <= 0.0f)
 		{
@@ -73,21 +74,29 @@ void Fade_Update()
 		break;
 
 	case FADE_STATE::FADE_OUT:
-		g_Fade.frame += STEP;  // 黒へ向かう
+		g_Fade.frame += STEP;
 		if (g_Fade.frame >= 29.0f)
 		{
 			// フェードアウト完了
 			g_Fade.frame = 29.0f;
 
-			// ここでシーン切り替え（Draw内でやると1Pだけ変になる）
+			// 先にシーン切り替え
 			SetScene(g_Fade.scene);
 
-			// すぐフェードイン開始
-			g_Fade.state = FADE_STATE::FADE_IN;
-			g_Fade.frame = 28.0f;
+			if (g_FadeOutOnly)
+			{
+				// 今回は FADE_IN に行かない（Result -> TeamLogo 用）
+				g_Fade.state = FADE_STATE::FADE_NONE;
+				g_FadeOutOnly = false; // 次回のために戻す
+			}
+			else
+			{
+				// 通常挙動（今まで通り）
+				g_Fade.state = FADE_STATE::FADE_IN;
+				g_Fade.frame = 28.0f;
+			}
 		}
 		break;
-
 	default:
 		break;
 	}
@@ -144,5 +153,9 @@ FADE_STATE	GetFadeState()
 {
 	return	g_Fade.state;	//現在の状態
 }
-
+void SetFadeOutOnly(int fadeframe, XMFLOAT4 color, SCENE scene)
+{
+	g_FadeOutOnly = true;
+	SetFade(fadeframe, color, FADE_OUT, scene);
+}
 
