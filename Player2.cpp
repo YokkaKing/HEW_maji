@@ -214,7 +214,7 @@ void	Player2Update()
 	//ヒットストップ中ならこの関数自体を抜けるため今後の処理がすべてスキップされる
 	if (g_Player2.m_hitAction.IsStopping())
 	{
-		Player2_ManualMove();
+		//Player2_ManualMove();
 		//ModelUpdateAnimation(g_Player2.m_model, 1.0f / 60.0f);
 		return;
 	}
@@ -1435,4 +1435,8 @@ void Player2_WarmupVisual()
 {
 	if (!g_Player2.m_model) return;
 	ModelUpdateAnimation(g_Player2.m_model, 0.0f);
+}
+bool Player2_GetIsDead()
+{
+	return g_Player2.m_isDead;
 }
