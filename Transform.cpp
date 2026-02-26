@@ -321,17 +321,17 @@ void ApplyTransformEffect()
 
     switch (weapon) {
     case WeaponTerrain::SWORD_WALL:
-        g_Player.m_moveSpeed = 0.2f; g_Player.m_jumpForce = 0.22f; break; // 0.1f からアップ
+        g_Player.m_moveSpeed = 0.2f; g_Player.m_jumpForce = 0.1f; break; // g_Player2 に直し、数値も上げる
     case WeaponTerrain::SPEAR_HILL:
-        g_Player.m_moveSpeed = 0.18f; g_Player.m_jumpForce = 0.20f; break;
+        g_Player.m_moveSpeed = 0.18f; g_Player.m_jumpForce = 0.08f; break;
     case WeaponTerrain::BOW_HILL:
-        g_Player.m_moveSpeed = 0.18f; g_Player.m_jumpForce = 0.24f; break;
+        g_Player.m_moveSpeed = 0.18f; g_Player.m_jumpForce = 0.11f; break;
     case WeaponTerrain::SHURIKEN_:
-        g_Player.m_moveSpeed = 0.24f; g_Player.m_jumpForce = 0.25f; break;
+        g_Player.m_moveSpeed = 0.24f; g_Player.m_jumpForce = 0.12f; break;
     case WeaponTerrain::HAMMER_:
-        g_Player.m_moveSpeed = 0.18f; g_Player.m_jumpForce = 0.20f; break;
+        g_Player.m_moveSpeed = 0.18f; g_Player.m_jumpForce = 0.08f; break;
     default:
-        g_Player.m_moveSpeed = 0.2f; g_Player.m_jumpForce = 0.22f; break;
+        g_Player.m_moveSpeed = 0.2f; g_Player.m_jumpForce = 0.1f; break;
     }
 }
 
@@ -394,8 +394,12 @@ void TransformPlayer2()
         }
     }
     else {
+        g_Player2.TransformTimer--;
+        if (g_Player2.TransformTimer <= TRANSFORM_LIMIT_FRAME - 60) {
+            g_Controller[controllerIdx].SetVibration(0.0f, 0.0f);
+        }
         // 解除判定
-        bool unevolve = (g_Player2.TransformTimer-- <= 0) || Keyboard_IsKeyDownTrigger(KK_D8);
+        bool unevolve = (g_Player2.TransformTimer<= 0) || Keyboard_IsKeyDownTrigger(KK_D8);
         if (g_Player2.TransformType == TRANSFORM_TYPE2::TRANSFORM_TYPE_A && ctrl.GetLeftTrigger() >= 0.9f) unevolve = true;
         if (g_Player2.TransformType == TRANSFORM_TYPE2::TRANSFORM_TYPE_B && ctrl.GetRightTrigger() >= 0.9f) unevolve = true;
 
@@ -424,17 +428,17 @@ void ApplyTransformEffect2()
 
     switch (weapon) {
     case WeaponTerrain::SWORD_WALL:
-        g_Player2.m_moveSpeed = 0.2f; g_Player2.m_jumpForce = 0.22f; break; // g_Player2 に直し、数値も上げる
+        g_Player2.m_moveSpeed = 0.2f; g_Player2.m_jumpForce = 0.1f; break; // g_Player2 に直し、数値も上げる
     case WeaponTerrain::SPEAR_HILL:
-        g_Player2.m_moveSpeed = 0.18f; g_Player2.m_jumpForce = 0.20f; break;
+        g_Player2.m_moveSpeed = 0.18f; g_Player2.m_jumpForce = 0.08f; break;
     case WeaponTerrain::BOW_HILL:
-        g_Player2.m_moveSpeed = 0.18f; g_Player2.m_jumpForce = 0.24f; break;
+        g_Player2.m_moveSpeed = 0.18f; g_Player2.m_jumpForce = 0.11f; break;
     case WeaponTerrain::SHURIKEN_:
-        g_Player2.m_moveSpeed = 0.24f; g_Player2.m_jumpForce = 0.25f; break;
+        g_Player2.m_moveSpeed = 0.24f; g_Player2.m_jumpForce = 0.12f; break;
     case WeaponTerrain::HAMMER_:
-        g_Player2.m_moveSpeed = 0.18f; g_Player2.m_jumpForce = 0.20f; break;
+        g_Player2.m_moveSpeed = 0.18f; g_Player2.m_jumpForce = 0.08f; break;
     default:
-        g_Player2.m_moveSpeed = 0.2f; g_Player2.m_jumpForce = 0.22f; break;
+        g_Player2.m_moveSpeed = 0.2f; g_Player2.m_jumpForce = 0.1f; break;
     }
 }
 
