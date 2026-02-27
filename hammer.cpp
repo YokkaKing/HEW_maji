@@ -485,23 +485,35 @@ void Hammer::Update()
 		}
 	}
 
+	//===============================================
+	//	ハンマーのチャージエフェクト
+	//===============================================
 	if (m_isCharging)
 	{
 		//プレイヤー識別
 		int playerIdx = (int)m_selectPlayer;
 
-		//エフェクトの位置を武器の位置に合わせる
-		XMFLOAT3 effectPos = m_weapon->m_position;
-		XMFLOAT3 effectOffsetIdle = { -0.35f, -0.6f, -1.0f }; // 止まった状態でのチャージエフェクトオフセット
-		XMFLOAT3 effectOffsetMove = { 0.2f, -0.6f, -1.0f }; // 移動状態でのチャージエフェクトオフセット
+		//エフェクトの位置をプレイヤーの位置に合わせる
+		XMFLOAT3 effectPos = owner->m_position;
+		XMFLOAT3 effectOffset = { 0.0f, -0.6f, 0.0f }; // 止まった状態でのチャージエフェクトオフセット
 
 		//Managerにエフェクトの状態を送信
 		ChargeEffectManager::GetInstance().SetEffect(
 			playerIdx,
 			effectPos,
-			effectOffsetMove,
+			effectOffset,
 			currentCType,
 			m_isCharging
+		);
+	}
+	else
+	{
+		ChargeEffectManager::GetInstance().SetEffect(
+			(int)m_selectPlayer,
+			owner->m_position,
+			{ 0.0f, 0.0f, 0.0f },
+			ChargeType::HAMMER_C_NONE,
+			false
 		);
 	}
 }

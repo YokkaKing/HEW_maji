@@ -121,7 +121,7 @@ void ChargeEffectManager::Draw(const XMMATRIX& viewMat, const XMMATRIX& projecti
         if (screenPos.z < 0.0f || screenPos.z > 1.0f) continue;
 
         // サイズと座標の決定
-        XMFLOAT2 effectSize = XMFLOAT2(1920.0f * 0.2f, 1080.0f * 0.2f);
+        XMFLOAT2 effectSize = XMFLOAT2(1920.0f * 0.5f, 1080.0f * 0.5f);
         XMFLOAT2 drawPos = XMFLOAT2(screenPos.x, screenPos.y);
 
         // 描画実行
