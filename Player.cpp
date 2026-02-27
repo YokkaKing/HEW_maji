@@ -254,8 +254,7 @@ void	PlayerUpdate()
 
 	if (g_Player.m_hitAction.IsStopping())
 	{
-		//Player_ManualMove();                         
-		//ModelUpdateAnimation(g_Player.m_model, 1.0f / 60.0f);  
+	
 		return;                                      
 	}
 
