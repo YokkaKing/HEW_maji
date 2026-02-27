@@ -22,6 +22,7 @@
 #include"Manager.h"
 #include"hitAction.h"
 #include"HitEffect.h"
+#include"ChargeEffect.h"
 //================================================================
 //	グローバル変数
 //================================================================
@@ -484,19 +485,25 @@ void Hammer::Update()
 		}
 	}
 
-	//プレイヤー識別
-	int playerIdx = (int)m_selectPlayer;
+	if (m_isCharging)
+	{
+		//プレイヤー識別
+		int playerIdx = (int)m_selectPlayer;
 
-	//エフェクトの位置を武器の位置に合わせる
-	XMFLOAT3 effectPos = m_weapon->m_position;
+		//エフェクトの位置を武器の位置に合わせる
+		XMFLOAT3 effectPos = m_weapon->m_position;
+		XMFLOAT3 effectOffsetIdle = { -0.35f, -0.6f, -1.0f }; // 止まった状態でのチャージエフェクトオフセット
+		XMFLOAT3 effectOffsetMove = { 0.2f, -0.6f, -1.0f }; // 移動状態でのチャージエフェクトオフセット
 
-	//Managerにエフェクトの状態を送信
-	HitEffectManager::GetInstance().UpdateChargeEffect(
-		playerIdx,
-		effectPos,
-		currentCType,
-		m_isCharging
-	);
+		//Managerにエフェクトの状態を送信
+		ChargeEffectManager::GetInstance().SetEffect(
+			playerIdx,
+			effectPos,
+			effectOffsetMove,
+			currentCType,
+			m_isCharging
+		);
+	}
 }
 
 void Hammer::Draw()

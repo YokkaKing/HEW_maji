@@ -41,7 +41,7 @@
 #include "HitEffect.h"
 #include "PlayerUI.h"
 #include "Guide.h"
-
+#include "ChargeEffect.h"
 //================================================================
 //	グローバル変数
 //================================================================
@@ -167,8 +167,8 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, const
 		Camera2_Update();
 	}
 
-	
 	HitEffectManager::GetInstance().Initialize(pDevice, pContext);
+	ChargeEffectManager::GetInstance().Initialize(pDevice, pContext);
 	//===========UI===========
 	Score_Initialize(pDevice, pContext);
 	Timer_Initialize(pDevice, pContext);
@@ -228,6 +228,7 @@ void Game_Finalize()
 	Camera2_Finalize();	//カメラ終了処理
 	g_sponer.ResetItem();
 	HitEffectManager::GetInstance().Finalize();
+	ChargeEffectManager::GetInstance().Finalize();
 	//=======UI===========
 	Score_Finalize();
 	Timer_Finalize();
@@ -388,6 +389,7 @@ void Game_Update()
 		Field_Update();
 		g_sponer.Update();
 		HitEffectManager::GetInstance().Update(1.0f / 60.0f);
+		ChargeEffectManager::GetInstance().Update(1.0f / 60.0f);
 		//=======UI===========
 		Timer_Update();
 		Number_Update();
@@ -505,6 +507,7 @@ void Game_Draw_Player1()
 		Score_Draw();
 	}
 	HitEffectManager::GetInstance().Draw(GetViewMatrix(), GetProjectionMatrix());
+	ChargeEffectManager::GetInstance().Draw(GetViewMatrix(), GetProjectionMatrix());
 }
 void Game_Draw_Player2()
 {
@@ -565,6 +568,7 @@ void Game_Draw_Player2()
 		Score_Draw();
 	}
 	HitEffectManager::GetInstance().Draw(GetViewMatrix2(), GetProjectionMatrix2());
+	ChargeEffectManager::GetInstance().Draw(GetViewMatrix2(), GetProjectionMatrix2());
 	//Timer_Draw();
 	//Number_Draw();
 	//Hp2_Draw();
