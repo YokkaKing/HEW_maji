@@ -80,6 +80,7 @@ void HitEffectManager::Update(float deltaTime)
             ++it;
         }
     }
+
 }
 
 void HitEffectManager::Finalize()
@@ -161,6 +162,7 @@ void HitEffectManager::Draw(const XMMATRIX& viewMat, const XMMATRIX& projectionM
             );
         }
     }
+
 }
 
 void HitEffectManager::HitEffect(XMFLOAT3 pos, EffectType type)
