@@ -58,7 +58,6 @@ ITEM_SPONER g_sponer;
 extern Controller g_Controller[2];
 static float g_timeScale = 1.0f;
 static float g_timeAccum = 0.0f;
-STAGE g_stage;
 static bool g_showScore = false;
 static bool g_waitingIntroBeforeTransformSelect = false;
 static bool g_needWarmupPlayerDrawState = false;
@@ -101,7 +100,7 @@ static void Game_DrawArenaIntroImage()
 	XMFLOAT2 size = XMFLOAT2(SCREEN_WIDTH, SCREEN_HEIGHT);                  // バナーっぽいサイズ
 	XMFLOAT4 col = XMFLOAT4(1, 1, 1, 1);
 
-	//DrawSprite(pos, size, col);
+	DrawSprite(pos, size, col);
 }
 
 void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, const inGameWTselect& select)
@@ -109,8 +108,13 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, const
 	
 	frame = 10;
 	//Controller_Initialize();
+
+	if (GetRoundCount() == 0)
+	{
+		g_Stage.Initialize(pDevice, pContext);
+		
+	}
 	Field_Initialize(pDevice, pContext); // フィールドの初期化
-	g_stage.Initialize(pDevice, pContext);
 	g_sponer.ResetItem();
 	g_sponer.Initialize();
 
@@ -457,7 +461,7 @@ void Game_Draw_Player1()
 	Camera_Draw();		//Drawの最初で呼ぶ！
 	Shader_SetMatrix(GetViewMatrix() * GetProjectionMatrix());
 	Field_Draw();
-	g_stage.Draw();
+	g_Stage.Draw();
 	TerrainDraw();
 	PlayerDraw();
 	Player2Draw();
@@ -517,7 +521,7 @@ void Game_Draw_Player2()
 	Camera2_Draw();
 	Shader_SetMatrix(GetViewMatrix2() * GetProjectionMatrix2());
 	// Field_Draw();
-	g_stage.Draw();
+	g_Stage.Draw();
 	TerrainDraw();
 	PlayerDraw();
 	Player2Draw();

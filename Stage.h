@@ -47,5 +47,6 @@ public:
 };
 
 extern STAGE g_Stage;
+STAGE_TYPE GetStage();
 
 #endif // STAGE_H

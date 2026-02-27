@@ -183,7 +183,11 @@ void Selectweaponui3d_Draw()
 
 	Shader_SetBones(g_Selectweaponui3d[0].m_model);
 	//モデルの描画リクエスト
-	ModelDraw(g_Selectweaponui3d[0].m_model);
+	if (GetPlayerSelected(0) && GetCounter(0) >= 90.0f)
+	{
+		ModelDraw(g_Selectweaponui3d[0].m_model);
+	}
+
 
 	rotation = XMMatrixRotationRollPitchYaw(
 		g_Selectweaponui3d[1].m_rotation.x,
@@ -201,8 +205,10 @@ void Selectweaponui3d_Draw()
 
 	Shader_SetBones(g_Selectweaponui3d[1].m_model);
 	//モデルの描画リクエスト
-	ModelDraw(g_Selectweaponui3d[1].m_model);
-
+	if (GetPlayerSelected(1)&&GetCounter(1)>=90.0f)
+	{
+		ModelDraw(g_Selectweaponui3d[1].m_model);
+	}
 	U_Light.SetEnable(FALSE);			//ライティングON
 	Shader_SetLight(U_Light.Light);	//ライト構造体をシェーダーへセット
 	SetDepthTest(FALSE);

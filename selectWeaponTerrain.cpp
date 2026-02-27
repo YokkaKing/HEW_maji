@@ -19,6 +19,18 @@
 #include <cmath>
 
 
+struct PlayerCursor 
+{
+    XMFLOAT2 pos;
+    bool isSelected;
+    int targetSlot; // -1: なし, 0: 1P枠, 1: 2P枠
+};
+const float SLOT_WIDTH = 750;
+const float SLOT_HEIGHT = 3357 * 0.3f;
+static XMFLOAT2 g_SlotPos[2];
+static PlayerCursor g_Cursors[2];
+static int g_PlayerToController[2] = { -1, -1 };
+
 static bool g_oldStickLeft[2] = { false, false };
 static bool g_oldStickRight[2] = { false, false };
 // 選択スロット数
@@ -26,6 +38,10 @@ static const int selectCount = 5;
 #pragma region UI関連定数
 static ID3D11ShaderResourceView* g_TextureBG[2] = { NULL };	// 背景テクスチャ
 static ID3D11ShaderResourceView* g_TextureUi_Card[3] = { NULL };
+static ID3D11ShaderResourceView* g_TextureUi_Card_Ok[2] = { NULL };
+static ID3D11ShaderResourceView* g_TextureUi_Card_Controller[2] = { NULL };
+static ID3D11ShaderResourceView* g_TextureUi_Card_Cursor[2] = { NULL };
+
 static ID3D11ShaderResourceView* g_TextureUi_Cursor[2] = { NULL };
 static ID3D11ShaderResourceView* g_TextureUi_Button[2] = { NULL };
 static ID3D11ShaderResourceView* g_TextureUI[selectCount] = { NULL };
@@ -33,14 +49,15 @@ static ID3D11Device* g_pDevice = nullptr;
 static ID3D11DeviceContext* g_pContext = nullptr;
 extern Controller g_Controller[2];
 static float g_SelectVibrationTimer[2] = { 0.0f, 0.0f };
-
+static float g_count[2] = {0,0};
 static inGameWTselect g_selectData;
 static int g_cursorP1 = 0;
 static int g_cursorP2 = 0;
 static bool g_isStarted = false;  
 static bool g_isP1Ready = false;
 static bool g_isP2Ready = false;
-
+static bool g_isP1Selected = false;
+static bool g_isP2Selected = false;
 // selectBG_3 用の SRV（左回転 / 右回転）
 static ID3D11ShaderResourceView* g_TextureBG3_Left = nullptr;
 static ID3D11ShaderResourceView* g_TextureBG3_Right = nullptr;
@@ -89,6 +106,7 @@ static float g_slotAnimTime[selectCount] = { 0.0f };
 static float g_slotAnimDuration = 0.20f; // スケールアニメーション時間 (秒)
 static const float g_slotBaseScale = 1.0f;
 static const float g_slotSelectedScale = 1.10f; // 選択時の最終スケール
+static float g_controllerScale[2] = { 0.0f,0.0f };
 MODEL* model;
 // 固定: スロット配置関連
 static float g_slotStartX = 600.0f;
@@ -154,7 +172,11 @@ void selectWT_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
     g_isP1Ready = false;
     g_isP2Ready = false;
     g_isStarted = false;
-
+    for (int i = 0; i < 2; i++)
+    {
+        g_count[i] = 0;
+    }
+ 
 
 #pragma region スプライトアニメ初期化
     for (int p = 0; p < 2; ++p)
@@ -266,18 +288,35 @@ void selectWT_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
     {
         TexMetadata		metadata;
         ScratchImage	image;
-        LoadFromWICFile(L"asset\\texture\\cancel_button.PNG", WIC_FLAGS_FORCE_SRGB, &metadata, image);
-        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Button[1]);
-        assert(g_TextureUi_Button[1]);
-    }
+        LoadFromWICFile(L"asset\\texture\\select_card_Ok.PNG", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Card_Ok[0]);
+        assert(g_TextureUi_Card_Ok[0]);
+       
+        LoadFromWICFile(L"asset\\texture\\select_card2_Ok.PNG", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Card_Ok[1]);
+        assert(g_TextureUi_Card_Ok[1]);
 
+        LoadFromWICFile(L"asset\\texture\\select_card_Controller.PNG", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Card_Controller[0]);
+        assert(g_TextureUi_Card_Controller[0]);
+
+        LoadFromWICFile(L"asset\\texture\\select_card2_Controller.PNG", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Card_Controller[1]);
+        assert(g_TextureUi_Card_Controller[1]);
+
+        LoadFromWICFile(L"asset\\texture\\1p.PNG", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Card_Cursor[0]);
+        assert(g_TextureUi_Card_Cursor[0]);
+
+        LoadFromWICFile(L"asset\\texture\\2p.PNG", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Card_Cursor[1]);
+        assert(g_TextureUi_Card_Cursor[1]);
+    }
     TexMetadata metadata;
     ScratchImage srcImage;
     HRESULT hr = LoadFromWICFile(L"asset\\texture\\selectBG_3.png", WIC_FLAGS_FORCE_SRGB, &metadata, srcImage);
-    // 左用: -90度 -> 270度回転（TEX_FR_ROTATE270）
     ScratchImage leftImg;
-    // FlipRotate のシグネチャは DirectXTex のバージョンによって異なる可能性あり
-    // ここでは典型的な FlipRotate( images, count, metadata, flag, dest ) を想定
+
     FlipRotate(srcImage.GetImages(), srcImage.GetImageCount(), metadata, TEX_FR_ROTATE270, leftImg);
     TexMetadata leftMeta = leftImg.GetMetadata();
     g_BG3_LeftWidth = leftMeta.width;
@@ -293,6 +332,7 @@ void selectWT_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
     CreateShaderResourceView(pDevice, rightImg.GetImages(), rightImg.GetImageCount(), rightMeta, &g_TextureBG3_Right);
     g_bg3OffsetLeft = 0.0f;
     g_bg3OffsetRight = 0.0f;
+ 
 
 
     // 武器アイコン読み込み
@@ -347,6 +387,22 @@ void selectWT_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
     }
     XMFLOAT4 color = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
     SetFade(60.0f, color, FADE_IN, SCENE_GAME);
+
+    float sw = (float)Direct3D_GetBackBufferWidth();
+    float sh = (float)Direct3D_GetBackBufferHeight();
+    g_SlotPos[0] = { sw * 0.28f, sh * 0.5f };
+    g_SlotPos[1] = { sw * 0.72f, sh * 0.5f };
+    for (int i = 0; i < 2; i++) {
+        g_Cursors[i].pos = { sw / 2.0f,sh / 2.0f };
+        g_Cursors[i].isSelected = false;
+        g_Cursors[i].targetSlot = -1;
+        g_PlayerToController[i] = -1;
+        g_Controller[i].SetVibration(0.0f, 0.0f);
+    }
+    g_controllerScale[0] = 0.0f;
+    g_controllerScale[1] = 0.0f;
+    g_isP1Selected = false;
+    g_isP2Selected = false;
 }
 
 // ------------------ 終了処理 ------------------
@@ -360,6 +416,10 @@ void selectWT_Finalize()
         SAFE_RELEASE(g_TextureBG[i]);
         SAFE_RELEASE(g_TextureUi_Cursor[i]);
         SAFE_RELEASE(g_TextureUi_Button[i]);
+        SAFE_RELEASE(g_TextureUi_Card_Ok[i]);
+        SAFE_RELEASE(g_TextureUi_Card_Controller[i]);
+        SAFE_RELEASE(g_TextureUi_Card_Cursor[i]);
+        
     }
     for (int i = 0; i < 3; i++)
     {
@@ -399,6 +459,74 @@ auto ResetGoAnimation = [&]()
 // ------------------ 更新処理 ------------------
 void selectWT_Update()
 {
+    for (int i = 0; i < 2; i++)
+    {
+        if (g_Cursors[i].isSelected)
+        {
+            g_count[i]++;
+            if (g_controllerScale[i] < 0.8f)
+            {
+                g_controllerScale[i] += 0.05f;
+            }
+            else
+            {
+                g_controllerScale[i] = 0.8f;
+            }
+        }
+       
+      
+ 
+    }
+   
+    for (int i = 0; i < 2; i++) {
+        //移動処理（決定していない場合のみ）
+        if (!g_Cursors[i].isSelected) {
+            float dx = g_Controller[i].GetLeftStickX();
+            float dy = g_Controller[i].GetLeftStickY();
+            if (i == 0) { // 1P: WASD
+                if (Keyboard_IsKeyDown(KK_A)) dx = -1.0f;
+                if (Keyboard_IsKeyDown(KK_D)) dx = 1.0f;
+                if (Keyboard_IsKeyDown(KK_W)) dy = 1.0f;
+                if (Keyboard_IsKeyDown(KK_S)) dy = -1.0f;
+            }
+            else { // 2P: Arrow Keys
+                if (Keyboard_IsKeyDown(KK_LEFT)) dx = -1.0f;
+                if (Keyboard_IsKeyDown(KK_RIGHT)) dx = 1.0f;
+                if (Keyboard_IsKeyDown(KK_UP)) dy = 1.0f;
+                if (Keyboard_IsKeyDown(KK_DOWN)) dy = -1.0f;
+            }
+            g_Cursors[i].pos.x += dx * 15.0f;
+            g_Cursors[i].pos.y -= dy * 15.0f;
+        }
+
+        g_Cursors[i].targetSlot = -1;
+        for (int s = 0; s < 2; s++) {
+            if (abs(g_Cursors[i].pos.x - g_SlotPos[s].x) < SLOT_WIDTH / 2.0f &&
+                abs(g_Cursors[i].pos.y - g_SlotPos[s].y) < SLOT_HEIGHT / 2.0f) {
+                g_Cursors[i].targetSlot = s;
+            }
+        }
+
+        //選択
+
+        bool isDecideTriggered = g_Controller[i].IsButtonPushed(ControllerButton::A_BUTTON);
+        if (i == 0 && Keyboard_IsKeyDownTrigger(KK_C)) isDecideTriggered = true;
+        if (i == 1 && Keyboard_IsKeyDownTrigger(KK_P)) isDecideTriggered = true;
+
+        if (isDecideTriggered) {
+            int slot = g_Cursors[i].targetSlot;
+            if (!g_Cursors[i].isSelected && slot != -1) {
+                if (i == slot) {
+                    g_Cursors[i].isSelected = true;
+                    g_PlayerToController[slot] = i;
+                    PlayAudio(g_button, false);
+
+                    g_Controller[i].SetVibration(0.3f, 0.3f);
+                }
+            }
+            
+        }
+    }
     if (g_vibrationTimerP1 > 0) {
         if (--g_vibrationTimerP1 <= 0) g_Controller[0].SetVibration(0.0f, 0.0f);
     }
@@ -422,7 +550,7 @@ void selectWT_Update()
             }
             else
             {
-                // 앞 50%: 축소(1.0 -> min), 뒤 50%: 복구(min -> 1.0)
+          
                 if (t < 0.5f)
                 {
                     float tt = t / 0.5f; // 0..1
@@ -462,7 +590,8 @@ void selectWT_Update()
 #pragma endregion
 #pragma region 選択処理
     // P1 操作
-    if (!g_isP1Ready)
+
+    if (!g_isP1Ready&& g_Cursors[0].isSelected)
     {
         // スティックの状態を取得
         float stickX = g_Controller[0].GetLeftStickX();
@@ -509,7 +638,7 @@ void selectWT_Update()
         g_oldStickLeft[0] = nowStickLeft;
         g_oldStickRight[0] = nowStickRight;
 
-        if (Keyboard_IsKeyDownTrigger(KK_LEFTCONTROL) || g_Controller[0].IsButtonPushed(ControllerButton::A_BUTTON))
+        if ((Keyboard_IsKeyDownTrigger(KK_LEFTCONTROL) || g_Controller[0].IsButtonPushed(ControllerButton::A_BUTTON)) && g_isP1Selected)
         {
             g_Controller[0].SetVibration(0.4f, 0.4f);
             g_vibrationTimerP1 = 10;
@@ -532,7 +661,7 @@ void selectWT_Update()
         ResetGoAnimation();
     }
     // P2 操作
-    if (!g_isP2Ready)
+    if (!g_isP2Ready && g_Cursors[1].isSelected)
     {
         float stickX = g_Controller[1].GetLeftStickX();
         bool nowStickLeft = (stickX < -0.5f);
@@ -577,7 +706,7 @@ void selectWT_Update()
         g_oldStickLeft[1] = nowStickLeft;
         g_oldStickRight[1] = nowStickRight;
 
-        if (Keyboard_IsKeyDownTrigger(KK_D5) || g_Controller[1].IsButtonPushed(ControllerButton::A_BUTTON))
+        if ((Keyboard_IsKeyDownTrigger(KK_D5) || g_Controller[1].IsButtonPushed(ControllerButton::A_BUTTON))&& g_isP2Selected)
         {
             g_Controller[1].SetVibration(0.4f, 0.4f);
             g_vibrationTimerP2 = 10;
@@ -734,6 +863,14 @@ void selectWT_Update()
             g_slotScale[i] = shouldBeSelected ? g_slotSelectedScale : g_slotBaseScale;
         }
     }
+    if (g_Cursors[0].isSelected)
+    {
+		g_isP1Selected = true;
+    }
+    if (g_Cursors[1].isSelected)
+    {
+        g_isP2Selected = true;
+    }
 }
 
 // ------------------ 描画処理 ------------------
@@ -809,14 +946,34 @@ void selectWT_Draw(int playerID)
     g_pContext->PSSetShaderResources(0, 1, &g_TextureBG[1]);
     DrawSprite(XMFLOAT2(screenWidth * 0.5f, screenHeight * 0.5f), XMFLOAT2(screenWidth, screenHeight), XMFLOAT4(1, 1, 1, 1));
 
+  
     // カード
     int CardposX = (int)(screenWidth / 2 - (screenWidth / 4));
     for (int i = 0; i < 2; i++)
     {
+        XMFLOAT4 color = { 0.5f, 0.5f, 0.5f, 1.0f };
+        for (int p = 0; p < 2; p++) {
+            if (g_Cursors[p].targetSlot == i) color = { 1, 1, 1, 1 };
+        }
         g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Card[i]);
-        DrawSprite(XMFLOAT2((float)CardposX, screenHeight / 2 - 50.0f), XMFLOAT2(827 * 0.8f, 1013 * 0.8f), XMFLOAT4(1, 1, 1, 1));
+        DrawSprite(XMFLOAT2((float)CardposX, screenHeight / 2 - 50.0f), XMFLOAT2(827 * 0.8f, 1013 * 0.8f), color);
+        
+        if (g_Cursors[i].isSelected)
+        {
+            g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Card_Ok[i]);
+            DrawSprite(XMFLOAT2((float)CardposX, screenHeight / 2 - 50.0f), XMFLOAT2(827 * 0.8f, 1013 * 0.8f), color);
+            if (g_count[i] < 90.0f)
+            {
+                g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Card_Controller[i]);
+                DrawSprite(XMFLOAT2((float)CardposX, screenHeight / 2 - 50.0f), XMFLOAT2(827 * g_controllerScale[i], 1013 * g_controllerScale[i]), color);
+            }
+         
+          
+        }
         CardposX += (int)(screenWidth / 2);
+
     }
+
     g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Card[2]);
     DrawSprite(XMFLOAT2(screenWidth * 0.5f, screenHeight * 0.85f), XMFLOAT2(3357 * 0.3f, 750 * 0.3f), XMFLOAT4(1, 1, 1, 1));
    
@@ -826,15 +983,22 @@ void selectWT_Draw(int playerID)
     float baseCursorH = 271.0f * 0.75f;
     float p1W = baseCursorW * g_cursorScale[0];
     float p1H = baseCursorH * g_cursorScale[0];
-    g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Cursor[0]);
-    DrawSprite(XMFLOAT2(g_cursorState[0].posX, g_slotPosY + 25.0f), XMFLOAT2(p1W, p1H), XMFLOAT4(1, 1, 1, 1));
+
 
     // P2 カーソル
     float p2W = baseCursorW * g_cursorScale[1];
     float p2H = baseCursorH * g_cursorScale[1];
-    g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Cursor[1]);
-    DrawSprite(XMFLOAT2(g_cursorState[1].posX, g_slotPosY - 20.0f), XMFLOAT2(p2W, p2H), XMFLOAT4(1, 1, 1, 1));
 
+    if (g_Cursors[0].isSelected)
+    {
+        g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Cursor[0]);
+        DrawSprite(XMFLOAT2(g_cursorState[0].posX, g_slotPosY + 25.0f), XMFLOAT2(p1W, p1H), XMFLOAT4(1, 1, 1, 1));
+    }
+    if (g_Cursors[1].isSelected)
+    {
+        g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Cursor[1]);
+        DrawSprite(XMFLOAT2(g_cursorState[1].posX, g_slotPosY - 20.0f), XMFLOAT2(p2W, p2H), XMFLOAT4(1, 1, 1, 1));
+    }
     // スロットアイコン描画 (スケール反映)
     float startX = g_slotStartX;
     float spacing = g_slotSpacing;
@@ -896,6 +1060,17 @@ void selectWT_Draw(int playerID)
 
      
     }
+ 
+    for (int i = 0; i < 2; i++)
+    {
+        if (!g_Cursors[i].isSelected)
+        {
+            g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Card_Cursor[i]);
+            DrawSprite(g_Cursors[i].pos, { 325.0f * 0.3f, 388.0f * 0.3f }, XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f));
+        }
+
+    }
+ 
 }
 
 // ------------------ Getter ------------------
@@ -916,4 +1091,12 @@ int GetPlayer1SelectedIndex()
 int GetPlayer2SelectedIndex()
 {
 	return g_cursorP2;
+}
+bool GetPlayerSelected(int playerIndex)
+{
+    return g_Cursors[playerIndex].isSelected;
+}
+float GetCounter(int playerIndex)
+{
+    return g_count[playerIndex];
 }

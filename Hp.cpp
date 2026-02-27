@@ -355,7 +355,7 @@ void Hp_Update()
     float hpPrev2 = g_Hp2.prevHp;
     g_Hp.m_Hp = Player_GetHp();
     g_Hp2.m_Hp = Player2_GetHp();
-    if (g_Timer.time > 0.0f)
+    if (g_Timer.time > 0.0f&&!Player_GetIsDead()&&!Player2_GetIsDead())
     {
         g_Timer.time -= g_Timer.frame;
     }
