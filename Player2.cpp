@@ -64,6 +64,9 @@ void Player2Die()
 {
 	hal::dout << "Player2 died!" << std::endl;
 
+	g_Player2.m_currentWeapon->ResetEffect(1);
+	g_Player2.m_currentWeapon = nullptr;
+
 	if (g_Player2.m_gameObject != nullptr)
 	{
 		g_Player2.m_gameObject->m_isEnable = false;

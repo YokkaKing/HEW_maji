@@ -68,6 +68,9 @@ void PlayerDie()
 {
 	hal::dout << "Player died!" << std::endl;
 
+	g_Player.m_currentWeapon->ResetEffect(0);
+	g_Player.m_currentWeapon = nullptr;
+
 	//プレイヤーを非表示にする
 	//if (g_Player.m_gameObject != nullptr)
 	//{
@@ -86,9 +89,6 @@ void PlayerDie()
 	g_Player1DeathAnimPlaying = true;
 	g_Player1DeathAnimTimer = 0.0f;
 	PlayAudio(g_ko, false);
-	
-
-	
 }
 void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, WeaponTerrain setWTp1)
 {

@@ -48,7 +48,6 @@ bool g_IsUsedB_P1 = false;
 bool g_IsUsedA_P2 = false;
 bool g_IsUsedB_P2 = false;
 
-
 void TransformInitialize(WeaponTerrain selectP1_A, WeaponTerrain selectP1_B, WeaponTerrain selectP2_A, WeaponTerrain selectP2_B) {
 
     g_Player.TransformType = TRANSFORM_TYPE::TRANSFORM_TYPE_NONE;
@@ -270,6 +269,7 @@ void TransformPlayer()
 
         }
         if (targetWT != WeaponTerrain::NONE) {
+            g_Player.m_currentWeapon->ResetEffect(0); // 1Pの武器のエフェクトを消す
             ApplyTransformationP1(&g_Player, targetWT, true);
             
             g_Player.TransformTimer = TRANSFORM_LIMIT_FRAME;
@@ -289,6 +289,7 @@ void TransformPlayer()
         if (g_Player.TransformType == TRANSFORM_TYPE::TRANSFORM_TYPE_B && ctrl.GetRightTrigger() >= 0.9f) unevolve = true;
 
         if (unevolve) {
+            g_Player.m_currentWeapon->ResetEffect(0); // 1Pのエフェクトを消す
             //エフェクトアニメーション
             XMFLOAT3 effectPos = g_Player.m_position;
             effectPos.y -= 0.5f;
@@ -381,6 +382,7 @@ void TransformPlayer2()
             Player2_SetPlayerIsAttaking(false);
         }
         if (targetWT != WeaponTerrain::NONE) {
+            g_Player2.m_currentWeapon->ResetEffect(1); // 2Pの武器のエフェクトを消す
             ApplyTransformationP2(&g_Player2, targetWT, true);
             g_Player2.m_isTransformed = true;
             g_Player2.TransformTimer = TRANSFORM_LIMIT_FRAME;
@@ -404,6 +406,7 @@ void TransformPlayer2()
         if (g_Player2.TransformType == TRANSFORM_TYPE2::TRANSFORM_TYPE_B && ctrl.GetRightTrigger() >= 0.9f) unevolve = true;
 
         if (unevolve) {
+            g_Player.m_currentWeapon->ResetEffect(1); // 2Pのエフェクトを消す
             //エフェクトアニメーション
             XMFLOAT3 effectPos = g_Player2.m_position;
             effectPos.y -= 0.5f;

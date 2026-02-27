@@ -432,3 +432,7 @@ void ShurikenShot::OnCollision(const CollisionInfo& info)
 	}
 }
 
+void Shuriken::ResetEffect(int select)
+{
+	return;
+}
