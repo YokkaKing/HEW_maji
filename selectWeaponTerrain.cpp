@@ -42,6 +42,11 @@ static ID3D11ShaderResourceView* g_TextureUi_Card_Bg[3] = { NULL };
 static ID3D11ShaderResourceView* g_TextureUi_Card_Status[5] = { NULL };
 static ID3D11ShaderResourceView* g_TextureUi_Card_Status_Button[2] = { NULL };
 
+static ID3D11ShaderResourceView* g_TextureUi_Card_tips[5] = { NULL };
+static ID3D11ShaderResourceView* g_TextureUi_Card_tips_2P[5] = { NULL };
+
+
+
 static ID3D11ShaderResourceView* g_TextureUi_Card_Ok[2] = { NULL };
 static ID3D11ShaderResourceView* g_TextureUi_Card_Controller[2] = { NULL };
 static ID3D11ShaderResourceView* g_TextureUi_Card_Cursor[2] = { NULL };
@@ -348,11 +353,52 @@ void selectWT_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 
         LoadFromWICFile(L"asset\\texture\\cancel_cursor.PNG", WIC_FLAGS_FORCE_SRGB, &metadata, image);
         CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Card_Status_Button[0]);
-        assert(g_TextureUi_Card_Status[4]);
+        assert(g_TextureUi_Card_Status_Button[0]);
 
         LoadFromWICFile(L"asset\\texture\\status_cursor.PNG", WIC_FLAGS_FORCE_SRGB, &metadata, image);
         CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Card_Status_Button[1]);
-        assert(g_TextureUi_Card_Status[4]);
+        assert(g_TextureUi_Card_Status_Button[1]);
+
+        LoadFromWICFile(L"asset\\texture\\tips_sword_1P.PNG", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Card_tips[0]);
+        assert(g_TextureUi_Card_tips[0]);
+
+        LoadFromWICFile(L"asset\\texture\\tips_spear_1P.PNG", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Card_tips[1]);
+        assert(g_TextureUi_Card_tips[1]);
+
+        LoadFromWICFile(L"asset\\texture\\tips_bow_1P.PNG", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Card_tips[2]);
+        assert(g_TextureUi_Card_tips[2]);
+
+        LoadFromWICFile(L"asset\\texture\\tips_hammer_1P.PNG", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Card_tips[3]);
+        assert(g_TextureUi_Card_tips[3]);
+
+        LoadFromWICFile(L"asset\\texture\\tips_shuriken_1P.PNG", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Card_tips[4]);
+        assert(g_TextureUi_Card_tips[4]);
+
+        LoadFromWICFile(L"asset\\texture\\tips_sword_2P.PNG", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Card_tips_2P[0]);
+        assert(g_TextureUi_Card_tips_2P[0]);
+
+        LoadFromWICFile(L"asset\\texture\\tips_spear_2P.PNG", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Card_tips_2P[1]);
+        assert(g_TextureUi_Card_tips_2P[1]);
+
+        LoadFromWICFile(L"asset\\texture\\tips_bow_2P.PNG", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Card_tips_2P[2]);
+        assert(g_TextureUi_Card_tips_2P[2]);
+
+        LoadFromWICFile(L"asset\\texture\\tips_hammer_2P.PNG", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Card_tips_2P[3]);
+        assert(g_TextureUi_Card_tips_2P[3]);
+
+        LoadFromWICFile(L"asset\\texture\\tips_shuriken_2P.PNG", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Card_tips_2P[4]);
+        assert(g_TextureUi_Card_tips_2P[4]);
+
     }
     TexMetadata metadata;
     ScratchImage srcImage;
@@ -475,6 +521,9 @@ void selectWT_Finalize()
     for (int i = 0; i < 5; i++)
     {
         SAFE_RELEASE(g_TextureUi_Card_Status[i]);
+        SAFE_RELEASE(g_TextureUi_Card_tips[i]);
+        SAFE_RELEASE(g_TextureUi_Card_tips_2P[i]);
+
     }
     for (int i = 0; i < 3; i++)
     {
@@ -512,6 +561,10 @@ auto ResetGoAnimation = [&]()
         g_goBtnX = g_goBtnStartX;
     };
 // ------------------ 更新処理 ------------------
+int GetControllerIndexFromPlayerNo(int playerNo) {
+    if (playerNo < 0 || playerNo >= 2) return -1;
+    return g_PlayerToController[playerNo];
+}
 void selectWT_Update()
 {
     for (int i = 0; i < 2; i++)
@@ -1082,19 +1135,7 @@ void selectWT_Draw_After3D()
 
     CardposX = (int)(screenWidth / 2 - (screenWidth / 4));
 
-    float scale = 0.5f;
-    g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Card_Status_Button[0]);
-    DrawSprite(XMFLOAT2((float)CardposX + 250, 220), XMFLOAT2(361 * scale, 240 * scale), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f));
 
-    g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Card_Status_Button[1]);
-    DrawSprite(XMFLOAT2((float)CardposX - 250, 180), XMFLOAT2(493 * scale, 237 * scale), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f));
-    CardposX += (int)(screenWidth / 2);
-
-    g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Card_Status_Button[0]);
-    DrawSpriteEx(XMFLOAT2((float)CardposX + 260, 190), XMFLOAT2(361 * scale, 240 * scale), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), 1, 1, 1, -6.0f);
-
-    g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Card_Status_Button[1]);
-    DrawSpriteEx(XMFLOAT2((float)CardposX - 240, 230), XMFLOAT2(493 * scale, 237 * scale), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), 1, 1, 1, -6.0f);
 
 
 
@@ -1118,11 +1159,17 @@ void selectWT_Draw_After3D()
     {
         g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Cursor[0]);
         DrawSprite(XMFLOAT2(g_cursorState[0].posX, g_slotPosY + 25.0f), XMFLOAT2(p1W, p1H), XMFLOAT4(1, 1, 1, 1));
+
+        g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Card_tips[g_cursorP1]);
+        DrawSprite(XMFLOAT2(screenWidth / 2-200, screenHeight / 2+150), XMFLOAT2(1088*0.35f, 640*0.35f), XMFLOAT4(1, 1, 1, 1));
     }
     if (g_Cursors[1].isSelected)
     {
         g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Cursor[1]);
         DrawSprite(XMFLOAT2(g_cursorState[1].posX, g_slotPosY - 20.0f), XMFLOAT2(p2W, p2H), XMFLOAT4(1, 1, 1, 1));
+
+        g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Card_tips_2P[g_cursorP2]);
+        DrawSprite(XMFLOAT2(screenWidth / 2+200, screenHeight / 2 -200), XMFLOAT2(995*0.35f,670*0.35f), XMFLOAT4(1, 1, 1, 1));
     }
     // スロットアイコン描画 (スケール反映)
     float startX = g_slotStartX;
@@ -1155,6 +1202,14 @@ void selectWT_Draw_After3D()
         DrawSprite(pos, size, color);
     }
 
+
+    float scale = 0.3f;
+    g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Card_Status_Button[0]);
+    DrawSprite(XMFLOAT2(300.0f, screenHeight - 90.0f), XMFLOAT2(361 * scale, 240 * scale), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f));
+
+    g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Card_Status_Button[1]);
+    DrawSprite(XMFLOAT2(100.0f, screenHeight - 100.0f), XMFLOAT2(493 * scale, 237 * scale), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f));
+    CardposX += (int)(screenWidth / 2);
 
     // ---------- スプライトアニメ描画（剣のプレビュー） ----------
     // 描画位置はカードの中心あたりに設定（必要に応じて微調整）

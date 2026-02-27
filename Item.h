@@ -56,5 +56,5 @@ public:
 
 // 全アイテムを削除する関数
 void ClearAllItems();
-
+ITEM_TYPE GetItemTypeFromGameObject(const GameObject* obj);
 #endif // ITEM_H

@@ -51,3 +51,4 @@ float GetCounter(int playerIndex);
 void selectWT_Draw_Before3D();
 void Selectweaponui3d_Draw();
 void selectWT_Draw_After3D();
+int GetControllerIndexFromPlayerNo(int playerNo);
