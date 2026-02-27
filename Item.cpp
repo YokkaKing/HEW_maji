@@ -16,6 +16,8 @@
 #include"Player2.h"
 #include"managerCollider.h"
 #include"Transform.h"
+#include "Hp.h"
+#include "Hp2.h"
 
 //================================================================
 //	É}ÉNÉçíËã`
@@ -128,7 +130,7 @@ void ITEM::Set()
 		m_itemType = ITEM_TYPE::HEALTH_RECOVERY;
 		break;
 	}
-
+	SetIsItemAlarmUse(true,set);
 	m_tag = "Item";
 	m_isScale = false;
 	m_isDead = false;

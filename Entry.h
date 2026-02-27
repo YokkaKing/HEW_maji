@@ -6,4 +6,4 @@ void Entry_Update();
 void Entry_Draw();
 void Entry_Finalize();
 
-int GetControllerIndexFromPlayerNo(int playerNo);
+

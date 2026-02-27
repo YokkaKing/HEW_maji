@@ -30,6 +30,7 @@ static	ID3D11ShaderResourceView* g_TextureTimer =  NULL ;
 static	ID3D11ShaderResourceView* g_TextureNumber = NULL;
 static	ID3D11ShaderResourceView* g_TextureLowHp = NULL;
 static	ID3D11ShaderResourceView* g_TextureButton[2] = { NULL };
+static	ID3D11ShaderResourceView* g_TextureItem[2] = {NULL};
 
 
 static	ID3D11ShaderResourceView* g_TextureHp_1P[4] = { NULL };
@@ -52,7 +53,12 @@ STATUS_1P g_Status1;
 STATUS_2P g_Status2;
 static float g_HpBlinkTime = 0.0f;
 static float canTransformFrame = 0.0f;
+static bool g_isItemAlarmUse = false;
 static bool g_LowHp = false;
+static int g_itemType = 0;
+static float g_alarmAlpha = 0.0f;
+static float g_alarmBlinkTime = 0.0f;
+static float g_alarmTimer = 0.0f;
 static std::mt19937 g_Rng;
 static std::uniform_real_distribution<float> g_Dist01(0.0f, 1.0f);
 static int WTToUIIndex(WeaponTerrain wt)
@@ -257,6 +263,13 @@ void Hp_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
     CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureButton[1]);
     assert(&g_TextureButton[1]);
 
+    LoadFromWICFile(L"asset\\texture\\Heal_alarm.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureItem[0]);
+    assert(&g_TextureItem[0]);
+
+    LoadFromWICFile(L"asset\\texture\\TransformHeal_alarm.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureItem[1]);
+    assert(&g_TextureItem[1]);
 	//フェードインのセット
     g_Hp.col = { 1.0f, 1.0f, 1.0f, 1.0f };
     g_Hp.pos = { 400, 1006 };
@@ -318,6 +331,10 @@ void Hp_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
     g_HpBlinkTime = 0.0f;
     g_LowHp = false;
     canTransformFrame = 0.0f;
+    g_isItemAlarmUse = false;
+    g_itemType = 0;
+    g_alarmAlpha = 0.0f;
+    g_alarmTimer = 0.0f;
 }
 void Hp_Finalize()
 {
@@ -330,6 +347,7 @@ void Hp_Finalize()
     for (int i = 0; i < 2; i++)
     {
         SAFE_RELEASE(g_TextureButton[i]);
+		SAFE_RELEASE(g_TextureItem[i]);
 		
     }
     for (int i = 0; i < 4; i++)
@@ -374,7 +392,11 @@ void Hp_Update()
     {
         g_HpBlinkTime += 0.04f;
     }
-
+    if (g_isItemAlarmUse)
+    {
+		g_alarmBlinkTime += 0.04f;
+        g_alarmTimer += 1.0f;
+    }
  
     //========================
     // 1P 赤HP制御
@@ -762,6 +784,12 @@ void Hp_Draw()
         SetBlendState(BLENDSTATE_ALFA);
         DrawSprite(XMFLOAT2(g_Status1.pos[2].x , g_Status1.pos[2].y - 50), XMFLOAT2(219 * scale, 105 * scale), g_Hp.col);
     }
+    if (g_isItemAlarmUse&&g_alarmTimer<=120.0f)
+    {
+        g_pContext->PSSetShaderResources(0, 1, &g_TextureItem[g_itemType]);
+        SetBlendState(BLENDSTATE_ALFA);
+        DrawSprite(XMFLOAT2(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 -200), XMFLOAT2(600, 600), XMFLOAT4(1.0f,1.0f,1.0f, g_alarmAlpha));
+    }
 }
 
 float Hp_GetTime()
@@ -773,5 +801,12 @@ void Hp_SetTime(float time)
 {
     g_Timer.time = time;
 }
+void SetIsItemAlarmUse(bool use,int type)
+{
+	g_isItemAlarmUse = use;
+    g_itemType = type;
+    g_alarmTimer = 0.0f;
+}
+
 
 
