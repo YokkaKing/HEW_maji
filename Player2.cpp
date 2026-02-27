@@ -47,7 +47,7 @@ WeaponTerrain g_setWTP2; // プレイヤーの武器と地形情報
 unsigned int g_changeP2;
 static bool g_Player2AttackPlaying = false; // 攻撃ワンショット再生中フラグ
 static bool g_Player2JumpPlaying = false; // ジャンプワンショット再生中フラグ
-static int g_Player2CurrentAnim = 0; // 0: idle, 1: move, 2: attack 3:jump
+static int g_Player2CurrentAnim = -1; // 0: idle, 1: move, 2: attack 3:jump
 bool g_isChangeP2;
 XMFLOAT3 gp2_slopeSpeed;
 bool gp2_roundReset;
@@ -163,6 +163,11 @@ void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 	{
 		g_Player2.m_gameObject->m_isEnable = true;
 	}
+
+	g_Player2CurrentAnim = -1;
+	ModelPlayClip(g_Player2.m_model, 0, 60, 60.0f, true);
+
+	ModelUpdateAnimation(g_Player2.m_model, 0.0f);
 }
 void Player2Finalize()
 {
@@ -198,15 +203,22 @@ void	Player2Update()
 		g_Player2.m_isAttacked = false; // ★ここで消す（連続発火防止）
 	}
 
-	// ★被弾アニメ進行（死んでてもタイマーは進めてOK）
 	if (g_Player2.m_hitAnimPlaying)
 	{
 		g_Player2.m_hitAnimTimer += 1.0f / 60.0f;
-		if (g_Player2.m_hitAnimTimer >= HIT_ANIM_DURATION)
+		bool finished = ModelConsumeClipFinished(g_Player2.m_model);
+
+		if (g_Player2.m_hitAnimTimer >= HIT_ANIM_DURATION || finished)
 		{
 			g_Player2.m_hitAnimPlaying = false;
 			g_Player2AttackPlaying = false;
 			g_Player2JumpPlaying = false;
+			g_Player2CurrentAnim = -1;
+		}
+		else
+		{
+			ModelUpdateAnimation(g_Player2.m_model, 1.0f / 60.0f);
+			return;
 		}
 	}
 	//ヒットアクション

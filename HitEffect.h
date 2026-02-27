@@ -57,8 +57,11 @@ private:
     ID3D11Device* m_pDevice = nullptr;
     ID3D11DeviceContext* m_pContext = nullptr;
     static ID3D11ShaderResourceView* m_pTextureRV[(int)EffectType::EFFECT_MAX];
+
     static int m_columns[(int)EffectType::EFFECT_MAX];
     static int m_rows[(int)EffectType::EFFECT_MAX];
+
     float m_frameDuration;
     std::vector<EffectInstance> m_effects;
+    EffectInstance m_chargeEffects[2];
 };

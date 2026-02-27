@@ -131,6 +131,8 @@ void ITEM::Set()
 		break;
 	}
 	SetIsItemAlarmUse(true,set);
+	SetIsItemAlarmUse2(true, set);
+
 	m_tag = "Item";
 	m_isScale = false;
 	m_isDead = false;
