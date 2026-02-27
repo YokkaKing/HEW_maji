@@ -19,7 +19,7 @@
 #include <cmath>
 
 
-struct PlayerCursor 
+struct PlayerCursor
 {
     XMFLOAT2 pos;
     bool isSelected;
@@ -38,6 +38,15 @@ static const int selectCount = 5;
 #pragma region UI関連定数
 static ID3D11ShaderResourceView* g_TextureBG[2] = { NULL };	// 背景テクスチャ
 static ID3D11ShaderResourceView* g_TextureUi_Card[3] = { NULL };
+static ID3D11ShaderResourceView* g_TextureUi_Card_Bg[3] = { NULL };
+static ID3D11ShaderResourceView* g_TextureUi_Card_Status[5] = { NULL };
+static ID3D11ShaderResourceView* g_TextureUi_Card_Status_Button[2] = { NULL };
+
+static ID3D11ShaderResourceView* g_TextureUi_Card_tips[5] = { NULL };
+static ID3D11ShaderResourceView* g_TextureUi_Card_tips_2P[5] = { NULL };
+
+
+
 static ID3D11ShaderResourceView* g_TextureUi_Card_Ok[2] = { NULL };
 static ID3D11ShaderResourceView* g_TextureUi_Card_Controller[2] = { NULL };
 static ID3D11ShaderResourceView* g_TextureUi_Card_Cursor[2] = { NULL };
@@ -49,11 +58,11 @@ static ID3D11Device* g_pDevice = nullptr;
 static ID3D11DeviceContext* g_pContext = nullptr;
 extern Controller g_Controller[2];
 static float g_SelectVibrationTimer[2] = { 0.0f, 0.0f };
-static float g_count[2] = {0,0};
+static float g_count[2] = { 0,0 };
 static inGameWTselect g_selectData;
 static int g_cursorP1 = 0;
 static int g_cursorP2 = 0;
-static bool g_isStarted = false;  
+static bool g_isStarted = false;
 static bool g_isP1Ready = false;
 static bool g_isP2Ready = false;
 static bool g_isP1Selected = false;
@@ -93,12 +102,12 @@ struct CursorState
     // 実装は slotScale の値を直接保持
 };
 static CursorState g_cursorState[2];
-
+static bool g_statusUsed[2] = { false,false };
 static float g_cursorScale[2] = { 1.0f, 1.0f };
 static bool  g_cursorScaleAnim[2] = { false, false };
 static float g_cursorScaleTime[2] = { 0.0f, 0.0f };
-static const float g_cursorScaleDuration = 0.1f; 
-static const float g_cursorScaleMin = 0.70f; 
+static const float g_cursorScaleDuration = 0.1f;
+static const float g_cursorScaleMin = 0.70f;
 // 各スロットのスケール値 (1.0 = base, >1 = 拡大)、アニメは slotAnimProgress/dirで制御
 static float g_slotScale[selectCount] = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f };
 static bool  g_slotAnimating[selectCount] = { false };
@@ -160,9 +169,9 @@ static float g_goBtnX = 0.0f;
 static float g_goBtnY = 0.0f;
 static float g_goBtnStartX = 0.0f;
 static float g_goBtnTargetX = 0.0f;
-static float g_goAnimDuration = 0.12f; 
+static float g_goAnimDuration = 0.12f;
 static float g_goAnimTime = 0.0f;
-static XMFLOAT2 g_goBtnSize = XMFLOAT2(500.0f*2, 231.0f * 2);
+static XMFLOAT2 g_goBtnSize = XMFLOAT2(500.0f * 2, 231.0f * 2);
 #pragma endregion
 // ------------------ 初期化 ------------------
 void selectWT_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
@@ -176,7 +185,7 @@ void selectWT_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
     {
         g_count[i] = 0;
     }
- 
+
 
 #pragma region スプライトアニメ初期化
     for (int p = 0; p < 2; ++p)
@@ -291,7 +300,7 @@ void selectWT_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
         LoadFromWICFile(L"asset\\texture\\select_card_Ok.PNG", WIC_FLAGS_FORCE_SRGB, &metadata, image);
         CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Card_Ok[0]);
         assert(g_TextureUi_Card_Ok[0]);
-       
+
         LoadFromWICFile(L"asset\\texture\\select_card2_Ok.PNG", WIC_FLAGS_FORCE_SRGB, &metadata, image);
         CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Card_Ok[1]);
         assert(g_TextureUi_Card_Ok[1]);
@@ -311,6 +320,85 @@ void selectWT_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
         LoadFromWICFile(L"asset\\texture\\2p.PNG", WIC_FLAGS_FORCE_SRGB, &metadata, image);
         CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Card_Cursor[1]);
         assert(g_TextureUi_Card_Cursor[1]);
+    }
+    {
+        TexMetadata		metadata;
+        ScratchImage	image;
+        LoadFromWICFile(L"asset\\texture\\status_bg.PNG", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Card_Bg[0]);
+        assert(g_TextureUi_Card_Bg[0]);
+        LoadFromWICFile(L"asset\\texture\\status_bg2.PNG", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Card_Bg[1]);
+        assert(g_TextureUi_Card_Bg[1]);
+
+        LoadFromWICFile(L"asset\\texture\\status_sword.PNG", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Card_Status[0]);
+        assert(g_TextureUi_Card_Status[0]);
+
+        LoadFromWICFile(L"asset\\texture\\status_spear.PNG", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Card_Status[1]);
+        assert(g_TextureUi_Card_Status[1]);
+
+        LoadFromWICFile(L"asset\\texture\\status_bow.PNG", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Card_Status[2]);
+        assert(g_TextureUi_Card_Status[2]);
+
+        LoadFromWICFile(L"asset\\texture\\status_hammer.PNG", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Card_Status[3]);
+        assert(g_TextureUi_Card_Status[3]);
+
+        LoadFromWICFile(L"asset\\texture\\status_shuriken.PNG", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Card_Status[4]);
+        assert(g_TextureUi_Card_Status[4]);
+
+        LoadFromWICFile(L"asset\\texture\\cancel_cursor.PNG", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Card_Status_Button[0]);
+        assert(g_TextureUi_Card_Status_Button[0]);
+
+        LoadFromWICFile(L"asset\\texture\\status_cursor.PNG", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Card_Status_Button[1]);
+        assert(g_TextureUi_Card_Status_Button[1]);
+
+        LoadFromWICFile(L"asset\\texture\\tips_sword_1P.PNG", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Card_tips[0]);
+        assert(g_TextureUi_Card_tips[0]);
+
+        LoadFromWICFile(L"asset\\texture\\tips_spear_1P.PNG", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Card_tips[1]);
+        assert(g_TextureUi_Card_tips[1]);
+
+        LoadFromWICFile(L"asset\\texture\\tips_bow_1P.PNG", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Card_tips[2]);
+        assert(g_TextureUi_Card_tips[2]);
+
+        LoadFromWICFile(L"asset\\texture\\tips_hammer_1P.PNG", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Card_tips[3]);
+        assert(g_TextureUi_Card_tips[3]);
+
+        LoadFromWICFile(L"asset\\texture\\tips_shuriken_1P.PNG", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Card_tips[4]);
+        assert(g_TextureUi_Card_tips[4]);
+
+        LoadFromWICFile(L"asset\\texture\\tips_sword_2P.PNG", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Card_tips_2P[0]);
+        assert(g_TextureUi_Card_tips_2P[0]);
+
+        LoadFromWICFile(L"asset\\texture\\tips_spear_2P.PNG", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Card_tips_2P[1]);
+        assert(g_TextureUi_Card_tips_2P[1]);
+
+        LoadFromWICFile(L"asset\\texture\\tips_bow_2P.PNG", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Card_tips_2P[2]);
+        assert(g_TextureUi_Card_tips_2P[2]);
+
+        LoadFromWICFile(L"asset\\texture\\tips_hammer_2P.PNG", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Card_tips_2P[3]);
+        assert(g_TextureUi_Card_tips_2P[3]);
+
+        LoadFromWICFile(L"asset\\texture\\tips_shuriken_2P.PNG", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Card_tips_2P[4]);
+        assert(g_TextureUi_Card_tips_2P[4]);
+
     }
     TexMetadata metadata;
     ScratchImage srcImage;
@@ -332,7 +420,7 @@ void selectWT_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
     CreateShaderResourceView(pDevice, rightImg.GetImages(), rightImg.GetImageCount(), rightMeta, &g_TextureBG3_Right);
     g_bg3OffsetLeft = 0.0f;
     g_bg3OffsetRight = 0.0f;
- 
+
 
 
     // 武器アイコン読み込み
@@ -403,12 +491,19 @@ void selectWT_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
     g_controllerScale[1] = 0.0f;
     g_isP1Selected = false;
     g_isP2Selected = false;
+
+    for (int i = 0; i < 2; i++)
+    {
+        g_statusUsed[i] = false;
+
+    }
+
 }
 
 // ------------------ 終了処理 ------------------
 void selectWT_Finalize()
 {
-  
+
     ID3D11ShaderResourceView* nullSRV[16] = { nullptr };
     if (g_pContext) g_pContext->PSSetShaderResources(0, 16, nullSRV);
     for (int i = 0; i < 2; i++)
@@ -419,7 +514,16 @@ void selectWT_Finalize()
         SAFE_RELEASE(g_TextureUi_Card_Ok[i]);
         SAFE_RELEASE(g_TextureUi_Card_Controller[i]);
         SAFE_RELEASE(g_TextureUi_Card_Cursor[i]);
-        
+        SAFE_RELEASE(g_TextureUi_Card_Bg[i]);
+        SAFE_RELEASE(g_TextureUi_Card_Status_Button[i]);
+
+    }
+    for (int i = 0; i < 5; i++)
+    {
+        SAFE_RELEASE(g_TextureUi_Card_Status[i]);
+        SAFE_RELEASE(g_TextureUi_Card_tips[i]);
+        SAFE_RELEASE(g_TextureUi_Card_tips_2P[i]);
+
     }
     for (int i = 0; i < 3; i++)
     {
@@ -457,6 +561,10 @@ auto ResetGoAnimation = [&]()
         g_goBtnX = g_goBtnStartX;
     };
 // ------------------ 更新処理 ------------------
+int GetControllerIndexFromPlayerNo(int playerNo) {
+    if (playerNo < 0 || playerNo >= 2) return -1;
+    return g_PlayerToController[playerNo];
+}
 void selectWT_Update()
 {
     for (int i = 0; i < 2; i++)
@@ -473,11 +581,26 @@ void selectWT_Update()
                 g_controllerScale[i] = 0.8f;
             }
         }
-       
-      
- 
     }
-   
+
+
+    if ((Keyboard_IsKeyDownTrigger(KK_Q) || g_Controller[0].IsButtonPushed(ControllerButton::L_THUMB)) && g_isP1Selected)
+    {
+        g_statusUsed[0] = true;
+    }
+    if ((Keyboard_IsKeyDownTrigger(KK_E) || g_Controller[0].IsButtonPushed(ControllerButton::R_THUMB)) && g_isP1Selected)
+    {
+        g_statusUsed[0] = false;
+    }
+    if ((Keyboard_IsKeyDownTrigger(KK_D8) || g_Controller[1].IsButtonPushed(ControllerButton::L_THUMB)) && g_isP2Selected)
+    {
+        g_statusUsed[1] = true;
+    }
+    if ((Keyboard_IsKeyDownTrigger(KK_D9) || g_Controller[1].IsButtonPushed(ControllerButton::R_THUMB)) && g_isP2Selected)
+    {
+        g_statusUsed[1] = false;
+    }
+
     for (int i = 0; i < 2; i++) {
         //移動処理（決定していない場合のみ）
         if (!g_Cursors[i].isSelected) {
@@ -524,7 +647,7 @@ void selectWT_Update()
                     g_Controller[i].SetVibration(0.3f, 0.3f);
                 }
             }
-            
+
         }
     }
     if (g_vibrationTimerP1 > 0) {
@@ -550,7 +673,7 @@ void selectWT_Update()
             }
             else
             {
-          
+
                 if (t < 0.5f)
                 {
                     float tt = t / 0.5f; // 0..1
@@ -591,14 +714,14 @@ void selectWT_Update()
 #pragma region 選択処理
     // P1 操作
 
-    if (!g_isP1Ready&& g_Cursors[0].isSelected)
+    if (!g_isP1Ready && g_Cursors[0].isSelected)
     {
         // スティックの状態を取得
         float stickX = g_Controller[0].GetLeftStickX();
         bool nowStickLeft = (stickX < -0.5f);
         bool nowStickRight = (stickX > 0.5f);
 
-        if (Keyboard_IsKeyDownTrigger(KK_LEFT)|| (nowStickLeft && !g_oldStickLeft[0]))
+        if (Keyboard_IsKeyDownTrigger(KK_LEFT) || (nowStickLeft && !g_oldStickLeft[0]))
         {
             PlayAudio(g_cursorMove, false);
             int oldIndex = g_cursorP1;
@@ -616,7 +739,7 @@ void selectWT_Update()
             StartSlotScaleAnim(g_cursorP1, true);
             Selectweaponui3d_ModelUpdate(1, g_cursorP1);
         }
-        if (Keyboard_IsKeyDownTrigger(KK_RIGHT)||(nowStickRight && !g_oldStickRight[0]))
+        if (Keyboard_IsKeyDownTrigger(KK_RIGHT) || (nowStickRight && !g_oldStickRight[0]))
         {
             PlayAudio(g_cursorMove, false);
             int oldIndex = g_cursorP1;
@@ -644,7 +767,7 @@ void selectWT_Update()
             g_vibrationTimerP1 = 10;
             PlayAudio(g_button, false);
             g_isP1Ready = true;
-            g_selectData.player1 = static_cast<WeaponTerrain>(g_cursorP1+1);
+            g_selectData.player1 = static_cast<WeaponTerrain>(g_cursorP1 + 1);
             Selectweaponui3d_ModelAttack(1, g_cursorP1);
         }
         else
@@ -667,7 +790,7 @@ void selectWT_Update()
         bool nowStickLeft = (stickX < -0.5f);
         bool nowStickRight = (stickX > 0.5f);
 
-        if (Keyboard_IsKeyDownTrigger(KK_D3)|| (nowStickLeft && !g_oldStickLeft[1]))
+        if (Keyboard_IsKeyDownTrigger(KK_D3) || (nowStickLeft && !g_oldStickLeft[1]))
         {
             PlayAudio(g_cursorMove, false);
             int oldIndex = g_cursorP2;
@@ -684,7 +807,7 @@ void selectWT_Update()
             Selectweaponui3d_ModelUpdate(2, g_cursorP2);
 
         }
-        if (Keyboard_IsKeyDownTrigger(KK_D4)|| (nowStickRight && !g_oldStickRight[1]))
+        if (Keyboard_IsKeyDownTrigger(KK_D4) || (nowStickRight && !g_oldStickRight[1]))
         {
             PlayAudio(g_cursorMove, false);
             int oldIndex = g_cursorP2;
@@ -706,13 +829,13 @@ void selectWT_Update()
         g_oldStickLeft[1] = nowStickLeft;
         g_oldStickRight[1] = nowStickRight;
 
-        if ((Keyboard_IsKeyDownTrigger(KK_D5) || g_Controller[1].IsButtonPushed(ControllerButton::A_BUTTON))&& g_isP2Selected)
+        if ((Keyboard_IsKeyDownTrigger(KK_D5) || g_Controller[1].IsButtonPushed(ControllerButton::A_BUTTON)) && g_isP2Selected)
         {
             g_Controller[1].SetVibration(0.4f, 0.4f);
             g_vibrationTimerP2 = 10;
             PlayAudio(g_button, false);
             g_isP2Ready = true;
-            g_selectData.player2 = static_cast<WeaponTerrain>(g_cursorP2+1);
+            g_selectData.player2 = static_cast<WeaponTerrain>(g_cursorP2 + 1);
             Selectweaponui3d_ModelAttack(2, g_cursorP2);
 
         }
@@ -730,26 +853,26 @@ void selectWT_Update()
         // GO演出を消す（片方でも解除されたら消す）
         ResetGoAnimation();
     }
-	// 両者 Ready なら GO アニメ開始
+    // 両者 Ready なら GO アニメ開始
     if (g_isP1Ready && g_isP2Ready)
     {
         if (g_goState == GO_NONE)
         {
-          
+
             Manager_SetWTselect(g_selectData);
 
-           
+
             g_goState = GO_ANIMATING;
             g_goAnimTime = 0.0f;
 
             float screenW = (float)Direct3D_GetBackBufferWidth();
             float screenH = (float)Direct3D_GetBackBufferHeight();
 
-            
+
             g_goBtnTargetX = screenW * 0.5f;
             g_goBtnY = screenH * 0.5f;
 
-        
+
             g_goBtnStartX = -(g_goBtnSize.x * 0.5f) - 50.0f;
             g_goBtnX = g_goBtnStartX;
         }
@@ -765,7 +888,7 @@ void selectWT_Update()
     }
     if (g_goState == GO_ANIMATING)
     {
-        g_goAnimTime += FRAME_DT; 
+        g_goAnimTime += FRAME_DT;
         float t = g_goAnimTime / g_goAnimDuration;
         if (t >= 1.0f) t = 1.0f;
 
@@ -773,15 +896,15 @@ void selectWT_Update()
 
         if (t >= 1.0f)
         {
-      
+
             g_goState = GO_WAIT_FOR_A;
         }
     }
     else if (g_goState == GO_WAIT_FOR_A)
     {
-   
+
         bool p1Pressed = Keyboard_IsKeyDownTrigger(KK_A) || g_Controller[0].IsButtonPushed(ControllerButton::A_BUTTON);
-        bool p2Pressed = g_Controller[1].IsButtonPushed(ControllerButton::A_BUTTON); 
+        bool p2Pressed = g_Controller[1].IsButtonPushed(ControllerButton::A_BUTTON);
         if (!g_isStarted && (p1Pressed || p2Pressed))
         {
             g_Controller[0].SetVibration(1.0f, 1.0f);
@@ -791,7 +914,7 @@ void selectWT_Update()
             PlayAudio(g_gameStart, false);
             XMFLOAT4 fadeColor(0.0f, 0.0f, 0.0f, 1.0f);
             SetFade(40.0f, fadeColor, FADE_STATE::FADE_OUT, SCENE_GAME);
-			g_isStarted = true;
+            g_isStarted = true;
             g_goState = GO_NONE;
             g_goAnimTime = 0.0f;
             g_goBtnX = g_goBtnStartX;
@@ -865,7 +988,7 @@ void selectWT_Update()
     }
     if (g_Cursors[0].isSelected)
     {
-		g_isP1Selected = true;
+        g_isP1Selected = true;
     }
     if (g_Cursors[1].isSelected)
     {
@@ -873,8 +996,7 @@ void selectWT_Update()
     }
 }
 
-// ------------------ 描画処理 ------------------
-void selectWT_Draw(int playerID)
+void selectWT_Draw_Before3D()
 {
     Shader_Begin();
     Shader_SetMatrix(GetViewMatrix() * GetProjectionMatrix());
@@ -941,12 +1063,11 @@ void selectWT_Draw(int playerID)
             DrawSprite(XMFLOAT2(drawX, y), XMFLOAT2(texW, texH), XMFLOAT4(1, 1, 1, 1));
         }
     }
-    // 背景
 
     g_pContext->PSSetShaderResources(0, 1, &g_TextureBG[1]);
     DrawSprite(XMFLOAT2(screenWidth * 0.5f, screenHeight * 0.5f), XMFLOAT2(screenWidth, screenHeight), XMFLOAT4(1, 1, 1, 1));
 
-  
+
     // カード
     int CardposX = (int)(screenWidth / 2 - (screenWidth / 4));
     for (int i = 0; i < 2; i++)
@@ -957,7 +1078,7 @@ void selectWT_Draw(int playerID)
         }
         g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Card[i]);
         DrawSprite(XMFLOAT2((float)CardposX, screenHeight / 2 - 50.0f), XMFLOAT2(827 * 0.8f, 1013 * 0.8f), color);
-        
+
         if (g_Cursors[i].isSelected)
         {
             g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Card_Ok[i]);
@@ -967,16 +1088,61 @@ void selectWT_Draw(int playerID)
                 g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Card_Controller[i]);
                 DrawSprite(XMFLOAT2((float)CardposX, screenHeight / 2 - 50.0f), XMFLOAT2(827 * g_controllerScale[i], 1013 * g_controllerScale[i]), color);
             }
-         
-          
+        }
+        CardposX += (int)(screenWidth / 2);
+    }
+}
+
+
+void selectWT_Draw_After3D()
+{
+    Shader_Begin();
+    Shader_SetMatrix(GetViewMatrix() * GetProjectionMatrix());
+    float screenWidth = (float)Direct3D_GetBackBufferWidth();
+    float screenHeight = (float)Direct3D_GetBackBufferHeight();
+    Shader_SetMatrix(XMMatrixOrthographicOffCenterLH(
+        0.0f,
+        screenWidth,
+        screenHeight,
+        0.0f,
+        0.0f,
+        1.0f));
+    Shader_SetWorldMatrix(XMMatrixIdentity());
+    int CardposX = (int)(screenWidth / 2 - (screenWidth / 4));
+    XMFLOAT4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
+    for (int i = 0; i < 2; i++)
+    {
+
+        if (g_statusUsed[i])
+        {
+            g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Card_Bg[i]);
+            DrawSprite(XMFLOAT2((float)CardposX, screenHeight / 2 - 50.0f), XMFLOAT2(827 * 0.8f, 1013 * 0.8f), color);
+            if (i == 0)
+            {
+                g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Card_Status[g_cursorP1]);
+                DrawSprite(XMFLOAT2((float)CardposX, screenHeight / 2 - 50.0f), XMFLOAT2(827 * 0.8f, 1013 * 0.8f), color);
+            }
+            else
+            {
+                g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Card_Status[g_cursorP2]);
+                DrawSprite(XMFLOAT2((float)CardposX, screenHeight / 2 - 50.0f), XMFLOAT2(827 * 0.8f, 1013 * 0.8f), color);
+            }
+
         }
         CardposX += (int)(screenWidth / 2);
 
     }
 
+    CardposX = (int)(screenWidth / 2 - (screenWidth / 4));
+
+
+
+
+
+
     g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Card[2]);
     DrawSprite(XMFLOAT2(screenWidth * 0.5f, screenHeight * 0.85f), XMFLOAT2(3357 * 0.3f, 750 * 0.3f), XMFLOAT4(1, 1, 1, 1));
-   
+
     // カーソル描画: 各プレイヤー用カーソルテクスチャを現在の posX で描画
     // P1 カーソル
     float baseCursorW = 202.0f * 0.75f;
@@ -993,11 +1159,17 @@ void selectWT_Draw(int playerID)
     {
         g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Cursor[0]);
         DrawSprite(XMFLOAT2(g_cursorState[0].posX, g_slotPosY + 25.0f), XMFLOAT2(p1W, p1H), XMFLOAT4(1, 1, 1, 1));
+
+        g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Card_tips[g_cursorP1]);
+        DrawSprite(XMFLOAT2(screenWidth / 2-200, screenHeight / 2+150), XMFLOAT2(1088*0.35f, 640*0.35f), XMFLOAT4(1, 1, 1, 1));
     }
     if (g_Cursors[1].isSelected)
     {
         g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Cursor[1]);
         DrawSprite(XMFLOAT2(g_cursorState[1].posX, g_slotPosY - 20.0f), XMFLOAT2(p2W, p2H), XMFLOAT4(1, 1, 1, 1));
+
+        g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Card_tips_2P[g_cursorP2]);
+        DrawSprite(XMFLOAT2(screenWidth / 2+200, screenHeight / 2 -200), XMFLOAT2(995*0.35f,670*0.35f), XMFLOAT4(1, 1, 1, 1));
     }
     // スロットアイコン描画 (スケール反映)
     float startX = g_slotStartX;
@@ -1030,7 +1202,15 @@ void selectWT_Draw(int playerID)
         DrawSprite(pos, size, color);
     }
 
-    
+
+    float scale = 0.3f;
+    g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Card_Status_Button[0]);
+    DrawSprite(XMFLOAT2(300.0f, screenHeight - 90.0f), XMFLOAT2(361 * scale, 240 * scale), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f));
+
+    g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Card_Status_Button[1]);
+    DrawSprite(XMFLOAT2(100.0f, screenHeight - 100.0f), XMFLOAT2(493 * scale, 237 * scale), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f));
+    CardposX += (int)(screenWidth / 2);
+
     // ---------- スプライトアニメ描画（剣のプレビュー） ----------
     // 描画位置はカードの中心あたりに設定（必要に応じて微調整）
     XMFLOAT2 p1Pos = XMFLOAT2(screenWidth * 0.25f, screenHeight * 0.5f - 50.0f);
@@ -1044,23 +1224,23 @@ void selectWT_Draw(int playerID)
         float screenW = (float)Direct3D_GetBackBufferWidth();
         float screenH = (float)Direct3D_GetBackBufferHeight();
 
-        
+
         if (g_TextureGoBg)
         {
             g_pContext->PSSetShaderResources(0, 1, &g_TextureGoBg);
             DrawSprite(XMFLOAT2(screenW * 0.5f, screenH * 0.5f), XMFLOAT2(screenW, screenH), XMFLOAT4(1, 1, 1, 1));
         }
 
-     
+
         if (g_TextureGoBtn)
         {
             g_pContext->PSSetShaderResources(0, 1, &g_TextureGoBtn);
             DrawSprite(XMFLOAT2(g_goBtnX, g_goBtnY), g_goBtnSize, XMFLOAT4(1, 1, 1, 1));
         }
 
-     
+
     }
- 
+
     for (int i = 0; i < 2; i++)
     {
         if (!g_Cursors[i].isSelected)
@@ -1070,7 +1250,7 @@ void selectWT_Draw(int playerID)
         }
 
     }
- 
+
 }
 
 // ------------------ Getter ------------------
@@ -1086,11 +1266,11 @@ bool selectWT_IsP2Ready()
 
 int GetPlayer1SelectedIndex()
 {
-	return g_cursorP1;
+    return g_cursorP1;
 }
 int GetPlayer2SelectedIndex()
 {
-	return g_cursorP2;
+    return g_cursorP2;
 }
 bool GetPlayerSelected(int playerIndex)
 {

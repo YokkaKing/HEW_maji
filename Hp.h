@@ -83,4 +83,6 @@ void Hp_Draw();
 float Hp_GetTime(); //時間制限用の関数
 void Hp_SetTime(float time); //時間制限のリセット用
 
+void SetIsItemAlarmUse(bool use,int type);
+
 #endif // HP_H

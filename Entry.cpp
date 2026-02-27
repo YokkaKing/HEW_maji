@@ -70,10 +70,7 @@ void Entry_Initialize(ID3D11Device* device, ID3D11DeviceContext* context) {
     }
 }
 
-int GetControllerIndexFromPlayerNo(int playerNo) {
-    if (playerNo < 0 || playerNo >= 2) return -1;
-    return g_PlayerToController[playerNo];
-}
+
 
 void Entry_Update() {
 
