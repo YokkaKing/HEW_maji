@@ -174,7 +174,7 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 	g_Player.m_isDead = false;
 	g_Player.m_isDeadFlag = false;
 
-	
+	ResetRoundTerrain(); // 地形をリセットするためのもの
 }
 void PlayerFinalize()
 {

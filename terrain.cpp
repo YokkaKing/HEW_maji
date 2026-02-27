@@ -617,60 +617,11 @@ void TerrainInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 		g_Terrain.other[i]->m_isStatic = true;
 	}
 
-	//======================================================
-	//	各プレイヤーに固定された座標で地形をセットしている現状
-	//	鈴木ができるのはここまでです。
-	//	あとは地形システムを作った久保木に任せます。
-	//	下のスイッチ文はそれっぽいので活用してもいいよ
-	//======================================================
-
-	// 選択された武器・地形データに応じて地形を生成
-	//switch (p1Set)
-	//{
-	//case WeaponTerrain::SWORD_WALL:
-	//	//g_Terrain.SimpleObjects(Trees, { 0.25f, 2.0f, 0.25f }, TERRAIN_TYPE::TREE, g_Terrain.m_motherPosition[1], 0); // 相手を中心に生えるから
-	//	g_Terrain.PixelObjects(Trees, TERRAIN_TYPE::TREE, g_Terrain.m_motherPosition[1], 0);
-	//	break;
-	//case WeaponTerrain::SPEAR_HILL:
-	//	//g_Terrain.SimpleObjects(Hills, { 0.25f, 0.25f, 0.25f }, TERRAIN_TYPE::HILL, g_Terrain.m_motherPosition[0], 0);
-	//	g_Terrain.CreateAnt(g_Terrain.m_motherPosition[0], 0);
-	//	break;
-	//case WeaponTerrain::BOW_HILL:
-	//	g_Terrain.SimpleObjects(Bogs, { 1.0f, 2.5f, 1.0f }, TERRAIN_TYPE::BOG, g_Terrain.m_motherPosition[0], 0);
-	//	break;
-	//case WeaponTerrain::HAMMER_:
-	//	g_Terrain.SimpleObjects(Walls, { 1.0f, 1.0f, 1.0f }, TERRAIN_TYPE::HILL, g_Terrain.m_motherPosition[1], 1);
-	//	break;
-	//case WeaponTerrain::SHURIKEN_:
-	//	g_Terrain.SimpleObjects(Walls, { 1.0f, 1.0f, 1.0f }, TERRAIN_TYPE::WALL, g_Terrain.m_motherPosition[0], 0);
-	//	break;
-	//default:
-	//	break;
-	//}
-	////プレイヤー2
-	//switch (p2Set)
-	//{
-	//case WeaponTerrain::SWORD_WALL:
-	//	//g_Terrain.SimpleObjects(Trees, { 0.25f, 2.0f, 0.25f }, TERRAIN_TYPE::TREE, g_Terrain.m_motherPosition[0], 1); // 相手を中心に生えるから
-	//	g_Terrain.PixelObjects(Trees, TERRAIN_TYPE::TREE, g_Terrain.m_motherPosition[0], 1);
-	//	break;
-	//case WeaponTerrain::SPEAR_HILL:
-	//	//g_Terrain.SimpleObjects(Hills, { 0.25f, 0.25f, 0.25f }, TERRAIN_TYPE::HILL, g_Terrain.m_motherPosition[1], 1);
-	//	g_Terrain.CreateAnt(g_Terrain.m_motherPosition[1], 1);
-	//	break;
-	//case WeaponTerrain::BOW_HILL:
-	//	g_Terrain.SimpleObjects(Bogs, { 1.0f, 2.5f, 1.0f }, TERRAIN_TYPE::BOG, g_Terrain.m_motherPosition[1], 1);
-	//	//g_Terrain.PixelObjects(Hills, TERRAIN_TYPE::HILL, initPosHill);
-	//	break;
-	//case WeaponTerrain::HAMMER_:
-	//	g_Terrain.SimpleObjects(Walls, { 1.0f, 1.0f, 1.0f }, TERRAIN_TYPE::HILL, g_Terrain.m_motherPosition[1], 1);
-	//	break;
-	//case WeaponTerrain::SHURIKEN_:
-	//	g_Terrain.SimpleObjects(Walls, { 1.0f, 1.0f, 1.0f }, TERRAIN_TYPE::WALL, g_Terrain.m_motherPosition[1], 1);
-	//	break;
-	//default:
-	//	break;
-	//}
+	// 多重変身を避けるための初期化
+	g_Terrain.lastSetP1 = (WeaponTerrain)-1;
+	g_Terrain.lastSetP2 = (WeaponTerrain)-1;
+	g_Terrain.firstCallP1 = true;
+	g_Terrain.firstCallP2 = true;
 }
 void TerrainFinalize()
 {
@@ -691,7 +642,6 @@ void TerrainFinalize()
 
 	for (int i = 0; i < 2; i++)
 	{
-		g_Terrain.hills[i].clear();
 		g_Terrain.walls[i].clear();
 		g_Terrain.trees[i].clear();
 		g_Terrain.ants[i].clear();
@@ -1103,21 +1053,16 @@ void TerrainDraw()
 }
 void TerrainSet(WeaponTerrain set, bool playerSelect)
 {
-	// --- 追加：重複呼び出し防止用のフラグ ---
-	static WeaponTerrain lastSetP1 = (WeaponTerrain)-1;
-	static WeaponTerrain lastSetP2 = (WeaponTerrain)-1;
-	static bool firstCallP1 = true;
-	static bool firstCallP2 = true;
-
+	// 多重変身を避けるためのセーファー
 	if (!playerSelect) { // P1の場合
-		if (!firstCallP1 && lastSetP1 == set) return; // 変化がなければ何もしない
-		lastSetP1 = set;
-		firstCallP1 = false;
+		if (!g_Terrain.firstCallP1 && g_Terrain.lastSetP1 == set) return; // 変化がなければ何もしない
+		g_Terrain.lastSetP1 = set;
+		g_Terrain.firstCallP1 = false;
 	}
 	else { // P2の場合
-		if (!firstCallP2 && lastSetP2 == set) return; // 変化がなければ何もしない
-		lastSetP2 = set;
-		firstCallP2 = false;
+		if (!g_Terrain.firstCallP2 && g_Terrain.lastSetP2 == set) return; // 変化がなければ何もしない
+		g_Terrain.lastSetP2 = set;
+		g_Terrain.firstCallP2 = false;
 	}
 	// ----------------------------------------
 
@@ -1165,6 +1110,27 @@ void TerrainSet(WeaponTerrain set, bool playerSelect)
 	default:
 		break;
 	}
+}
+void ResetRoundTerrain()
+{
+	// 1. 全ての地形オブジェクト（実体）を削除
+	g_Terrain.terrainObjects.clear();
+
+	// 2. 各プレイヤーごとの参照用ポインタ配列をクリア
+	for (int i = 0; i < 2; i++) 
+	{
+		g_Terrain.walls[i].clear();
+		g_Terrain.fances[i].clear();
+		g_Terrain.trees[i].clear();
+		g_Terrain.ants[i].clear();
+		g_Terrain.bogs[i].clear();
+	}
+
+	// フラグを初期状態に戻す
+	g_Terrain.lastSetP1 = (WeaponTerrain)-1; // または WeaponTerrain::NONE
+	g_Terrain.lastSetP2 = (WeaponTerrain)-1;
+	g_Terrain.firstCallP1 = true;
+	g_Terrain.firstCallP2 = true;
 }
 // プレイヤーに追従していた地形を解放する
 void TERRAIN::ClearPlayerObjects(WeaponTerrain set, int select)
@@ -1249,7 +1215,6 @@ void TERRAIN::SetObject(XMFLOAT3 pos, XMFLOAT3 scl, std::string tag, int lay, in
 
 	if (raw_ptr != nullptr)
 	{
-		if (raw_ptr->m_tag == "HILL") hills[select].push_back(raw_ptr);
 		if (raw_ptr->m_tag == "WALL") walls[select].push_back(raw_ptr);
 		if (raw_ptr->m_tag == "FANCE") fances[select].push_back(raw_ptr);
 		if (raw_ptr->m_tag == "BOUNCE") fances[select].push_back(raw_ptr);
@@ -1598,13 +1563,6 @@ void TERRAIN::CreateHit(std::vector<TERRAIN_OBJECT> terrain, XMFLOAT3 motherPosi
 
 		switch (terrain[i].m_type)
 		{
-		case TERRAIN_TYPE::HILL:
-			SetObject(pos, terrain[i].m_size, "HILL", 0, select);
-			hills[select][i]->m_position = pos;	// 座標を格納
-			hills[select][i]->m_velocity = terrain[i].m_distance;
-			hills[select][i]->m_scale = terrain[i].m_size;
-			break;
-
 		case TERRAIN_TYPE::WALL:
 			SetObject(pos, terrain[i].m_size, "WALL", 0, select);
 			walls[select][i]->m_position = pos;	// 座標を格納
