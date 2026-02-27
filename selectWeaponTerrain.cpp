@@ -1108,8 +1108,34 @@ void selectWT_Draw_After3D()
         0.0f,
         1.0f));
     Shader_SetWorldMatrix(XMMatrixIdentity());
-    int CardposX = (int)(screenWidth / 2 - (screenWidth / 4));
     XMFLOAT4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
+    int CardposX = (int)(screenWidth / 2 - (screenWidth / 4));
+    float baseCursorW = 202.0f * 0.75f;
+    float baseCursorH = 271.0f * 0.75f;
+    float p1W = baseCursorW * g_cursorScale[0];
+    float p1H = baseCursorH * g_cursorScale[0];
+
+
+    // P2 カーソル
+    float p2W = baseCursorW * g_cursorScale[1];
+    float p2H = baseCursorH * g_cursorScale[1];
+
+    
+
+    if (g_Cursors[0].isSelected)
+    {
+        g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Card_tips[g_cursorP1]);
+        DrawSprite(XMFLOAT2(screenWidth / 2 - 200, screenHeight / 2 + 150), XMFLOAT2(1088 * 0.35f, 640 * 0.35f), XMFLOAT4(1, 1, 1, 1));
+      
+
+    }
+    if (g_Cursors[1].isSelected)
+    {
+        g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Card_tips_2P[g_cursorP2]);
+        DrawSprite(XMFLOAT2(screenWidth / 2 + 200, screenHeight / 2 - 200), XMFLOAT2(995 * 0.35f, 670 * 0.35f), XMFLOAT4(1, 1, 1, 1));
+      
+
+    }
     for (int i = 0; i < 2; i++)
     {
 
@@ -1117,6 +1143,13 @@ void selectWT_Draw_After3D()
         {
             g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Card_Bg[i]);
             DrawSprite(XMFLOAT2((float)CardposX, screenHeight / 2 - 50.0f), XMFLOAT2(827 * 0.8f, 1013 * 0.8f), color);
+        }
+    }
+    for (int i = 0; i < 2; i++)
+    {
+
+        if (g_statusUsed[i])
+        {
             if (i == 0)
             {
                 g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Card_Status[g_cursorP1]);
@@ -1133,44 +1166,28 @@ void selectWT_Draw_After3D()
 
     }
 
+    
+    // カーソル描画: 各プレイヤー用カーソルテクスチャを現在の posX で描画
+    // P1 カーソル
+
+
     CardposX = (int)(screenWidth / 2 - (screenWidth / 4));
-
-
-
-
-
-
     g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Card[2]);
     DrawSprite(XMFLOAT2(screenWidth * 0.5f, screenHeight * 0.85f), XMFLOAT2(3357 * 0.3f, 750 * 0.3f), XMFLOAT4(1, 1, 1, 1));
 
-    // カーソル描画: 各プレイヤー用カーソルテクスチャを現在の posX で描画
-    // P1 カーソル
-    float baseCursorW = 202.0f * 0.75f;
-    float baseCursorH = 271.0f * 0.75f;
-    float p1W = baseCursorW * g_cursorScale[0];
-    float p1H = baseCursorH * g_cursorScale[0];
-
-
-    // P2 カーソル
-    float p2W = baseCursorW * g_cursorScale[1];
-    float p2H = baseCursorH * g_cursorScale[1];
-
     if (g_Cursors[0].isSelected)
     {
+
         g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Cursor[0]);
         DrawSprite(XMFLOAT2(g_cursorState[0].posX, g_slotPosY + 25.0f), XMFLOAT2(p1W, p1H), XMFLOAT4(1, 1, 1, 1));
-
-        g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Card_tips[g_cursorP1]);
-        DrawSprite(XMFLOAT2(screenWidth / 2-200, screenHeight / 2+150), XMFLOAT2(1088*0.35f, 640*0.35f), XMFLOAT4(1, 1, 1, 1));
     }
+   
     if (g_Cursors[1].isSelected)
     {
         g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Cursor[1]);
         DrawSprite(XMFLOAT2(g_cursorState[1].posX, g_slotPosY - 20.0f), XMFLOAT2(p2W, p2H), XMFLOAT4(1, 1, 1, 1));
-
-        g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Card_tips_2P[g_cursorP2]);
-        DrawSprite(XMFLOAT2(screenWidth / 2+200, screenHeight / 2 -200), XMFLOAT2(995*0.35f,670*0.35f), XMFLOAT4(1, 1, 1, 1));
     }
+
     // スロットアイコン描画 (スケール反映)
     float startX = g_slotStartX;
     float spacing = g_slotSpacing;
