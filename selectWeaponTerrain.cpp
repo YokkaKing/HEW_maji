@@ -1126,15 +1126,11 @@ void selectWT_Draw_After3D()
     {
         g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Card_tips[g_cursorP1]);
         DrawSprite(XMFLOAT2(screenWidth / 2 - 200, screenHeight / 2 + 150), XMFLOAT2(1088 * 0.35f, 640 * 0.35f), XMFLOAT4(1, 1, 1, 1));
-      
-
     }
     if (g_Cursors[1].isSelected)
     {
         g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Card_tips_2P[g_cursorP2]);
         DrawSprite(XMFLOAT2(screenWidth / 2 + 200, screenHeight / 2 - 200), XMFLOAT2(995 * 0.35f, 670 * 0.35f), XMFLOAT4(1, 1, 1, 1));
-      
-
     }
     for (int i = 0; i < 2; i++)
     {
@@ -1144,7 +1140,9 @@ void selectWT_Draw_After3D()
             g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Card_Bg[i]);
             DrawSprite(XMFLOAT2((float)CardposX, screenHeight / 2 - 50.0f), XMFLOAT2(827 * 0.8f, 1013 * 0.8f), color);
         }
+        CardposX += (int)(screenWidth / 2);
     }
+    CardposX = (int)(screenWidth / 2 - (screenWidth / 4));
     for (int i = 0; i < 2; i++)
     {
 
