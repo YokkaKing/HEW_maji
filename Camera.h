@@ -15,6 +15,7 @@
 #include<d3d11.h>
 #include<DirectXMath.h>
 #include"direct3d.h"
+#include<deque>
 using namespace DirectX;
 
 class CAMERA
@@ -32,6 +33,19 @@ class CAMERA
 		float		NearClip;		//近面クリップ距離
 		float		FarClip;		//遠面クリップ距離
 };
+
+//================================================================
+//	カメラ制御の変数や関数
+//================================================================
+// P1カメラが追従するための「P2の座標履歴」
+extern std::deque<XMFLOAT3> g_P2PositionHistory;
+// P2カメラが追従するための「P1の座標履歴」
+extern std::deque<XMFLOAT3> g_P1PositionHistory;
+// 自動追従を有効にするかどうかのフラグ
+extern bool g_IsAutoCamera;
+// プロトタイプ宣言の更新
+void Camera_AutoUpdate(); // 自動計算用関数の追加
+//================================================================
 
 
 void Camera_Initialize();
