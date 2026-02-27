@@ -32,6 +32,10 @@ static	ID3D11ShaderResourceView* g_TextureLowHp2 = NULL;
 static	ID3D11ShaderResourceView* g_TextureButton2[2] = { NULL };
 static	ID3D11ShaderResourceView* g_TextureHp_1P[4] = { NULL };
 static	ID3D11ShaderResourceView* g_TextureHp_2P[4] = { NULL };
+
+static	ID3D11ShaderResourceView* g_TextureItem[2] = { NULL };
+
+
 static	ID3D11ShaderResourceView* g_TextureGuide = NULL;
 static	ID3D11ShaderResourceView* g_TextureTransform_1P[6] = { NULL };
 static	ID3D11ShaderResourceView* g_TextureTransform_2P[6] = { NULL };
@@ -49,6 +53,12 @@ STATUS_2P_2 g_Status2;
 static float g_HpBlinkTime2 = 0.0f;
 static bool g_LowHp2 = false;
 static float canTransformFrame = 0.0f;
+static float g_alarmAlpha = 0.0f;
+static float g_alarmBlinkTime = 0.0f;
+static float g_alarmTimer = 0.0f;
+static bool g_isItemAlarmUse = false;
+static int g_itemType = 0;
+
 static std::mt19937 g_Rng;
 static std::uniform_real_distribution<float> g_Dist01(0.0f, 1.0f);
 
@@ -250,6 +260,14 @@ void Hp2_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
     CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureButton2[1]);
     assert(&g_TextureButton2[1]);
 
+    LoadFromWICFile(L"asset\\texture\\TransformHeal_alarm.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureItem[0]);
+    assert(&g_TextureItem[0]);
+
+    LoadFromWICFile(L"asset\\texture\\Heal_alarm.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureItem[1]);
+    assert(&g_TextureItem[1]);
+
     //フェードインのセット
     g_Hp.col = { 1.0f, 1.0f, 1.0f, 1.0f };
     g_Hp.pos = { 400, 1056 };
@@ -312,6 +330,10 @@ void Hp2_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
     g_HpBlinkTime2 = 0.0f;
     g_LowHp2 = false;
     canTransformFrame = 0.0f;
+    g_isItemAlarmUse = false;
+    g_itemType = 0;
+    g_alarmAlpha = 0.0f;
+    g_alarmTimer = 0.0f;
 }
 void Hp2_Finalize()
 {
@@ -324,6 +346,7 @@ void Hp2_Finalize()
     for (int i = 0; i < 2; i++)
     {
         SAFE_RELEASE(g_TextureButton2[i]);
+        SAFE_RELEASE(g_TextureItem[i]);
     }
 
     for (int i = 0; i < 4; i++)
@@ -367,7 +390,12 @@ void Hp2_Update()
     {
         g_HpBlinkTime2 += 0.04f;
     }
-  
+    if (g_isItemAlarmUse)
+    {
+        g_alarmBlinkTime += 0.04f;
+        g_alarmTimer += 1.0f;
+    }
+
     const float DAMAGE_DELAY = 2.0f;
     const float RED_SHRINK_PER_FRAME = 0.4f;
     // --- Player1（右側に出す） ---
@@ -722,7 +750,16 @@ void Hp2_Draw()
         SetBlendState(BLENDSTATE_ALFA);
         DrawSprite(XMFLOAT2(g_Status2.pos[2].x, g_Status2.pos[2].y - 50), XMFLOAT2(219 * 0.3, 105 * 0.3), g_Hp.col);
     }
+    blink = (cosf(g_alarmBlinkTime) + 1.0f) * 0.5f;
+    alpha = 0.1f + blink * 0.9f;
+    if (g_isItemAlarmUse && g_alarmTimer <= 180.0f)
+    {
+        g_pContext->PSSetShaderResources(0, 1, &g_TextureItem[g_itemType]);
+        SetBlendState(BLENDSTATE_ALFA);
+        DrawSprite(XMFLOAT2(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 200), XMFLOAT2(600 * 1.2f, 600 * 1.2f), XMFLOAT4(1.0f, 1.0f, 1.0f, alpha));
+    }
 }
+
 
 float Hp2_GetTime()
 {
@@ -734,3 +771,9 @@ void Hp2_SetTime(float time)
     g_Timer.time = time;
 }
 
+void SetIsItemAlarmUse2(bool use, int type)
+{
+    g_isItemAlarmUse = use;
+    g_itemType = type;
+    g_alarmTimer = 0.0f;
+}

@@ -263,11 +263,11 @@ void Hp_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
     CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureButton[1]);
     assert(&g_TextureButton[1]);
 
-    LoadFromWICFile(L"asset\\texture\\Heal_alarm.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    LoadFromWICFile(L"asset\\texture\\TransformHeal_alarm.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
     CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureItem[0]);
     assert(&g_TextureItem[0]);
 
-    LoadFromWICFile(L"asset\\texture\\TransformHeal_alarm.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    LoadFromWICFile(L"asset\\texture\\Heal_alarm.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
     CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureItem[1]);
     assert(&g_TextureItem[1]);
 	//フェードインのセット
@@ -784,11 +784,13 @@ void Hp_Draw()
         SetBlendState(BLENDSTATE_ALFA);
         DrawSprite(XMFLOAT2(g_Status1.pos[2].x , g_Status1.pos[2].y - 50), XMFLOAT2(219 * scale, 105 * scale), g_Hp.col);
     }
-    if (g_isItemAlarmUse&&g_alarmTimer<=120.0f)
+    blink = (cosf(g_alarmBlinkTime) + 1.0f) * 0.5f;
+    alpha = 0.1f + blink * 0.9f;
+    if (g_isItemAlarmUse&&g_alarmTimer<=180.0f)
     {
         g_pContext->PSSetShaderResources(0, 1, &g_TextureItem[g_itemType]);
         SetBlendState(BLENDSTATE_ALFA);
-        DrawSprite(XMFLOAT2(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 -200), XMFLOAT2(600, 600), XMFLOAT4(1.0f,1.0f,1.0f, g_alarmAlpha));
+        DrawSprite(XMFLOAT2(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 -200), XMFLOAT2(600*1.2f, 600*1.2f), XMFLOAT4(1.0f,1.0f,1.0f, alpha));
     }
 }
 
