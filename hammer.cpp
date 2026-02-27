@@ -457,6 +457,46 @@ void Hammer::Update()
 			m_chargeState = CHARGE_NONE;
 		}
 	}
+
+	ChargeType currentCType = ChargeType::HAMMER_C_NONE;
+
+	if (m_isCharging && m_chargePower > 0.0f)
+	{
+		if (m_chargePower < 2.4f)
+		{
+			currentCType = ChargeType::HAMMER_C_W;
+		}
+		else if (m_chargePower < 3.5f)
+		{
+			currentCType = ChargeType::HAMMER_C_B;
+		}
+		else if (m_chargePower < 4.5f)
+		{
+			currentCType = ChargeType::HAMMER_C_G;
+		}
+		else if (m_chargePower < 5.5f)
+		{
+			currentCType = ChargeType::HAMMER_C_G;
+		}
+		else if (m_chargePower >= 5.5f)
+		{
+			currentCType = ChargeType::HAMMER_C_R;
+		}
+	}
+
+	//プレイヤー識別
+	int playerIdx = (int)m_selectPlayer;
+
+	//エフェクトの位置を武器の位置に合わせる
+	XMFLOAT3 effectPos = m_weapon->m_position;
+
+	//Managerにエフェクトの状態を送信
+	HitEffectManager::GetInstance().UpdateChargeEffect(
+		playerIdx,
+		effectPos,
+		currentCType,
+		m_isCharging
+	);
 }
 
 void Hammer::Draw()
