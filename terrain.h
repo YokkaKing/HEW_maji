@@ -52,6 +52,7 @@ void TerrainFinalize();
 void TerrainUpdate();
 void TerrainDraw();
 void TerrainSet(WeaponTerrain set, bool playerSelect); // 何の地形か、何Pか
+void ResetRoundTerrain(); // ラウンド終了毎に呼び出す
 
 class TERRAIN_OBJECT
 {
@@ -69,7 +70,6 @@ public:
 	XMFLOAT3 m_motherPosition[2] = {};
 	// 作成したオブジェクトを保存する器
 	std::vector<std::unique_ptr<GameObject>> terrainObjects;
-	std::vector<GameObject*> hills[2];	// 丘の当たり判定の全て
 	std::vector<GameObject*> walls[2];	// 壁の当たり判定の全て
 	std::vector<GameObject*> fances[2];	// 塀の当たり判定の全て
 	std::vector<GameObject*> trees[2];	// 木の当たり判定の全て
@@ -88,6 +88,12 @@ public:
 	XMFLOAT3 m_otherModelScale[10];
 	XMFLOAT3 m_otherPosition[10];
 	MODEL* m_otherModel[3];
+
+	// 多重変身を避けるための変数
+	WeaponTerrain lastSetP1;
+	WeaponTerrain lastSetP2;
+	bool firstCallP1;
+	bool firstCallP2;
 public:
 	void SetObject(XMFLOAT3 pos, XMFLOAT3 scl, std::string tag, int lay, int select);
 
