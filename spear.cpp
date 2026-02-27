@@ -181,7 +181,7 @@ void Spear::Update()
 
 	bool inputCharge = false;
 
-	if (Keyboard_IsKeyDown(m_chargeKey) || Keyboard_IsKeyDown(KK_C)) {
+	if (Keyboard_IsKeyDown(m_chargeKey) || Keyboard_IsKeyDown(KK_C)|| g_Controller[controlIdx].GetRightTrigger() >= 0.9f) {
 		inputCharge = true;
 
 	}
@@ -195,7 +195,7 @@ void Spear::Update()
 	}
 	if (!m_selectPlayer)
 	{
-		if (Keyboard_IsKeyDown(KK_C) || g_Controller[0].IsButtonDown(ControllerButton::X_BUTTON))
+		if (Keyboard_IsKeyDown(KK_C) || g_Controller[0].IsButtonDown(ControllerButton::X_BUTTON)|| g_Controller[controlIdx].GetRightTrigger() >= 0.9f)
 		{
 			// 攻撃中じゃなければチャージできる
 			if (!m_isAttacking && m_coolTime <= 0.0f)
@@ -228,7 +228,7 @@ void Spear::Update()
 
 	if (m_selectPlayer)
 	{
-		if (Keyboard_IsKeyDown(KK_P) || g_Controller[1].IsButtonPushed(ControllerButton::X_BUTTON))
+		if (Keyboard_IsKeyDown(KK_P) || g_Controller[1].IsButtonPushed(ControllerButton::X_BUTTON)|| g_Controller[controlIdx].GetRightTrigger() >= 0.9f)
 		{
 			// 攻撃中じゃなければチャージできる
 			if (!m_isAttacking && m_coolTime <= 0.0f)

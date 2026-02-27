@@ -404,14 +404,11 @@ void ShurikenShot::OnCollision(const CollisionInfo& info)
 		if (info.other->m_tag == "Player") // 相手がPlayerの時のみ
 		{
 			SetPlayer_IsAttacked(true);
-
 			PlayAudio(g_damageSharp, false);
 			Player2_PlusScore(5.0f); // スコア加算
-
 			info.other->TakeDamage(5.0f);
 			m_isDead = true;
 			g_Player.m_isAttacked = true;
-
 			//ヒットエフェクト
 			XMFLOAT3 effectPos = info.other->m_position;
 			effectPos.y -= 1.0f;
@@ -423,7 +420,6 @@ void ShurikenShot::OnCollision(const CollisionInfo& info)
 				0.1f,
 				info.other->m_position.z - this->m_position.z
 			};
-
 			//P1に対してヒットアクションを発動
 			//引数:方向vec, HS時間, KB距離
 			g_Player.m_hitAction.triggerHA(dir, stopTime, 0.1f);

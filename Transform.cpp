@@ -285,8 +285,8 @@ void TransformPlayer()
         }
         // 解除判定
         bool unevolve = (g_Player.TransformTimer <= 0) || Keyboard_IsKeyDownTrigger(KK_D8);
-        if (g_Player.TransformType == TRANSFORM_TYPE::TRANSFORM_TYPE_A && ctrl.GetLeftTrigger() >= 0.9f) unevolve = true;
-        if (g_Player.TransformType == TRANSFORM_TYPE::TRANSFORM_TYPE_B && ctrl.GetRightTrigger() >= 0.9f) unevolve = true;
+        //if (g_Player.TransformType == TRANSFORM_TYPE::TRANSFORM_TYPE_A && ctrl.GetLeftTrigger() >= 0.9f) unevolve = true;
+        //if (g_Player.TransformType == TRANSFORM_TYPE::TRANSFORM_TYPE_B && ctrl.GetRightTrigger() >= 0.9f) unevolve = true;
 
         if (unevolve) {
             g_Player.m_currentWeapon->ResetEffect(0); // 1Pのエフェクトを消す
@@ -402,8 +402,8 @@ void TransformPlayer2()
         }
         // 解除判定
         bool unevolve = (g_Player2.TransformTimer<= 0) || Keyboard_IsKeyDownTrigger(KK_D8);
-        if (g_Player2.TransformType == TRANSFORM_TYPE2::TRANSFORM_TYPE_A && ctrl.GetLeftTrigger() >= 0.9f) unevolve = true;
-        if (g_Player2.TransformType == TRANSFORM_TYPE2::TRANSFORM_TYPE_B && ctrl.GetRightTrigger() >= 0.9f) unevolve = true;
+        //if (g_Player2.TransformType == TRANSFORM_TYPE2::TRANSFORM_TYPE_A && ctrl.GetLeftTrigger() >= 0.9f) unevolve = true;
+        //if (g_Player2.TransformType == TRANSFORM_TYPE2::TRANSFORM_TYPE_B && ctrl.GetRightTrigger() >= 0.9f) unevolve = true;
 
         if (unevolve) {
             g_Player.m_currentWeapon->ResetEffect(1); // 2Pのエフェクトを消す

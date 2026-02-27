@@ -218,7 +218,7 @@ void	PlayerUpdate()
 	g_Player.m_shakeIntensity *= 0.9f;
 	if (g_Player.m_shakeIntensity < 0.001f) g_Player.m_shakeIntensity = 0.0f;
 
-	TransformPlayer();
+	
 
 	ApplyTransformEffect();   
 	if (g_Player.m_isAttacked && !g_Player.m_isDead)
@@ -276,7 +276,7 @@ void	PlayerUpdate()
 		return;
 	}
 	if (g_Player.m_isDead)return;	
-
+	TransformPlayer();
 	//ヒットアクション
 
 	//ヒットストップ中ならこの関数自体を抜けるため今後の処理がすべてスキップされる
