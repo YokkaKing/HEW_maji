@@ -94,7 +94,8 @@ void Arrow::Update()
 
 	if (!m_selectPlayer)
 	{
-		if (Keyboard_IsKeyDown(KK_C) || g_Controller[controlIdx].IsButtonDown(ControllerButton::X_BUTTON))
+		if (Keyboard_IsKeyDown(KK_C) || g_Controller[controlIdx].IsButtonDown(ControllerButton::X_BUTTON)||
+			g_Controller[controlIdx].GetRightTrigger() >= 0.9f)
 		{
 			// 攻撃中じゃなければチャージできる
 			if (!m_isAttacking && m_coolTime <= 0.0f)
@@ -123,7 +124,8 @@ void Arrow::Update()
 
 	if (m_selectPlayer)
 	{
-		if (Keyboard_IsKeyDown(KK_P) || g_Controller[controlIdx].IsButtonDown(ControllerButton::X_BUTTON))
+		if (Keyboard_IsKeyDown(KK_P) || g_Controller[controlIdx].IsButtonDown(ControllerButton::X_BUTTON)|| 
+			g_Controller[controlIdx].GetRightTrigger() >= 0.9f)
 		{
 			// 攻撃中じゃなければチャージできる
 			if (!m_isAttacking && m_coolTime <= 0.0f)

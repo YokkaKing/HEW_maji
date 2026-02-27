@@ -584,19 +584,19 @@ void selectWT_Update()
     }
 
 
-    if ((Keyboard_IsKeyDownTrigger(KK_Q) || g_Controller[0].IsButtonPushed(ControllerButton::L_THUMB)) && g_isP1Selected)
+    if ((Keyboard_IsKeyDownTrigger(KK_Q) ||g_Controller[0].GetRightTrigger() >= 0.9f) && g_isP1Selected)
     {
         g_statusUsed[0] = true;
     }
-    if ((Keyboard_IsKeyDownTrigger(KK_E) || g_Controller[0].IsButtonPushed(ControllerButton::R_THUMB)) && g_isP1Selected)
+    if ((Keyboard_IsKeyDownTrigger(KK_E) || g_Controller[0].GetLeftTrigger() >= 0.9f) && g_isP1Selected)
     {
         g_statusUsed[0] = false;
     }
-    if ((Keyboard_IsKeyDownTrigger(KK_D8) || g_Controller[1].IsButtonPushed(ControllerButton::L_THUMB)) && g_isP2Selected)
+    if ((Keyboard_IsKeyDownTrigger(KK_D8) || g_Controller[1].GetRightTrigger() >= 0.9f) && g_isP2Selected)
     {
         g_statusUsed[1] = true;
     }
-    if ((Keyboard_IsKeyDownTrigger(KK_D9) || g_Controller[1].IsButtonPushed(ControllerButton::R_THUMB)) && g_isP2Selected)
+    if ((Keyboard_IsKeyDownTrigger(KK_D9) || g_Controller[1].GetLeftTrigger() >= 0.9f) && g_isP2Selected)
     {
         g_statusUsed[1] = false;
     }

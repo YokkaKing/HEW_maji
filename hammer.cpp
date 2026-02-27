@@ -179,7 +179,7 @@ void Hammer::Update()
 	}
 	
 	bool inputCharge = false;
-	if (Keyboard_IsKeyDown(m_chargeKey))
+	if (Keyboard_IsKeyDown(m_chargeKey)|| g_Controller[controlIdx].GetRightTrigger() >= 0.9f)
 	{
 		inputCharge = true;
 	}

@@ -28,9 +28,11 @@ struct FadeObject
 {
 	FADE_STATE	state;			//フェード処理状態
 	float		count;			//カウンター
-	float		frame;			//フェード処理時間
+	float		frame[3];			//フェード処理時間
 	XMFLOAT4	fadecolor;		//フェード色
 	SCENE		scene;			//次に切り替わるシーン
+	XMFLOAT4 col;
+	
 };
 
 void Fade_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
