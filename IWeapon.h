@@ -54,6 +54,7 @@ public:
 
     // 攻撃開始時にコライダーを有効化
     virtual void Attack() = 0;
+    virtual void ResetEffect(int select) = 0;
 
     // 衝突応答関数
     virtual void OnWeaponCollision(GameObject* target) = 0;

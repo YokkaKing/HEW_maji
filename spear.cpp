@@ -546,6 +546,11 @@ void Spear::OnWeaponCollision(GameObject* target)
 	}
 }
 
+void Spear::ResetEffect(int select)
+{
+	return;
+}
+
 void Spear::Throw(float power, bool select)
 {
 	PlayAudio(g_spear, false);

@@ -338,3 +338,8 @@ void Sword::OnWeaponCollision(GameObject* target)
 		}
 	}
 }
+
+void Sword::ResetEffect(int select)
+{
+	return;
+}

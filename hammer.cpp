@@ -834,3 +834,14 @@ void Hammer::OnWeaponCollision(GameObject* target)
 		}
 	}
 }
+
+void Hammer::ResetEffect(int select)
+{
+	ChargeEffectManager::GetInstance().SetEffect(
+		select,
+		owner->m_position,
+		{ 0.0f, 0.0f, 0.0f },
+		ChargeType::HAMMER_C_NONE,
+		false
+	);
+}

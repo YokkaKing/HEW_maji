@@ -307,6 +307,11 @@ void Arrow::OnWeaponCollision(GameObject* target)
 
 }
 
+void Arrow::ResetEffect(int select)
+{
+	return;
+}
+
 void Arrow::Throw(float power, bool select)
 {
 	ArrowShot* shot = new ArrowShot();

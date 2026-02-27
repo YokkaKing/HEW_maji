@@ -53,7 +53,7 @@ public:
     void Update() override;
     void Draw() override;
     void Attack() override;
-
+    void ResetEffect(int select) override;
     void Throw(float power, bool select);
 
     void OnWeaponCollision(GameObject* target) override;
