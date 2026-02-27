@@ -52,7 +52,7 @@ WeaponTerrain g_setWTP1; // プレイヤーの武器と地形情報
 unsigned int g_changeP1;
 static bool g_Player1AttackPlaying = false; // 攻撃ワンショット再生中フラグ
 static bool g_Player1JumpPlaying = false; // ジャンプワンショット再生中フラグ
-static int g_Player1CurrentAnim = 0; // 0: idle, 1: move, 2: attack 3:jump
+static int g_Player1CurrentAnim = -1; // 0: idle, 1: move, 2: attack 3:jump
 bool g_isChangeP1;
 ITEM_SPONER gp_itemSponer;
 XMFLOAT3 gp1_slopeSpeed;
@@ -86,8 +86,9 @@ void PlayerDie()
 	g_Player1DeathAnimPlaying = true;
 	g_Player1DeathAnimTimer = 0.0f;
 	PlayAudio(g_ko, false);
+	
 
-	// ★フェードはManager側で「1秒スロウ後」に開始する
+	
 }
 void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, WeaponTerrain setWTp1)
 {
@@ -175,6 +176,11 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 	g_Player.m_isDeadFlag = false;
 
 	ResetRoundTerrain(); // 地形をリセットするためのもの
+
+	g_Player1CurrentAnim = -1;
+	ModelPlayClip(g_Player.m_model, 0, 60, 60.0f, true); // 基本Idle(武器ごとに変えるなら下で分岐)
+	ModelUpdateAnimation(g_Player.m_model, 0.0f);
+
 }
 void PlayerFinalize()
 {
@@ -223,11 +229,24 @@ void	PlayerUpdate()
 	if (g_Player.m_hitAnimPlaying)
 	{
 		g_Player.m_hitAnimTimer += 1.0f / 60.0f;
-		if (g_Player.m_hitAnimTimer >= HIT_ANIM_DURATION)
+
+		// クリップ終了でもOKにする（時間ズレ対策）
+		bool finished = ModelConsumeClipFinished(g_Player.m_model);
+
+		if (g_Player.m_hitAnimTimer >= HIT_ANIM_DURATION || finished)
 		{
 			g_Player.m_hitAnimPlaying = false;
 			g_Player1AttackPlaying = false;
 			g_Player1JumpPlaying = false;
+
+			// ★ここが安全策：次フレームで idle/move を必ず再セットさせる
+			g_Player1CurrentAnim = -1;
+		}
+		else
+		{
+			// ★被弾中は他のidle/move切替で上書きされないようにする（安全）
+			ModelUpdateAnimation(g_Player.m_model, 1.0f / 60.0f);
+			return;
 		}
 	}
 	g_Player.m_hitAction.Update(g_Player.m_position);
@@ -235,8 +254,7 @@ void	PlayerUpdate()
 
 	if (g_Player.m_hitAction.IsStopping())
 	{
-		//Player_ManualMove();                         
-		//ModelUpdateAnimation(g_Player.m_model, 1.0f / 60.0f);  
+	
 		return;                                      
 	}
 
