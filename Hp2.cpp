@@ -692,7 +692,7 @@ void Hp2_Draw()
 
     g_pContext->PSSetShaderResources(0, 1, &g_TextureGuide);
     SetBlendState(BLENDSTATE_ALFA);
-    DrawSprite(XMFLOAT2(200, SCREEN_HEIGHT - 150), XMFLOAT2(452 * 0.5, 261 * 0.5), g_Hp.col);
+    DrawSprite(XMFLOAT2(250, SCREEN_HEIGHT - 200), XMFLOAT2(900 * 0.6, 520 * 0.6), g_Hp.col);
     XMFLOAT2 transformIconScale = XMFLOAT2(g_Status2.size[1].x + 150, g_Status2.size[1].y + 60);
 
 

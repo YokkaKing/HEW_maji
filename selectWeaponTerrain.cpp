@@ -297,6 +297,13 @@ void selectWT_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
     {
         TexMetadata		metadata;
         ScratchImage	image;
+        LoadFromWICFile(L"asset\\texture\\cancel_button.PNG", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Button[1]);
+        assert(g_TextureUi_Button[1]);
+    }
+    {
+        TexMetadata		metadata;
+        ScratchImage	image;
         LoadFromWICFile(L"asset\\texture\\select_card_Ok.PNG", WIC_FLAGS_FORCE_SRGB, &metadata, image);
         CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Card_Ok[0]);
         assert(g_TextureUi_Card_Ok[0]);
@@ -1226,8 +1233,14 @@ void selectWT_Draw_After3D()
     DrawSprite(XMFLOAT2(100.0f, screenHeight - 100.0f), XMFLOAT2(493 * scale, 237 * scale), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f));
     CardposX += (int)(screenWidth / 2);
 
-    // ---------- スプライトアニメ描画（剣のプレビュー） ----------
-    // 描画位置はカードの中心あたりに設定（必要に応じて微調整）
+    
+    g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Button[0]);
+    DrawSprite(XMFLOAT2(screenWidth/2 +600.0f, screenHeight - 90.0f), XMFLOAT2(263 * 0.6, 100 * 0.6), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f));
+
+    g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Button[1]);
+    DrawSprite(XMFLOAT2(screenWidth / 2+800.0f, screenHeight - 100.0f), XMFLOAT2(482 * scale, 198 * scale), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f));
+
+    CardposX += (int)(screenWidth / 2);
     XMFLOAT2 p1Pos = XMFLOAT2(screenWidth * 0.25f, screenHeight * 0.5f - 50.0f);
     XMFLOAT2 p2Pos = XMFLOAT2(screenWidth * 0.75f, screenHeight * 0.5f - 50.0f);
     XMFLOAT2 drawSize = XMFLOAT2(600.0f, 600.0f); // 描画サイズ（ピクセル）: 調整可

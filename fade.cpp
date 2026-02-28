@@ -121,7 +121,7 @@ void Fade_Update()
 			g_Fade.col = { 1.0f,1.0f,1.0f,1.0f };
 			if (g_Fade.frame[1] < 59)
 			{
-				g_Fade.frame[1] += 2.0f;
+				g_Fade.frame[1] += 1.5f;
 			}
 			else
 			{
@@ -129,7 +129,7 @@ void Fade_Update()
 			}
 			if (g_Fade.frame[2] < 29)
 			{
-				g_Fade.frame[2] += 2.0f;
+				g_Fade.frame[2] += 1.0f;
 			}
 			else
 			{
