@@ -260,7 +260,7 @@ void	Player2Update()
 //================================================================
 	// CキーかAボタンで
 	bool attackPushed = (ctrlIdx != 0 && g_Controller[ctrlIdx].GetRightTrigger() >= 0.9f);
-	if (Keyboard_IsKeyDownTrigger(KK_P) || attackPushed)
+	if (Keyboard_IsKeyDownTrigger(KK_P) || attackPushed|| g_Controller[ctrlIdx].IsButtonPushed(ControllerButton::X_BUTTON))
 	{
 		// 武器があるか
 		if (g_Player2.m_currentWeapon && !g_Player2AttackPlaying&&g_Player2.m_currentWeapon->GetCoolTime() ==0.0f&& !g_Player2.m_hitAnimPlaying)

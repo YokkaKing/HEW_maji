@@ -221,13 +221,21 @@ void Title_Update()
             int ctrlIdx = GetControllerIndexFromPlayerNo(playerNo);
             if (ctrlIdx != -1)
             {
-                if (g_Controller[playerNo].IsButtonPushed(ControllerButton::A_BUTTON)) {
+                if (g_Controller[playerNo].IsButtonPushed(ControllerButton::A_BUTTON)
+                    || g_Controller[playerNo].IsButtonPushed(ControllerButton::B_BUTTON)
+                    || g_Controller[playerNo].IsButtonPushed(ControllerButton::X_BUTTON)
+                    || g_Controller[playerNo].IsButtonPushed(ControllerButton::Y_BUTTON))
+                {
                     isStartTriggered = true;
                 }
             }
             else
             {
-                if (g_Controller[playerNo].IsButtonPushed(ControllerButton::A_BUTTON)) {
+                if (g_Controller[playerNo].IsButtonPushed(ControllerButton::A_BUTTON)
+                    || g_Controller[playerNo].IsButtonPushed(ControllerButton::B_BUTTON)
+                    || g_Controller[playerNo].IsButtonPushed(ControllerButton::X_BUTTON)
+                    || g_Controller[playerNo].IsButtonPushed(ControllerButton::Y_BUTTON))
+                {
                     isStartTriggered = true;
                 }
             }

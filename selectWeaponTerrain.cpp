@@ -45,6 +45,7 @@ static ID3D11ShaderResourceView* g_TextureUi_Card_Status_Button[2] = { NULL };
 static ID3D11ShaderResourceView* g_TextureUi_Card_tips[5] = { NULL };
 static ID3D11ShaderResourceView* g_TextureUi_Card_tips_2P[5] = { NULL };
 
+static ID3D11ShaderResourceView* g_TextureUi_Video[5] = { NULL };
 
 
 static ID3D11ShaderResourceView* g_TextureUi_Card_Ok[2] = { NULL };
@@ -172,6 +173,7 @@ static float g_goBtnTargetX = 0.0f;
 static float g_goAnimDuration = 0.12f;
 static float g_goAnimTime = 0.0f;
 static XMFLOAT2 g_goBtnSize = XMFLOAT2(500.0f * 2, 231.0f * 2);
+static float g_videoFrame[2] = { 0.0f,0.0f };
 #pragma endregion
 // ------------------ 初期化 ------------------
 void selectWT_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
@@ -479,7 +481,29 @@ void selectWT_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
         LoadFromWICFile(L"asset\\texture\\go_button.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
         CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureGoBtn);
         assert(g_TextureGoBtn);
+
+        LoadFromWICFile(L"asset\\texture\\go_button.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Video[0]);
+        assert(&g_TextureUi_Video[0]);
+
+        LoadFromWICFile(L"asset\\texture\\go_button.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Video[1]);
+        assert(&g_TextureUi_Video[1]);
+
+        LoadFromWICFile(L"asset\\texture\\go_button.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Video[2]);
+        assert(&g_TextureUi_Video[2]);
+
+        LoadFromWICFile(L"asset\\texture\\go_button.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Video[3]);
+        assert(&g_TextureUi_Video[3]);
+        LoadFromWICFile(L"asset\\texture\\go_button.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Video[4]);
     }
+
+ 
+   
+    assert(&g_TextureUi_Video[4]);
     XMFLOAT4 color = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
     SetFade(60.0f, color, FADE_IN, SCENE_GAME);
 
@@ -523,6 +547,7 @@ void selectWT_Finalize()
         SAFE_RELEASE(g_TextureUi_Card_Cursor[i]);
         SAFE_RELEASE(g_TextureUi_Card_Bg[i]);
         SAFE_RELEASE(g_TextureUi_Card_Status_Button[i]);
+		SAFE_RELEASE(g_TextureUi_Video[i]);
 
     }
     for (int i = 0; i < 5; i++)
@@ -560,6 +585,9 @@ void selectWT_Finalize()
     g_isP2Ready = false;
     g_goState = GO_NONE;
     g_goAnimTime = 0.0f;
+    g_videoFrame[0] = 0.0f;
+    g_videoFrame[1] = 0.0f;
+
 }
 auto ResetGoAnimation = [&]()
     {
@@ -593,19 +621,19 @@ void selectWT_Update()
 
     if ((Keyboard_IsKeyDownTrigger(KK_Q) ||g_Controller[0].GetRightTrigger() >= 0.9f) && g_isP1Selected)
     {
-        g_statusUsed[0] = true;
+        g_statusUsed[0] = false;
     }
     if ((Keyboard_IsKeyDownTrigger(KK_E) || g_Controller[0].GetLeftTrigger() >= 0.9f) && g_isP1Selected)
     {
-        g_statusUsed[0] = false;
+        g_statusUsed[0] = true;
     }
     if ((Keyboard_IsKeyDownTrigger(KK_D8) || g_Controller[1].GetRightTrigger() >= 0.9f) && g_isP2Selected)
     {
-        g_statusUsed[1] = true;
+        g_statusUsed[1] = false;
     }
     if ((Keyboard_IsKeyDownTrigger(KK_D9) || g_Controller[1].GetLeftTrigger() >= 0.9f) && g_isP2Selected)
     {
-        g_statusUsed[1] = false;
+        g_statusUsed[1] = true;
     }
 
     for (int i = 0; i < 2; i++) {
@@ -782,7 +810,7 @@ void selectWT_Update()
             if (Keyboard_IsKeyDownTrigger(KK_F1)) g_isP1Ready = false;
         }
     }
-    if (g_isP1Ready && (Keyboard_IsKeyDownTrigger(KK_Z) || g_Controller[0].IsButtonPushed(ControllerButton::B_BUTTON)))
+    if (g_isP1Ready && (Keyboard_IsKeyDownTrigger(KK_Z) || g_Controller[0].IsButtonPushed(ControllerButton::X_BUTTON)))
     {
         PlayAudio(g_button, false); // 好みでキャンセルSEにしてもOK
         g_isP1Ready = false;
@@ -852,7 +880,7 @@ void selectWT_Update()
         }
     }
     // P2 Ready解除（6）
-    if (g_isP2Ready && (Keyboard_IsKeyDownTrigger(KK_D6) || g_Controller[1].IsButtonPushed(ControllerButton::B_BUTTON)))
+    if (g_isP2Ready && (Keyboard_IsKeyDownTrigger(KK_D6) || g_Controller[1].IsButtonPushed(ControllerButton::X_BUTTON)))
     {
         PlayAudio(g_button, false); // 好みでキャンセルSEにしてもOK
         g_isP2Ready = false;
@@ -1233,12 +1261,7 @@ void selectWT_Draw_After3D()
     DrawSprite(XMFLOAT2(100.0f, screenHeight - 100.0f), XMFLOAT2(493 * scale, 237 * scale), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f));
     CardposX += (int)(screenWidth / 2);
 
-    
-    g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Button[0]);
-    DrawSprite(XMFLOAT2(screenWidth/2 +600.0f, screenHeight - 90.0f), XMFLOAT2(263 * 0.6, 100 * 0.6), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f));
 
-    g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Button[1]);
-    DrawSprite(XMFLOAT2(screenWidth / 2+800.0f, screenHeight - 100.0f), XMFLOAT2(482 * scale, 198 * scale), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f));
 
     CardposX += (int)(screenWidth / 2);
     XMFLOAT2 p1Pos = XMFLOAT2(screenWidth * 0.25f, screenHeight * 0.5f - 50.0f);
@@ -1278,6 +1301,12 @@ void selectWT_Draw_After3D()
         }
 
     }
+
+    g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Button[0]);
+    DrawSprite(XMFLOAT2(screenWidth / 2 + 600.0f, screenHeight - 90.0f), XMFLOAT2(263 * 0.6, 100 * 0.6), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f));
+
+    g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Button[1]);
+    DrawSprite(XMFLOAT2(screenWidth / 2 + 800.0f, screenHeight - 100.0f), XMFLOAT2(482 * scale, 198 * scale), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f));
 
 }
 
