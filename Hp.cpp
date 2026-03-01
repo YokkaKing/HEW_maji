@@ -38,6 +38,15 @@ static	ID3D11ShaderResourceView* g_TextureHp_2P[4] = { NULL };
 static	ID3D11ShaderResourceView* g_TextureGuide = NULL;   
 static	ID3D11ShaderResourceView* g_TextureTransform_1P[6] = { NULL };
 static	ID3D11ShaderResourceView* g_TextureTransform_2P[6] = { NULL };
+
+
+static	ID3D11ShaderResourceView* g_TextureCanTransform_1P[6] = { NULL };
+static	ID3D11ShaderResourceView* g_TextureCanTransform_2P[6] = { NULL };
+
+static	ID3D11ShaderResourceView* g_TextureTransformFrame_1P[2] = { NULL };
+static	ID3D11ShaderResourceView* g_TextureTransformFrame_2P[2] = { NULL };
+
+
 static	ID3D11ShaderResourceView* g_TextureTransformNow_1P[6] = { NULL };
 static	ID3D11ShaderResourceView* g_TextureTransformNow_2P[6] = { NULL };
 static	ID3D11ShaderResourceView* g_Texture_1P[6] = { NULL };
@@ -59,6 +68,7 @@ static int g_itemType = 0;
 static float g_alarmAlpha = 0.0f;
 static float g_alarmBlinkTime = 0.0f;
 static float g_alarmTimer = 0.0f;
+static float frame;
 static std::mt19937 g_Rng;
 static std::uniform_real_distribution<float> g_Dist01(0.0f, 1.0f);
 static int WTToUIIndex(WeaponTerrain wt)
@@ -199,8 +209,6 @@ void Hp_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
     assert(&g_TextureTransform_1P[5]);
 
 
- 
-
 #pragma endregion
 
 #pragma region status_2P
@@ -270,6 +278,71 @@ void Hp_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
     LoadFromWICFile(L"asset\\texture\\Heal_alarm.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
     CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureItem[1]);
     assert(&g_TextureItem[1]);
+
+    LoadFromWICFile(L"asset\\texture\\transform.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureTransformFrame_1P[0]);
+    assert(&g_TextureTransformFrame_1P[0]);
+
+    LoadFromWICFile(L"asset\\texture\\transform2_2.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureTransformFrame_1P[1]);
+    assert(&g_TextureTransformFrame_1P[1]);
+
+    LoadFromWICFile(L"asset\\texture\\transform_2.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureTransformFrame_2P[0]);
+    assert(&g_TextureTransformFrame_2P[0]);
+
+    LoadFromWICFile(L"asset\\texture\\transform2.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureTransformFrame_2P[1]);
+    assert(&g_TextureTransformFrame_2P[1]);
+
+
+
+    LoadFromWICFile(L"asset\\texture\\sword_status2.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureCanTransform_1P[0]);
+    assert(&g_TextureCanTransform_1P[0]);
+
+    LoadFromWICFile(L"asset\\texture\\spear_status2.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureCanTransform_1P[1]);
+    assert(&g_TextureCanTransform_1P[1]);
+    LoadFromWICFile(L"asset\\texture\\bow_status2.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureCanTransform_1P[2]);
+    assert(&g_TextureCanTransform_1P[2]);
+
+    LoadFromWICFile(L"asset\\texture\\hammer_status2.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureCanTransform_1P[3]);
+    assert(&g_TextureCanTransform_1P[3]);
+
+    LoadFromWICFile(L"asset\\texture\\shuriken_status2.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureCanTransform_1P[4]);
+    assert(&g_TextureCanTransform_1P[4]);
+    LoadFromWICFile(L"asset\\texture\\default_noselect.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureCanTransform_1P[5]);
+    assert(&g_TextureCanTransform_1P[5]);
+
+
+
+    LoadFromWICFile(L"asset\\texture\\sword_status.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureCanTransform_2P[0]);
+    assert(&g_TextureCanTransform_1P[0]);
+
+    LoadFromWICFile(L"asset\\texture\\spear_status.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureCanTransform_2P[1]);
+    assert(&g_TextureCanTransform_1P[1]);
+    LoadFromWICFile(L"asset\\texture\\bow_status.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureCanTransform_2P[2]);
+    assert(&g_TextureCanTransform_1P[2]);
+
+    LoadFromWICFile(L"asset\\texture\\hammer_status.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureCanTransform_2P[3]);
+    assert(&g_TextureCanTransform_1P[3]);
+
+    LoadFromWICFile(L"asset\\texture\\shuriken_status.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureCanTransform_2P[4]);
+    assert(&g_TextureCanTransform_1P[4]);
+    LoadFromWICFile(L"asset\\texture\\default_noselect.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureCanTransform_2P[5]);
+    assert(&g_TextureCanTransform_1P[5]);
+
 	//フェードインのセット
     g_Hp.col = { 1.0f, 1.0f, 1.0f, 1.0f };
     g_Hp.pos = { 400, 1006 };
@@ -335,6 +408,8 @@ void Hp_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
     g_itemType = 0;
     g_alarmAlpha = 0.0f;
     g_alarmTimer = 0.0f;
+    frame = 0;
+
 }
 void Hp_Finalize()
 {
@@ -348,7 +423,16 @@ void Hp_Finalize()
     {
         SAFE_RELEASE(g_TextureButton[i]);
 		SAFE_RELEASE(g_TextureItem[i]);
+        SAFE_RELEASE(g_TextureTransformFrame_1P[i]);
+        SAFE_RELEASE(g_TextureTransformFrame_2P[i]);
+
 		
+    }
+    for (int i = 0; i < 5; i++)
+    {
+        SAFE_RELEASE(g_TextureCanTransform_1P[i]);
+        SAFE_RELEASE(g_TextureCanTransform_2P[i]);
+
     }
     for (int i = 0; i < 4; i++)
     {
@@ -368,6 +452,14 @@ void Hp_Finalize()
 }
 void Hp_Update()
 {
+    if (frame < 29)
+    {
+        frame += 0.6f;
+    }
+    else
+    {
+		frame = 0.0f;
+    }
     // いまのHP（前フレームとの差分でダメージ/回復を判定する）
     float hpPrev1 = g_Hp.prevHp;
     float hpPrev2 = g_Hp2.prevHp;
@@ -719,23 +811,12 @@ void Hp_Draw()
 
     g_pContext->PSSetShaderResources(0, 1, &g_TextureGuide);
     SetBlendState(BLENDSTATE_ALFA);
-    DrawSprite(XMFLOAT2(200, SCREEN_HEIGHT - 150), XMFLOAT2(452 * 0.5, 261 * 0.5), g_Hp2.col);
+    DrawSprite(XMFLOAT2(250, SCREEN_HEIGHT - 200), XMFLOAT2(900 * 0.6, 520 * 0.6), g_Hp.col);
 
     XMFLOAT2 transformIconScale = XMFLOAT2(g_Status1.size[1].x + 150, g_Status1.size[1].y+60);
 
 
  
-
-
-
-    g_pContext->PSSetShaderResources(0, 1, &g_TextureTransform_1P[g_Status1.nextType[0]]);
-    SetBlendState(BLENDSTATE_ALFA);
-    DrawSprite(g_Status1.pos[0], g_Status1.size[1], g_Hp.col);
-
-    g_pContext->PSSetShaderResources(0, 1, &g_TextureTransform_1P[g_Status1.nextType[1]]);
-    SetBlendState(BLENDSTATE_ALFA);
-    DrawSprite(g_Status1.pos[2], g_Status1.size[1], g_Hp.col);
-
     g_pContext->PSSetShaderResources(0, 1, &g_TextureTransformNow_1P[g_Status1.nowType]);
     SetBlendState(BLENDSTATE_ALFA);
     DrawSprite(g_Status1.pos[1], g_Status1.size[0], g_Hp.col);
@@ -743,13 +824,68 @@ void Hp_Draw()
 
  
 
-    g_pContext->PSSetShaderResources(0, 1, &g_TextureTransform_2P[g_Status2.nextType[0]]);
-    SetBlendState(BLENDSTATE_ALFA);
-    DrawSprite(g_Status2.pos[0], g_Status2.size[1], g_Hp.col);
 
-    g_pContext->PSSetShaderResources(0, 1, &g_TextureTransform_2P[g_Status2.nextType[1]]);
-    SetBlendState(BLENDSTATE_ALFA);
-    DrawSprite(g_Status2.pos[2], g_Status2.size[1], g_Hp.col);
+
+   
+    if (GetIsUsedA_P1())
+    {
+
+        g_pContext->PSSetShaderResources(0, 1, &g_TextureTransform_1P[g_Status1.nextType[0]]);
+        SetBlendState(BLENDSTATE_ALFA);
+        DrawSprite(g_Status1.pos[0], g_Status1.size[1], g_Hp.col);
+    }
+    if (!GetIsUsedA_P1())
+    {
+        g_pContext->PSSetShaderResources(0, 1, &g_TextureTransformFrame_1P[0]);
+        SetBlendState(BLENDSTATE_ALFA);
+        DrawSpriteEx(XMFLOAT2(g_Status1.pos[0].x-6, g_Status1.pos[0].y-5), XMFLOAT2(g_Status1.size[1].x + 140, g_Status1.size[1].y + 140), g_Hp.col, frame, 6, 5);
+        g_pContext->PSSetShaderResources(0, 1, &g_TextureCanTransform_1P[g_Status1.nextType[0]]);
+        SetBlendState(BLENDSTATE_ALFA);
+        DrawSprite(g_Status1.pos[0], g_Status1.size[1], g_Hp.col);
+    }
+    if (!GetIsUsedB_P1())
+    {
+        g_pContext->PSSetShaderResources(0, 1, &g_TextureTransformFrame_1P[1]);
+        SetBlendState(BLENDSTATE_ALFA);
+        DrawSpriteEx(XMFLOAT2(g_Status1.pos[2].x-6, g_Status1.pos[2].y-5), XMFLOAT2(g_Status1.size[1].x + 140, g_Status1.size[1].y + 140), g_Hp.col, frame, 6, 5);
+        g_pContext->PSSetShaderResources(0, 1, &g_TextureCanTransform_1P[g_Status1.nextType[1]]);
+        SetBlendState(BLENDSTATE_ALFA);
+        DrawSprite(g_Status1.pos[2], g_Status1.size[1], g_Hp.col);
+
+    }
+    if (GetIsUsedB_P1())
+    {
+        g_pContext->PSSetShaderResources(0, 1, &g_TextureTransform_1P[g_Status1.nextType[1]]);
+        SetBlendState(BLENDSTATE_ALFA);
+        DrawSprite(g_Status1.pos[2], g_Status1.size[1], g_Hp.col);
+    }
+ 
+
+    if (GetIsUsedA_P2())
+    {
+        g_pContext->PSSetShaderResources(0, 1, &g_TextureTransform_2P[g_Status2.nextType[0]]);
+        SetBlendState(BLENDSTATE_ALFA);
+        DrawSprite(g_Status2.pos[0], g_Status2.size[1], g_Hp.col);
+    }
+    if (!GetIsUsedA_P2())
+    {
+        g_pContext->PSSetShaderResources(0, 1, &g_TextureCanTransform_2P[g_Status2.nextType[0]]);
+        SetBlendState(BLENDSTATE_ALFA);
+        DrawSprite(g_Status2.pos[0], g_Status2.size[1], g_Hp.col);
+    }
+    if (!GetIsUsedB_P2())
+    {
+        g_pContext->PSSetShaderResources(0, 1, &g_TextureCanTransform_2P[g_Status2.nextType[1]]);
+        SetBlendState(BLENDSTATE_ALFA);
+        DrawSprite(g_Status2.pos[2], g_Status2.size[1], g_Hp.col);
+
+    }
+    if (GetIsUsedB_P2())
+    {
+        g_pContext->PSSetShaderResources(0, 1, &g_TextureTransform_2P[g_Status2.nextType[1]]);
+        SetBlendState(BLENDSTATE_ALFA);
+        DrawSprite(g_Status2.pos[2], g_Status2.size[1], g_Hp.col);
+    }
 
     g_pContext->PSSetShaderResources(0, 1, &g_TextureTransformNow_2P[g_Status2.nowType]);
     SetBlendState(BLENDSTATE_ALFA);
@@ -761,7 +897,7 @@ void Hp_Draw()
    // cosで0.0～1.0を作る
     float blink = (cosf(g_HpBlinkTime) + 1.0f) * 0.5f;
 
-    // 完全に消えると見づらいので、0.35～1.0くらいで点滅させる
+   
     float alpha = 0.1f + blink * 0.9f;
 
     XMFLOAT4 col = { 1.0f, 1.0f, 1.0f, alpha };
@@ -772,13 +908,13 @@ void Hp_Draw()
         DrawSprite(pos, size, col);
     }
     static float scale = 0.3f;
-    if (!GetIsUsedA_P1())
+    if (!GetIsUsedA_P1()&&!GetPlayer_IsTransformed())
     {
         g_pContext->PSSetShaderResources(0, 1, &g_TextureButton[0]);
         SetBlendState(BLENDSTATE_ALFA);
         DrawSprite(XMFLOAT2(g_Status1.pos[0].x , g_Status1.pos[0].y - 50), XMFLOAT2(219 * scale, 105 * scale), g_Hp.col);
     }
-    if (!GetIsUsedB_P1())
+    if (!GetIsUsedB_P1() && !GetPlayer_IsTransformed())
     {
         g_pContext->PSSetShaderResources(0, 1, &g_TextureButton[1]);
         SetBlendState(BLENDSTATE_ALFA);

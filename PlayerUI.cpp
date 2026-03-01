@@ -88,7 +88,7 @@ void PlayerUI::Draw(bool isPlayer1) {
 
         // 分割画面時の表示位置補正 (もしズレる場合)
         // 1Pは左半分、2Pは右半分に表示されるようにDrawSpriteExを呼ぶ
-       // DrawSpriteEx(screenPos1, size, color, 0, 1, 1);
+        DrawSpriteEx(screenPos1, size, color, 0, 1, 1);
     }
 
     //プレイヤー2のタグ
@@ -99,7 +99,7 @@ void PlayerUI::Draw(bool isPlayer1) {
         pos2.y += 0.5f;
 
         XMFLOAT2 screenPos2 = ProjectWorldToScreen(pos2, view, proj);
-        //DrawSpriteEx(screenPos2, size, color, 0, 1, 1);
+        DrawSpriteEx(screenPos2, size, color, 0, 1, 1);
     }
 
 

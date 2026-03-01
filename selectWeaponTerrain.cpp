@@ -45,6 +45,7 @@ static ID3D11ShaderResourceView* g_TextureUi_Card_Status_Button[2] = { NULL };
 static ID3D11ShaderResourceView* g_TextureUi_Card_tips[5] = { NULL };
 static ID3D11ShaderResourceView* g_TextureUi_Card_tips_2P[5] = { NULL };
 
+static ID3D11ShaderResourceView* g_TextureUi_Video[5] = { NULL };
 
 
 static ID3D11ShaderResourceView* g_TextureUi_Card_Ok[2] = { NULL };
@@ -172,6 +173,7 @@ static float g_goBtnTargetX = 0.0f;
 static float g_goAnimDuration = 0.12f;
 static float g_goAnimTime = 0.0f;
 static XMFLOAT2 g_goBtnSize = XMFLOAT2(500.0f * 2, 231.0f * 2);
+static float g_videoFrame[2] = { 0.0f,0.0f };
 #pragma endregion
 // ------------------ 初期化 ------------------
 void selectWT_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
@@ -293,6 +295,13 @@ void selectWT_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
         LoadFromWICFile(L"asset\\texture\\select_button.PNG", WIC_FLAGS_FORCE_SRGB, &metadata, image);
         CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Button[0]);
         assert(g_TextureUi_Button[0]);
+    }
+    {
+        TexMetadata		metadata;
+        ScratchImage	image;
+        LoadFromWICFile(L"asset\\texture\\cancel_button.PNG", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Button[1]);
+        assert(g_TextureUi_Button[1]);
     }
     {
         TexMetadata		metadata;
@@ -472,7 +481,29 @@ void selectWT_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
         LoadFromWICFile(L"asset\\texture\\go_button.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
         CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureGoBtn);
         assert(g_TextureGoBtn);
+
+        LoadFromWICFile(L"asset\\texture\\sword_video.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Video[0]);
+        assert(&g_TextureUi_Video[0]);
+
+        LoadFromWICFile(L"asset\\texture\\spear_video.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Video[1]);
+        assert(&g_TextureUi_Video[1]);
+
+        LoadFromWICFile(L"asset\\texture\\bow_video.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Video[2]);
+        assert(&g_TextureUi_Video[2]);
+
+        LoadFromWICFile(L"asset\\texture\\hammer_video.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Video[3]);
+        assert(&g_TextureUi_Video[3]);
+        LoadFromWICFile(L"asset\\texture\\shuriken_video.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Video[4]);
     }
+
+ 
+   
+    assert(&g_TextureUi_Video[4]);
     XMFLOAT4 color = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
     SetFade(60.0f, color, FADE_IN, SCENE_GAME);
 
@@ -516,6 +547,7 @@ void selectWT_Finalize()
         SAFE_RELEASE(g_TextureUi_Card_Cursor[i]);
         SAFE_RELEASE(g_TextureUi_Card_Bg[i]);
         SAFE_RELEASE(g_TextureUi_Card_Status_Button[i]);
+		SAFE_RELEASE(g_TextureUi_Video[i]);
 
     }
     for (int i = 0; i < 5; i++)
@@ -553,6 +585,9 @@ void selectWT_Finalize()
     g_isP2Ready = false;
     g_goState = GO_NONE;
     g_goAnimTime = 0.0f;
+    g_videoFrame[0] = 0.0f;
+    g_videoFrame[1] = 0.0f;
+
 }
 auto ResetGoAnimation = [&]()
     {
@@ -586,21 +621,92 @@ void selectWT_Update()
 
     if ((Keyboard_IsKeyDownTrigger(KK_Q) ||g_Controller[0].GetRightTrigger() >= 0.9f) && g_isP1Selected)
     {
-        g_statusUsed[0] = true;
+        g_statusUsed[0] = false;
     }
     if ((Keyboard_IsKeyDownTrigger(KK_E) || g_Controller[0].GetLeftTrigger() >= 0.9f) && g_isP1Selected)
     {
-        g_statusUsed[0] = false;
+        g_statusUsed[0] = true;
     }
     if ((Keyboard_IsKeyDownTrigger(KK_D8) || g_Controller[1].GetRightTrigger() >= 0.9f) && g_isP2Selected)
     {
-        g_statusUsed[1] = true;
+        g_statusUsed[1] = false;
     }
     if ((Keyboard_IsKeyDownTrigger(KK_D9) || g_Controller[1].GetLeftTrigger() >= 0.9f) && g_isP2Selected)
     {
-        g_statusUsed[1] = false;
+        g_statusUsed[1] = true;
     }
+    static float limit1 = 0.0f;
+    static float limit2 = 0.0f;
 
+    switch (g_cursorP1)
+    {
+        case 0:
+            limit1 = 92.0f;
+		    break;
+        case 1:
+			limit1 = 99.0f;
+            break;
+		case 2:
+            limit1 = 169.0f;
+			break;
+        case 3:
+			limit1 = 135.0f;
+            break;
+		case 4:
+			limit1 = 44.0f;
+			break;
+    }
+    switch (g_cursorP2)
+    {
+    case 0:
+        limit2 = 92.0f;
+        break;
+    case 1:
+        limit2 = 99.0f;
+        break;
+    case 2:
+        limit2 = 169.0f;
+        break;
+    case 3:
+        limit2 = 135.0f;
+        break;
+    case 4:
+        limit2 = 44.0f;
+        break;
+    }
+    if (g_statusUsed[0])
+    {
+        float dx = g_Controller[0].GetLeftStickX();
+   
+        if (g_videoFrame[0] < limit1)
+        {
+            g_videoFrame[0] += 0.7f;
+        }
+        else if(dx <= 0.01f || dx >= 0.01f || g_videoFrame[0] > limit1)
+        {
+            g_videoFrame[0] = 0.0f;
+        }
+    }
+    else
+    {
+		g_videoFrame[0] = 0.0f;
+    }
+    if (g_statusUsed[1])
+    {
+        float dx = g_Controller[1].GetLeftStickX();
+        if (g_videoFrame[1] < limit2)
+        {
+            g_videoFrame[1] += 0.7f;
+        }
+        else if (dx <= 0.01f ||dx >= 0.01f || g_videoFrame[1] > limit1)
+        {
+            g_videoFrame[1] = 0.0f;
+        }
+    }
+    else
+    {
+		g_videoFrame[1] = 0.0f;
+    }
     for (int i = 0; i < 2; i++) {
         //移動処理（決定していない場合のみ）
         if (!g_Cursors[i].isSelected) {
@@ -775,7 +881,7 @@ void selectWT_Update()
             if (Keyboard_IsKeyDownTrigger(KK_F1)) g_isP1Ready = false;
         }
     }
-    if (g_isP1Ready && (Keyboard_IsKeyDownTrigger(KK_Z) || g_Controller[0].IsButtonPushed(ControllerButton::B_BUTTON)))
+    if (g_isP1Ready && (Keyboard_IsKeyDownTrigger(KK_Z) || g_Controller[0].IsButtonPushed(ControllerButton::X_BUTTON)))
     {
         PlayAudio(g_button, false); // 好みでキャンセルSEにしてもOK
         g_isP1Ready = false;
@@ -845,7 +951,7 @@ void selectWT_Update()
         }
     }
     // P2 Ready解除（6）
-    if (g_isP2Ready && (Keyboard_IsKeyDownTrigger(KK_D6) || g_Controller[1].IsButtonPushed(ControllerButton::B_BUTTON)))
+    if (g_isP2Ready && (Keyboard_IsKeyDownTrigger(KK_D6) || g_Controller[1].IsButtonPushed(ControllerButton::X_BUTTON)))
     {
         PlayAudio(g_button, false); // 好みでキャンセルSEにしてもOK
         g_isP2Ready = false;
@@ -1148,15 +1254,57 @@ void selectWT_Draw_After3D()
 
         if (g_statusUsed[i])
         {
+            static float scale = 0.5f;
             if (i == 0)
             {
                 g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Card_Status[g_cursorP1]);
                 DrawSprite(XMFLOAT2((float)CardposX, screenHeight / 2 - 50.0f), XMFLOAT2(827 * 0.8f, 1013 * 0.8f), color);
+                g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Video[g_cursorP1]);
+               
+                switch (g_cursorP1)
+                {
+                case 0:
+                    DrawSpriteEx(XMFLOAT2((float)CardposX, screenHeight / 2 - 150.0f), XMFLOAT2(800 * scale, 530 * scale), XMFLOAT4(1, 1, 1, 1), g_videoFrame[0], 5, 19);
+                    break;
+                case 1:
+                    DrawSpriteEx(XMFLOAT2((float)CardposX, screenHeight / 2 - 150.0f), XMFLOAT2(800 * scale, 530 * scale), XMFLOAT4(1, 1, 1, 1), g_videoFrame[0], 5, 24);
+                    break;
+                case 2:
+                    DrawSpriteEx(XMFLOAT2((float)CardposX, screenHeight / 2 - 150.0f), XMFLOAT2(800 * scale, 530 * scale), XMFLOAT4(1, 1, 1, 1), g_videoFrame[0], 10, 17);
+                    break;
+                case 3:
+                    DrawSpriteEx(XMFLOAT2((float)CardposX, screenHeight / 2 - 150.0f), XMFLOAT2(800 * scale, 530 * scale), XMFLOAT4(1, 1, 1, 1), g_videoFrame[0], 10, 14);
+                    break;
+                case 4:
+                    DrawSpriteEx(XMFLOAT2((float)CardposX, screenHeight / 2 - 150.0f), XMFLOAT2(800 * scale, 530 * scale), XMFLOAT4(1, 1, 1, 1), g_videoFrame[0], 10, 5);
+                    break;
+                }
+               
+
             }
             else
             {
                 g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Card_Status[g_cursorP2]);
                 DrawSprite(XMFLOAT2((float)CardposX, screenHeight / 2 - 50.0f), XMFLOAT2(827 * 0.8f, 1013 * 0.8f), color);
+                g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Video[g_cursorP2]);
+                switch (g_cursorP2)
+                {
+                case 0:
+                    DrawSpriteEx(XMFLOAT2((float)CardposX, screenHeight / 2 - 150.0f), XMFLOAT2(800 * scale, 530 * scale), XMFLOAT4(1, 1, 1, 1), g_videoFrame[1], 5, 19);
+                    break;
+                case 1:
+                    DrawSpriteEx(XMFLOAT2((float)CardposX, screenHeight / 2 - 150.0f), XMFLOAT2(800 * scale, 530 * scale), XMFLOAT4(1, 1, 1, 1), g_videoFrame[1], 5, 24);
+                    break;
+                case 2:
+                    DrawSpriteEx(XMFLOAT2((float)CardposX, screenHeight / 2 - 150.0f), XMFLOAT2(800 * scale, 530 * scale), XMFLOAT4(1, 1, 1, 1), g_videoFrame[1], 10, 17);
+                    break;
+                case 3:
+                    DrawSpriteEx(XMFLOAT2((float)CardposX, screenHeight / 2 - 150.0f), XMFLOAT2(800 * scale, 530 * scale), XMFLOAT4(1, 1, 1, 1), g_videoFrame[1], 10, 14);
+                    break;
+                case 4:
+                    DrawSpriteEx(XMFLOAT2((float)CardposX, screenHeight / 2 - 150.0f), XMFLOAT2(800 * scale, 530 * scale), XMFLOAT4(1, 1, 1, 1), g_videoFrame[1], 10, 5);
+                    break;
+                }
             }
 
         }
@@ -1226,8 +1374,9 @@ void selectWT_Draw_After3D()
     DrawSprite(XMFLOAT2(100.0f, screenHeight - 100.0f), XMFLOAT2(493 * scale, 237 * scale), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f));
     CardposX += (int)(screenWidth / 2);
 
-    // ---------- スプライトアニメ描画（剣のプレビュー） ----------
-    // 描画位置はカードの中心あたりに設定（必要に応じて微調整）
+
+
+    CardposX += (int)(screenWidth / 2);
     XMFLOAT2 p1Pos = XMFLOAT2(screenWidth * 0.25f, screenHeight * 0.5f - 50.0f);
     XMFLOAT2 p2Pos = XMFLOAT2(screenWidth * 0.75f, screenHeight * 0.5f - 50.0f);
     XMFLOAT2 drawSize = XMFLOAT2(600.0f, 600.0f); // 描画サイズ（ピクセル）: 調整可
@@ -1265,6 +1414,12 @@ void selectWT_Draw_After3D()
         }
 
     }
+
+    g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Button[0]);
+    DrawSprite(XMFLOAT2(screenWidth / 2 + 600.0f, screenHeight - 90.0f), XMFLOAT2(263 * 0.6, 100 * 0.6), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f));
+
+    g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Button[1]);
+    DrawSprite(XMFLOAT2(screenWidth / 2 + 800.0f, screenHeight - 100.0f), XMFLOAT2(482 * scale, 198 * scale), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f));
 
 }
 
