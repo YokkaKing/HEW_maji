@@ -130,6 +130,8 @@ public:
 public:
 	// 蟻地獄のオブジェクトを作る
 	void CreateAnt(XMFLOAT3 motherPosition, int select);
+	// ハンマーの壁の坂オブジェクトを作る
+	void CreateWall(XMFLOAT3 motherPosition, int select);
 };
 
 #endif // TERRAIN_H
