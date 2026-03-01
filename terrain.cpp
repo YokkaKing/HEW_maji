@@ -698,6 +698,7 @@ void TerrainUpdate()
 			g_Terrain.m_isChange[0] = true; // 1Pの変身を確認
 			g_Terrain.m_coolTime[0] = 120.0f;
 			g_pos[0] = GetPlayer2Position(); // プレイヤー2の場所
+			g_Player2.SetStop(TRUE); // プレイヤー2の動きを止める
 		}
 	}
 	else
@@ -705,6 +706,10 @@ void TerrainUpdate()
 		g_Terrain.m_coolTime[0] = 0.0f;
 		g_Terrain.m_isChange[0] = false;
 		g_pos[0] = {};
+		if (g_Player2.m_stopFlag)
+		{
+			g_Player2.SetStop(FALSE); // プレイヤー2を動かす
+		}
 	}
 
 	if (GetPlayer2_IsTransformed())
@@ -716,6 +721,7 @@ void TerrainUpdate()
 			g_Terrain.m_isChange[1] = true; // 2Pの変身を確認
 			g_Terrain.m_coolTime[1] = 120.0f;
 			g_pos[1] = GetPlayerPosition();
+			g_Player.SetStop(TRUE); // プレイヤー1の動きを止める
 		}
 	}
 	else
@@ -723,6 +729,28 @@ void TerrainUpdate()
 		g_Terrain.m_coolTime[1] = 0.0f;	// クールタイムをなくす
 		g_Terrain.m_isChange[1] = false; // 変身を解く
 		g_pos[1] = {};
+		if (g_Player.m_stopFlag)
+		{
+			g_Player.SetStop(FALSE); // プレイヤー1を動かす
+		}
+	}
+
+	// クールタイムが100.0fより小さくなったら
+	if (g_Terrain.m_coolTime[0] < 118.0f)
+	{
+		if (g_Player2.m_stopFlag)
+		{
+			g_Player2.SetStop(FALSE); // プレイヤー2を動かす
+		}
+	}
+
+	// クールタイムが100.0fより小さくなったら
+	if (g_Terrain.m_coolTime[1] < 118.0f)
+	{
+		if (g_Player.m_stopFlag)
+		{
+			g_Player.SetStop(FALSE); // プレイヤー1を動かす
+		}
 	}
 
 	// 変身したら-する

@@ -95,6 +95,9 @@ void PlayerInitialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Weap
 	g_pDevice = pDevice;
 	g_pContext = pContext;
 	g_shadowPlaneP1 = ModelLoad("asset\\model\\block.fbx");
+
+	g_Player.m_stopFlag = false;
+
 	TexMetadata metadata;
 	ScratchImage image;
 	deadModel = ModelLoad("asset\\model\\dead.fbx");
@@ -660,26 +663,33 @@ void Player_ManualMove() // 新しい手動移動関数として作成
 	float speed = 0.0f;
 
 	float stickY = ctrl.GetLeftStickY();
-	if (fabs(stickY) > 0.05f) // デッドゾーンを設定 (必要に応じて調整)
-	{
-		speed = stickY * 0.1f;
-	}
-	if (Keyboard_IsKeyDown(KK_W)) speed = +0.1f;
-	if (Keyboard_IsKeyDown(KK_S)) speed = -0.1f;
 
+	if (!g_Player.m_stopFlag)
+	{
+		if (fabs(stickY) > 0.05f) // デッドゾーンを設定 (必要に応じて調整)
+		{
+			speed = stickY * 0.1f;
+		}
+		if (Keyboard_IsKeyDown(KK_W)) speed = +0.1f;
+		if (Keyboard_IsKeyDown(KK_S)) speed = -0.1f;
+	}
 
 	moveX += forwardX * speed;
 	moveZ += forwardZ * speed;
 	// 横移動
 	float strafe = 0.0f;
 	float stickX = ctrl.GetLeftStickX();
-	if (fabs(stickX) > 0.05f) // デッドゾーンを設定 (必要に応じて調整)
+
+	if (!g_Player.m_stopFlag)
 	{
-		// 左スティック左方向 (-1.0f) で左移動 (strafe = +0.1f) に対応
-		strafe = stickX * 0.1f;
+		if (fabs(stickX) > 0.05f) // デッドゾーンを設定 (必要に応じて調整)
+		{
+			// 左スティック左方向 (-1.0f) で左移動 (strafe = +0.1f) に対応
+			strafe = stickX * 0.1f;
+		}
+		if (Keyboard_IsKeyDown(KK_A)) strafe = -0.1f;
+		if (Keyboard_IsKeyDown(KK_D)) strafe = +0.1f;
 	}
-	if (Keyboard_IsKeyDown(KK_A)) strafe = -0.1f;
-	if (Keyboard_IsKeyDown(KK_D)) strafe = +0.1f;
 
 	moveX += rightX * strafe;
 	moveZ += rightZ * strafe;
@@ -1324,6 +1334,7 @@ void PLAYER::RoundReset(XMFLOAT3 startPos)
     m_isDead = false;
     State = PLAYER_STATE_IDLE;
 	gp1_roundReset = true;
+	g_Player.m_stopFlag = false;
 
     //����ƕϐg��Ԃ��u��������v�ɖ߂�
     EquipBaseWeapon();

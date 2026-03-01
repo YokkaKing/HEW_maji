@@ -64,6 +64,8 @@ public:
 	float m_frame = 1.0f / 60.0f;
     std::vector<std::shared_ptr<Component>> components;
     bool m_isEnable = true;
+
+    bool m_stopFlag = false; // é~Ç‹ÇÈÇ©Ç«Ç§Ç©ÇÃÉtÉâÉO
 public:
     template <typename T, typename... Args>
     std::shared_ptr<T> AddComponent(Args&&... args)
@@ -117,6 +119,12 @@ public:
     virtual void Update() {};
 
     virtual void Draw() {}
+
+    // ìÆÇ©Ç∑Ç©Ç«Ç§Ç©ÇÃê›íË
+    void SetStop(bool flag)
+    {
+        m_stopFlag = flag;
+    }
 };
 
 #endif // GAME_OBJECT_H
