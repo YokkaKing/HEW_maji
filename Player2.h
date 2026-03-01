@@ -126,4 +126,6 @@ void Player2_SetPlayerIsAttaking(int flg);
 void Player2_ResetMoveMul();
 void Player2_StartHitAnim();
 bool Player2_GetIsDead();
+bool GetPlayer2Stop();
+
 #endif // PLAYER2_H

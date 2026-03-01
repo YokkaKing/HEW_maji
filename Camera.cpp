@@ -36,6 +36,8 @@
 // オートエイム緩和用の設定
 #define CAMERA_AUTO_MIN_DIST (1.0f)  // これより近いと追従を停止する（デッドゾーン）
 #define CAMERA_AUTO_MAX_DIST (10.0f) // これより遠ければ100%の速度で追従する
+
+#define CAMERA_SHAKE_AMOUNT (0.2f) // 揺れの強さ
 //================================================================
 //	グローバル変数
 //================================================================
@@ -130,6 +132,9 @@ void Camera2_Finalize()
 }
 void Camera_Update()
 {
+	// カメラシェイク用オフセット
+	static XMFLOAT3 shakeOffset = { 0.0f, 0.0f, 0.0f };
+
 	static float nowYaw = 0.0f;
 	static float nowPitch = 22.0f;
 	static float nowDistance = 6.0f;
@@ -216,22 +221,53 @@ void Camera_Update()
 		}
 	}
 
+	// 5. カメラシェイク判定
+	if (GetPlayerStop()) 
+	{
+		// プレイヤー停止中：ランダムな揺れを発生させる
+		shakeOffset.x = (((float)rand() / RAND_MAX) * 2.0f - 1.0f) * CAMERA_SHAKE_AMOUNT;
+		shakeOffset.y = (((float)rand() / RAND_MAX) * 2.0f - 1.0f) * CAMERA_SHAKE_AMOUNT;
+		shakeOffset.z = (((float)rand() / RAND_MAX) * 2.0f - 1.0f) * CAMERA_SHAKE_AMOUNT;
+	}
+	else 
+	{
+		// 移動中：揺れをゼロに戻す（元の位置に復帰）
+		shakeOffset.x = 0.0f;
+		shakeOffset.y = 0.0f;
+		shakeOffset.z = 0.0f;
+	}
+
 	// 注視点の設定
 	CameraObject.AtPosition = playerPos;
 	CameraObject.AtPosition.y += 2.0f;
 
-	// カメラ座標の計算
+	// カメラ基本座標の計算
 	CameraObject.Position.x = playerPos.x + sinf(CameraRotationY + XM_PI) * cosf(CameraRotationX) * CAMERA_DISTANCE;
 	CameraObject.Position.y = playerPos.y + sinf(CameraRotationX) * CAMERA_DISTANCE + 2.5f;
 	CameraObject.Position.z = playerPos.z + cosf(CameraRotationY + XM_PI) * cosf(CameraRotationX) * CAMERA_DISTANCE;
 
+	// シェイクオフセットの適用（行列作成の直前に加算）
+	XMVECTOR finalPos = XMLoadFloat3(&CameraObject.Position);
+	XMVECTOR finalAt = XMLoadFloat3(&CameraObject.AtPosition);
+	XMVECTOR offset = XMLoadFloat3(&shakeOffset);
+
+	// カメラ位置（Pos）のみを揺らすことで視差を作る
+	finalPos = XMVectorAdd(finalPos, offset);
+	// finalAt = XMVectorAdd(finalAt, offset); // 注視点は固定することで揺れを強調
+
+	// シェイク後の座標を保存しないと、Camera_Drawで上書きされて揺れが消える
+	XMStoreFloat3(&CameraObject.Position, finalPos);
+	XMStoreFloat3(&CameraObject.AtPosition, finalAt);
+
 	// 行列更新
-	CameraObject.View = XMMatrixLookAtLH(XMLoadFloat3(&CameraObject.Position), XMLoadFloat3(&CameraObject.AtPosition), XMLoadFloat3(&CameraObject.UpVector));
+	CameraObject.View = XMMatrixLookAtLH(finalPos, finalAt, XMLoadFloat3(&CameraObject.UpVector));
 	CameraObject.Projection = XMMatrixPerspectiveFovLH(CameraObject.Fov, CameraObject.Aspect, CameraObject.NearClip, CameraObject.FarClip);
-}
+ }
 
 void Camera2_Update()
 {
+	static XMFLOAT3 shakeOffset2 = { 0.0f, 0.0f, 0.0f };
+
 	XMFLOAT3 player2Pos = GetPlayer2Position();
 
 	// 履歴追加
@@ -268,17 +304,43 @@ void Camera2_Update()
 		}
 	}
 
+	// カメラシェイク判定 (P2はGetPlayer2Stopを参照)
+	if (GetPlayer2Stop()) 
+	{
+		shakeOffset2.x = (((float)rand() / RAND_MAX) * 2.0f - 1.0f) * CAMERA_SHAKE_AMOUNT;
+		shakeOffset2.y = (((float)rand() / RAND_MAX) * 2.0f - 1.0f) * CAMERA_SHAKE_AMOUNT;
+		shakeOffset2.z = (((float)rand() / RAND_MAX) * 2.0f - 1.0f) * CAMERA_SHAKE_AMOUNT;
+	}
+	else 
+	{
+		shakeOffset2.x = 0.0f;
+		shakeOffset2.y = 0.0f;
+		shakeOffset2.z = 0.0f;
+	}
+
 	// 注視点の設定
 	Camera2Object.AtPosition = player2Pos;
 	Camera2Object.AtPosition.y += 2.0f;
 
-	// カメラ座標の計算
+	// Camera2RotationX / Y を使用するように修正（P1の変数を参照していたミス）
 	Camera2Object.Position.x = player2Pos.x + sinf(Camera2RotationY + XM_PI) * cosf(Camera2RotationX) * CAMERA_DISTANCE;
 	Camera2Object.Position.y = player2Pos.y + sinf(Camera2RotationX) * CAMERA_DISTANCE + 2.5f;
 	Camera2Object.Position.z = player2Pos.z + cosf(Camera2RotationY + XM_PI) * cosf(Camera2RotationX) * CAMERA_DISTANCE;
 
+	// シェイクオフセットの適用
+	XMVECTOR finalPos2 = XMLoadFloat3(&Camera2Object.Position);
+	XMVECTOR finalAt2 = XMLoadFloat3(&Camera2Object.AtPosition);
+	XMVECTOR offset2 = XMLoadFloat3(&shakeOffset2);
+
+	// Positionのみに適用
+	finalPos2 = XMVectorAdd(finalPos2, offset2);
+
+	// 座標を保存
+	XMStoreFloat3(&Camera2Object.Position, finalPos2);
+	XMStoreFloat3(&Camera2Object.AtPosition, finalAt2);
+
 	// 行列更新
-	Camera2Object.View = XMMatrixLookAtLH(XMLoadFloat3(&Camera2Object.Position), XMLoadFloat3(&Camera2Object.AtPosition), XMLoadFloat3(&Camera2Object.UpVector));
+	Camera2Object.View = XMMatrixLookAtLH(finalPos2, finalAt2, XMLoadFloat3(&Camera2Object.UpVector));
 	Camera2Object.Projection = XMMatrixPerspectiveFovLH(Camera2Object.Fov, Camera2Object.Aspect, Camera2Object.NearClip, Camera2Object.FarClip);
 }
 
