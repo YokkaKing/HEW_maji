@@ -1442,3 +1442,7 @@ bool Player2_GetIsDead()
 {
 	return g_Player2.m_isDead;
 }
+bool GetPlayer2Stop()
+{
+	return g_Player2.m_stopFlag;
+}

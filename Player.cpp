@@ -1504,3 +1504,7 @@ bool Player_GetIsDead()
 {
 	return g_Player.m_isDead;
 }
+bool GetPlayerStop()
+{
+	return g_Player.m_stopFlag;
+}
