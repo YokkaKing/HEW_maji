@@ -91,6 +91,8 @@ void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, Wea
 	g_pContext2 = pContext;
 	deadModel2 = ModelLoad("asset\\model\\dead.fbx");
 
+	g_Player2.m_stopFlag = false;
+
 	if (INITIAL_MODEL_PATH_P2 == nullptr) {
 		g_Player2.m_model = ModelLoad("asset\\model\\block.fbx"); // 確実に存在するファイル
 	}
@@ -583,7 +585,7 @@ void	Player2Update()
 void Player2_ManualMove()
 {
 	int ctrlIdx = GetControllerIndexFromPlayerNo(1);
-//	if (controllerIdx == -1) return;
+	//	if (controllerIdx == -1) return;
 
 	Controller& ctrl = g_Controller[ctrlIdx];
 
@@ -611,8 +613,6 @@ void Player2_ManualMove()
 		g_Player2.m_koyoteTime -= 0.1f;
 	}
 
-
-
 	float len = sqrtf(forwardX * forwardX + forwardZ * forwardZ);
 	if (len > 0.0f)
 	{
@@ -632,14 +632,17 @@ void Player2_ManualMove()
 	float moveX = 0.0f;
 	float moveZ = 0.0f;
 	float speed = 0.0f;
-	
-	float stickY = ctrl.GetLeftStickY();
-	if (fabs(stickY) > 0.05f) // デッドゾーンを設定 (必要に応じて調整)
+
+	if (!g_Player2.m_stopFlag)
 	{
-		speed = stickY * 0.1f;
+		float stickY = ctrl.GetLeftStickY();
+		if (fabs(stickY) > 0.05f) // デッドゾーンを設定 (必要に応じて調整)
+		{
+			speed = stickY * 0.1f;
+		}
+		if (Keyboard_IsKeyDown(KK_U)) speed = +0.1f;
+		if (Keyboard_IsKeyDown(KK_J)) speed = -0.1f;
 	}
-	if (Keyboard_IsKeyDown(KK_U)) speed = +0.1f;
-	if (Keyboard_IsKeyDown(KK_J)) speed = -0.1f;
 
 	moveX += forwardX * speed;
 	moveZ += forwardZ * speed;
@@ -647,13 +650,16 @@ void Player2_ManualMove()
 	// 横移動
 	float strafe = 0.0f;
 	float stickX = ctrl.GetLeftStickX();
-	if (fabs(stickX) > 0.05f) // デッドゾーンを設定 (必要に応じて調整)
+	if (!g_Player2.m_stopFlag)
 	{
-		// 左スティック左方向 (-1.0f) で左移動 (strafe = +0.1f) に対応
-		strafe = stickX * 0.1f;
+		if (fabs(stickX) > 0.05f) // デッドゾーンを設定 (必要に応じて調整)
+		{
+			// 左スティック左方向 (-1.0f) で左移動 (strafe = +0.1f) に対応
+			strafe = stickX * 0.1f;
+		}
+		if (Keyboard_IsKeyDown(KK_H)) strafe = -0.1f;
+		if (Keyboard_IsKeyDown(KK_K)) strafe = +0.1f;
 	}
-	if (Keyboard_IsKeyDown(KK_H)) strafe = -0.1f;
-	if (Keyboard_IsKeyDown(KK_K)) strafe = +0.1f;
 
 	moveX += rightX * strafe;
 	moveZ += rightZ * strafe;
@@ -1244,6 +1250,7 @@ void PLAYER2::RoundReset(XMFLOAT3 startPos)
 	m_isDead = false;
 	State = PLAYER2_STATE_IDLE;
 	gp2_roundReset = true;
+	g_Player.m_stopFlag = false;
 
 	//武器と変身状態を「初期武器」に戻す
 	EquipBaseWeapon();
