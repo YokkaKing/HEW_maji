@@ -854,6 +854,10 @@ PLAYER2* GetPlayer2()
 // 武器を装備する
 void PLAYER2::EquipWeapon(std::unique_ptr<IWeapon> weapon)
 {
+	if (m_currentWeapon != nullptr)
+	{
+		m_currentWeapon->ResetEffect(1);
+	}
 	m_currentWeapon = nullptr;
 	m_currentWeapon = std::move(weapon);
 }
@@ -1052,43 +1056,29 @@ void PLAYER2::OnCollision(const CollisionInfo& info)
 
 		if (info.other->m_tag == "Slope")
 		{
-			auto INFO = info;
-			// 法線が自分を押し出す方向に向くように反転
-			INFO.normal.x *= -1;
-			INFO.normal.y *= -1;
-			INFO.normal.z *= -1;
+			// 1. 押し出し（めり込み防止の基本）
+			m_position.x += info.normal.x * info.penetration;
+			m_position.y += info.normal.y * info.penetration;
+			m_position.z += info.normal.z * info.penetration;
 
-			m_position.x += INFO.normal.x * INFO.penetration;
-			m_position.y += INFO.normal.y * INFO.penetration;
-			m_position.z += INFO.normal.z * INFO.penetration;
-
-			// 坂道なら normal.y が 0 より大きければ地面とみなす
-			if (INFO.normal.y > 0.1f)
+			if (info.normal.y > 0.1f)
 			{
 				m_isGround = true;
 				if (m_velocity.y < 0) m_velocity.y = 0.0f;
 
-				// --- gp_speed への計算 ---
-				const float slideFriction = 0.15f;
-				float slopeSeverity = 1.0f - INFO.normal.y;
-				float slidePower = slopeSeverity * slideFriction;
-				const float gravityEffect = 0.02f;
+				float climbResistance = 0.7f; // 0.8〜0.9 くらいで調整（小さいほど遅くなる）
 
-				// m_velocity ではなく gp_speed に加算
-				gp2_slopeSpeed.x += INFO.normal.x * (slidePower + gravityEffect);
-				gp2_slopeSpeed.z += INFO.normal.z * (slidePower + gravityEffect);
+				// 入力によって進もうとしている速度にブレーキをかける
+				m_velocity.x *= climbResistance;
+				m_velocity.z *= climbResistance;
 
-				// リミッター
-				float maxSlide = 0.08f;
-				float speedXZ = sqrtf(gp2_slopeSpeed.x * gp2_slopeSpeed.x + gp2_slopeSpeed.z * gp2_slopeSpeed.z);
-				if (speedXZ > maxSlide)
+				if (gp2_move)
 				{
-					gp2_slopeSpeed.x = (gp2_slopeSpeed.x / speedXZ) * maxSlide;
-					gp2_slopeSpeed.z = (gp2_slopeSpeed.z / speedXZ) * maxSlide;
+					m_position.y += 0.1f;
 				}
 
-				m_velocity.x *= 0.0f;
-				m_velocity.z *= 0.0f;
+				// 滑り計算（gp1_slopeSpeed）は使わないので 0 にリセット
+				gp2_slopeSpeed = { 0.0f, 0.0f, 0.0f };
 			}
 		}
 

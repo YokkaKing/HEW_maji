@@ -268,8 +268,12 @@ void TransformPlayer()
             SetPlayer_IsTransformed(true);
 
         }
-        if (targetWT != WeaponTerrain::NONE) {
-            g_Player.m_currentWeapon->ResetEffect(0); // 1Pの武器のエフェクトを消す
+        if (targetWT != WeaponTerrain::NONE)
+        {
+            if (g_Player.m_currentWeapon != nullptr)
+            {
+                g_Player.m_currentWeapon->ResetEffect(0); // 1Pの武器のエフェクトを消す
+            }
             ApplyTransformationP1(&g_Player, targetWT, true);
             
             g_Player.TransformTimer = TRANSFORM_LIMIT_FRAME;
@@ -288,8 +292,12 @@ void TransformPlayer()
         //if (g_Player.TransformType == TRANSFORM_TYPE::TRANSFORM_TYPE_A && ctrl.GetLeftTrigger() >= 0.9f) unevolve = true;
         //if (g_Player.TransformType == TRANSFORM_TYPE::TRANSFORM_TYPE_B && ctrl.GetRightTrigger() >= 0.9f) unevolve = true;
 
-        if (unevolve) {
-            g_Player.m_currentWeapon->ResetEffect(0); // 1Pのエフェクトを消す
+        if (unevolve) 
+        {
+            if (g_Player.m_currentWeapon != nullptr)
+            {
+                g_Player.m_currentWeapon->ResetEffect(0); // 1Pのエフェクトを消す
+            }
             //エフェクトアニメーション
             XMFLOAT3 effectPos = g_Player.m_position;
             effectPos.y -= 0.5f;
@@ -381,8 +389,12 @@ void TransformPlayer2()
 
             Player2_SetPlayerIsAttaking(false);
         }
-        if (targetWT != WeaponTerrain::NONE) {
-            g_Player2.m_currentWeapon->ResetEffect(1); // 2Pの武器のエフェクトを消す
+        if (targetWT != WeaponTerrain::NONE) 
+        {
+            if (g_Player2.m_currentWeapon != nullptr)
+            {
+                g_Player2.m_currentWeapon->ResetEffect(1); // 2Pの武器のエフェクトを消す
+            }
             ApplyTransformationP2(&g_Player2, targetWT, true);
             g_Player2.m_isTransformed = true;
             g_Player2.TransformTimer = TRANSFORM_LIMIT_FRAME;
@@ -405,8 +417,12 @@ void TransformPlayer2()
         //if (g_Player2.TransformType == TRANSFORM_TYPE2::TRANSFORM_TYPE_A && ctrl.GetLeftTrigger() >= 0.9f) unevolve = true;
         //if (g_Player2.TransformType == TRANSFORM_TYPE2::TRANSFORM_TYPE_B && ctrl.GetRightTrigger() >= 0.9f) unevolve = true;
 
-        if (unevolve) {
-            g_Player.m_currentWeapon->ResetEffect(1); // 2Pのエフェクトを消す
+        if (unevolve)
+        {
+            if (g_Player2.m_currentWeapon != nullptr)
+            {
+                g_Player2.m_currentWeapon->ResetEffect(1); // 2Pのエフェクトを消す
+            }
             //エフェクトアニメーション
             XMFLOAT3 effectPos = g_Player2.m_position;
             effectPos.y -= 0.5f;

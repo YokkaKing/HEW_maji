@@ -16,6 +16,8 @@
 #define TREE_POS_Y (1.0f)
 #define FANCE_POS_Y (2.0f)
 #define FANCE_POS_Y_ (0.0f)
+#define WALL_POS_Y (0.5f)
+#define WALL_POS_Y_ (-1.51f)
 #define OTHER_TERRAIN_SIZE (10)
 
 //================================================================
@@ -91,6 +93,29 @@ XMFLOAT2 g_antlionData4[4] =
 	{ -7.3f, 0.0f },
 	{ 0.0f, 7.3f },
 	{ 7.3f, 0.0f }
+};
+// 壁の坂のためのデータ(endPositionのみ)他は共通のため
+XMFLOAT3 g_wallData[8] =
+{
+	{ 0.0f, 0.25f, 0.3f },
+	{ 0.0f, 0.25f, 0.3f },
+	{ 0.3f, 0.25f, 0.0f },
+	{ 0.3f, 0.25f, 0.0f },
+	{ 0.0f, 0.25f, -0.3f },
+	{ 0.0f, 0.25f, -0.3f },
+	{ -0.3f, 0.25f, 0.0f },
+	{ -0.3f, 0.25f, 0.0f }
+};
+XMFLOAT2 g_wallData2[8] =
+{
+	{ 2.0f, -10.135f },
+	{ -2.0f, -10.135f },
+	{ -10.135f, 2.0f },
+	{ -10.135f, -2.0f },
+	{ 2.0f, 10.135f },
+	{ -2.0f, 10.135f },
+	{ 10.135f, 2.0f },
+	{ 10.135f, -2.0f }
 };
 
 std::string otherModel[2][3] =
@@ -671,7 +696,7 @@ void TerrainUpdate()
 		if (g_Terrain.m_coolTime[0] <= 0)
 		{
 			g_Terrain.m_isChange[0] = true; // 1Pの変身を確認
-			g_Terrain.m_coolTime[0] = 45.0f;
+			g_Terrain.m_coolTime[0] = 120.0f;
 			g_pos[0] = GetPlayer2Position(); // プレイヤー2の場所
 		}
 	}
@@ -689,7 +714,7 @@ void TerrainUpdate()
 		if (g_Terrain.m_coolTime[1] <= 0)
 		{
 			g_Terrain.m_isChange[1] = true; // 2Pの変身を確認
-			g_Terrain.m_coolTime[1] = 45.0f;
+			g_Terrain.m_coolTime[1] = 120.0f;
 			g_pos[1] = GetPlayerPosition();
 		}
 	}
@@ -739,7 +764,7 @@ void TerrainUpdate()
 		switch (GetSetWTP1())
 		{
 		case WeaponTerrain::SWORD_WALL:
-			g_Terrain.UpdateObject(g_Terrain.trees[0], g_Terrain.m_motherPosition[1], FALSE); // P1の地形の当たり判定
+			g_Terrain.UpdateObject(g_Terrain.trees[0],{ g_pos[0].x, g_Terrain.m_motherPosition[0].y, g_pos[0].z }, FALSE); // P1の地形の当たり判定
 			break;
 		case WeaponTerrain::SPEAR_HILL:
 			g_Terrain.UpdateObject(g_Terrain.ants[0], g_Terrain.m_motherPosition[0], FALSE); // P1の地形の当たり判定
@@ -748,7 +773,7 @@ void TerrainUpdate()
 			g_Terrain.UpdateObject(g_Terrain.bogs[0], g_Terrain.m_motherPosition[0], FALSE); // P1の地形の当たり判定
 			break;
 		case WeaponTerrain::HAMMER_:
-			g_Terrain.UpdateObject(g_Terrain.walls[0], g_Terrain.m_motherPosition[1], TRUE); // P1の地形の当たり判定
+			g_Terrain.UpdateObject(g_Terrain.walls[0], { g_pos[0].x, g_Terrain.m_motherPosition[0].y, g_pos[0].z }, FALSE); // P1の地形の当たり判定
 			break;
 		case WeaponTerrain::SHURIKEN_:
 			g_Terrain.UpdateObject(g_Terrain.fances[0], g_Terrain.m_motherPosition[0], FALSE); // P1の地形の当たり判定
@@ -787,7 +812,7 @@ void TerrainUpdate()
 			switch (GetSetWTP1())
 			{
 			case WeaponTerrain::SWORD_WALL:
-				g_Terrain.UpdateObject(g_Terrain.trees[0], g_Terrain.m_motherPosition[1], TRUE); // P1の地形の当たり判定
+				g_Terrain.UpdateObject(g_Terrain.trees[0], { g_pos[0].x, g_Terrain.m_motherPosition[0].y, g_pos[0].z }, TRUE); // P1の地形の当たり判定
 				break;
 			case WeaponTerrain::SPEAR_HILL:
 				g_Terrain.UpdateObject(g_Terrain.ants[0], g_Terrain.m_motherPosition[0], TRUE); // P1の地形の当たり判定
@@ -796,7 +821,7 @@ void TerrainUpdate()
 				g_Terrain.UpdateObject(g_Terrain.bogs[0], g_Terrain.m_motherPosition[0], TRUE); // P1の地形の当たり判定
 				break;
 			case WeaponTerrain::HAMMER_:
-				g_Terrain.UpdateObject(g_Terrain.walls[0], g_Terrain.m_motherPosition[1], TRUE); // P1の地形の当たり判定
+				g_Terrain.UpdateObject(g_Terrain.walls[0], { g_pos[0].x, g_Terrain.m_motherPosition[0].y, g_pos[0].z }, TRUE); // P1の地形の当たり判定
 				break;
 			case WeaponTerrain::SHURIKEN_:
 				g_Terrain.UpdateObject(g_Terrain.fances[0], g_Terrain.m_motherPosition[0], TRUE); // P1の地形の当たり判定
@@ -813,7 +838,7 @@ void TerrainUpdate()
 		switch (GetSetWTP2())
 		{
 		case WeaponTerrain::SWORD_WALL:
-			g_Terrain.UpdateObject(g_Terrain.trees[1], g_Terrain.m_motherPosition[0], FALSE); // P1の地形の当たり判定
+			g_Terrain.UpdateObject(g_Terrain.trees[1], { g_pos[1].x, g_Terrain.m_motherPosition[1].y, g_pos[1].z }, FALSE); // P1の地形の当たり判定
 			break;
 		case WeaponTerrain::SPEAR_HILL:
 			g_Terrain.UpdateObject(g_Terrain.ants[1], g_Terrain.m_motherPosition[1], FALSE); // P1の地形の当たり判定
@@ -822,7 +847,7 @@ void TerrainUpdate()
 			g_Terrain.UpdateObject(g_Terrain.bogs[1], g_Terrain.m_motherPosition[1], FALSE); // P1の地形の当たり判定
 			break;
 		case WeaponTerrain::HAMMER_:
-			g_Terrain.UpdateObject(g_Terrain.walls[1], g_Terrain.m_motherPosition[1], TRUE); // P1の地形の当たり判定
+			g_Terrain.UpdateObject(g_Terrain.walls[1], { g_pos[1].x, g_Terrain.m_motherPosition[1].y, g_pos[1].z }, FALSE); // P1の地形の当たり判定
 			break;
 		case WeaponTerrain::SHURIKEN_:
 			g_Terrain.UpdateObject(g_Terrain.fances[1], g_Terrain.m_motherPosition[1], FALSE); // P1の地形の当たり判定
@@ -845,7 +870,7 @@ void TerrainUpdate()
 			posY = BOG_POS_Y;
 			break;
 		case WeaponTerrain::HAMMER_:
-			posY = 0.7f;
+			posY = WALL_POS_Y;
 			break;
 		case WeaponTerrain::SHURIKEN_:
 			posY = FANCE_POS_Y;
@@ -861,7 +886,7 @@ void TerrainUpdate()
 			switch (GetSetWTP2())
 			{
 			case WeaponTerrain::SWORD_WALL:
-				g_Terrain.UpdateObject(g_Terrain.trees[1], g_Terrain.m_motherPosition[0], TRUE); // P1の地形の当たり判定
+				g_Terrain.UpdateObject(g_Terrain.trees[1], { g_pos[1].x, g_Terrain.m_motherPosition[1].y, g_pos[1].z }, TRUE); // P1の地形の当たり判定
 				break;
 			case WeaponTerrain::SPEAR_HILL:
 				g_Terrain.UpdateObject(g_Terrain.ants[1], g_Terrain.m_motherPosition[1], TRUE); // P1の地形の当たり判定
@@ -870,7 +895,7 @@ void TerrainUpdate()
 				g_Terrain.UpdateObject(g_Terrain.bogs[1], g_Terrain.m_motherPosition[1], TRUE); // P1の地形の当たり判定
 				break;
 			case WeaponTerrain::HAMMER_:
-				g_Terrain.UpdateObject(g_Terrain.walls[1], g_Terrain.m_motherPosition[1], TRUE); // P1の地形の当たり判定
+				g_Terrain.UpdateObject(g_Terrain.walls[1], { g_pos[1].x, g_Terrain.m_motherPosition[1].y, g_pos[1].z }, TRUE); // P1の地形の当たり判定
 				break;
 			case WeaponTerrain::SHURIKEN_:
 				g_Terrain.UpdateObject(g_Terrain.fances[1], g_Terrain.m_motherPosition[1], TRUE); // P1の地形の当たり判定
@@ -945,7 +970,7 @@ void TerrainDraw()
 			g_Terrain.m_motherPosition[0].x,
 			g_Terrain.m_motherPosition[0].y,
 			g_Terrain.m_motherPosition[0].z);
-		if (no == 4)
+		if (no == 1 || no == 4)
 		{
 			translation = XMMatrixTranslation(
 				g_pos[0].x,
@@ -1017,7 +1042,7 @@ void TerrainDraw()
 			g_Terrain.m_motherPosition[1].x,
 			g_Terrain.m_motherPosition[1].y,
 			g_Terrain.m_motherPosition[1].z);
-		if (no == 4)
+		if (no == 1 || no == 4)
 		{
 			translation = XMMatrixTranslation(
 				g_pos[1].x,
@@ -1082,17 +1107,21 @@ void TerrainSet(WeaponTerrain set, bool playerSelect)
 		break;
 	}
 
-	int swordSelect = 0;
-	if (select == 0)
+	switch (select)
 	{
-		swordSelect = 1;
+	case 0:
+		g_pos[0] = GetPlayer2Position();
+		break;
+	case 1:
+		g_pos[1] = GetPlayerPosition();
+		break;
 	}
 
 	switch (set)
 	{
 	case WeaponTerrain::SWORD_WALL:
 		//g_Terrain.SimpleObjects(Trees, { 0.25f, 2.0f, 0.25f }, TERRAIN_TYPE::TREE, g_Terrain.m_motherPosition[swordSelect], select);
-		g_Terrain.PixelObjects(Trees, TERRAIN_TYPE::TREE, g_Terrain.m_motherPosition[swordSelect], select);
+		g_Terrain.PixelObjects(Trees, TERRAIN_TYPE::TREE, { g_pos[select].x, g_Terrain.m_motherPosition[select].y, g_pos[select].z }, select);
 		break;
 	case WeaponTerrain::SPEAR_HILL:
 		g_Terrain.CreateAnt(g_Terrain.m_motherPosition[select], select);
@@ -1101,7 +1130,8 @@ void TerrainSet(WeaponTerrain set, bool playerSelect)
 		g_Terrain.SimpleObjects(Bogs, { 1.0f, 2.5f, 1.0f }, TERRAIN_TYPE::BOG, g_Terrain.m_motherPosition[select], select);
 		break;
 	case WeaponTerrain::HAMMER_:
-		g_Terrain.SimpleObjects(Walls, { 1.0f, 1.0f, 1.0f }, TERRAIN_TYPE::WALL, g_Terrain.m_motherPosition[select], select);
+		g_Terrain.SimpleObjects(Walls, { 1.0f, 1.0f, 1.0f }, TERRAIN_TYPE::WALL, { g_pos[select].x, g_Terrain.m_motherPosition[select].y, g_pos[select].z }, select);
+		g_Terrain.CreateWall({ g_pos[select].x, g_Terrain.m_motherPosition[select].y, g_pos[select].z }, select);
 		break;
 	case WeaponTerrain::SHURIKEN_:
 		g_Terrain.SimpleObjects(sFances, { 1.2f, 1.2f, 1.2f }, TERRAIN_TYPE::FANCE_S, g_Terrain.m_motherPosition[select], select);
@@ -1519,8 +1549,11 @@ void TERRAIN::UpdateObject(std::vector<GameObject*> terrain, XMFLOAT3 motherPosi
 					obj->m_position.y = ANTLION_POS_Y_;
 				}
 			}
-			else if (obj->m_tag == "TREEP1" || obj->m_tag == "TREEP2")
+			else if (obj->m_tag == "TREEP1")
 			{
+				obj->m_position.x = g_pos[0].x + obj->m_velocity.x;
+				obj->m_position.z = g_pos[0].z + obj->m_velocity.z;
+
 				if (obj->m_position.y < 0.5f)
 				{
 					obj->m_position.y += 0.1f; // 上昇
@@ -1529,6 +1562,45 @@ void TERRAIN::UpdateObject(std::vector<GameObject*> terrain, XMFLOAT3 motherPosi
 				if (obj->m_position.y >= 0.5f)
 				{
 					obj->m_position.y = 0.5f;
+				}
+			}
+			else if (obj->m_tag == "TREEP2")
+			{
+				obj->m_position.x = g_pos[1].x + obj->m_velocity.x;
+				obj->m_position.z = g_pos[1].z + obj->m_velocity.z;
+
+				if (obj->m_position.y < 0.5f)
+				{
+					obj->m_position.y += 0.1f; // 上昇
+				}
+
+				if (obj->m_position.y >= 0.5f)
+				{
+					obj->m_position.y = 0.5f;
+				}
+			}
+			else if (obj->m_tag == "Slope")
+			{
+				if (obj->m_position.y < WALL_POS_Y_)
+				{
+					obj->m_position.y += 0.1f; // 上昇
+				}
+
+				if (obj->m_position.y >= WALL_POS_Y_)
+				{
+					obj->m_position.y = WALL_POS_Y_;
+				}
+			}
+			else if (obj->m_tag == "WALL")
+			{
+				if (obj->m_position.y < 1.3f)
+				{
+					obj->m_position.y += 0.2f; // 上昇
+				}
+
+				if (obj->m_position.y >= 1.3f)
+				{
+					obj->m_position.y = 1.3f;
 				}
 			}
 			else
@@ -1719,4 +1791,36 @@ void TERRAIN::CreateAnt(XMFLOAT3 motherPosition, int select)
 	//		terrainObjects.push_back(std::move(antObj));
 	//	}
 	//}
+}
+
+// ハンマーの壁の坂オブジェクトを作る
+void TERRAIN::CreateWall(XMFLOAT3 motherPosition, int select)
+{
+	// 四方分坂を作る(外から上る方)
+	for (int i = 0; i < 8; i++)
+	{
+		// ファクトリの戻り値 (生のポインタ) を unique_ptr で受け取り、所有権を確保
+		std::unique_ptr<GameObject> antObj(
+			ColliderFactory::CreateTrapezoidSlopeObject(
+				{ 0.0f, 0.0f, 0.0f },
+				g_wallData[i],
+				18.0f,
+				18.0f,
+				0.4f,
+				"Slope",
+				0
+			)
+		);
+
+		antObj->m_position = motherPosition;
+		antObj->m_position.z += g_wallData2[i].y;
+		antObj->m_position.x += g_wallData2[i].x;
+		GameObject* raw_ptr = antObj.get(); // 生のポインタを取得（参照用）
+
+		if (raw_ptr != nullptr)
+		{
+			walls[select].push_back(raw_ptr);
+			terrainObjects.push_back(std::move(antObj));
+		}
+	}
 }
