@@ -96,7 +96,28 @@ void Spear::Attack()
 	m_isAttacking = true; // 攻撃している
 	m_attackTimer = 0.0f; // 攻撃タイマー初期化
 	g_moveSpear[m_selectPlayer] = {0.0f, 0.0f, 0.0f};
-	m_coolTime = 1.5f;
+	if (!m_selectPlayer)
+	{
+		if (GetPlayer_IsTransformed())
+		{
+			m_coolTime = 1.2f;
+		}
+		else
+		{
+			m_coolTime = 1.5f;
+		}
+	}
+	else
+	{
+		if (GetPlayer2_IsTransformed())
+		{
+			m_coolTime = 1.2f;
+		}
+		else
+		{
+			m_coolTime = 1.5f;
+		}
+	}
 	m_fxAnim.PlayFrames(1, 60, 60.0f, false, 1.0f);
 	m_collider->SetEnable(true); // 当たり判定の有効
 	m_weapon->m_delay = 0.1f;
@@ -222,7 +243,14 @@ void Spear::Update()
 				m_chargePower = 0.0f;
 
 				// 投げた後のクールタイム
-				m_coolTime = 1.5f;
+				if (GetPlayer_IsTransformed())
+				{
+					m_coolTime = 1.2f;
+				}
+				else
+				{
+					m_coolTime = 1.5f;
+				}
 			}
 		}
 	}
@@ -255,7 +283,14 @@ void Spear::Update()
 				m_chargePower = 0.0f;
 
 				// 投げた後のクールタイム
-				m_coolTime = 1.5f;
+				if (GetPlayer2_IsTransformed())
+				{
+					m_coolTime = 1.2f;
+				}
+				else
+				{
+					m_coolTime = 1.5f;
+				}
 			}
 		}
 	}
@@ -450,7 +485,7 @@ void Spear::Draw()
 			m_weapon->m_rotation.z);
 		XMMATRIX	translation = XMMatrixTranslation(
 			m_weapon->m_position.x,
-			m_weapon->m_position.y - 0.3f,
+			m_weapon->m_position.y - 0.5f,
 			m_weapon->m_position.z);
 		XMMATRIX world = scale * rotation * translation;
 
@@ -487,12 +522,18 @@ void Spear::OnWeaponCollision(GameObject* target)
 		case FALSE: // 攻撃者が1Pだったら
 			if (target->m_tag == "Player2") // 相手がPlayer2の時のみ
 			{
+				float damageMultiplier = 1.0f; // ダメージ倍率
+
+				if (GetPlayer_IsTransformed())
+				{
+					damageMultiplier = 1.3f; // 倍率変更
+				}
+
 				SetPlayer2_IsAttacked(true);
 				PlayAudio(g_damageSharp);
 				m_hitTargets.insert(target);
-				target->TakeDamage(15.0f); // 仮に20ダメージ
-				Player_PlusScore(15); // スコア加算
-
+				target->TakeDamage(15.0f * damageMultiplier); // 仮に20ダメージ
+				Player_PlusScore(15.0f * damageMultiplier); // スコア加算
 
 				//ヒットエフェクト
 				XMFLOAT3 effectPos = target->m_position;
@@ -517,12 +558,19 @@ void Spear::OnWeaponCollision(GameObject* target)
 		case TRUE: // 攻撃者が2Pだったら
 			if (target->m_tag == "Player") // 相手がPlayerの時のみ
 			{
+				float damageMultiplier = 1.0f; // ダメージ倍率
+
+				if (GetPlayer_IsTransformed())
+				{
+					damageMultiplier = 1.3f; // 倍率変更
+				}
+
 				SetPlayer_IsAttacked(true);
 				PlayAudio(g_damageSharp);
 
 				m_hitTargets.insert(target);
-				target->TakeDamage(15.0f);
-				Player2_PlusScore(15); // スコア加算
+				target->TakeDamage(15.0f * damageMultiplier);
+				Player2_PlusScore(15.0f * damageMultiplier); // スコア加算
 				//ヒットエフェクト
 				XMFLOAT3 effectPos = target->m_position;
 				effectPos.y -= 1.0f;
@@ -745,11 +793,17 @@ void SpearShot::OnCollision(const CollisionInfo& info)
 	case FALSE: // 1Pだったら
 		if (info.other->m_tag == "Player2") // 相手がPlayer2の時のみ
 		{
-			SetPlayer2_IsAttacked(true);
+			float damageMultiplier = 1.0f; // ダメージ倍率
 
+			if (GetPlayer_IsTransformed())
+			{
+				damageMultiplier = 1.3f; // 倍率変更
+			}
+
+			SetPlayer2_IsAttacked(true);
 			PlayAudio(g_damageSharp, false);
-			info.other->TakeDamage(15.0f); // 仮に20ダメージ
-			Player_PlusScore(15.0f);
+			info.other->TakeDamage(15.0f * damageMultiplier); // 仮に20ダメージ
+			Player_PlusScore(15.0f * damageMultiplier);
 			m_isDead = true;
 
 			//ヒットエフェクト
@@ -773,9 +827,16 @@ void SpearShot::OnCollision(const CollisionInfo& info)
 	case TRUE: // 2Pだったら
 		if (info.other->m_tag == "Player") // 相手がPlayerの時のみ
 		{
+			float damageMultiplier = 1.0f; // ダメージ倍率
+
+			if (GetPlayer_IsTransformed())
+			{
+				damageMultiplier = 1.3f; // 倍率変更
+			}
+
 			PlayAudio(g_damageSharp, false);
-			info.other->TakeDamage(15.0f);
-			Player2_PlusScore(15.0f);
+			info.other->TakeDamage(15.0f * damageMultiplier);
+			Player2_PlusScore(15.0f * damageMultiplier);
 			SetPlayer_IsAttacked(true);
 
 			m_isDead = true;

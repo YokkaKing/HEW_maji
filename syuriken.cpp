@@ -83,8 +83,28 @@ void Shuriken::Attack()
 	if (m_coolTime > 0.0f) return; // クールタイム中ならだめ
 	PlayAudio(g_arrow_shuriken, false);
 	Throw(m_selectPlayer);
-	m_coolTime = 0.5f;
-	
+	if (!m_selectPlayer)
+	{
+		if (GetPlayer_IsTransformed())
+		{
+			m_coolTime = 0.5f;
+		}
+		else
+		{
+			m_coolTime = 0.7f;
+		}
+	}
+	else
+	{
+		if (GetPlayer2_IsTransformed())
+		{
+			m_coolTime = 0.5f;
+		}
+		else
+		{
+			m_coolTime = 0.7f;
+		}
+	}
 }
 
 void Shuriken::Update()
@@ -373,12 +393,19 @@ void ShurikenShot::OnCollision(const CollisionInfo& info)
 	case FALSE: // 1Pだったら
 		if (info.other->m_tag == "Player2") // 相手がPlayer2の時のみ
 		{
+			float damageMultiplier = 1.0f; // ダメージ倍率
+
+			if (GetPlayer_IsTransformed())
+			{
+				damageMultiplier = 1.3f; // 倍率変更
+			}
+
 			SetPlayer2_IsAttacked(true);
 
 			PlayAudio(g_damageSharp, false);
-			Player_PlusScore(5.0f); // スコア加算
+			Player_PlusScore(3.0f * damageMultiplier); // スコア加算
 
-			info.other->TakeDamage(5.0f);
+			info.other->TakeDamage(3.0f * damageMultiplier);
 			m_isDead = true;
 			g_Player2.m_isAttacked = true;
 
@@ -403,10 +430,17 @@ void ShurikenShot::OnCollision(const CollisionInfo& info)
 	case TRUE: // 2Pだったら
 		if (info.other->m_tag == "Player") // 相手がPlayerの時のみ
 		{
+			float damageMultiplier = 1.0f; // ダメージ倍率
+
+			if (GetPlayer_IsTransformed())
+			{
+				damageMultiplier = 1.3f; // 倍率変更
+			}
+
 			SetPlayer_IsAttacked(true);
 			PlayAudio(g_damageSharp, false);
-			Player2_PlusScore(5.0f); // スコア加算
-			info.other->TakeDamage(5.0f);
+			Player2_PlusScore(3.0f * damageMultiplier); // スコア加算
+			info.other->TakeDamage(3.0f * damageMultiplier);
 			m_isDead = true;
 			g_Player.m_isAttacked = true;
 			//ヒットエフェクト
