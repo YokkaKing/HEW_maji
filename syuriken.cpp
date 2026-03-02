@@ -75,12 +75,12 @@ Shuriken::Shuriken(GameObject* player, bool select) : IWeapon(player)
 
 Shuriken::~Shuriken()
 {
-	ManagerCollider::RemoveCollider(m_collider); // 削除
+	ManagerCollider::RemoveCollider(m_collider); 
 }
 
 void Shuriken::Attack()
 {
-	if (m_coolTime > 0.0f) return; // クールタイム中ならだめ
+	if (m_coolTime > 0.0f) return; 
 	PlayAudio(g_arrow_shuriken, false);
 	Throw(m_selectPlayer);
 	m_coolTime = 0.5f;
@@ -376,9 +376,9 @@ void ShurikenShot::OnCollision(const CollisionInfo& info)
 			SetPlayer2_IsAttacked(true);
 
 			PlayAudio(g_damageSharp, false);
-			Player_PlusScore(5.0f); // スコア加算
+			Player_PlusScore(3.0f); // スコア加算
 
-			info.other->TakeDamage(5.0f);
+			info.other->TakeDamage(3.0f);
 			m_isDead = true;
 			g_Player2.m_isAttacked = true;
 
@@ -405,8 +405,8 @@ void ShurikenShot::OnCollision(const CollisionInfo& info)
 		{
 			SetPlayer_IsAttacked(true);
 			PlayAudio(g_damageSharp, false);
-			Player2_PlusScore(5.0f); // スコア加算
-			info.other->TakeDamage(5.0f);
+			Player2_PlusScore(3.0f); // スコア加算
+			info.other->TakeDamage(3.0f);
 			m_isDead = true;
 			g_Player.m_isAttacked = true;
 			//ヒットエフェクト

@@ -41,6 +41,8 @@ static ID3D11ShaderResourceView* g_TextureUi_Card[3] = { NULL };
 static ID3D11ShaderResourceView* g_TextureUi_Card_Bg[3] = { NULL };
 static ID3D11ShaderResourceView* g_TextureUi_Card_Status[5] = { NULL };
 static ID3D11ShaderResourceView* g_TextureUi_Card_Status_Button[2] = { NULL };
+static ID3D11ShaderResourceView* g_TextureUi_Attack_Guide[2] = { NULL };	
+static ID3D11ShaderResourceView* g_TextureUi_Charge_Guide[2] = { NULL };
 
 static ID3D11ShaderResourceView* g_TextureUi_Card_tips[5] = { NULL };
 static ID3D11ShaderResourceView* g_TextureUi_Card_tips_2P[5] = { NULL };
@@ -122,6 +124,8 @@ MODEL* model;
 static float g_slotStartX = 600.0f;
 static float g_slotSpacing = 170.0f;
 static float g_slotPosY = 0.0f;
+static float g_AttackFrame[2] = {0.0f,0.0f};
+static float g_ChargeFrame[2] = { 0.0f,0.0f };
 
 // フレーム時間（現在は固定 1/60f。実運用では deltaTime を渡すことを推奨）
 static const float FRAME_DT = 1.0f / 60.0f;
@@ -500,8 +504,27 @@ void selectWT_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
         LoadFromWICFile(L"asset\\texture\\shuriken_video.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
         CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Video[4]);
     }
+    {
+        TexMetadata		metadata;
+        ScratchImage	image;
+        LoadFromWICFile(L"asset\\texture\\attack_guide.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Attack_Guide[0]);
+        assert(g_TextureUi_Attack_Guide[0]);
+        LoadFromWICFile(L"asset\\texture\\attack_guide2.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Attack_Guide[1]);
+        assert(g_TextureUi_Attack_Guide[1]);
+    }
+    {
+        TexMetadata		metadata;
+        ScratchImage	image;
+        LoadFromWICFile(L"asset\\texture\\Charge_guide.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Charge_Guide[0]);
+        assert(g_TextureUi_Charge_Guide[0]);
+        LoadFromWICFile(L"asset\\texture\\Charge_guide2.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+        CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureUi_Charge_Guide[1]);
+        assert(g_TextureUi_Charge_Guide[1]);
+    }
 
- 
    
     assert(&g_TextureUi_Video[4]);
     XMFLOAT4 color = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
@@ -528,7 +551,10 @@ void selectWT_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
         g_statusUsed[i] = false;
 
     }
-
+	g_AttackFrame[0] = 0;
+    g_AttackFrame[1] = 0;
+    g_ChargeFrame[0] = 0;
+    g_ChargeFrame[1] = 0;
 }
 
 // ------------------ 終了処理 ------------------
@@ -548,6 +574,8 @@ void selectWT_Finalize()
         SAFE_RELEASE(g_TextureUi_Card_Bg[i]);
         SAFE_RELEASE(g_TextureUi_Card_Status_Button[i]);
 		SAFE_RELEASE(g_TextureUi_Video[i]);
+        SAFE_RELEASE(g_TextureUi_Attack_Guide[i]);
+        SAFE_RELEASE(g_TextureUi_Charge_Guide[i]);
 
     }
     for (int i = 0; i < 5; i++)
@@ -602,6 +630,7 @@ int GetControllerIndexFromPlayerNo(int playerNo) {
 }
 void selectWT_Update()
 {
+  
     for (int i = 0; i < 2; i++)
     {
         if (g_Cursors[i].isSelected)
@@ -686,10 +715,34 @@ void selectWT_Update()
         {
             g_videoFrame[0] = 0.0f;
         }
+       
+        if (g_AttackFrame[0] < 1.9f)
+        {
+            g_AttackFrame[0] += 0.05f;
+        }
+        else
+        {
+			g_AttackFrame[0] = 0.0f;
+        }
+
+        if (g_ChargeFrame[0] < 1.0f)
+        {
+            g_ChargeFrame[0] += 0.05f;
+        }
+        else if (g_ChargeFrame[0] < 1.9f)
+        {
+            g_ChargeFrame[0] += 0.01f;
+        }
+        else
+        {
+            g_ChargeFrame[0] = 0.0f;
+        }
     }
     else
     {
 		g_videoFrame[0] = 0.0f;
+        g_ChargeFrame[0] = 0.0f;
+        g_AttackFrame[0] = 0.0f;
     }
     if (g_statusUsed[1])
     {
@@ -701,11 +754,37 @@ void selectWT_Update()
         else if (dx <= 0.01f ||dx >= 0.01f || g_videoFrame[1] > limit1)
         {
             g_videoFrame[1] = 0.0f;
+           
         }
+       
+        if (g_AttackFrame[1] < 1.9f)
+        {
+            g_AttackFrame[1] += 0.05f;
+        }
+        else
+        {
+            g_AttackFrame[1] = 0.0f;
+        }
+
+        if (g_ChargeFrame[1] < 1.0f)
+        {
+            g_ChargeFrame[1] += 0.05f;
+        }
+        else if (g_ChargeFrame[1] < 1.9f)
+        {
+            g_ChargeFrame[1] += 0.01f;
+        }
+        else
+        {
+            g_ChargeFrame[1] = 0.0f;
+        }
+
     }
     else
     {
 		g_videoFrame[1] = 0.0f;
+        g_ChargeFrame[1] = 0.0f;
+        g_AttackFrame[1] = 0.0f;
     }
     for (int i = 0; i < 2; i++) {
         //移動処理（決定していない場合のみ）
@@ -1255,6 +1334,7 @@ void selectWT_Draw_After3D()
         if (g_statusUsed[i])
         {
             static float scale = 0.5f;
+            static float posY = 190.0f;
             if (i == 0)
             {
                 g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Card_Status[g_cursorP1]);
@@ -1264,19 +1344,19 @@ void selectWT_Draw_After3D()
                 switch (g_cursorP1)
                 {
                 case 0:
-                    DrawSpriteEx(XMFLOAT2((float)CardposX, screenHeight / 2 - 150.0f), XMFLOAT2(800 * scale, 530 * scale), XMFLOAT4(1, 1, 1, 1), g_videoFrame[0], 5, 19);
+                    DrawSpriteEx(XMFLOAT2((float)CardposX, screenHeight / 2 - posY), XMFLOAT2(800 * scale, 530 * scale), XMFLOAT4(1, 1, 1, 1), g_videoFrame[0], 5, 19);
                     break;
                 case 1:
-                    DrawSpriteEx(XMFLOAT2((float)CardposX, screenHeight / 2 - 150.0f), XMFLOAT2(800 * scale, 530 * scale), XMFLOAT4(1, 1, 1, 1), g_videoFrame[0], 5, 24);
+                    DrawSpriteEx(XMFLOAT2((float)CardposX, screenHeight / 2 - posY), XMFLOAT2(800 * scale, 530 * scale), XMFLOAT4(1, 1, 1, 1), g_videoFrame[0], 5, 24);
                     break;
                 case 2:
-                    DrawSpriteEx(XMFLOAT2((float)CardposX, screenHeight / 2 - 150.0f), XMFLOAT2(800 * scale, 530 * scale), XMFLOAT4(1, 1, 1, 1), g_videoFrame[0], 10, 17);
+                    DrawSpriteEx(XMFLOAT2((float)CardposX, screenHeight / 2 - posY), XMFLOAT2(800 * scale, 530 * scale), XMFLOAT4(1, 1, 1, 1), g_videoFrame[0], 10, 17);
                     break;
                 case 3:
-                    DrawSpriteEx(XMFLOAT2((float)CardposX, screenHeight / 2 - 150.0f), XMFLOAT2(800 * scale, 530 * scale), XMFLOAT4(1, 1, 1, 1), g_videoFrame[0], 10, 14);
+                    DrawSpriteEx(XMFLOAT2((float)CardposX, screenHeight / 2 - posY), XMFLOAT2(800 * scale, 530 * scale), XMFLOAT4(1, 1, 1, 1), g_videoFrame[0], 10, 14);
                     break;
                 case 4:
-                    DrawSpriteEx(XMFLOAT2((float)CardposX, screenHeight / 2 - 150.0f), XMFLOAT2(800 * scale, 530 * scale), XMFLOAT4(1, 1, 1, 1), g_videoFrame[0], 10, 5);
+                    DrawSpriteEx(XMFLOAT2((float)CardposX, screenHeight / 2 - posY), XMFLOAT2(800 * scale, 530 * scale), XMFLOAT4(1, 1, 1, 1), g_videoFrame[0], 10, 5);
                     break;
                 }
                
@@ -1284,38 +1364,36 @@ void selectWT_Draw_After3D()
             }
             else
             {
+                CardposX += (int)(screenWidth / 2);
                 g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Card_Status[g_cursorP2]);
                 DrawSprite(XMFLOAT2((float)CardposX, screenHeight / 2 - 50.0f), XMFLOAT2(827 * 0.8f, 1013 * 0.8f), color);
                 g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Video[g_cursorP2]);
                 switch (g_cursorP2)
                 {
                 case 0:
-                    DrawSpriteEx(XMFLOAT2((float)CardposX, screenHeight / 2 - 150.0f), XMFLOAT2(800 * scale, 530 * scale), XMFLOAT4(1, 1, 1, 1), g_videoFrame[1], 5, 19);
+                    DrawSpriteEx(XMFLOAT2((float)CardposX, screenHeight / 2 - posY), XMFLOAT2(800 * scale, 530 * scale), XMFLOAT4(1, 1, 1, 1), g_videoFrame[1], 5, 19);
                     break;
                 case 1:
-                    DrawSpriteEx(XMFLOAT2((float)CardposX, screenHeight / 2 - 150.0f), XMFLOAT2(800 * scale, 530 * scale), XMFLOAT4(1, 1, 1, 1), g_videoFrame[1], 5, 24);
+                    DrawSpriteEx(XMFLOAT2((float)CardposX, screenHeight / 2 - posY), XMFLOAT2(800 * scale, 530 * scale), XMFLOAT4(1, 1, 1, 1), g_videoFrame[1], 5, 24);
                     break;
                 case 2:
-                    DrawSpriteEx(XMFLOAT2((float)CardposX, screenHeight / 2 - 150.0f), XMFLOAT2(800 * scale, 530 * scale), XMFLOAT4(1, 1, 1, 1), g_videoFrame[1], 10, 17);
+                    DrawSpriteEx(XMFLOAT2((float)CardposX, screenHeight / 2 - posY), XMFLOAT2(800 * scale, 530 * scale), XMFLOAT4(1, 1, 1, 1), g_videoFrame[1], 10, 17);
                     break;
                 case 3:
-                    DrawSpriteEx(XMFLOAT2((float)CardposX, screenHeight / 2 - 150.0f), XMFLOAT2(800 * scale, 530 * scale), XMFLOAT4(1, 1, 1, 1), g_videoFrame[1], 10, 14);
+                    DrawSpriteEx(XMFLOAT2((float)CardposX, screenHeight / 2 - posY), XMFLOAT2(800 * scale, 530 * scale), XMFLOAT4(1, 1, 1, 1), g_videoFrame[1], 10, 14);
                     break;
                 case 4:
-                    DrawSpriteEx(XMFLOAT2((float)CardposX, screenHeight / 2 - 150.0f), XMFLOAT2(800 * scale, 530 * scale), XMFLOAT4(1, 1, 1, 1), g_videoFrame[1], 10, 5);
+                    DrawSpriteEx(XMFLOAT2((float)CardposX, screenHeight / 2 - posY), XMFLOAT2(800 * scale, 530 * scale), XMFLOAT4(1, 1, 1, 1), g_videoFrame[1], 10, 5);
                     break;
                 }
             }
 
         }
-        CardposX += (int)(screenWidth / 2);
+       
 
     }
 
-    
-    // カーソル描画: 各プレイヤー用カーソルテクスチャを現在の posX で描画
-    // P1 カーソル
-
+ 
 
     CardposX = (int)(screenWidth / 2 - (screenWidth / 4));
     g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Card[2]);
@@ -1326,12 +1404,65 @@ void selectWT_Draw_After3D()
 
         g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Cursor[0]);
         DrawSprite(XMFLOAT2(g_cursorState[0].posX, g_slotPosY + 25.0f), XMFLOAT2(p1W, p1H), XMFLOAT4(1, 1, 1, 1));
+        if (g_statusUsed[0])
+        {
+            switch (g_cursorP1)
+            {
+            case 0:
+                g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Attack_Guide[(int)g_AttackFrame[0]]);
+                DrawSprite(XMFLOAT2((float)CardposX, screenHeight / 2), XMFLOAT2(508 * 0.5f, 140 * 0.5f), XMFLOAT4(1, 1, 1, 1));
+                break;
+            case 1:
+                g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Charge_Guide[(int)g_ChargeFrame[0]]);
+                DrawSprite(XMFLOAT2((float)CardposX, screenHeight / 2), XMFLOAT2(803 * 0.5f, 140 * 0.5f), XMFLOAT4(1, 1, 1, 1));
+                break;
+            case 2:
+                g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Charge_Guide[(int)g_ChargeFrame[0]]);
+                DrawSprite(XMFLOAT2((float)CardposX, screenHeight / 2), XMFLOAT2(803 * 0.5f, 140 * 0.5f), XMFLOAT4(1, 1, 1, 1));
+                break;
+            case 3:
+                g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Charge_Guide[(int)g_ChargeFrame[0]]);
+                DrawSprite(XMFLOAT2((float)CardposX, screenHeight / 2), XMFLOAT2(803 * 0.5f, 140 * 0.5f), XMFLOAT4(1, 1, 1, 1));
+                break;
+            case 4:
+                g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Attack_Guide[(int)g_AttackFrame[0]]);
+                DrawSprite(XMFLOAT2((float)CardposX, screenHeight / 2), XMFLOAT2(508 * 0.5f, 140 * 0.5f), XMFLOAT4(1, 1, 1, 1));
+                break;
+            }
+        }
     }
    
     if (g_Cursors[1].isSelected)
     {
         g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Cursor[1]);
         DrawSprite(XMFLOAT2(g_cursorState[1].posX, g_slotPosY - 20.0f), XMFLOAT2(p2W, p2H), XMFLOAT4(1, 1, 1, 1));
+        CardposX += (int)(screenWidth / 2);
+        if (g_statusUsed[1])
+        {
+            switch (g_cursorP2)
+            {
+            case 0:
+                g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Attack_Guide[(int)g_AttackFrame[1]]);
+                DrawSprite(XMFLOAT2((float)CardposX, screenHeight / 2), XMFLOAT2(508 * 0.5f, 140 * 0.5f), XMFLOAT4(1, 1, 1, 1));
+                break;
+            case 1:
+                g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Charge_Guide[(int)g_ChargeFrame[1]]);
+                DrawSprite(XMFLOAT2((float)CardposX, screenHeight / 2), XMFLOAT2(803 * 0.5f, 140 * 0.5f), XMFLOAT4(1, 1, 1, 1));
+                break;
+            case 2:
+                g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Charge_Guide[(int)g_ChargeFrame[1]]);
+                DrawSprite(XMFLOAT2((float)CardposX, screenHeight / 2), XMFLOAT2(803 * 0.5f, 140 * 0.5f), XMFLOAT4(1, 1, 1, 1));
+                break;
+            case 3:
+                g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Charge_Guide[(int)g_ChargeFrame[1]]);
+                DrawSprite(XMFLOAT2((float)CardposX, screenHeight / 2), XMFLOAT2(803 * 0.5f, 140 * 0.5f), XMFLOAT4(1, 1, 1, 1));
+                break;
+            case 4:
+                g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Attack_Guide[(int)g_AttackFrame[1]]);
+                DrawSprite(XMFLOAT2((float)CardposX, screenHeight / 2), XMFLOAT2(508 * 0.5f, 140 * 0.5f), XMFLOAT4(1, 1, 1, 1));
+                break;
+            }
+        }
     }
 
     // スロットアイコン描画 (スケール反映)
@@ -1414,9 +1545,9 @@ void selectWT_Draw_After3D()
         }
 
     }
-
+	scale = 0.4f;
     g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Button[0]);
-    DrawSprite(XMFLOAT2(screenWidth / 2 + 600.0f, screenHeight - 90.0f), XMFLOAT2(263 * 0.6, 100 * 0.6), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f));
+    DrawSprite(XMFLOAT2(screenWidth / 2 + 600.0f, screenHeight - 100.0f), XMFLOAT2(482 * scale, 198 * scale), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f));
 
     g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Button[1]);
     DrawSprite(XMFLOAT2(screenWidth / 2 + 800.0f, screenHeight - 100.0f), XMFLOAT2(482 * scale, 198 * scale), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f));

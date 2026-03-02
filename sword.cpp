@@ -300,8 +300,8 @@ void Sword::OnWeaponCollision(GameObject* target)
 				//攻撃時に攻撃者側にもヒットストップを入れる
 				//時間だけを止めたいため、方向ベクトルとパワーの値は0に
 				g_Player.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime, 0.0f);
-				target->TakeDamage(15.0f); // 仮に20ダメージ
-				Player_PlusScore(15); // スコア加算
+				target->TakeDamage(10.0f); // 仮に20ダメージ
+				Player_PlusScore(10); // スコア加算
 			}
 			break;
 
@@ -331,8 +331,8 @@ void Sword::OnWeaponCollision(GameObject* target)
 				//攻撃時に攻撃者側にもヒットストップを入れる
 				//時間だけを止めたいため、方向ベクトルとパワーの値は0に
 				g_Player2.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime, 0.0f);
-				target->TakeDamage(15.0f);
-				Player2_PlusScore(15); // スコア加算
+				target->TakeDamage(10.0f);
+				Player2_PlusScore(10); // スコア加算
 			}
 			break;
 		}

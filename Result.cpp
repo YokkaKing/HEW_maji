@@ -37,6 +37,7 @@ void Result_Finalize()
     Player_AllCountReset();
     StopAudio(g_result);
 
+
 }
 
 void Result_Update()

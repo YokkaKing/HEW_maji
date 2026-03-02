@@ -31,7 +31,7 @@ extern int g_charge2;
 extern int g_charge3;
 extern int g_charge4;
 extern int g_charge5;
-
+extern int g_clap;
 extern int g_crowd;
 extern int g_cursorMove;
 extern int g_damageHammer;
