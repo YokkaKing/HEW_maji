@@ -563,13 +563,15 @@ void Hammer::OnWeaponCollision(GameObject* target)
 		case FALSE: // 1Pだったら
 			if (target->m_tag == "Player2") // 相手がPlayer2の時のみ
 			{
+				float damage = 20.0f;
+
 				PlayAudio(g_damageHammer, false);
 				SetPlayer2_IsAttacked(true);
 				m_hitTargets.insert(target);
 
 				if (m_chargePower < 2.4f)
 				{
-					target->TakeDamage(20.0f);
+					target->TakeDamage(damage);
 
 					//ヒットエフェクト
 					XMFLOAT3 effectPos = target->m_position;
@@ -589,11 +591,18 @@ void Hammer::OnWeaponCollision(GameObject* target)
 					//攻撃時に攻撃者側にもヒットストップを入れる
 					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
 					g_Player.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime1, 0.0f);
-					Player_PlusScore(20.0f);
+					Player_PlusScore(damage);
 				}
 				else if (m_chargePower < 3.5f)
 				{
-					target->TakeDamage(30.0f);
+					damage = 25.0f;
+
+					if (GetPlayer_IsTransformed())
+					{
+						damage = 30.0f;
+					}
+
+					target->TakeDamage(damage);
 
 					//ヒットエフェクト
 					XMFLOAT3 effectPos = target->m_position;
@@ -613,11 +622,18 @@ void Hammer::OnWeaponCollision(GameObject* target)
 					//攻撃時に攻撃者側にもヒットストップを入れる
 					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
 					g_Player.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime2, 0.0f);
-					Player_PlusScore(30.0f);
+					Player_PlusScore(damage);
 				}
 				else if (m_chargePower < 4.5f)
 				{
-					target->TakeDamage(40.0f);
+					damage = 30.0f;
+
+					if (GetPlayer_IsTransformed())
+					{
+						damage = 40.0f;
+					}
+
+					target->TakeDamage(damage);
 
 					//ヒットエフェクト
 					XMFLOAT3 effectPos = target->m_position;
@@ -637,11 +653,18 @@ void Hammer::OnWeaponCollision(GameObject* target)
 					//攻撃時に攻撃者側にもヒットストップを入れる
 					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
 					g_Player.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime3, 0.0f);
-					Player_PlusScore(40.0f);
+					Player_PlusScore(damage);
 				}
 				else if (m_chargePower < 5.5f)
 				{
-					target->TakeDamage(50.0f);
+					damage = 40.0f;
+
+					if (GetPlayer_IsTransformed())
+					{
+						damage = 50.0f;
+					}
+
+					target->TakeDamage(damage);
 
 					//ヒットエフェクト
 					XMFLOAT3 effectPos = target->m_position;
@@ -661,11 +684,18 @@ void Hammer::OnWeaponCollision(GameObject* target)
 					//攻撃時に攻撃者側にもヒットストップを入れる
 					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
 					g_Player.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime3, 0.0f);
-					Player_PlusScore(50.0f);
+					Player_PlusScore(damage);
 				}
 				else if (m_chargePower >= 5.5f)
 				{
-					target->TakeDamage(70.0f);
+					damage = 50.0f;
+
+					if (GetPlayer_IsTransformed())
+					{
+						damage = 70.0f;
+					}
+
+					target->TakeDamage(damage);
 
 					//ヒットエフェクト
 					XMFLOAT3 effectPos = target->m_position;
@@ -684,7 +714,7 @@ void Hammer::OnWeaponCollision(GameObject* target)
 					//攻撃時に攻撃者側にもヒットストップを入れる
 					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
 					g_Player.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime4, 0.0f);
-					Player_PlusScore(70.0f);
+					Player_PlusScore(damage);
 				}
 			}
 			break;
@@ -692,6 +722,8 @@ void Hammer::OnWeaponCollision(GameObject* target)
 		case TRUE: // 2Pだったら
 			if (target->m_tag == "Player") // 相手がPlayerの時のみ
 			{
+				float damage = 20.0f;
+
 				PlayAudio(g_damageHammer, false);
 				SetPlayer_IsAttacked(true);
 
@@ -699,7 +731,7 @@ void Hammer::OnWeaponCollision(GameObject* target)
 
 				if (m_chargePower < 2.4f)
 				{
-					target->TakeDamage(20.0f);
+					target->TakeDamage(damage);
 
 					PlayAudio(g_damageHammer);
 
@@ -723,13 +755,20 @@ void Hammer::OnWeaponCollision(GameObject* target)
 					//攻撃時に攻撃者側にもヒットストップを入れる
 					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
 					g_Player2.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime1, 0.0f);
-					Player2_PlusScore(20.0f);
+					Player2_PlusScore(damage);
 				}
 				else if (m_chargePower < 3.5f)
 				{
+					damage = 25.0f;
+
+					if (GetPlayer2_IsTransformed())
+					{
+						damage = 30.0f;
+					}
+
 					PlayAudio(g_damageHammer);
 
-					target->TakeDamage(30.0f);
+					target->TakeDamage(damage);
 
 					//ヒットエフェクト
 					XMFLOAT3 effectPos = target->m_position;
@@ -749,13 +788,20 @@ void Hammer::OnWeaponCollision(GameObject* target)
 					//攻撃時に攻撃者側にもヒットストップを入れる
 					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
 					g_Player2.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime2, 0.0f);
-					Player2_PlusScore(30.0f);
+					Player2_PlusScore(damage);
 				}
 				else if (m_chargePower < 4.5f)
 				{
+					damage = 30.0f;
+
+					if (GetPlayer2_IsTransformed())
+					{
+						damage = 40.0f;
+					}
+
 					PlayAudio(g_damageHammer);
 
-					target->TakeDamage(40.0f);
+					target->TakeDamage(damage);
 
 					//ヒットエフェクト
 					XMFLOAT3 effectPos = target->m_position;
@@ -775,13 +821,20 @@ void Hammer::OnWeaponCollision(GameObject* target)
 					//攻撃時に攻撃者側にもヒットストップを入れる
 					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
 					g_Player2.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime3, 0.0f);
-					Player2_PlusScore(40.0f);
+					Player2_PlusScore(damage);
 				}
 				else if (m_chargePower < 5.5f)
 				{
+					damage = 40.0f;
+
+					if (GetPlayer2_IsTransformed())
+					{
+						damage = 50.0f;
+					}
+
 					PlayAudio(g_damageHammer);
 
-					target->TakeDamage(50.0f);
+					target->TakeDamage(damage);
 
 					//ヒットエフェクト
 					XMFLOAT3 effectPos = target->m_position;
@@ -801,13 +854,20 @@ void Hammer::OnWeaponCollision(GameObject* target)
 					//攻撃時に攻撃者側にもヒットストップを入れる
 					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
 					g_Player2.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime3, 0.0f);
-					Player2_PlusScore(50.0f);
+					Player2_PlusScore(damage);
 				}
 				else if (m_chargePower >= 5.5f)
 				{
+					damage = 50.0f;
+
+					if (GetPlayer2_IsTransformed())
+					{
+						damage = 70.0f;
+					}
+
 					PlayAudio(g_damageHammer);
 
-					target->TakeDamage(70.0f);
+					target->TakeDamage(damage);
 
 					//ヒットエフェクト
 					XMFLOAT3 effectPos = target->m_position;
@@ -827,7 +887,7 @@ void Hammer::OnWeaponCollision(GameObject* target)
 					//攻撃時に攻撃者側にもヒットストップを入れる
 					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
 					g_Player2.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime4, 0.0f);
-					Player2_PlusScore(70.0f);
+					Player2_PlusScore(damage);
 				}
 			}
 			break;
