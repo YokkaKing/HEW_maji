@@ -29,6 +29,8 @@
 #include "TeamLogo.h"
 #include "Stage.h"
 #include "SelectMap.h"
+#include "HitEffect.h"
+#include "Transform.h"
 //================================================================
 //	ƒOƒ[ƒoƒ‹•Ï”
 //================================================================
@@ -324,6 +326,20 @@ void Manager_Update()
 					//Game_ResetRound();
 					StartDeathSequence(SCENE_GAME, false);
 					//g_roundResultLocked = false;
+				}
+			}
+
+			if (g_RoundCount >= 1)
+			{
+				if (Keyboard_IsKeyDownTrigger(KK_TAB))
+				{
+					TransformFinalize();
+
+					g_RoundCount = 0;
+					g_P1Wins = 0;
+					g_P2Wins = 0;
+
+					SetScene(SCENE_TITLE);
 				}
 			}
 

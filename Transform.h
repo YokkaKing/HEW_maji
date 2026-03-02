@@ -19,7 +19,7 @@ using namespace DirectX;
 
 // 進化システム初期化 
 void TransformInitialize(WeaponTerrain selectP1_A, WeaponTerrain selectP1_B, WeaponTerrain selectP2_A, WeaponTerrain selectP2_B);
-
+void TransformFinalize();
 // プレイヤーを進化させるメイン関数 
 void TransformPlayer();
 
