@@ -251,6 +251,7 @@ void TransformPlayer()
             Player_SetPlayerIsAttaking(false);
             Player_ResetMoveMul();
             PlayAudio(g_change, false);
+            PlayAudio(g_terrain, false);
 
             g_IsUsedA_P1 = true;
 			SetPlayer_IsTransformed(true);
@@ -268,6 +269,8 @@ void TransformPlayer()
             Player_SetPlayerIsAttaking(false);
             Player_ResetMoveMul();
             PlayAudio(g_change, false);
+            PlayAudio(g_terrain, false);
+
             g_IsUsedB_P1 = true;
             SetPlayer_IsTransformed(true);
 
@@ -373,6 +376,7 @@ void TransformPlayer2()
             Player2_SetPlayerIsAttaking(false);
             Player2_PlusTransformCount();
             PlayAudio(g_change, false);
+            PlayAudio(g_terrain, false);
 
             SetPlayer2_IsTransformed(true);
         }
@@ -390,6 +394,7 @@ void TransformPlayer2()
             SetPlayer2_IsTransformed(true);
             Player2_ResetMoveMul();
             PlayAudio(g_change, false);
+            PlayAudio(g_terrain, false);
 
             Player2_SetPlayerIsAttaking(false);
         }

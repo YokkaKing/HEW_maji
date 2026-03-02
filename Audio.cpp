@@ -32,7 +32,7 @@ int g_charge2 = -1;
 int g_charge3 = -1;
 int g_charge4 = -1;
 int g_charge5 = -1;
-
+int g_clap = -1;
 int g_crowd = -1;
 int g_cursorMove = -1;
 int g_damageHammer = -1;
@@ -77,7 +77,7 @@ void InitAudio()
 	g_charge3 = LoadAudio("asset\\Audio\\charge_3.wav");
 	g_charge4 = LoadAudio("asset\\Audio\\charge_4.wav");
 	g_charge5 = LoadAudio("asset\\Audio\\charge_5.wav");
-
+	g_clap = LoadAudio("asset\\Audio\\clap.wav");
 	g_crowd = LoadAudio("asset\\Audio\\crowd.wav");
 	g_cursorMove = LoadAudio("asset\\Audio\\cursorMove.wav");
 	g_damageHammer = LoadAudio("asset\\Audio\\damageHammer.wav");
@@ -121,6 +121,8 @@ void InitAudio()
 	SetAudioVolume(g_arrow_shuriken, 2.0f);
 	SetAudioVolume(g_ko, 2.0f);
 	SetAudioVolume(g_score, 2.0f);
+	SetAudioVolume(g_terrain, 1.5f);
+	SetAudioVolume(g_clap, 1.5f);
 
 
 

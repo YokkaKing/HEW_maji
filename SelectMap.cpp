@@ -57,7 +57,7 @@ void SelectMap_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
     assert(&g_TextureSelectMap_Bg);
 
 
-    LoadFromWICFile(L"asset\\texture\\choose_button.png", WIC_FLAGS_NONE, &metadata, image);
+    LoadFromWICFile(L"asset\\texture\\select_button.png", WIC_FLAGS_NONE, &metadata, image);
     CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureSelectMap_SelectButton);
     assert(&g_TextureSelectMap_SelectButton);
 
@@ -194,8 +194,8 @@ void SelectMap_Draw()
         g_pContext->PSSetShaderResources(0, 1, &g_TextureSelectMap_SelectButton);
         SetBlendState(BLENDSTATE_ALFA);
         col = { 1.0f, 1.0f, 1.0f, 1.0f };
-        pos = { SCREEN_WIDTH- 250 , SCREEN_HEIGHT  -80};
-        size = {263*0.7, 100*0.7 };
+        pos = { SCREEN_WIDTH- 250 , SCREEN_HEIGHT  -90};
+        size = {482*0.5, 198*0.5 };
         DrawSprite(pos, size, col);
 
         g_pContext->PSSetShaderResources(0, 1, &g_TextureSelectMap_MapName[g_selectedMapIndex]);
