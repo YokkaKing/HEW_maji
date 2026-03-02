@@ -80,7 +80,28 @@ void Sword::Attack()
 	m_isAttacking = true; // 攻撃している
 	m_attackTimer = 0.0f; // 攻撃タイマー初期化
 	g_moveSword[m_selectPlayer] = {0.0f, 0.0f, 0.0f}; // 簡易アニメーションの初期化
-	m_coolTime = 1.0f; // クールタイムの設定
+	if (!m_selectPlayer)
+	{
+		if (GetPlayer_IsTransformed())
+		{
+			m_coolTime = 0.8f;
+		}
+		else
+		{
+			m_coolTime = 1.0f;
+		}
+	}
+	else
+	{
+		if (GetPlayer2_IsTransformed())
+		{
+			m_coolTime = 0.8f;
+		}
+		else
+		{
+			m_coolTime = 1.0f;
+		}
+	}
 	m_fxAnim.PlayFrames(1, 20, 30.0f, false, 1.0f);
 	m_collider->SetEnable(true); // 当たり判定の有効
 
@@ -278,6 +299,13 @@ void Sword::OnWeaponCollision(GameObject* target)
 		case FALSE: // 1Pだったら
 			if (target->m_tag == "Player2") // 相手がPlayer2の時のみ
 			{
+				float damageMultiplier = 1.0f;
+
+				if (GetPlayer_IsTransformed())
+				{
+					damageMultiplier = 1.3f; // 倍率変更
+				}
+
 				PlayAudio(g_damageSharp, false);
 				m_hitTargets.insert(target);
 				SetPlayer2_IsAttacked(true);
@@ -300,14 +328,21 @@ void Sword::OnWeaponCollision(GameObject* target)
 				//攻撃時に攻撃者側にもヒットストップを入れる
 				//時間だけを止めたいため、方向ベクトルとパワーの値は0に
 				g_Player.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime, 0.0f);
-				target->TakeDamage(10.0f); // 仮に20ダメージ
-				Player_PlusScore(10); // スコア加算
+				target->TakeDamage(10.0f * damageMultiplier ); // 仮に20ダメージ
+				Player_PlusScore(10.0f * damageMultiplier); // スコア加算
 			}
 			break;
 
 		case TRUE: // 2Pだったら
 			if (target->m_tag == "Player") // 相手がPlayerの時のみ
 			{
+				float damageMultiplier = 1.0f;
+
+				if (GetPlayer_IsTransformed())
+				{
+					damageMultiplier = 1.3f; // 倍率変更
+				}
+
 				SetPlayer_IsAttacked(true);
 
 				PlayAudio(g_damageSharp, false);
@@ -331,8 +366,8 @@ void Sword::OnWeaponCollision(GameObject* target)
 				//攻撃時に攻撃者側にもヒットストップを入れる
 				//時間だけを止めたいため、方向ベクトルとパワーの値は0に
 				g_Player2.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime, 0.0f);
-				target->TakeDamage(10.0f);
-				Player2_PlusScore(10); // スコア加算
+				target->TakeDamage(10.0f * damageMultiplier);
+				Player2_PlusScore(10.0f * damageMultiplier); // スコア加算
 			}
 			break;
 		}

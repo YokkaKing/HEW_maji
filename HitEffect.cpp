@@ -92,6 +92,7 @@ void HitEffectManager::Finalize()
             m_pTextureRV[i] = nullptr;
         }
     }
+    m_effects.clear();
 }
 
 void HitEffectManager::Draw(const XMMATRIX& viewMat, const XMMATRIX& projectionMat)

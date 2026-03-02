@@ -118,7 +118,14 @@ void Arrow::Update()
 			m_chargePower = 0.0f;
 			PlayAudio(g_arrow_shuriken, false);
 			// 投げた後のクールタイム
-			m_coolTime = 1.5f;
+			if (GetPlayer_IsTransformed())
+			{
+				m_coolTime = 1.2f;
+			}
+			else
+			{
+				m_coolTime = 1.5f;
+			}
 		}
 	}
 
@@ -148,7 +155,14 @@ void Arrow::Update()
 			m_chargePower = 0.0f;
 			PlayAudio(g_arrow_shuriken, false);
 			// 投げた後のクールタイム
-			m_coolTime = 1.5f;
+			if (GetPlayer2_IsTransformed())
+			{
+				m_coolTime = 1.2f;
+			}
+			else
+			{
+				m_coolTime = 1.5f;
+			}
 		}
 	}
 	const float mul = (m_isCharging || m_isAttacking) ? 0.3f : 1.0f;
@@ -512,10 +526,19 @@ void ArrowShot::OnCollision(const CollisionInfo& info)
 		{
 			SetPlayer2_IsAttacked(true);
 
+			float damage = 5.0f;
+
 			PlayAudio(g_damageSharp, false);
 			if (m_chargePower < 0.5f)
 			{
-				info.other->TakeDamage(5.0f);
+				damage = 5.0f;
+
+				if (GetPlayer_IsTransformed())
+				{
+					damage = 10.0f;
+				}
+
+				info.other->TakeDamage(damage);
 				//ヒットバック計算式
 				XMFLOAT3 dir = {
 					info.other->m_position.x - this->m_position.x,
@@ -527,11 +550,18 @@ void ArrowShot::OnCollision(const CollisionInfo& info)
 				//引数:方向vec, HS時間, KB距離
 				g_Player2.m_hitAction.triggerHA(dir, stopTime1, 0.05f);
 
-				Player_PlusScore(5.0f);
+				Player_PlusScore(damage);
 			}
 			else if (m_chargePower < 1.0f)
 			{
-				info.other->TakeDamage(10.0f);
+				damage = 10.0f;
+
+				if (GetPlayer_IsTransformed())
+				{
+					damage = 15.0f;
+				}
+
+				info.other->TakeDamage(damage);
 				//ヒットバック計算式
 				XMFLOAT3 dir = {
 					info.other->m_position.x - this->m_position.x,
@@ -542,11 +572,16 @@ void ArrowShot::OnCollision(const CollisionInfo& info)
 				//P2に対してヒットアクションを発動
 				//引数:方向vec, HS時間, KB距離
 				g_Player2.m_hitAction.triggerHA(dir, stopTime2, 0.07f);
-				Player_PlusScore(10.0f);
+				Player_PlusScore(damage);
 			}
 			else if (m_chargePower < 2.0f)
 			{
-				info.other->TakeDamage(15.0f);
+				damage = 15.0f;
+				if (GetPlayer_IsTransformed())
+				{
+					damage = 20.0f;
+				}
+
 				//ヒットバック計算式
 				XMFLOAT3 dir = {
 					info.other->m_position.x - this->m_position.x,
@@ -556,11 +591,18 @@ void ArrowShot::OnCollision(const CollisionInfo& info)
 				//P2に対してヒットアクションを発動
 				//引数:方向vec, HS時間, KB距離
 				g_Player2.m_hitAction.triggerHA(dir, stopTime3, 0.09f);
-				Player_PlusScore(15.0f);
+				Player_PlusScore(damage);
 			}
 			else if (m_chargePower > 2.0f)
 			{
-				info.other->TakeDamage(20.0f);
+				damage = 20.0f;
+
+				if (GetPlayer_IsTransformed())
+				{
+					damage = 25.0f;
+				}
+				info.other->TakeDamage(damage);
+
 				//ヒットバック計算式
 				XMFLOAT3 dir = {
 					info.other->m_position.x - this->m_position.x,
@@ -571,7 +613,7 @@ void ArrowShot::OnCollision(const CollisionInfo& info)
 				//P2に対してヒットアクションを発動
 				//引数:方向vec, HS時間, KB距離
 				g_Player2.m_hitAction.triggerHA(dir, stopTime4, 0.1f);
-				Player_PlusScore(20.0f);
+				Player_PlusScore(damage);
 			}
 			m_isDead = true;
 			g_Player2.m_isAttacked = true;
@@ -584,10 +626,19 @@ void ArrowShot::OnCollision(const CollisionInfo& info)
 		{
 			SetPlayer_IsAttacked(true);
 
+			float damage = 5.0f;
+
 			PlayAudio(g_damageSharp, false);
 			if (m_chargePower < 0.5f)
 			{
-				info.other->TakeDamage(5.0f);
+				damage = 5.0f;
+
+				if (GetPlayer_IsTransformed())
+				{
+					damage = 10.0f;
+				}
+
+				info.other->TakeDamage(damage);
 				//ヒットバック計算式
 				XMFLOAT3 dir = {
 					info.other->m_position.x - this->m_position.x,
@@ -598,11 +649,18 @@ void ArrowShot::OnCollision(const CollisionInfo& info)
 				//P2に対してヒットアクションを発動
 				//引数:方向vec, HS時間, KB距離
 				g_Player.m_hitAction.triggerHA(dir, stopTime1, 0.05f);
-				Player2_PlusScore(5.0f);
+				Player2_PlusScore(damage);
 			}
 			else if (m_chargePower < 1.0f)
 			{
-				info.other->TakeDamage(10.0f);
+				damage = 10.0f;
+
+				if (GetPlayer_IsTransformed())
+				{
+					damage = 15.0f;
+				}
+
+				info.other->TakeDamage(damage);
 				//ヒットバック計算式
 				XMFLOAT3 dir = {
 					info.other->m_position.x - this->m_position.x,
@@ -614,11 +672,16 @@ void ArrowShot::OnCollision(const CollisionInfo& info)
 				//引数:方向vec, HS時間, KB距離
 				g_Player.m_hitAction.triggerHA(dir, stopTime2, 0.07f);
 
-				Player2_PlusScore(10.0f);
+				Player2_PlusScore(damage);
 			}
 			else if (m_chargePower < 2.0f)
 			{
-				info.other->TakeDamage(15.0f);
+				damage = 15.0f;
+				if (GetPlayer_IsTransformed())
+				{
+					damage = 20.0f;
+				}
+				info.other->TakeDamage(damage);
 				//ヒットバック計算式
 				XMFLOAT3 dir = {
 					info.other->m_position.x - this->m_position.x,
@@ -629,12 +692,18 @@ void ArrowShot::OnCollision(const CollisionInfo& info)
 				//P2に対してヒットアクションを発動
 				//引数:方向vec, HS時間, KB距離
 				g_Player.m_hitAction.triggerHA(dir, stopTime3, 0.09f);
-
-				Player2_PlusScore(15.0f);
+				Player2_PlusScore(damage);
 			}
 			else if (m_chargePower > 2.0f)
 			{
-				info.other->TakeDamage(20.0f);
+				damage = 20.0f;
+
+				if (GetPlayer_IsTransformed())
+				{
+					damage = 25.0f;
+				}
+
+				info.other->TakeDamage(damage);
 				//ヒットバック計算式
 				XMFLOAT3 dir = {
 					info.other->m_position.x - this->m_position.x,
@@ -645,7 +714,7 @@ void ArrowShot::OnCollision(const CollisionInfo& info)
 				//P2に対してヒットアクションを発動
 				//引数:方向vec, HS時間, KB距離
 				g_Player.m_hitAction.triggerHA(dir, stopTime4, 0.1f);
-				Player2_PlusScore(30.0f);
+				Player2_PlusScore(damage);
 			}
 			m_isDead = true;
 			g_Player.m_isAttacked = true;

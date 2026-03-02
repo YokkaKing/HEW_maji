@@ -94,6 +94,10 @@ void TransformInitialize(WeaponTerrain selectP1_A, WeaponTerrain selectP1_B, Wea
 void TransformFinalize()
 {
     // èIóπèàóù
+    SetIsUsed_P1(1, false);
+    SetIsUsed_P1(2, false);
+    SetIsUsed_P2(1, false);
+    SetIsUsed_P2(2, false);
 }
 
 void ApplyTransformationP1(PLAYER* p, WeaponTerrain wt, bool isTransform)
