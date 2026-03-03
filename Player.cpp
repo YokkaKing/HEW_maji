@@ -294,7 +294,7 @@ void	PlayerUpdate()
 //================================================================
 	//bool attackPushed = (ctrlIdx != -1 && g_Controller[ctrlIdx].IsButtonPushed(ControllerButton::X_BUTTON));
 	bool attackPushed = (ctrlIdx != -1 && g_Controller[ctrlIdx].GetRightTrigger() >= 0.9f);
-	if (Keyboard_IsKeyDownTrigger(KK_C) || attackPushed|| g_Controller[ctrlIdx].IsButtonPushed(ControllerButton::X_BUTTON))
+	if (Keyboard_IsKeyDownTrigger(KK_C) || attackPushed)
 	{
 		// 武器が存在し攻撃中でなければ攻撃開始
 		if (g_Player.m_currentWeapon && !g_Player1AttackPlaying && g_Player.m_currentWeapon->GetCoolTime()==0.0f&& !g_Player.m_hitAnimPlaying)

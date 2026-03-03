@@ -179,7 +179,7 @@ void Hammer::Update()
 	}
 	
 	bool inputCharge = false;
-	if (Keyboard_IsKeyDown(m_chargeKey)|| g_Controller[controlIdx].GetRightTrigger() >= 0.9f|| g_Controller[controlIdx].IsButtonPushed(ControllerButton::X_BUTTON))
+	if (Keyboard_IsKeyDown(m_chargeKey)|| g_Controller[controlIdx].GetRightTrigger() >= 0.9f)
 	{
 		inputCharge = true;
 	}
