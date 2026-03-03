@@ -54,7 +54,7 @@ Spear::Spear(GameObject* player, bool select) : IWeapon(player)
 	// 武器に親へのポインタを設定
 	m_weapon->m_weaponPtr = this;
 
-	XMFLOAT3 scale = { 0.45f, 0.45f, 1.0f };
+	XMFLOAT3 scale = { 0.7f, 0.7f, 1.5f }; // 0.45f 0.45f 1.0f
 	m_collider = m_weapon->AddComponent<BoxCollider>(m_weapon.get(), scale);
 
 	m_weapon->m_scale = scale;
@@ -70,7 +70,7 @@ Spear::Spear(GameObject* player, bool select) : IWeapon(player)
 	m_coolTime = 0.0f;
 
 	m_damageFCount = 0.0f; // ダメージの経過時間
-	m_damageFrame = { 0.2f, 0.35f }; // ダメージの有効フレーム
+	m_damageFrame = { 0.2f, 0.45f }; // ダメージの有効フレーム
 
 	/*********** テストコード **********/
 	g_modelSpear[0] = ModelLoad("asset\\model\\weapon_spear.fbx");
@@ -101,22 +101,22 @@ void Spear::Attack()
 	{
 		if (GetPlayer_IsTransformed())
 		{
-			m_coolTime = 1.2f;
+			m_coolTime = 0.9f;
 		}
 		else
 		{
-			m_coolTime = 1.5f;
+			m_coolTime = 1.2f;
 		}
 	}
 	else
 	{
 		if (GetPlayer2_IsTransformed())
 		{
-			m_coolTime = 1.2f;
+			m_coolTime = 0.9f;
 		}
 		else
 		{
-			m_coolTime = 1.5f;
+			m_coolTime = 1.2f;
 		}
 	}
 	m_fxAnim.PlayFrames(1, 60, 60.0f, false, 1.0f);
@@ -230,11 +230,12 @@ void Spear::Update()
 		}
 		else if (m_isCharging)
 		{
-			if (m_chargePower <= 1.0f)
+			if (m_chargePower <= 0.7f)
 			{
 				m_isAttack = true;
 				Attack();
 				m_isCharging = false;
+				m_chargePower = 0.0f;
 			}
 			else
 			{
@@ -304,11 +305,12 @@ void Spear::Update()
 		}
 		else if (m_isCharging)
 		{
-			if (m_chargePower <= 1.0f)
+			if (m_chargePower <= 0.7f)
 			{
 				m_isAttack = true;
 				Attack();
 				m_isCharging = false;
+				m_chargePower = 0.0f;
 			}
 			else
 			{
@@ -618,10 +620,13 @@ void Spear::OnWeaponCollision(GameObject* target)
 				};
 				//P2に対してヒットアクションを発動
 				//引数:方向vec, HS時間, KB距離
-				g_Player2.m_hitAction.triggerHA(dir, stopTime, 0.1);
-				//攻撃時に攻撃者側にもヒットストップを入れる
-				//時間だけを止めたいため、方向ベクトルとパワーの値は0に
-				g_Player.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime, 0.0f);
+				if (GetChangeP2())
+				{
+					g_Player2.m_hitAction.triggerHA(dir, stopTime, 0.1);
+					//攻撃時に攻撃者側にもヒットストップを入れる
+					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
+					g_Player.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime, 0.0f);
+				}
 			}
 			break;
 
@@ -655,10 +660,13 @@ void Spear::OnWeaponCollision(GameObject* target)
 
 				//P1に対してヒットアクションを発動
 				//引数:方向vec, HS時間, KB距離
-				g_Player.m_hitAction.triggerHA(dir, stopTime, 0.1f);
-				//攻撃時に攻撃者側にもヒットストップを入れる
-				//時間だけを止めたいため、方向ベクトルとパワーの値は0に
-				g_Player2.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime, 0.0f);
+				if (GetChangeP1())
+				{
+					g_Player.m_hitAction.triggerHA(dir, stopTime, 0.1f);
+					//攻撃時に攻撃者側にもヒットストップを入れる
+					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
+					g_Player2.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime, 0.0f);
+				}
 			}
 			break;
 		}
@@ -890,7 +898,10 @@ void SpearShot::OnCollision(const CollisionInfo& info)
 
 			//P2に対してヒットアクションを発動
 			//引数:方向vec, HS時間, KB距離
-			g_Player2.m_hitAction.triggerHA(dir, stopTime, 0.1f);
+			if (GetChangeP2())
+			{
+				g_Player2.m_hitAction.triggerHA(dir, stopTime, 0.1f);
+			}
 		}
 		break;
 
@@ -925,7 +936,10 @@ void SpearShot::OnCollision(const CollisionInfo& info)
 
 			//P1に対してヒットアクションを発動
 			//引数:方向vec, HS時間, KB距離
-			g_Player.m_hitAction.triggerHA(dir, stopTime, 0.1f);
+			if (GetChangeP1())
+			{
+				g_Player.m_hitAction.triggerHA(dir, stopTime, 0.1f);
+			}
 		}
 		break;
 	}

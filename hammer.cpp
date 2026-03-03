@@ -31,6 +31,7 @@ PLAYER* g_PlayerHammer1;
 PLAYER2* g_PlayerHammer2;
 XMFLOAT3 g_moveHammer[2]; // 簡易アニメーション
 extern Controller g_Controller[2];
+bool g_charge[2]; // チャージしてるかどうか
 
 
 static int GetHammerChargeSoundStageByPower(float p)
@@ -82,6 +83,9 @@ Hammer::Hammer(GameObject* player, bool select) : IWeapon(player)
 	m_damageFrame = { 0.38f, 0.5f }; // ダメージの有効フレーム
 
 	m_move = { 0.0f, 0.0f, 0.0f };
+
+	g_charge[0] = false;
+	g_charge[1] = false;
 
 	/*********** テストコード **********/
 	g_modelHammer[0] = ModelLoad("asset\\model\\block.fbx");
@@ -197,6 +201,16 @@ void Hammer::Update()
 		if (!m_isAttacking && m_coolTime <= 0.0f)
 		{
 			m_isCharging = true;
+
+			if (!m_selectPlayer)
+			{
+				g_charge[0] = true;
+			}
+			else
+			{
+				g_charge[1] = true;
+			}
+
 			m_chargePower += (1.0f / 60.0f);
 			if (m_chargePower > MAX_CHARGE) m_chargePower = MAX_CHARGE;
 			if (g_Controller[m_playerIndex].IsConnected())
@@ -206,10 +220,8 @@ void Hammer::Update()
 			}
 		}
 	}
-
 	else if (m_isCharging)
 	{
-	
 		StopAudio(g_charge1);
 		StopAudio(g_charge2);
 		StopAudio(g_charge3);
@@ -231,6 +243,16 @@ void Hammer::Update()
 		m_isAttack = true;
 		// キーを離した瞬間攻撃
 		m_isCharging = false;
+
+		if (!m_selectPlayer)
+		{
+			g_charge[0] = false;
+		}
+		else
+		{
+			g_charge[1] = false;
+		}
+
 		Attack();
 	}
 	const float mul = (m_isCharging || m_isAttacking) ? 0.3f : 1.0f;
@@ -904,4 +926,13 @@ void Hammer::ResetEffect(int select)
 		ChargeType::HAMMER_C_NONE,
 		false
 	);
+}
+
+bool GetPlayerCharge()
+{
+	return g_charge[0];
+}
+bool GetPlayer2Charge()
+{
+	return g_charge[1];
 }

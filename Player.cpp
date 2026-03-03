@@ -249,13 +249,6 @@ void	PlayerUpdate()
 	}
 	g_Player.m_hitAction.Update(g_Player.m_position);
 
-
-	if (g_Player.m_hitAction.IsStopping())
-	{
-	
-		return;                                      
-	}
-
 	if (g_Player.m_isDead && g_Player1DeathAnimPlaying)
 	{
 		ModelUpdateAnimation(g_Player.m_model, 1.0f / 60.0f);
@@ -352,6 +345,7 @@ void	PlayerUpdate()
 	{
 		g_Player.m_currentWeapon->Update();
 	}
+
 	if (!g_Player.m_hitAction.IsStopping())
 	{
 		Player_ManualMove();
@@ -1426,8 +1420,11 @@ static void Player_StartHitAnim()
 	if (!g_Player.m_model) return;
 
 	// ★ここを“被弾アニメのフレーム範囲”にする（仮の例）
-	const int HIT_START = 600;
-	const int HIT_END = 660;
+	/*const int HIT_START = 600;
+	const int HIT_END = 660;*/
+
+	if (GetPlayer2CurrentWT() == WeaponTerrain::SHURIKEN_) return;
+	if (GetChangeP1()) return;
 
 	// 1回だけ開始（毎フレーム呼ぶと最初のフレームに戻る可能性がある）
 	if (!g_Player.m_hitAnimPlaying)
@@ -1470,7 +1467,6 @@ static void Player_StartHitAnim()
 			case WeaponTerrain::HAMMER_: // hammer
 				ModelPlayClip(g_Player.m_model, 541, 600, 60.0f, false, 1.0f);
 				break;
-
 			case WeaponTerrain::SHURIKEN_: //shuriken
 				ModelPlayClip(g_Player.m_model, 211, 260, 60.0f, false, 1.0f);
 				break;

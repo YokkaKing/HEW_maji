@@ -185,25 +185,7 @@ void Shuriken::Update()
 
 void Shuriken::Draw()
 {
-	//ワールド行列作成
-	XMMATRIX	scale = XMMatrixScaling(
-		m_weapon->m_scale.x*0.1f,
-		m_weapon->m_scale.y * 0.1f,
-		m_weapon->m_scale.z * 0.1f);
-	XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
-		m_weapon->m_rotation.x,
-		m_weapon->m_rotation.y,
-		m_weapon->m_rotation.z);
-	XMMATRIX	translation = XMMatrixTranslation(
-		m_weapon->m_position.x,
-		m_weapon->m_position.y,
-		m_weapon->m_position.z);
-	XMMATRIX	world = scale * rotation * translation;
-
-	//シェーダーへ行列をセット
-	Shader_SetWorldMatrix(world);
-
-	ModelDraw(g_modelShuriken[0]);
+	return;
 }
 
 void Shuriken::OnWeaponCollision(GameObject* target)
@@ -422,7 +404,10 @@ void ShurikenShot::OnCollision(const CollisionInfo& info)
 
 			//P2に対してヒットアクションを発動
 			//引数:方向vec, HS時間, KB距離
-			g_Player2.m_hitAction.triggerHA(dir, stopTime, 0.1f);
+			if (GetChangeP2())
+			{
+				g_Player2.m_hitAction.triggerHA(dir, stopTime, 0.1f);
+			}
 		}
 		break;
 
@@ -455,7 +440,10 @@ void ShurikenShot::OnCollision(const CollisionInfo& info)
 			};
 			//P1に対してヒットアクションを発動
 			//引数:方向vec, HS時間, KB距離
-			g_Player.m_hitAction.triggerHA(dir, stopTime, 0.1f);
+			if (GetChangeP1())
+			{
+				g_Player.m_hitAction.triggerHA(dir, stopTime, 0.1f);
+			}
 		}
 		break;
 	}

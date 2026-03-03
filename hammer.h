@@ -81,4 +81,7 @@ public:
     void OnWeaponCollision(GameObject* target) override;
 };
 
+bool GetPlayerCharge();
+bool GetPlayer2Charge();
+
 #endif // HAMMER_H

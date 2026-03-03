@@ -226,13 +226,7 @@ void	Player2Update()
 	}
 	//ヒットアクション
 	g_Player2.m_hitAction.Update(g_Player2.m_position);
-	//ヒットストップ中ならこの関数自体を抜けるため今後の処理がすべてスキップされる
-	if (g_Player2.m_hitAction.IsStopping())
-	{
-		//Player2_ManualMove();
-		//ModelUpdateAnimation(g_Player2.m_model, 1.0f / 60.0f);
-		return;
-	}
+
 	if (g_Player2.m_isDead && g_Player2DeathAnimPlaying)
 	{
 		ModelUpdateAnimation(g_Player2.m_model, 1.0f / 60.0f);
@@ -1306,7 +1300,10 @@ bool GetChangeP2()
 }
 
 
-
+WeaponTerrain GetPlayer2CurrentWT()
+{
+	return g_Player2.m_currentWT;
+}
 bool GetPlayer2_IsAttacked()
 {
 	return g_Player2.m_isAttacked;
@@ -1378,8 +1375,11 @@ static void Player2_StartHitAnim()
 {
 	if (!g_Player2.m_model) return;
 
-	const int HIT_START = 600;
-	const int HIT_END = 660;
+	/*const int HIT_START = 600;
+	const int HIT_END = 660;*/
+
+	if (GetPlayerCurrentWT() == WeaponTerrain::SHURIKEN_) return;
+	if (GetChangeP2()) return;
 
 	if (!g_Player2.m_hitAnimPlaying)
 	{
@@ -1399,7 +1399,6 @@ static void Player2_StartHitAnim()
 			case WeaponTerrain::HAMMER_: // hammer
 				ModelPlayClip(g_Player2.m_model, 541, 600, 60.0f, false, 1.0f);
 				break;
-
 			case WeaponTerrain::SHURIKEN_: //shuriken
 				ModelPlayClip(g_Player2.m_model, 211, 260, 60.0f, false, 1.0f);
 				break;
@@ -1421,7 +1420,6 @@ static void Player2_StartHitAnim()
 			case WeaponTerrain::HAMMER_: // hammer
 				ModelPlayClip(g_Player2.m_model, 541, 600, 60.0f, false, 1.0f);
 				break;
-
 			case WeaponTerrain::SHURIKEN_: //shuriken
 				ModelPlayClip(g_Player2.m_model, 211, 260, 60.0f, false, 1.0f);
 				break;
