@@ -19,7 +19,7 @@
 #include"Player2.h"
 #include"keyboard.h"
 #include"Controller.h"
-
+#include"ChargeEffect.h"
 //================================================================
 //	グローバル変数
 //================================================================
@@ -126,6 +126,58 @@ void Arrow::Update()
 				m_coolTime = 1.5f;
 			}
 		}
+
+		//弓のチャージエフェクト
+		ChargeType currentCType = ChargeType::HAMMER_C_NONE;
+
+		if (m_isCharging && m_chargePower > 0.0f)
+		{
+			if (m_chargePower < 0.5f)
+			{
+				currentCType = ChargeType::HAMMER_C_W;
+			}
+			else if (m_chargePower < 1.0f)
+			{
+				currentCType = ChargeType::HAMMER_C_B;
+			}
+			else if (m_chargePower < 2.0f)
+			{
+				currentCType = ChargeType::HAMMER_C_G;
+			}
+			else if (m_chargePower > 2.0f)
+			{
+				currentCType = ChargeType::HAMMER_C_R;
+			}
+		}
+
+		if (m_isCharging)
+		{
+			//プレイヤー識別
+			int playerIdx = (int)m_selectPlayer;
+
+			//エフェクトの位置をプレイヤーの位置に合わせる
+			XMFLOAT3 effectPos = owner->m_position;
+			XMFLOAT3 effectOffset = { 0.0f, -0.6f, 0.0f }; // 止まった状態でのチャージエフェクトオフセット
+
+			//Managerにエフェクトの状態を送信
+			ChargeEffectManager::GetInstance().SetEffect(
+				playerIdx,
+				effectPos,
+				effectOffset,
+				currentCType,
+				m_isCharging
+			);
+		}
+		else
+		{
+			ChargeEffectManager::GetInstance().SetEffect(
+				(int)m_selectPlayer,
+				owner->m_position,
+				{ 0.0f, 0.0f, 0.0f },
+				ChargeType::HAMMER_C_NONE,
+				false
+			);
+		}
 	}
 
 	if (m_selectPlayer)
@@ -162,6 +214,59 @@ void Arrow::Update()
 				m_coolTime = 1.5f;
 			}
 		}
+
+		//弓のチャージエフェクト
+		ChargeType currentCType = ChargeType::HAMMER_C_NONE;
+
+		if (m_isCharging && m_chargePower > 0.0f)
+		{
+			if (m_chargePower < 0.5f)
+			{
+				currentCType = ChargeType::HAMMER_C_W;
+			}
+			else if (m_chargePower < 1.0f)
+			{
+				currentCType = ChargeType::HAMMER_C_B;
+			}
+			else if (m_chargePower < 2.0f)
+			{
+				currentCType = ChargeType::HAMMER_C_G;
+			}
+			else if (m_chargePower > 2.0f)
+			{
+				currentCType = ChargeType::HAMMER_C_R;
+			}
+		}
+
+		if (m_isCharging)
+		{
+			//プレイヤー識別
+			int playerIdx = (int)m_selectPlayer;
+
+			//エフェクトの位置をプレイヤーの位置に合わせる
+			XMFLOAT3 effectPos = owner->m_position;
+			XMFLOAT3 effectOffset = { 0.0f, -0.6f, 0.0f }; // 止まった状態でのチャージエフェクトオフセット
+
+			//Managerにエフェクトの状態を送信
+			ChargeEffectManager::GetInstance().SetEffect(
+				playerIdx,
+				effectPos,
+				effectOffset,
+				currentCType,
+				m_isCharging
+			);
+		}
+		else
+		{
+			ChargeEffectManager::GetInstance().SetEffect(
+				(int)m_selectPlayer,
+				owner->m_position,
+				{ 0.0f, 0.0f, 0.0f },
+				ChargeType::HAMMER_C_NONE,
+				false
+			);
+		}
+
 	}
 	const float mul = (m_isCharging || m_isAttacking) ? 0.3f : 1.0f;
 	if (m_selectPlayer == FALSE)
