@@ -109,6 +109,7 @@ bool GetPlayer2_IsAttacked();
 void SetPlayer2_IsAttacked(bool isAttacked);
 PLAYER2* GetPlayer2();
 WeaponTerrain GetSetWTP2();
+WeaponTerrain GetPlayer2CurrentWT();
 bool GetChangeP2();
 void SetWTP2(WeaponTerrain wt);
 int Player2_GetTransformCount();

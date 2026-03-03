@@ -57,7 +57,7 @@ Sword::Sword(GameObject* player, bool select) : IWeapon(player)
 	m_coolTime = 0.0f;
 
 	m_damageFCount = 0.0f; // ダメージの経過時間
-	m_damageFrame = { 0.2f, 0.3f }; // ダメージの有効フレーム
+	m_damageFrame = { 0.2f, 0.45f }; // ダメージの有効フレーム
 
 	g_moveSword[m_selectPlayer] = { 0.0f, 0.0f, 0.0f };
 
@@ -299,6 +299,8 @@ void Sword::OnWeaponCollision(GameObject* target)
 		case FALSE: // 1Pだったら
 			if (target->m_tag == "Player2") // 相手がPlayer2の時のみ
 			{
+				if (GetChangeP2()) return; // 相手がハンマーでチャージしてたら飛ばす
+
 				float damageMultiplier = 1.0f;
 
 				if (GetPlayer_IsTransformed())
@@ -324,11 +326,14 @@ void Sword::OnWeaponCollision(GameObject* target)
 
 				//P2に対してヒットアクションを発動
 				//引数:方向vec, HS時間, KB距離
-				g_Player2.m_hitAction.triggerHA(dir, stopTime, 0.1);
-				//攻撃時に攻撃者側にもヒットストップを入れる
-				//時間だけを止めたいため、方向ベクトルとパワーの値は0に
-				g_Player.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime, 0.0f);
-				target->TakeDamage(10.0f * damageMultiplier ); // 仮に20ダメージ
+				if (GetChangeP2())
+				{
+					g_Player2.m_hitAction.triggerHA(dir, stopTime, 0.1);
+					//攻撃時に攻撃者側にもヒットストップを入れる
+					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
+					g_Player.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime, 0.0f);
+				}
+				target->TakeDamage(10.0f * damageMultiplier); // 仮に20ダメージ
 				Player_PlusScore(10.0f * damageMultiplier); // スコア加算
 			}
 			break;
@@ -360,12 +365,15 @@ void Sword::OnWeaponCollision(GameObject* target)
 					target->m_position.z - owner->m_position.z
 				};
 
-				//P1に対してヒットアクションを発動
-				//引数:方向vec, HS時間, KB距離
-				g_Player.m_hitAction.triggerHA(dir, stopTime, 0.1f);
-				//攻撃時に攻撃者側にもヒットストップを入れる
-				//時間だけを止めたいため、方向ベクトルとパワーの値は0に
-				g_Player2.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime, 0.0f);
+				if (GetChangeP1())
+				{
+					//P1に対してヒットアクションを発動
+					//引数:方向vec, HS時間, KB距離
+					g_Player.m_hitAction.triggerHA(dir, stopTime, 0.1f);
+					//攻撃時に攻撃者側にもヒットストップを入れる
+					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
+					g_Player2.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime, 0.0f);
+				}
 				target->TakeDamage(10.0f * damageMultiplier);
 				Player2_PlusScore(10.0f * damageMultiplier); // スコア加算
 			}

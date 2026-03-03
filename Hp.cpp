@@ -234,7 +234,7 @@ void Hp_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 
     LoadFromWICFile(L"asset\\texture\\default_select_2P.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
     CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureTransformNow_2P[5]);
-    assert(&g_TextureTransformNow_2P[5]);s
+    assert(&g_TextureTransformNow_2P[5]);
 
 
     LoadFromWICFile(L"asset\\texture\\sword_noselect_2P.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
