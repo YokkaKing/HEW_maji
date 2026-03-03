@@ -20,6 +20,7 @@
 #include"keyboard.h"
 #include "HitEffect.h"
 #include"controller.h"
+#include"ChargeEffect.h"
 /*********************************/
 
 
@@ -253,6 +254,40 @@ void Spear::Update()
 				}
 			}
 		}
+
+		//===============================================
+		//	槍のチャージエフェクト
+		//===============================================
+		if (m_chargePower == MAX_CHARGE)
+		{//チャージが完了していたらエフェクトを出す
+			ChargeType currentCType = ChargeType::HAMMER_C_B;
+
+			//プレイヤー識別
+			int playerIdx = (int)m_selectPlayer;
+
+			//エフェクトの位置をプレイヤーの位置に合わせる
+			XMFLOAT3 effectPos = owner->m_position;
+			XMFLOAT3 effectOffset = { 0.0f, -0.6f, 0.0f }; // 止まった状態でのチャージエフェクトオフセット
+
+			//Managerにエフェクトの状態を送信
+			ChargeEffectManager::GetInstance().SetEffect(
+				playerIdx,
+				effectPos,
+				effectOffset,
+				currentCType,
+				m_isCharging
+			);
+		}
+		else
+		{
+			ChargeEffectManager::GetInstance().SetEffect(
+				(int)m_selectPlayer,
+				owner->m_position,
+				{ 0.0f, 0.0f, 0.0f },
+				ChargeType::HAMMER_C_NONE,
+				false
+			);
+		}
 	}
 
 	if (m_selectPlayer)
@@ -293,6 +328,41 @@ void Spear::Update()
 				}
 			}
 		}
+
+		//===============================================
+		//	槍のチャージエフェクト
+		//===============================================
+		if (m_chargePower >= MAX_CHARGE)
+		{//チャージが完了していたらエフェクトを出す
+			ChargeType currentCType = ChargeType::HAMMER_C_B;
+
+			//プレイヤー識別
+			int playerIdx = (int)m_selectPlayer;
+
+			//エフェクトの位置をプレイヤーの位置に合わせる
+			XMFLOAT3 effectPos = owner->m_position;
+			XMFLOAT3 effectOffset = { 0.0f, -0.6f, 0.0f }; // 止まった状態でのチャージエフェクトオフセット
+
+			//Managerにエフェクトの状態を送信
+			ChargeEffectManager::GetInstance().SetEffect(
+				playerIdx,
+				effectPos,
+				effectOffset,
+				currentCType,
+				m_isCharging
+			);
+		}
+		else
+		{
+			ChargeEffectManager::GetInstance().SetEffect(
+				(int)m_selectPlayer,
+				owner->m_position,
+				{ 0.0f, 0.0f, 0.0f },
+				ChargeType::HAMMER_C_NONE,
+				false
+			);
+		}
+
 	}
 	const float mul = (m_isCharging || m_isAttacking) ? 0.3f : 1.0f;
 	if (m_selectPlayer == FALSE)
