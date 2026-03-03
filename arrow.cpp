@@ -403,7 +403,7 @@ void Arrow::Throw(float power, bool select)
 			float mv = sqrtf(player->m_velocity.x * player->m_velocity.x +
 				player->m_velocity.z * player->m_velocity.z);
 			isMoving = (mv > 0.001f);
-			ModelPlayClip(model, 374, 420, 60.0f, false, 2.0f);
+			ModelPlayClip(model, 374, 418, 60.0f, false, 2.0f);
 		}
 	}
 	else
@@ -415,7 +415,7 @@ void Arrow::Throw(float power, bool select)
 			float mv = sqrtf(player->m_velocity.x * player->m_velocity.x +
 				player->m_velocity.z * player->m_velocity.z);
 			isMoving = (mv > 0.001f);
-			ModelPlayClip(model, 374, 420, 60.0f, false, 2.0f);
+			ModelPlayClip(model, 374, 418, 60.0f, false, 2.0f);
 		}
 	}
 }

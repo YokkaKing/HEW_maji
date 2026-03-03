@@ -685,7 +685,7 @@ void Spear::Throw(float power, bool select)
 			float mv = sqrtf(player->m_velocity.x * player->m_velocity.x +
 				player->m_velocity.z * player->m_velocity.z);
 			isMoving = (mv > 0.001f);
-			ModelPlayClip(model, 810, 880, 60.0f, false, 2.0f);
+			ModelPlayClip(model, 810, 879, 60.0f, false, 2.0f);
 
 		}
 	}
