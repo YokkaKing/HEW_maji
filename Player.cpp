@@ -71,17 +71,12 @@ void PlayerDie()
 	g_Player.m_currentWeapon->ResetEffect(0);
 	g_Player.m_currentWeapon = nullptr;
 
-	//プレイヤーを非表示にする
-	//if (g_Player.m_gameObject != nullptr)
-	//{
-	//	g_Player.m_gameObject->m_isEnable = false;
-	//}
 	
-	// 入力を受け付けないようにする
 	g_Player.State = PLAYER_STATE::PLAYER_STATE_IDLE;
 	g_Player.m_isDeadFlag = true;
 	g_Player.m_model = deadModel;
-	ModelPlayClip(g_Player.m_model, 0, 60, 60.0f, false);
+	
+	ModelPlayClip(g_Player.m_model, 0, 58, 60.0f, false);
 
 	// 念のため先頭フレーム確定
 	ModelUpdateAnimation(g_Player.m_model, 0.0f);
@@ -264,7 +259,7 @@ void	PlayerUpdate()
 			g_Player1DeathAnimPlaying = false;
 
 			// ★最後のフレーム(60)で止める
-			ModelPlayClip(g_Player.m_model, 60, 60, 60.0f, true);
+			ModelPlayClip(g_Player.m_model, 58, 58, 60.0f, true);
 			ModelUpdateAnimation(g_Player.m_model, 0.0f);    // 行列反映用（必要なら）
 
 	

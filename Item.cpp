@@ -90,8 +90,8 @@ void ITEM_SPONER::ResetItem()
 XMFLOAT3 ITEM_SPONER::WherePosition()
 {
 	// Player1とPlayer2のどっちが体力が少ないか
-	bool nearPlayer = (Player_GetHp < Player2_GetHp) ? false :
-		(Player_GetHp > Player2_GetHp) ? true : false;
+	bool nearPlayer = (Player_GetHp() < Player2_GetHp()) ? false :
+		(Player_GetHp() > Player2_GetHp()) ? true : false;
 
 	// プレイヤーの範囲10マス以内くらいに落ちてくるようにする
 	if (nearPlayer)

@@ -136,7 +136,7 @@ void SelectTransformUi_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pC
     CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureNumber);
     assert(&g_TextureNumber);
 
-    LoadFromWICFile(L"asset\\texture\\choose_button.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
+    LoadFromWICFile(L"asset\\texture\\select_button.png", WIC_FLAGS_FORCE_SRGB, &metadata, image);
     CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TextureButton);
     assert(&g_TextureButton);
 
@@ -242,7 +242,7 @@ void SelectTransformUi_Draw()
 
             g_pContext->PSSetShaderResources(0, 1, &g_TextureButton);
             SetBlendState(BLENDSTATE_ALFA);
-            DrawSprite(XMFLOAT2(SCREEN_WIDTH / 2 - 100, SCREEN_HEIGHT - 100), XMFLOAT2(263, 100), g_Ui[i].col);
+            DrawSprite(XMFLOAT2(SCREEN_WIDTH / 2 - 100, SCREEN_HEIGHT - 100), XMFLOAT2(482*0.7, 198*0.7), g_Ui[i].col);
 
             //êîéöï`âÊ
             int time[2];

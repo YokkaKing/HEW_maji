@@ -71,11 +71,10 @@ void Player2Die()
 	{
 		g_Player2.m_gameObject->m_isEnable = false;
 	}
-	
+
 	g_Player2.State = PLAYER2_STATE::PLAYER2_STATE_IDLE;
-	//g_Player2.m_isDeadFlag = true;
 	g_Player2.m_model = deadModel2;
-	ModelPlayClip(g_Player.m_model, 0, 60, 60.0f, false);
+	ModelPlayClip(g_Player2.m_model, 0, 58, 60.0f, false);
 
 	// 念のため先頭フレーム確定
 	ModelUpdateAnimation(g_Player2.m_model, 0.0f);
@@ -83,7 +82,6 @@ void Player2Die()
 	g_Player2DeathAnimPlaying = true;
 	g_Player2DeathAnimTimer = 0.0f;
 	PlayAudio(g_ko, false);
-	// ★フェードはManager側で「1秒スロウ後」に開始する
 }
 void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, WeaponTerrain setWTp2)
 {
@@ -239,7 +237,7 @@ void	Player2Update()
 			g_Player2DeathAnimPlaying = false;
 
 			// ★最後のフレーム(60)で停止
-			ModelPlayClip(g_Player2.m_model, 60, 60, 60.0f, true);
+			ModelPlayClip(g_Player2.m_model, 58, 58, 60.0f, true);
 			ModelUpdateAnimation(g_Player2.m_model, 0.0f);
 
 			// 非表示にしない
