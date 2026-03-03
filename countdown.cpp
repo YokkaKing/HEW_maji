@@ -171,7 +171,7 @@ static void DrawTextureZoom(ID3D11ShaderResourceView* tex, int bno, int wc, int 
 	const float sh = (float)Direct3D_GetBackBufferHeight();
 
 	float eScale = EaseCos01(g_animT);
-	float scale = fromScale + (1.0f - fromScale) * eScale;
+	float scale = fromScale + (0.7f - fromScale) * eScale;
 
 	float rad = 0.0f;
 	if (rotate)
