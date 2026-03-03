@@ -147,7 +147,6 @@ void ApplyTransformationP1(PLAYER* p, WeaponTerrain wt, bool isTransform)
         }
     }
 
-    // 3. ƒ‚ƒfƒ‹‚ÌƒŠƒ[ƒh
     if (path) {
         MODEL* newModel = ModelLoad(path);
         if (newModel != nullptr) {

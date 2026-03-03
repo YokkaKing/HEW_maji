@@ -715,7 +715,7 @@ void selectWT_Update()
         {
             g_videoFrame[0] = 0.0f;
         }
-       
+     
         if (g_AttackFrame[0] < 1.9f)
         {
             g_AttackFrame[0] += 0.05f;
@@ -1401,7 +1401,7 @@ void selectWT_Draw_After3D()
 
     if (g_Cursors[0].isSelected)
     {
-
+        CardposX = (int)(screenWidth / 2 - (screenWidth / 4)) - 50.0f;
         g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Cursor[0]);
         DrawSprite(XMFLOAT2(g_cursorState[0].posX, g_slotPosY + 25.0f), XMFLOAT2(p1W, p1H), XMFLOAT4(1, 1, 1, 1));
         if (g_statusUsed[0])
@@ -1436,7 +1436,7 @@ void selectWT_Draw_After3D()
     {
         g_pContext->PSSetShaderResources(0, 1, &g_TextureUi_Cursor[1]);
         DrawSprite(XMFLOAT2(g_cursorState[1].posX, g_slotPosY - 20.0f), XMFLOAT2(p2W, p2H), XMFLOAT4(1, 1, 1, 1));
-        CardposX += (int)(screenWidth / 2);
+        CardposX += (int)(screenWidth / 2) -5;
         if (g_statusUsed[1])
         {
             switch (g_cursorP2)
