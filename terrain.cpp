@@ -765,7 +765,7 @@ void TerrainUpdate()
 		{
 			g_Terrain.m_coolTime[0] = 0.0f;	// クールタイムをなくす
 			g_Terrain.m_isChange[0] = false; // 変身を解く
-			g_pos[0] = {};
+			g_pos[0] = GetPlayer2Position();
 		}
 	}
 	// 変身したら-する
@@ -780,7 +780,7 @@ void TerrainUpdate()
 		{
 			g_Terrain.m_coolTime[1] = 0.0f;	// クールタイムをなくす
 			g_Terrain.m_isChange[1] = false; // 変身を解く
-			g_pos[1] = {};
+			g_pos[1] = GetPlayerPosition();
 		}
 	}
 
