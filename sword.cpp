@@ -1,226 +1,340 @@
-// ===============================
-//sword.cpp
-// ===============================
-#include "sword.h"
-#include "direct3d.h"
-#include "shader.h"
-#include "Camera.h"
-#include"debug_ostream.h"
-
-Sword::Sword()
-    : center(0.0f, 0.0f, 0.0f),
-    halfSize(0.5f, 0.5f, 0.05f),
-    isActive(false),
-    m_AttackFrameTimer(0), // ƒ^ƒCƒ}[‰Šú‰»
-
-    m_model(nullptr), //‰Šú‰»
-    m_scale(0.2f, 0.2f, 0.2f), //Œ•‚ÌƒXƒP[ƒ‹‚ğ¬‚³‚ß‚Éİ’è
-    m_rotation(0.0f, XM_PIDIV2, 0.0f), //Œ•‚ğƒvƒŒƒCƒ„[‚É‡‚í‚¹‚Ä‰ñ“]‚³‚¹‚é
-    m_offset(0.5f, 0.1f, 0.0f), //Œ•‚ğƒvƒŒƒCƒ„[‚Ì‰E‘¤A­‚µã‚É”z’u
-    m_Damage(0.0f), //’Ç‰Á: ƒ_ƒ[ƒW‰Šú‰»
-    m_Range(0.0f)   //’Ç‰Á: Ë’ö‰Šú‰»
-{
-}
-
-// IWeapon::Initialize‚ÌÀ‘•
-void Sword::Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
-{
-    // ƒ‚ƒfƒ‹ƒ[ƒh‚âƒŠƒ\[ƒX‚Ì‰Šú‰»ˆ—
-    //m_model = ModelLoad("asset\\model\\sword.fbx");
-    m_model = ModelLoad("asset\\model\\test.fbx");
-
-    if (m_model == nullptr)
-    {
-        hal::dout << "ERROR: Failed to load sword model.\n";
-    }
-}
-
-// IWeapon::Finalize‚ÌÀ‘•
-void Sword::Finalize()
-{
-    //ƒ‚ƒfƒ‹‚Ì‰ğ•ú
-    if (m_model)
-    {
-        ModelRelease(m_model);
-        m_model = nullptr;
-    }
-}
-
-// IWeapon::StartAttack‚ÌÀ‘•
-// ƒvƒŒƒCƒ„[‚ÌˆÊ’u‚Æ‰ñ“]‚ğó‚¯æ‚èA“–‚½‚è”»’è‚ğ¶¬/—LŒø‰»‚·‚é
-void Sword::StartAttack(const XMFLOAT3& playerPosition, const XMFLOAT3& playerRotation)
-{
-    // Œ•‚Ì“–‚½‚è”»’è‚ğ—LŒø‰»
-    isActive = true;
-    m_AttackFrameTimer = 0; // ƒ^ƒCƒ}[ƒŠƒZƒbƒg
-
-    // ƒvƒŒƒCƒ„[‚ÌˆÊ’u‚Æ‰ñ“]‚ğŒ³‚ÉAŒ•‚ÌˆÊ’u‚ğŒˆ’è
-    // ¡‰ñ‚Ì—á‚Å‚Í‰ñ“]‚ğg‚í‚¸AƒvƒŒƒCƒ„[‚Ì‰E‘¤‚ÉŒÅ’èiŠù‘¶‚ÌUpdateƒƒWƒbƒN‚ğ—˜—pj
-    center.x = playerPosition.x + 0.5f;
-    center.y = playerPosition.y;
-    center.z = playerPosition.z;
-
-}
-
-// IWeapon::EndAttack‚ÌÀ‘•
-void Sword::EndAttack()
-{
-    // Œ•‚Ì“–‚½‚è”»’è‚ğ–³Œø‰»
-    isActive = false;
-    m_AttackFrameTimer = 0; // ƒ^ƒCƒ}[ƒŠƒZƒbƒg
-}
-
-// IWeapon::Draw‚ÌÀ‘•
-void Sword::Draw(const XMFLOAT3& playerPosition, const XMFLOAT3& playerRotation)
-{
-    if (!m_model) return;
-
-    // š Œ•‚Ìƒ[ƒ‹ƒhs—ñ‚ğì¬
-
-    // 1. ƒXƒP[ƒ‹
-    XMMATRIX scale = XMMatrixScaling(
-        m_scale.x,
-        m_scale.y,
-        m_scale.z);
-
-    // 2. Œ•©g‚Ì‰ñ“] (‘Ò‹@‚âUŒ‚ƒAƒjƒ[ƒVƒ‡ƒ“‚Ì‰ñ“])
-    XMMATRIX sword_rotation = XMMatrixRotationRollPitchYaw(
-        m_rotation.x,
-        m_rotation.y,
-        m_rotation.z);
-
-    // 3. ƒvƒŒƒCƒ„[‚Ì‰ñ“] (Œ•‚àƒvƒŒƒCƒ„[‚Æ“¯‚É‰ñ“]‚·‚é)
-    XMMATRIX player_rotation = XMMatrixRotationRollPitchYaw(
-        playerRotation.x,
-        playerRotation.y,
-        playerRotation.z);
-
-    // 4. Œ•‚ÌƒIƒtƒZƒbƒgˆÚ“® (ƒvƒŒƒCƒ„[‚Ì’†S‚©‚ç‚Ì‘Š‘ÎˆÊ’u)
-    // ƒvƒŒƒCƒ„[‚Ì‰ñ“]‚ğl—¶‚·‚é‚½‚ßAƒIƒtƒZƒbƒg‚ğ‰ñ“]s—ñ‚Å•ÏŠ·‚·‚é•K—v‚ª‚ ‚é
-    XMMATRIX offset_translation = XMMatrixTranslation(
-        m_offset.x,
-        m_offset.y,
-        m_offset.z);
-
-    // 5. ƒvƒŒƒCƒ„[‚Ìƒ[ƒ‹ƒh‹óŠÔ‚Å‚ÌˆÊ’u
-    XMMATRIX player_translation = XMMatrixTranslation(
-        playerPosition.x,
-        playerPosition.y,
-        playerPosition.z);
-
-    // ƒ[ƒ‹ƒhs—ñ‚ÌŒ‹‡‡˜
-    // LocalScale -> LocalRotation -> LocalOffset(‰ñ“]) -> PlayerTranslation
-    // (LocalOffset * PlayerRotation) ‚ÅƒIƒtƒZƒbƒg‚ğ‰ñ“]‚³‚¹‚é
-    XMMATRIX world = scale * sword_rotation * offset_translation * player_rotation * player_translation;
-
-
-    // •ÏŠ·s—ñì¬
-    XMMATRIX view = GetViewMatrix();
-    XMMATRIX projection = GetProjectionMatrix();
-    XMMATRIX wvp = world * view * projection;
-
-    // ƒVƒF[ƒ_[‚Ös—ñ‚ğƒZƒbƒg
-    Shader_SetWorldMatrix(world);
-    Shader_SetMatrix(wvp);
-
-    // ƒ‚ƒfƒ‹‚Ì•`‰æƒŠƒNƒGƒXƒg
-    ModelDraw(m_model);
-}
-
-// IWeapon::Update‚ÌÀ‘•
-void Sword::Update(float deltaTime)
-{
-    // •Ší©g‚Ìó‘Ôiƒ^ƒCƒ}[‚È‚Çj‚ğXV‚·‚é
-    if (isActive)
-    {
-        m_AttackFrameTimer++;
-    }
-
-}
-
-// IWeapon::ShouldEndAttack‚ÌÀ‘•
-bool Sword::ShouldEndAttack() const
-{
-    // ƒ^ƒCƒ}[‚ª‹K’è‚ÌƒtƒŒ[ƒ€”‚ğ’´‚¦‚½‚ç true
-    return isActive && (m_AttackFrameTimer >= ATTACK_DURATION_FRAMES);
-}
-
-// IWeapon::IsAttacking‚ÌÀ‘•
-bool Sword::IsAttacking() const
-{
-    return isActive;
-}
-
-void Sword::Update(XMFLOAT3& playerPos)
-{
-    // ƒvƒŒƒCƒ„[ˆÊ’u‚É’Ç] (Šù‘¶‚ÌŠÖ”AIWeapon‚ÌUpdate‚Æ‚Í•Ê)
-    center.x = playerPos.x + 0.5f;
-    center.y = playerPos.y;
-    center.z = playerPos.z;
-}
 /*
-void Sword::StartAttack()
-{
-    isActive = true;
-}
-
-void Sword::EndAttack()
-{
-    isActive = false;
-}
+* ãƒ•ã‚¡ã‚¤ãƒ«å	sword.cpp
+* ã‚¿ã‚¤ãƒˆãƒ«	å‰£
+* ä½œæˆè€…		ä¸‰æ©‹æ‹“æ–—
+* ä½œæˆæ—¥		12æœˆ09æ—¥
+* æ›´æ–°æ—¥		12æœˆ09æ—¥
 */
 
-// Aƒ{ƒ^ƒ“ˆê‰ñ‰Ÿ‚µ‚ÅUŒ‚‚·‚éˆ— //’Ç‰Á
-void Sword::HandleInput(bool isAPressed, bool isAReleased,const XMFLOAT3& playerPos, const XMFLOAT3& playerRot) //’Ç‰Á
+//================================================================
+//	ã‚¤ãƒ³ã‚¯ãƒ«ãƒ¼ãƒ‰
+//================================================================
+#include"Audio.h"
+#include"sword.h"
+#include"managerCollider.h"
+#include"debug_ostream.h"
+#include"model.h"
+#include"Camera.h"
+#include"Player.h"
+#include"Player2.h"
+#include"hitAction.h"
+#include"HitEffect.h"
+//================================================================
+//	ã‚°ãƒ­ãƒ¼ãƒãƒ«å¤‰æ•°
+//================================================================
+MODEL* g_modelSword[2] = { NULL,NULL };
+PLAYER* g_PlayerSword1;
+PLAYER2* g_PlayerSword2;
+XMFLOAT3 g_moveSword[2]; // ç°¡æ˜“ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³
+
+Sword::Sword(GameObject* player, bool select) : IWeapon(player)
 {
-    if (isAPressed)
-    {
-        // ‘¦‰Ÿ‚µ‚ÅUŒ‚ŠJn
-        isActive = true;
-        m_AttackFrameTimer = 0;
+	g_PlayerSword1 = GetPlayer();
+	g_PlayerSword2 = GetPlayer2();
 
-        // ƒvƒŒƒCƒ„[ˆÊ’u‚ÉŠî‚Ã‚¢‚ÄŒ•‚ÌˆÊ’u‚ğİ’è
-        center.x = playerPos.x + 0.5f;
-        center.y = playerPos.y;
-        center.z = playerPos.z;
+	// æ­¦å™¨ã®å½“ãŸã‚Šåˆ¤å®šã®ä½œæˆ
+	m_weapon = std::make_unique<GameObject>();
+	m_weapon->m_tag = "Attack";	// ã‚¿ã‚°
+	m_weapon->m_layer = 0;		// ãƒ¬ã‚¤ãƒ¤ãƒ¼
+	
+	m_selectPlayer = select; // ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼è¨­å®š 1Pã‹2Pã‹
 
-        // Ë’ö‚Æƒ_ƒ[ƒW‚ğİ’è
-        m_Range = 1.0f;   //’Ç‰Á: Ë’ö1m
-        m_Damage = 10.0f; //’Ç‰Á: ƒ_ƒ[ƒW10
-    }
+	// æ­¦å™¨ã«è¦ªã¸ã®ãƒã‚¤ãƒ³ã‚¿ã‚’è¨­å®š
+	m_weapon->m_weaponPtr = this;
 
-    if (isAReleased)
-    {
-        // UŒ‚I—¹
-        EndAttack();
-    }
-       
+	XMFLOAT3 scale = { 0.3f, 1.0f, 0.3f };
+	XMFLOAT3 bukiScale = { 1.5f, 1.0f, 1.0f };
+	m_collider = m_weapon->AddComponent<BoxCollider>(m_weapon.get(), bukiScale);
+
+	m_weapon->m_scale = scale;
+	m_weapon->m_rotation = { 0.0f, 0.0f, 0.0f };
+
+	ManagerCollider::AddCollider(m_collider); // ç™»éŒ²
+
+	m_collider->SetEnable(false); // æœ€åˆã¯å½“ãŸã‚Šåˆ¤å®šã‚’ç„¡åŠ¹åŒ–
+
+	m_attackTimer = 0.0f;
+	m_coolTime = 0.0f;
+
+	m_damageFCount = 0.0f; // ãƒ€ãƒ¡ãƒ¼ã‚¸ã®çµŒéæ™‚é–“
+	m_damageFrame = { 0.2f, 0.3f }; // ãƒ€ãƒ¡ãƒ¼ã‚¸ã®æœ‰åŠ¹ãƒ•ãƒ¬ãƒ¼ãƒ 
+
+	g_moveSword[m_selectPlayer] = { 0.0f, 0.0f, 0.0f };
+
+	g_modelSword[0] = ModelLoad("asset\\model\\FX_sword.fbx");
+	m_fxAnim.Bind(g_modelSword[0]);
+	g_modelSword[1] = ModelLoad("asset\\model\\block2.fbx");
 }
 
-bool Sword::CheckCollision(XMFLOAT3& playerCenter, XMFLOAT3& playerHalfSize)
+Sword::~Sword()
 {
-    if (!isActive) return false;
+	ManagerCollider::RemoveCollider(m_collider); // å‰Šé™¤
+}
 
-    // Œ•‚Ì“–‚½‚è”»’èBOX‚ÌÅ¬EÅ‘å
-    float swordMinX = center.x - halfSize.x;
-    float swordMaxX = center.x + halfSize.x;
-    float swordMinY = center.y - halfSize.y;
-    float swordMaxY = center.y + halfSize.y;
-    float swordMinZ = center.z - halfSize.z;
-    float swordMaxZ = center.z + halfSize.z;
+void Sword::Attack()
+{
+	if (m_isAttacking) return; // æ”»æ’ƒã—ã¦ãŸã‚‰çµ‚ã‚ã‚Š
+	if (m_coolTime > 0.0f) return;
+	PlayAudio(g_sword, false);
+	m_damageFCount = 0.0f;
+	m_isAttacking = true; // æ”»æ’ƒã—ã¦ã„ã‚‹
+	m_attackTimer = 0.0f; // æ”»æ’ƒã‚¿ã‚¤ãƒãƒ¼åˆæœŸåŒ–
+	g_moveSword[m_selectPlayer] = {0.0f, 0.0f, 0.0f}; // ç°¡æ˜“ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ã®åˆæœŸåŒ–
+	m_coolTime = 1.0f; // ã‚¯ãƒ¼ãƒ«ã‚¿ã‚¤ãƒ ã®è¨­å®š
+	m_fxAnim.PlayFrames(1, 20, 30.0f, false, 1.0f);
+	m_collider->SetEnable(true); // å½“ãŸã‚Šåˆ¤å®šã®æœ‰åŠ¹
 
-    // ƒvƒŒƒCƒ„[‚Ì“–‚½‚è”»’èBOX‚ÌÅ¬EÅ‘å
-    float playerMinX = playerCenter.x - playerHalfSize.x;
-    float playerMaxX = playerCenter.x + playerHalfSize.x;
-    float playerMinY = playerCenter.y - playerHalfSize.y;
-    float playerMaxY = playerCenter.y + playerHalfSize.y;
-    float playerMinZ = playerCenter.z - playerHalfSize.z;
-    float playerMaxZ = playerCenter.z + playerHalfSize.z;
+	
+	// å¤šé‡ãƒ’ãƒƒãƒˆå¸½å­ãƒªã‚¹ãƒˆã‚’ãƒªã‚»ãƒƒãƒˆ
+	m_hitTargets.clear();
+}
 
-    // AABB“¯m‚ÌÕ“Ë”»’è
-    bool collisionX = (swordMinX <= playerMaxX) && (swordMaxX >= playerMinX);
-    bool collisionY = (swordMinY <= playerMaxY) && (swordMaxY >= playerMinY);
-    bool collisionZ = (swordMinZ <= playerMaxZ) && (swordMaxZ >= playerMinZ);
+void Sword::Update()
+{
+	m_fxAnim.Update(1.0f / 60.0f);
+	if (m_coolTime > 0.0f)
+	{
+		m_coolTime -= 1.0f / 60.0f; 
+	}
+	else
+	{
+		m_coolTime = 0.0f;
+	}
 
-    return collisionX && collisionY && collisionZ;
+
+	if (m_isAttacking)
+	{
+		m_damageFCount += 1.0f / 60.0f;
+	}
+	else
+	{
+		m_damageFCount = 0.0f;
+	}
+
+	// ãƒ€ãƒ¡ãƒ¼ã‚¸çµŒéæ™‚é–“ãŒç¯„å›²å†…ãªã‚‰æ”»æ’ƒã§ãã‚‹
+	if (m_damageFCount > m_damageFrame.x &&
+		m_damageFCount < m_damageFrame.y)
+	{
+		if (!m_collider.get()->IsEnable())
+		{
+			m_collider.get()->SetEnable(true); // æ”»æ’ƒæœ‰åŠ¹	
+		}
+	}
+	else
+	{
+		if (m_collider.get()->IsEnable())
+		{
+			m_collider.get()->SetEnable(false); // æ”»æ’ƒç„¡åŠ¹
+		}
+	}
+
+	if (m_attackTimer < (ATTACK_DURATION / 2) && m_isAttacking)
+	{
+		float progress = m_attackTimer / (ATTACK_DURATION / 2.0f);
+
+		if (progress > 1.0f) progress = 1.0f;
+
+		g_moveSword[m_selectPlayer].x = m_animePosition.x * progress;
+		g_moveSword[m_selectPlayer].y = m_animePosition.y * progress;
+		g_moveSword[m_selectPlayer].z = m_animePosition.z * progress;
+	}
+	else
+	{
+		g_moveSword[m_selectPlayer].x -= (m_animePosition.x / 30.0f);
+		g_moveSword[m_selectPlayer].y -= (m_animePosition.y / 30.0f);
+		g_moveSword[m_selectPlayer].z -= (m_animePosition.z / 30.0f);
+
+		if (g_moveSword[m_selectPlayer].x < 0.0f)
+		{
+			g_moveSword[m_selectPlayer].x = 0.0f;
+		}
+		if (g_moveSword[m_selectPlayer].y < 0.0f)
+		{
+			g_moveSword[m_selectPlayer].y = 0.0f;
+		}
+		if (g_moveSword[m_selectPlayer].z < 0.0f)
+		{
+			g_moveSword[m_selectPlayer].z = 0.0f;
+		}
+	}
+
+	XMMATRIX rotationMatrixY;
+	XMVECTOR offsetVector;
+	XMVECTOR rotatedOffset;
+	XMVECTOR playerPosition;
+	XMVECTOR swordPosition;
+
+	switch (m_selectPlayer)
+	{
+	case FALSE:
+		XMFLOAT3 offset1 =
+		{
+			m_offset.x + g_moveSword[m_selectPlayer].x,
+			m_offset.y + g_moveSword[m_selectPlayer].y,
+			m_offset.z + g_moveSword[m_selectPlayer].z
+		};
+
+		rotationMatrixY = XMMatrixRotationY(g_PlayerSword1->m_rotation.y);
+		offsetVector = XMLoadFloat3(&offset1);
+		rotatedOffset = XMVector3Transform(offsetVector, rotationMatrixY);
+		playerPosition = XMLoadFloat3(&owner->m_position);
+		swordPosition = XMVectorAdd(playerPosition, rotatedOffset);
+		XMStoreFloat3(&m_weapon->m_position, swordPosition);
+
+		m_weapon->m_rotation = g_PlayerSword1->m_rotation;
+		break;
+
+	case TRUE:
+		XMFLOAT3 offset2 =
+		{
+			m_offset.x + g_moveSword[m_selectPlayer].x,
+			m_offset.y + g_moveSword[m_selectPlayer].y,
+			m_offset.z + g_moveSword[m_selectPlayer].z
+		};
+
+		rotationMatrixY = XMMatrixRotationY(g_PlayerSword2->m_rotation.y);
+		offsetVector = XMLoadFloat3(&offset2);
+		rotatedOffset = XMVector3Transform(offsetVector, rotationMatrixY);
+		playerPosition = XMLoadFloat3(&owner->m_position);
+		swordPosition = XMVectorAdd(playerPosition, rotatedOffset);
+		XMStoreFloat3(&m_weapon->m_position, swordPosition);
+
+		m_weapon->m_rotation = g_PlayerSword2->m_rotation;
+		break;
+
+	default:
+		break;
+	}
+	
+	// æ”»æ’ƒã—ã¦ã‚‹ã¨ã
+	if (m_isAttacking)
+	{
+		m_attackTimer += (1.0f / 60.0f);
+
+		// æ”»æ’ƒã®æœ‰åŠ¹æ™‚é–“ãŒçµ‚ã‚ã£ãŸã‚‰
+		if (m_attackTimer >= ATTACK_DURATION)
+		{
+			m_isAttacking = false; // æ”»æ’ƒçµ‚äº†
+			m_collider->SetEnable(false); // å½“ãŸã‚Šåˆ¤å®šæ­¢ã‚ã‚‹
+		}
+	}
+
+	
+
+}
+
+void Sword::Draw()
+{
+	if (m_isAttacking)
+	{
+		XMMATRIX	scale = XMMatrixScaling(
+			m_weapon->m_scale.x * 0.04f,
+			m_weapon->m_scale.y * 0.02f,
+			m_weapon->m_scale.z * 0.02f);
+		XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
+			m_weapon->m_rotation.x,
+			m_weapon->m_rotation.y + XM_PI,
+			m_weapon->m_rotation.z);
+		XMMATRIX	translation = XMMatrixTranslation(
+			m_weapon->m_position.x,
+			m_weapon->m_position.y,
+			m_weapon->m_position.z);
+		XMMATRIX world = scale * rotation * translation;
+
+
+		XMMATRIX fxWorld = m_fxAnim.GetDeltaMatrix() * world;
+
+		Shader_SetWorldMatrix(fxWorld);
+
+
+		//Shader_SetBones(g_modelSword[0]);
+		ModelDraw(g_modelSword[0]);
+		
+	}
+
+}
+
+void Sword::OnWeaponCollision(GameObject* target)
+{
+	// è‡ªåˆ†ã®ã‚ªãƒ¼ãƒŠãƒ¼ã ã£ãŸã‚‰é£›ã°ã™
+	if (target == owner)
+	{
+		return;
+	}
+
+	// å¤šé‡ãƒ’ãƒƒãƒˆé˜²æ­¢ã€æ—¢ã«ä¸€å›ã®æ”»æ’ƒã§ãƒ€ãƒ¡ãƒ¼ã‚¸ã‚’ä¸ãˆã¦ãŸã‚‰
+	if (m_hitTargets.count(target) > 0)
+	{
+		return;
+	}
+
+	if (m_isAttacking)
+	{
+		//ãƒ’ãƒƒãƒˆã‚¹ãƒˆãƒƒãƒ—ç”¨P1,P2å…±é€šå¤‰æ•°
+		float stopTime = 0.3f;
+		// 1Pã‹2Pã‹
+		switch (m_selectPlayer)
+		{
+		case FALSE: // 1Pã ã£ãŸã‚‰
+			if (target->m_tag == "Player2") // ç›¸æ‰‹ãŒPlayer2ã®æ™‚ã®ã¿
+			{
+				PlayAudio(g_damageSharp, false);
+				m_hitTargets.insert(target);
+				SetPlayer2_IsAttacked(true);
+
+				//ãƒ’ãƒƒãƒˆã‚¨ãƒ•ã‚§ã‚¯ãƒˆ
+				XMFLOAT3 effectPos = target->m_position;
+				effectPos.y -= 1.0f;
+				HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::ZANGEKI);
+
+				//ãƒ’ãƒƒãƒˆãƒãƒƒã‚¯è¨ˆç®—å¼
+				XMFLOAT3 dir = {
+					target->m_position.x - owner->m_position.x,
+					0.1f,
+					target->m_position.z - owner->m_position.z
+				};
+
+				//P2ã«å¯¾ã—ã¦ãƒ’ãƒƒãƒˆã‚¢ã‚¯ã‚·ãƒ§ãƒ³ã‚’ç™ºå‹•
+				//å¼•æ•°:æ–¹å‘vec, HSæ™‚é–“, KBè·é›¢
+				g_Player2.m_hitAction.triggerHA(dir, stopTime, 0.1);
+				//æ”»æ’ƒæ™‚ã«æ”»æ’ƒè€…å´ã«ã‚‚ãƒ’ãƒƒãƒˆã‚¹ãƒˆãƒƒãƒ—ã‚’å…¥ã‚Œã‚‹
+				//æ™‚é–“ã ã‘ã‚’æ­¢ã‚ãŸã„ãŸã‚ã€æ–¹å‘ãƒ™ã‚¯ãƒˆãƒ«ã¨ãƒ‘ãƒ¯ãƒ¼ã®å€¤ã¯0ã«
+				g_Player.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime, 0.0f);
+				target->TakeDamage(15.0f); // ä»®ã«20ãƒ€ãƒ¡ãƒ¼ã‚¸
+				Player_PlusScore(15); // ã‚¹ã‚³ã‚¢åŠ ç®—
+			}
+			break;
+
+		case TRUE: // 2Pã ã£ãŸã‚‰
+			if (target->m_tag == "Player") // ç›¸æ‰‹ãŒPlayerã®æ™‚ã®ã¿
+			{
+				SetPlayer_IsAttacked(true);
+
+				PlayAudio(g_damageSharp, false);
+				m_hitTargets.insert(target);
+
+				//ãƒ’ãƒƒãƒˆã‚¨ãƒ•ã‚§ã‚¯ãƒˆ
+				XMFLOAT3 effectPos = target->m_position;
+				effectPos.y -= 1.0f;
+				HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::ZANGEKI);
+
+				//ãƒ’ãƒƒãƒˆãƒãƒƒã‚¯è¨ˆç®—å¼
+				XMFLOAT3 dir = {
+					target->m_position.x - owner->m_position.x,
+					0.1f,
+					target->m_position.z - owner->m_position.z
+				};
+
+				//P1ã«å¯¾ã—ã¦ãƒ’ãƒƒãƒˆã‚¢ã‚¯ã‚·ãƒ§ãƒ³ã‚’ç™ºå‹•
+				//å¼•æ•°:æ–¹å‘vec, HSæ™‚é–“, KBè·é›¢
+				g_Player.m_hitAction.triggerHA(dir, stopTime, 0.1f);
+				//æ”»æ’ƒæ™‚ã«æ”»æ’ƒè€…å´ã«ã‚‚ãƒ’ãƒƒãƒˆã‚¹ãƒˆãƒƒãƒ—ã‚’å…¥ã‚Œã‚‹
+				//æ™‚é–“ã ã‘ã‚’æ­¢ã‚ãŸã„ãŸã‚ã€æ–¹å‘ãƒ™ã‚¯ãƒˆãƒ«ã¨ãƒ‘ãƒ¯ãƒ¼ã®å€¤ã¯0ã«
+				g_Player2.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime, 0.0f);
+				target->TakeDamage(15.0f);
+				Player2_PlusScore(15); // ã‚¹ã‚³ã‚¢åŠ ç®—
+			}
+			break;
+		}
+	}
 }

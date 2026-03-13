@@ -1,174 +1,777 @@
-﻿// ===============================
-// hammer.cpp
-// ===============================
-#include "hammer.h"
-#include "direct3d.h"
-#include "shader.h"
-#include "Camera.h"
+﻿/*
+* ファイル名	hammer.cpp
+* タイトル	ハンマー
+* 作成者		三橋拓斗
+* 作成日		12月09日
+* 更新日		12月09日
+*/
+
+//================================================================
+//	インクルード
+//================================================================
+#include"Audio.h"
+#include"hammer.h"
+#include "Entry.h"
 #include"debug_ostream.h"
+#include"model.h"
+#include"Camera.h"
+#include"Player.h"
+#include"Player2.h"
+#include"keyboard.h"
+#include"controller.h"
+#include"Manager.h"
+#include"hitAction.h"
+#include"HitEffect.h"
+//================================================================
+//	グローバル変数
+//================================================================
+MODEL* g_modelHammer[2] = { NULL, NULL };
+PLAYER* g_PlayerHammer1;
+PLAYER2* g_PlayerHammer2;
+XMFLOAT3 g_moveHammer[2]; // 簡易アニメーション
+extern Controller g_Controller[2];
 
-Hammer::Hammer()
-    : center(0.0f, 0.0f, 0.0f),
-    halfSize(0.7f, 0.7f, 0.3f), // ハンマーは広めの判定
-    isActive(false),
-    m_AttackFrameTimer(0),
-    m_model(nullptr),
-    m_scale(0.4f, 0.4f, 0.4f),
-    m_rotation(0.0f, XM_PIDIV2, 0.0f), // 下向きに振り下ろすイメージ
-    m_offset(0.6f, 0.2f, 0.0f),         // プレイヤーの右手側に配置
-    m_Damage(0.0f),     //追加: ダメージ初期化
-    m_Range(1.0f),      //追加: 射程は常に1m
-    m_ChargeTimer(0),   //追加: チャージタイマー初期化
-    m_ChargeLevel(0)    //追加: チャージ段階初期化
-{}
 
-void Hammer::Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
+static int GetHammerChargeSoundStageByPower(float p)
 {
-    m_model = ModelLoad("asset\\model\\hammer.fbx");
-    if (!m_model)
-    {
-        hal::dout << "ERROR: Failed to load hammer model.\n";
-    }
+	if (p < 2.4f) return 0;
+	if (p < 3.5f) return 1;
+	if (p < 4.5f) return 2;
+	if (p < 5.5f) return 3;
+	return 4; // 最大段階（ループ）
 }
 
-void Hammer::Finalize()
+Hammer::Hammer(GameObject* player, bool select) : IWeapon(player)
 {
-    if (m_model)
-    {
-        ModelRelease(m_model);
-        m_model = nullptr;
-    }
+	g_PlayerHammer1 = GetPlayer();
+	g_PlayerHammer2 = GetPlayer2();
+
+	// 武器の当たり判定の作成
+	m_weapon = std::make_unique<GameObject>();
+	m_weapon->m_tag = "Attack";	// タグ
+	m_weapon->m_layer = 0;		// レイヤー
+	m_chargeState = CHARGE_NONE;
+	m_wasCharging = false;
+	m_selectPlayer = select; // プレイヤー設定 1Pか2Pか
+	m_playerIndex = (m_selectPlayer == FALSE) ? 0 : 1;
+	m_chargeKey = (m_playerIndex == 0) ? KK_C : KK_P; //<< キー設定
+	m_chargeButton = ControllerButton::X_BUTTON;
+
+	m_move = { 0.0f, 0.0f, 0.0f };
+	// 武器に親へのポインタを設定
+	m_weapon->m_weaponPtr = this;
+
+	XMFLOAT3 scale = { 1.5f, 1.0f, 1.0f };
+	m_collider = m_weapon->AddComponent<BoxCollider>(m_weapon.get(), scale);
+
+	m_weapon->m_scale = scale;
+	m_weapon->m_rotation = { 0.0f, 0.0f, 0.0f };
+
+	ManagerCollider::AddCollider(m_collider); // 登録
+
+	m_collider->SetEnable(false); // 最初は当たり判定を無効化
+
+	m_attackTimer = 0.0f;
+	m_coolTime = 0.0f;
+	m_chargeSoundStage = -1;
+	m_chargeLoopPlaying = false;
+	m_charge5Played = false;
+	m_charge5WaitTimer = 0.0f;
+	m_damageFCount = 0.0f; // ダメージの経過時間
+	m_damageFrame = { 0.38f, 0.5f }; // ダメージの有効フレーム
+
+	m_move = { 0.0f, 0.0f, 0.0f };
+
+	/*********** テストコード **********/
+	g_modelHammer[0] = ModelLoad("asset\\model\\block.fbx");
+	g_modelHammer[1] = ModelLoad("asset\\model\\block2.fbx");
+	/*********************************/
 }
 
-void Hammer::StartAttack(const XMFLOAT3& playerPosition, const XMFLOAT3& playerRotation)
+Hammer::~Hammer()
 {
-    isActive = true;
-    m_AttackFrameTimer = 0;
-
-    // プレイヤー位置に追従
-    center.x = playerPosition.x + m_offset.x;
-    center.y = playerPosition.y + m_offset.y;
-    center.z = playerPosition.z + m_offset.z;
+	ManagerCollider::RemoveCollider(m_collider); // 削除
 }
 
-void Hammer::EndAttack()
+void Hammer::Attack()
 {
-    isActive = false;
-    m_AttackFrameTimer = 0;
+	if (m_isAttacking) return; // 攻撃してたら終わり
+	if (m_coolTime > 0.0f) return;
+	if (m_isCharging) return;
+	if (!m_isAttack) return;
+
+	m_damageFCount = 0.0f;
+	m_isAttacking = true; // 攻撃している
+	m_attackTimer = 0.0f; // 攻撃タイマー初期化
+	m_move = { 0.0f, 0.0f, 0.0f };
+	m_coolTime = 1.5f;
+	m_isAttack = false;
+
+	MODEL* model = nullptr;
+	bool isMoving = false;
+
+	if (m_selectPlayer == FALSE)
+	{
+		PLAYER* player = g_PlayerHammer1;
+		if (player)
+		{
+			model = player->m_model;
+
+			float mv = sqrtf(player->m_velocity.x * player->m_velocity.x +
+				player->m_velocity.z * player->m_velocity.z);
+			isMoving = (mv > 0.001f);
+			ModelPlayClip(model, 280, 419, 60.0f, false, 2.0f);
+		}
+	}
+	else
+	{
+		PLAYER2* player = g_PlayerHammer2;
+		if (player)
+		{
+			model = player->m_model;
+
+			float mv = sqrtf(player->m_velocity.x * player->m_velocity.x +
+				player->m_velocity.z * player->m_velocity.z);
+			isMoving = (mv > 0.001f);
+			ModelPlayClip(model, 280, 420, 60.0f, false, 2.0f);
+		}
+	}
+
+	// 多重ヒット帽子リストをリセット
+	m_hitTargets.clear();
 }
 
-void Hammer::Draw(const XMFLOAT3& playerPosition, const XMFLOAT3& playerRotation)
+void Hammer::Update()
 {
-    if (!m_model) return;
+	int controlIdx = GetControllerIndexFromPlayerNo(m_selectPlayer);
+	if (controlIdx == -1) return;
 
-    XMMATRIX scale = XMMatrixScaling(m_scale.x, m_scale.y, m_scale.z);
-    XMMATRIX hammer_rotation = XMMatrixRotationRollPitchYaw(m_rotation.x, m_rotation.y, m_rotation.z);
-    XMMATRIX player_rotation = XMMatrixRotationRollPitchYaw(playerRotation.x, playerRotation.y, playerRotation.z);
-    XMMATRIX offset_translation = XMMatrixTranslation(m_offset.x, m_offset.y, m_offset.z);
-    XMMATRIX player_translation = XMMatrixTranslation(playerPosition.x, playerPosition.y, playerPosition.z);
+	if (m_coolTime > 0.0f) {
+		m_coolTime -= 1.0f / 60.0f;
+		if (m_coolTime < 0.0f) m_coolTime = 0.0f;
+	}
 
-    XMMATRIX world = scale * hammer_rotation * offset_translation * player_rotation * player_translation;
+	if (m_isAttacking)
+	{
+		m_damageFCount += 1.0f / 60.0f;
+	}
+	else
+	{
+		m_damageFCount = 0.0f;
+	}
 
-    XMMATRIX view = GetViewMatrix();
-    XMMATRIX projection = GetProjectionMatrix();
-    XMMATRIX wvp = world * view * projection;
+	// ダメージ経過時間が範囲内なら攻撃できる
+	if (m_damageFCount > m_damageFrame.x &&
+		m_damageFCount < m_damageFrame.y)
+	{
+		if (!m_collider.get()->IsEnable())
+		{
+			m_collider.get()->SetEnable(true); // 攻撃有効	
+		}
+	}
+	else
+	{
+		if (m_collider.get()->IsEnable())
+		{
+			m_collider.get()->SetEnable(false); // 攻撃無効
+		}
+	}
+	
+	bool inputCharge = false;
+	if (Keyboard_IsKeyDown(m_chargeKey))
+	{
+		inputCharge = true;
+	}
+	//if (m_playerIndex == 0) inputCharge = Keyboard_IsKeyDown(KK_C);//<< キー設定
+	//else                    inputCharge = Keyboard_IsKeyDown(KK_P);//<< キー設定
+	// コントローラー入力チェック (Xボタン)
+	if (g_Controller[m_playerIndex].IsConnected()) {
+		if (g_Controller[m_playerIndex].IsButtonDown(m_chargeButton)) {
+			inputCharge = true;
+		}
+	}
 
-    Shader_SetWorldMatrix(world);
-    Shader_SetMatrix(wvp);
+	if (inputCharge)
+	{
+		if (!m_isAttacking && m_coolTime <= 0.0f)
+		{
+			m_isCharging = true;
+			m_chargePower += (1.0f / 60.0f);
+			if (m_chargePower > MAX_CHARGE) m_chargePower = MAX_CHARGE;
+			if (g_Controller[m_playerIndex].IsConnected())
+			{
+				float intensity = m_chargePower / MAX_CHARGE;
+				g_Controller[m_playerIndex].SetVibration(intensity, intensity);
+			}
+		}
+	}
 
-    ModelDraw(m_model);
+	else if (m_isCharging)
+	{
+	
+		StopAudio(g_charge1);
+		StopAudio(g_charge2);
+		StopAudio(g_charge3);
+		StopAudio(g_charge4);
+		StopAudio(g_charge5);
+
+		m_chargeLoopPlaying = false;
+		m_charge5Played = false;
+		m_charge5WaitTimer = 0.0f;
+		m_chargeSoundStage = -1;
+
+		// そのあと攻撃音
+		PlayAudio(g_hammer, false);
+		if (g_Controller[m_playerIndex].IsConnected()) {
+			g_Controller[m_playerIndex].SetVibration(0.0f, 0.0f);
+		}
+
+		PlayAudio(g_hammer, false);
+		m_isAttack = true;
+		// キーを離した瞬間攻撃
+		m_isCharging = false;
+		Attack();
+	}
+	const float mul = (m_isCharging || m_isAttacking) ? 0.3f : 1.0f;
+	const float dt = 1.0f / 60.0f;
+
+	if (m_isCharging)
+	{
+		const int newStage = GetHammerChargeSoundStageByPower(m_chargePower);
+
+		// 段階が変わった瞬間だけ鳴らす
+		if (newStage != m_chargeSoundStage)
+		{
+			// ループ中だったら止める
+			if (m_chargeLoopPlaying)
+			{
+				StopAudio(g_charge5);
+				m_chargeLoopPlaying = false;
+			}
+
+			// 最大段階用の待機状態をリセット
+			m_charge5Played = false;
+			m_charge5WaitTimer = 0.0f;
+
+			switch (newStage)
+			{
+			case 0:
+				PlayAudio(g_charge1, false);
+				break;
+			case 1:
+				PlayAudio(g_charge2, false);
+				break;
+			case 2:
+				PlayAudio(g_charge3, false);
+				break;
+			case 3:
+				PlayAudio(g_charge4, false);
+				break;
+			case 4:
+				// 最大段階に入った瞬間は g_charge5 を1回だけ鳴らす
+				PlayAudio(g_charge5, false);
+				m_charge5Played = true;
+
+				// g_charge5 の長さ分待ってからループへ
+				// ここは実音の長さに合わせて調整（例: 0.8秒）
+				m_charge5WaitTimer = 0.8f;
+				break;
+			}
+
+			m_chargeSoundStage = newStage;
+		}
+
+		// 最大段階にいる間：g_charge5後に 2~3秒ループへ移行
+		if (m_chargeSoundStage == 4 && m_charge5Played && !m_chargeLoopPlaying)
+		{
+			if (m_charge5WaitTimer > 0.0f)
+			{
+				m_charge5WaitTimer -= dt;
+				if (m_charge5WaitTimer <= 0.0f)
+				{
+					PlayAudioLoopSection(g_charge5, 1.5f, 3.0f);
+					m_chargeLoopPlaying = true;
+				}
+			}
+		}
+	}
+	if (m_selectPlayer == FALSE)
+	{
+		if (g_PlayerHammer1) g_PlayerHammer1->m_moveMul = mul;
+	}
+	else
+	{
+		if (g_PlayerHammer2) g_PlayerHammer2->m_moveMul = mul;
+	}
+	MODEL* model = nullptr;
+	bool isMoving = false;
+	if (m_playerIndex == 0)
+	{
+		PLAYER* p = g_PlayerHammer1;
+		if (p)
+		{
+			model = p->m_model;
+			float mv = sqrtf(p->m_velocity.x * p->m_velocity.x + p->m_velocity.z * p->m_velocity.z);
+			isMoving = (mv > 0.001f);
+		}
+	}
+	else
+	{
+		PLAYER2* p = g_PlayerHammer2;
+		if (p)
+		{
+			model = p->m_model;
+			float mv = sqrtf(p->m_velocity.x * p->m_velocity.x + p->m_velocity.z * p->m_velocity.z);
+			isMoving = (mv > 0.001f);
+		}
+	}
+
+	if (m_isCharging && !m_wasCharging)
+	{
+		
+		if (model) {
+			ModelPlayClip(model, 241, 280, 60.0f, false, 1.0f);
+		}
+		m_chargeSoundStage = -1;
+		m_chargeLoopPlaying = false;
+		m_charge5Played = false;
+		m_charge5WaitTimer = 0.0f;
+		m_chargeState = CHARGE_IN;
+	}
+	if (m_isCharging && isMoving)
+	{
+		if (m_chargeState != CHARGE_MOVE_LOOP)
+		{
+			if (model) {
+				ModelPlayClip(model, 421, 540, 60.0f, true, 2.0f);
+			}
+			m_chargeState = CHARGE_MOVE_LOOP;
+		}
+	}
+	if (m_isCharging && !isMoving)
+	{
+		if (m_chargeState == CHARGE_MOVE_LOOP)
+		{
+			
+			if (model) {
+				ModelPlayClip(model, 280, 280, 60.0f, true, 1.0f);
+			}
+			m_chargeState = CHARGE_HOLD;
+		}
+		else if (m_chargeState == CHARGE_IN)
+		{
+			
+			if (model && ModelConsumeClipFinished(model))
+			{
+				
+				ModelPlayClip(model, 280, 280, 60.0f, true, 1.0f);
+				m_chargeState = CHARGE_HOLD;
+			}
+		}
+		else if (m_chargeState == CHARGE_NONE)
+		{
+			// nothing
+		}
+	}
+	m_wasCharging = m_isCharging;
+	if (m_attackTimer < (ATTACK_DURATION / 2) && m_isAttacking)
+	{
+		float progress = m_attackTimer / (ATTACK_DURATION / 2.0f);
+
+		if (progress > 1.0f) progress = 1.0f;
+
+		m_move.x = m_animePosition.x * progress;
+		m_move.y = m_animePosition.y * progress;
+		m_move.z = m_animePosition.z * progress;
+	}
+	else
+	{
+		m_move.x -= (m_animePosition.x / 30.0f);
+		m_move.y -= (m_animePosition.y / 30.0f);
+		m_move.z -= (m_animePosition.z / 30.0f);
+
+		if (m_move.x < 0.0f) m_move.x = 0.0f;
+		if (m_move.y < 0.0f) m_move.y = 0.0f;
+		if (m_move.z < 0.0f) m_move.z = 0.0f;
+	}
+
+	XMMATRIX rotationMatrixY;
+	XMVECTOR offsetVector;
+	XMVECTOR rotatedOffset;
+	XMVECTOR playerPosition;
+	XMVECTOR swordPosition;
+
+	switch (m_selectPlayer)
+	{
+	case FALSE:
+		XMFLOAT3 offset1 =
+		{
+			m_offset.x + m_move.x,
+			m_offset.y + m_move.y,
+			m_offset.z + m_move.z
+		};
+
+		rotationMatrixY = XMMatrixRotationY(g_PlayerHammer1->m_rotation.y);
+		offsetVector = XMLoadFloat3(&offset1);
+		rotatedOffset = XMVector3Transform(offsetVector, rotationMatrixY);
+		playerPosition = XMLoadFloat3(&owner->m_position);
+		swordPosition = XMVectorAdd(playerPosition, rotatedOffset);
+		XMStoreFloat3(&m_weapon->m_position, swordPosition);
+
+		m_weapon->m_rotation = g_PlayerHammer1->m_rotation;
+		break;
+
+	case TRUE:
+		XMFLOAT3 offset2 =
+		{
+			m_offset.x + m_move.x,
+			m_offset.y + m_move.y,
+			m_offset.z + m_move.z
+		};
+
+		rotationMatrixY = XMMatrixRotationY(g_PlayerHammer2->m_rotation.y);
+		offsetVector = XMLoadFloat3(&offset2);
+		rotatedOffset = XMVector3Transform(offsetVector, rotationMatrixY);
+		playerPosition = XMLoadFloat3(&owner->m_position);
+		swordPosition = XMVectorAdd(playerPosition, rotatedOffset);
+		XMStoreFloat3(&m_weapon->m_position, swordPosition);
+
+		m_weapon->m_rotation = g_PlayerHammer2->m_rotation;
+		break;
+
+	default:
+		break;
+	}
+
+	// 攻撃してるとき
+	if (m_isAttacking)
+	{
+		m_attackTimer += (1.0f / 60.0f);
+
+		// 攻撃の有効時間が終わったら
+		if (m_attackTimer >= ATTACK_DURATION)
+		{
+			m_isAttacking = false; // 攻撃終了
+			m_collider->SetEnable(false); // 当たり判定止める
+			m_chargePower = 0.0f;
+			m_chargeState = CHARGE_NONE;
+		}
+	}
 }
 
-void Hammer::Update(float deltaTime)
+void Hammer::Draw()
 {
-    if (isActive)
-    {
-        m_AttackFrameTimer++;
-        // 振り下ろし動作を簡易的に表現（Y方向に少し下げる）
-        center.y -= 0.01f;
-    }
+	//ワールド行列作成
+	XMMATRIX	scale = XMMatrixScaling(
+		m_weapon->m_scale.x,
+		m_weapon->m_scale.y,
+		m_weapon->m_scale.z);
+	XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
+		m_weapon->m_rotation.x,
+		m_weapon->m_rotation.y,
+		m_weapon->m_rotation.z);
+	XMMATRIX	translation = XMMatrixTranslation(
+		m_weapon->m_position.x,
+		m_weapon->m_position.y,
+		m_weapon->m_position.z);
+	XMMATRIX	world = scale * rotation * translation;
 }
 
-bool Hammer::ShouldEndAttack() const
+void Hammer::OnWeaponCollision(GameObject* target)
 {
-    return isActive && (m_AttackFrameTimer >= ATTACK_DURATION_FRAMES);
-}
+	// 自分のオーナーだったら飛ばす
+	if (target == owner)
+	{
+		return;
+	}
 
-bool Hammer::IsAttacking() const
-{
-    return isActive;
-}
+	// 多重ヒット防止、既に一回の攻撃でダメージを与えてたら
+	if (m_hitTargets.count(target) > 0)
+	{
+		return;
+	}
 
-// Aボタン入力処理
-void Hammer::HandleInput(bool isAPressed, bool isAReleased,const XMFLOAT3& playerPos, const XMFLOAT3& playerRot) //追加
-{
-    if (isAPressed)
-    {
-        // 押し続けている間チャージ
-        m_ChargeTimer++;
-    }
+	if (m_isAttacking)
+	{
+		//ヒットストップ用P1,P2共通変数
+		float stopTime1 = 0.3f;
+		float stopTime2 = 0.5f;
+		float stopTime3 = 0.8f;
+		float stopTime4 = 1.2f;
+		// 1Pか2Pか
+		switch (m_selectPlayer)
+		{
+		case FALSE: // 1Pだったら
+			if (target->m_tag == "Player2") // 相手がPlayer2の時のみ
+			{
+				PlayAudio(g_damageHammer, false);
+				SetPlayer2_IsAttacked(true);
+				m_hitTargets.insert(target);
 
-    if (isAReleased)
-    {
-        // チャージ段階判定（60FPS換算）
-        if (m_ChargeTimer >= 150 && m_ChargeTimer < 210)
-        { // 2.5秒〜3.5秒未満
-            m_ChargeLevel = 1;
-            m_Damage = 20.0f;
-        }
-        else if (m_ChargeTimer >= 210 && m_ChargeTimer < 270)
-        { // 3.5秒〜4.5秒未満
-            m_ChargeLevel = 2;
-            m_Damage = 30.0f;
-        }
-        else if (m_ChargeTimer >= 270 && m_ChargeTimer < 330)
-        { // 4.5秒〜5.5秒未満
-            m_ChargeLevel = 3;
-            m_Damage = 40.0f;
-        }
-        else if (m_ChargeTimer >= 330)
-        { // 5.5秒以上
-            m_ChargeLevel = 4;
-            m_Damage = 70.0f;
-        }
+				if (m_chargePower < 2.4f)
+				{
+					target->TakeDamage(20.0f);
 
-        // 射程は常に1m
-        m_Range = 1.0f;
+					//ヒットエフェクト
+					XMFLOAT3 effectPos = target->m_position;
+					effectPos.y -= 1.0f;
+					HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::DAGEKI);
 
-        // 攻撃開始
-        isActive = true;
-        m_AttackFrameTimer = 0;
+					//ヒットバック計算式
+					XMFLOAT3 dir = {
+						target->m_position.x - owner->m_position.x,
+						0.1f,
+						target->m_position.z - owner->m_position.z
+					};
 
-        center.x = playerPos.x + m_offset.x;
-        center.y = playerPos.y + m_offset.y;
-        center.z = playerPos.z + m_offset.z;
+					//P2に対してヒットアクションを発動
+					//引数:方向vec, HS時間, KB距離
+					g_Player2.m_hitAction.triggerHA(dir, stopTime1, 0.1f);
+					//攻撃時に攻撃者側にもヒットストップを入れる
+					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
+					g_Player.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime1, 0.0f);
+					Player_PlusScore(20.0f);
+				}
+				else if (m_chargePower < 3.5f)
+				{
+					target->TakeDamage(30.0f);
 
-        // チャージリセット
-        m_ChargeTimer = 0;
-    }
-}
+					//ヒットエフェクト
+					XMFLOAT3 effectPos = target->m_position;
+					effectPos.y -= 1.0f;
+					HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::DAGEKI);
 
-bool Hammer::CheckCollision(XMFLOAT3& playerCenter, XMFLOAT3& playerHalfSize)
-{
-    if (!isActive) return false;
+					//ヒットバック計算式
+					XMFLOAT3 dir = {
+						target->m_position.x - owner->m_position.x,
+						0.1f,
+						target->m_position.z - owner->m_position.z
+					};
 
-    float hammerMinX = center.x - halfSize.x;
-    float hammerMaxX = center.x + halfSize.x;
-    float hammerMinY = center.y - halfSize.y;
-    float hammerMaxY = center.y + halfSize.y;
-    float hammerMinZ = center.z - halfSize.z;
-    float hammerMaxZ = center.z + halfSize.z;
+					//P2に対してヒットアクションを発動
+					//引数:方向vec, HS時間, KB距離
+					g_Player2.m_hitAction.triggerHA(dir, stopTime2, 0.2f);
+					//攻撃時に攻撃者側にもヒットストップを入れる
+					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
+					g_Player.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime2, 0.0f);
+					Player_PlusScore(30.0f);
+				}
+				else if (m_chargePower < 4.5f)
+				{
+					target->TakeDamage(40.0f);
 
-    float playerMinX = playerCenter.x - playerHalfSize.x;
-    float playerMaxX = playerCenter.x + playerHalfSize.x;
-    float playerMinY = playerCenter.y - playerHalfSize.y;
-    float playerMaxY = playerCenter.y + playerHalfSize.y;
-    float playerMinZ = playerCenter.z - playerHalfSize.z;
-    float playerMaxZ = playerCenter.z + playerHalfSize.z;
+					//ヒットエフェクト
+					XMFLOAT3 effectPos = target->m_position;
+					effectPos.y -= 1.0f;
+					HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::DAGEKI);
 
-    bool collisionX = (hammerMinX <= playerMaxX) && (hammerMaxX >= playerMinX);
-    bool collisionY = (hammerMinY <= playerMaxY) && (hammerMaxY >= playerMinY);
-    bool collisionZ = (hammerMinZ <= playerMaxZ) && (hammerMaxZ >= playerMinZ);
+					//ヒットバック計算式
+					XMFLOAT3 dir = {
+						target->m_position.x - owner->m_position.x,
+						0.1f,
+						target->m_position.z - owner->m_position.z
+					};
 
-    return collisionX && collisionY && collisionZ;
+					//P2に対してヒットアクションを発動
+					//引数:方向vec, HS時間, KB距離
+					g_Player2.m_hitAction.triggerHA(dir, stopTime3, 0.3f);
+					//攻撃時に攻撃者側にもヒットストップを入れる
+					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
+					g_Player.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime3, 0.0f);
+					Player_PlusScore(40.0f);
+				}
+				else if (m_chargePower < 5.5f)
+				{
+					target->TakeDamage(50.0f);
+
+					//ヒットエフェクト
+					XMFLOAT3 effectPos = target->m_position;
+					effectPos.y -= 1.0f;
+					HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::DAGEKI);
+
+					//ヒットバック計算式
+					XMFLOAT3 dir = {
+						target->m_position.x - owner->m_position.x,
+						0.1f,
+						target->m_position.z - owner->m_position.z
+					};
+
+					//P2に対してヒットアクションを発動
+					//引数:方向vec, HS時間, KB距離
+					g_Player2.m_hitAction.triggerHA(dir, stopTime3, 0.3f);
+					//攻撃時に攻撃者側にもヒットストップを入れる
+					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
+					g_Player.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime3, 0.0f);
+					Player_PlusScore(50.0f);
+				}
+				else if (m_chargePower >= 5.5f)
+				{
+					target->TakeDamage(70.0f);
+
+					//ヒットエフェクト
+					XMFLOAT3 effectPos = target->m_position;
+					effectPos.y -= 1.0f;
+					HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::DAGEKI);
+
+					//ヒットバック計算式
+					XMFLOAT3 dir = {
+						target->m_position.x - owner->m_position.x,
+						0.1f,
+						target->m_position.z - owner->m_position.z
+					};
+					//P2に対してヒットアクションを発動
+					//引数:方向vec, HS時間, KB距離
+					g_Player2.m_hitAction.triggerHA(dir, stopTime4, 0.6f);
+					//攻撃時に攻撃者側にもヒットストップを入れる
+					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
+					g_Player.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime4, 0.0f);
+					Player_PlusScore(70.0f);
+				}
+			}
+			break;
+
+		case TRUE: // 2Pだったら
+			if (target->m_tag == "Player") // 相手がPlayerの時のみ
+			{
+				PlayAudio(g_damageHammer, false);
+				SetPlayer_IsAttacked(true);
+
+				m_hitTargets.insert(target);
+
+				if (m_chargePower < 2.4f)
+				{
+					target->TakeDamage(20.0f);
+
+					PlayAudio(g_damageHammer);
+
+
+					//ヒットエフェクト
+					XMFLOAT3 effectPos = target->m_position;
+					effectPos.y -= 1.0f;
+					HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::DAGEKI);
+
+
+					//ヒットバック計算式
+					XMFLOAT3 dir = {
+						target->m_position.x - owner->m_position.x,
+						0.1f,
+						target->m_position.z - owner->m_position.z
+					};
+
+					//P2に対してヒットアクションを発動
+					//引数:方向vec, HS時間, KB距離
+					g_Player.m_hitAction.triggerHA(dir, stopTime1, 0.1f);
+					//攻撃時に攻撃者側にもヒットストップを入れる
+					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
+					g_Player2.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime1, 0.0f);
+					Player2_PlusScore(20.0f);
+				}
+				else if (m_chargePower < 3.5f)
+				{
+					PlayAudio(g_damageHammer);
+
+					target->TakeDamage(30.0f);
+
+					//ヒットエフェクト
+					XMFLOAT3 effectPos = target->m_position;
+					effectPos.y -= 1.0f;
+					HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::DAGEKI);
+
+					//ヒットバック計算式
+					XMFLOAT3 dir = {
+						target->m_position.x - owner->m_position.x,
+						0.1f,
+						target->m_position.z - owner->m_position.z
+					};
+
+					//P2に対してヒットアクションを発動
+					//引数:方向vec, HS時間, KB距離
+					g_Player.m_hitAction.triggerHA(dir, stopTime2, 0.2f);
+					//攻撃時に攻撃者側にもヒットストップを入れる
+					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
+					g_Player2.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime2, 0.0f);
+					Player2_PlusScore(30.0f);
+				}
+				else if (m_chargePower < 4.5f)
+				{
+					PlayAudio(g_damageHammer);
+
+					target->TakeDamage(40.0f);
+
+					//ヒットエフェクト
+					XMFLOAT3 effectPos = target->m_position;
+					effectPos.y -= 1.0f;
+					HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::DAGEKI);
+
+					//ヒットバック計算式
+					XMFLOAT3 dir = {
+						target->m_position.x - owner->m_position.x,
+						0.1f,
+						target->m_position.z - owner->m_position.z
+					};
+
+					//P2に対してヒットアクションを発動
+					//引数:方向vec, HS時間, KB距離
+					g_Player.m_hitAction.triggerHA(dir, stopTime3, 0.3f);
+					//攻撃時に攻撃者側にもヒットストップを入れる
+					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
+					g_Player2.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime3, 0.0f);
+					Player2_PlusScore(40.0f);
+				}
+				else if (m_chargePower < 5.5f)
+				{
+					PlayAudio(g_damageHammer);
+
+					target->TakeDamage(50.0f);
+
+					//ヒットエフェクト
+					XMFLOAT3 effectPos = target->m_position;
+					effectPos.y -= 1.0f;
+					HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::DAGEKI);
+
+					//ヒットバック計算式
+					XMFLOAT3 dir = {
+						target->m_position.x - owner->m_position.x,
+						0.1f,
+						target->m_position.z - owner->m_position.z
+					};
+
+					//P2に対してヒットアクションを発動
+					//引数:方向vec, HS時間, KB距離
+					g_Player.m_hitAction.triggerHA(dir, stopTime3, 0.3f);
+					//攻撃時に攻撃者側にもヒットストップを入れる
+					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
+					g_Player2.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime3, 0.0f);
+					Player2_PlusScore(50.0f);
+				}
+				else if (m_chargePower >= 5.5f)
+				{
+					PlayAudio(g_damageHammer);
+
+					target->TakeDamage(70.0f);
+
+					//ヒットエフェクト
+					XMFLOAT3 effectPos = target->m_position;
+					effectPos.y -= 1.0f;
+					HitEffectManager::GetInstance().HitEffect(effectPos, EffectType::DAGEKI);
+
+					//ヒットバック計算式
+					XMFLOAT3 dir = {
+						target->m_position.x - owner->m_position.x,
+						0.1f,
+						target->m_position.z - owner->m_position.z
+					};
+
+					//P2に対してヒットアクションを発動
+					//引数:方向vec, HS時間, KB距離
+					g_Player.m_hitAction.triggerHA(dir, stopTime4, 0.6f);
+					//攻撃時に攻撃者側にもヒットストップを入れる
+					//時間だけを止めたいため、方向ベクトルとパワーの値は0に
+					g_Player2.m_hitAction.triggerHA({ 0.0f, 0.0f, 0.0f }, stopTime4, 0.0f);
+					Player2_PlusScore(70.0f);
+				}
+			}
+			break;
+		}
+	}
 }

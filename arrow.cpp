@@ -1,187 +1,601 @@
-﻿// ===============================
-// arrow.cpp
-// ===============================
-#include "arrow.h"
-#include "direct3d.h"
-#include "shader.h"
-#include "Camera.h"
+﻿/*
+* ファイル名	arrow.cpp
+* タイトル	弓
+* 作成者		三橋拓斗
+* 作成日		12月09日
+* 更新日		12月09日
+*/
+
+//================================================================
+//	インクルード
+//================================================================
+#include"Audio.h"
+#include"arrow.h"
+#include "Entry.h"
 #include"debug_ostream.h"
+#include"model.h"
+#include"Camera.h"
+#include"Player.h"
+#include"Player2.h"
+#include"keyboard.h"
+#include"Controller.h"
 
-Arrow::Arrow()
-    : center(0.0f, 0.0f, 0.0f),
-    halfSize(0.1f, 0.1f, 0.5f), // 細長い当たり判定
-    isActive(false),
-    m_AttackFrameTimer(0),
-    m_ChargeTimer(0),   //追加
-    m_ChargeLevel(0),   //追加
-    m_Damage(0.0f),     //追加
-    m_Range(0.0f),      //追加
-    m_model(nullptr),
-    m_scale(0.2f, 0.2f, 0.2f),
-    m_rotation(0.0f, 0.0f, 0.0f),
-    m_offset(0.0f, 0.0f, 0.0f),
-    m_velocity(0.0f, 0.0f, 0.0f)
-{}
+//================================================================
+//	グローバル変数
+//================================================================
+MODEL* g_modelArrow[2] = { NULL, NULL };
+PLAYER* g_PlayerArrow1;
+PLAYER2* g_PlayerArrow2;
+XMFLOAT3 g_moveArrow[2]; // 簡易アニメーション
+extern Controller g_Controller[2];
 
-void Arrow::Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
+Arrow::Arrow(GameObject* player, bool select) : IWeapon(player)
 {
-    m_model = ModelLoad("asset\\model\\arrow.fbx");
-    if (!m_model)
-    {
-        hal::dout << "ERROR: Failed to load arrow model.\n";
-    }
+	g_PlayerArrow1 = GetPlayer();
+	g_PlayerArrow2 = GetPlayer2();
+
+	// 武器の当たり判定の作成
+	m_weapon = std::make_unique<GameObject>();
+	m_weapon->m_tag = "Attack";	// タグ
+	m_weapon->m_layer = 0;		// レイヤー
+
+	m_selectPlayer = select; // プレイヤー設定 1Pか2Pか
+
+	// 武器に親へのポインタを設定
+	m_weapon->m_weaponPtr = this;
+
+	XMFLOAT3 scale = { 0.2f, 0.8f, 0.2f };
+	m_collider = m_weapon->AddComponent<BoxCollider>(m_weapon.get(), scale);
+
+	m_weapon->m_scale = scale;
+	m_weapon->m_rotation = { 0.0f, 0.0f, 0.0f };
+
+	ManagerCollider::AddCollider(m_collider); // 登録
+
+	m_collider->SetEnable(false); // 最初は当たり判定を無効化
+
+	m_attackTimer = 0.0f;
+
+	g_moveArrow[m_selectPlayer] = { 0.0f, 0.0f, 0.0f };
+	m_coolTime = 0.0f;
+
+	/*********** テストコード **********/
+	g_modelArrow[0] = ModelLoad("asset\\model\\weapon_arrow.fbx");
+	g_modelArrow[1] = ModelLoad("asset\\model\\block2.fbx");
+	/*********************************/
 }
 
-void Arrow::Finalize()
+Arrow::~Arrow()
 {
-    if (m_model)
-    {
-        ModelRelease(m_model);
-        m_model = nullptr;
-    }
+	ManagerCollider::RemoveCollider(m_collider); // 削除
 }
 
-// IWeapon::StartAttackの実装
-// プレイヤーの位置と回転を受け取り、当たり判定を生成/有効化する
-void Arrow::StartAttack(const XMFLOAT3& playerPosition, const XMFLOAT3& playerRotation)
+void Arrow::Attack()
 {
-    
+	
 }
 
-// プレイヤーの向いている方向に矢を撃つ //追加
-void Arrow::Shoot(const XMFLOAT3& playerPosition, const XMFLOAT3& playerRotation) //追加
+void Arrow::Update()
 {
-    center = playerPosition;
+	int controlIdx = GetControllerIndexFromPlayerNo(m_selectPlayer);
+	if (controlIdx == -1) return;
 
-    // プレイヤーの回転から前方向ベクトルを計算
-    XMMATRIX rot = XMMatrixRotationRollPitchYaw(playerRotation.x, playerRotation.y, playerRotation.z);
-    XMVECTOR forward = XMVector3TransformNormal(XMVectorSet(0, 0, 1, 0), rot);
-    XMStoreFloat3(&m_velocity, forward);
+	if (m_coolTime > 0.0f)
+	{
+		{
+			m_coolTime -= 1.0f / 60.0f;
+			if (m_coolTime < 0.0f) m_coolTime = 0.0f;
+		}
+	}
+	else
+	{
+		m_coolTime = 0.0f;
+	}
 
-    // 射程距離を速度に反映
-    m_velocity.x *= m_Range;
-    m_velocity.y *= m_Range;
-    m_velocity.z *= m_Range;
+	if (!m_selectPlayer)
+	{
+		if (Keyboard_IsKeyDown(KK_C) || g_Controller[controlIdx].IsButtonDown(ControllerButton::X_BUTTON))
+		{
+			// 攻撃中じゃなければチャージできる
+			if (!m_isAttacking && m_coolTime <= 0.0f)
+			{
+				m_isCharging = true;
+				m_chargePower += (1.0f / 60.0f);
+				if (m_chargePower > MAX_CHARGE) m_chargePower = MAX_CHARGE;
+				if (g_Controller[0].IsConnected()) {
+					float intensity = (m_chargePower / MAX_CHARGE) * 0.4f;
+					g_Controller[0].SetVibration(intensity, intensity);
+				}
+			}
+		}
+		else if (m_isCharging)
+		{
+			if (g_Controller[controlIdx].IsConnected()) g_Controller[controlIdx].SetVibration(0.0f, 0.0f);
+			// キーを離した瞬間に投げる
+			Throw(m_chargePower, m_selectPlayer);
+			m_isCharging = false;
+			m_chargePower = 0.0f;
+			PlayAudio(g_arrow_shuriken, false);
+			// 投げた後のクールタイム
+			m_coolTime = 1.5f;
+		}
+	}
 
-    isActive = true;
-    m_AttackFrameTimer = 0;
+	if (m_selectPlayer)
+	{
+		if (Keyboard_IsKeyDown(KK_P) || g_Controller[controlIdx].IsButtonDown(ControllerButton::X_BUTTON))
+		{
+			// 攻撃中じゃなければチャージできる
+			if (!m_isAttacking && m_coolTime <= 0.0f)
+			{
+				m_isCharging = true;
+				m_chargePower += (1.0f / 60.0f);
+				if (m_chargePower > MAX_CHARGE) m_chargePower = MAX_CHARGE;
+				if (g_Controller[1].IsConnected()) {
+					float intensity = (m_chargePower / MAX_CHARGE) * 0.4f;
+					g_Controller[1].SetVibration(intensity, intensity);
+				}
+			}
+		}
+		else if (m_isCharging)
+		{
+			if (g_Controller[controlIdx].IsConnected()) g_Controller[controlIdx].SetVibration(0.0f, 0.0f);
+			// キーを離した瞬間に投げる
+			Throw(m_chargePower, m_selectPlayer);
+			m_isCharging = false;
+			m_chargePower = 0.0f;
+			PlayAudio(g_arrow_shuriken, false);
+			// 投げた後のクールタイム
+			m_coolTime = 1.5f;
+		}
+	}
+	const float mul = (m_isCharging || m_isAttacking) ? 0.3f : 1.0f;
+	if (m_selectPlayer == FALSE)
+	{
+		if (g_PlayerArrow1) g_PlayerArrow1->m_moveMul = mul;
+	}
+	else
+	{
+		if (g_PlayerArrow2) g_PlayerArrow2->m_moveMul = mul;
+	}
+
+	MODEL* model = nullptr;
+	bool isMoving = false;
+	if (m_selectPlayer == 0)
+	{
+		PLAYER* p = g_PlayerArrow1;
+		if (p)
+		{
+			model = p->m_model;
+			float mv = sqrtf(p->m_velocity.x * p->m_velocity.x + p->m_velocity.z * p->m_velocity.z);
+			isMoving = (mv > 0.001f);
+		}
+	}
+	else
+	{
+		PLAYER2* p = g_PlayerArrow2;
+
+		if (p)
+		{
+			model = p->m_model;
+			float mv = sqrtf(p->m_velocity.x * p->m_velocity.x + p->m_velocity.z * p->m_velocity.z);
+			isMoving = (mv > 0.001f);
+		}
+	}
+	if (m_isCharging && !m_wasCharging)
+	{
+		if (model)
+		{
+			ModelPlayClip(model, 301, 374, 60.0f, false, 1.0f);
+		}
+		m_chargeState = CHARGE_IN;
+	}
+	if (m_isCharging && isMoving)
+	{
+		if (m_chargeState != CHARGE_MOVE_LOOP)
+		{
+			if (model)
+			{
+				ModelPlayClip(model, 241, 300, 60.0f, true, 1.0f);
+			}
+			m_chargeState = CHARGE_MOVE_LOOP;
+		}
+	}
+	if (m_isCharging && !isMoving)
+	{
+		if (m_chargeState == CHARGE_MOVE_LOOP)
+		{
+			if (model) {
+				ModelPlayClip(model, 374, 374, 60.0f, true, 1.0f);
+			}
+			m_chargeState = CHARGE_HOLD;
+		}
+		else if (m_chargeState == CHARGE_IN)
+		{
+
+			if (model && ModelConsumeClipFinished(model))
+			{
+				ModelPlayClip(model, 374, 374, 60.0f, true, 1.0f);
+				m_chargeState = CHARGE_HOLD;
+			}
+		}
+		else if (m_chargeState == CHARGE_NONE)
+		{
+			// nothing
+		}
+	}
+
+	// ����p�t���O���g���ă`���[�W����
+
+	m_wasCharging = m_isCharging;
+
+	// キャラに合わせて武器も回転
+	XMMATRIX rotationMatrixY;
+	XMVECTOR offsetVector;
+	XMVECTOR rotatedOffset;
+	XMVECTOR playerPosition;
+	XMVECTOR swordPosition;
+
+	switch (m_selectPlayer)
+	{
+	case FALSE:
+		XMFLOAT3 offset1 =
+		{
+			m_offset.x + g_moveArrow[m_selectPlayer].x,
+			m_offset.y + g_moveArrow[m_selectPlayer].y,
+			m_offset.z + g_moveArrow[m_selectPlayer].z
+		};
+
+		rotationMatrixY = XMMatrixRotationY(g_PlayerArrow1->m_rotation.y);
+		offsetVector = XMLoadFloat3(&offset1);
+		rotatedOffset = XMVector3Transform(offsetVector, rotationMatrixY);
+		playerPosition = XMLoadFloat3(&owner->m_position);
+		swordPosition = XMVectorAdd(playerPosition, rotatedOffset);
+		XMStoreFloat3(&m_weapon->m_position, swordPosition);
+
+		m_weapon->m_rotation = g_PlayerArrow1->m_rotation;
+		break;
+
+	case TRUE:
+		XMFLOAT3 offset2 =
+		{
+			m_offset.x + g_moveArrow[m_selectPlayer].x,
+			m_offset.y + g_moveArrow[m_selectPlayer].y,
+			m_offset.z + g_moveArrow[m_selectPlayer].z
+		};
+
+		rotationMatrixY = XMMatrixRotationY(g_PlayerArrow2->m_rotation.y);
+		offsetVector = XMLoadFloat3(&offset2);
+		rotatedOffset = XMVector3Transform(offsetVector, rotationMatrixY);
+		playerPosition = XMLoadFloat3(&owner->m_position);
+		swordPosition = XMVectorAdd(playerPosition, rotatedOffset);
+		XMStoreFloat3(&m_weapon->m_position, swordPosition);
+
+		m_weapon->m_rotation = g_PlayerArrow2->m_rotation;
+		break;
+
+	default:
+		break;
+	}
 }
 
-// Aボタン入力処理 //追加
-void Arrow::HandleInput(bool isAPressed, bool isAReleased, const XMFLOAT3& playerPos, const XMFLOAT3& playerRot) //追加
+void Arrow::Draw()
 {
-    if (isAPressed)
-    {
-        // 押し続けている間チャージ
-        m_ChargeTimer++;
-    }
+	//ワールド行列作成
+	XMMATRIX	scale = XMMatrixScaling(
+		m_weapon->m_scale.x,
+		m_weapon->m_scale.y,
+		m_weapon->m_scale.z);
+	XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
+		m_weapon->m_rotation.x,
+		m_weapon->m_rotation.y,
+		m_weapon->m_rotation.z);
+	XMMATRIX	translation = XMMatrixTranslation(
+		m_weapon->m_position.x,
+		m_weapon->m_position.y,
+		m_weapon->m_position.z);
+	XMMATRIX	world = scale * rotation * translation;
 
-    if (isAReleased)
-    {
-        // チャージ段階判定（60FPS換算）
-        if (m_ChargeTimer == 0)
-        {
-            // 即押し
-            m_ChargeLevel = 0;
-            m_Range = 0.5f;
-            m_Damage = 3.0f;
-        }
-        else if (m_ChargeTimer < 120)
-        { // 1〜2秒
-            m_ChargeLevel = 1;
-            m_Range = 1.0f;
-            m_Damage = 6.0f;
-        }
-        else if (m_ChargeTimer < 180)
-        { // 2〜3秒
-            m_ChargeLevel = 2;
-            m_Range = 2.0f;
-            m_Damage = 12.0f;
-        }
-        else
-        { // 3秒以上
-            m_ChargeLevel = 3;
-            m_Range = 4.0f;
-            m_Damage = 12.0f;
-        }
+	//シェーダーへ行列をセット
+	Shader_SetWorldMatrix(world);
 
-        // プレイヤーの向きに矢を撃つ
-        Shoot(playerPos, playerRot);
-
-        // チャージリセット
-        m_ChargeTimer = 0;
-    }
+	//ModelDraw(g_modelArrow[0]);
 }
 
-void Arrow::EndAttack()
+void Arrow::OnWeaponCollision(GameObject* target)
 {
-    isActive = false;
-    m_AttackFrameTimer = 0;
+
 }
 
-void Arrow::Draw(const XMFLOAT3& playerPosition, const XMFLOAT3& playerRotation)
+void Arrow::Throw(float power, bool select)
 {
-    if (!m_model) return;
+	ArrowShot* shot = new ArrowShot();
+	PlayAudio(g_arrow_shuriken, false);
+	shot->m_position = m_weapon->m_position;
+	shot->m_rotation = m_weapon->m_rotation;
+	shot->m_selectPlayer = select;
+	shot->m_chargePower = power;
 
-    XMMATRIX scale = XMMatrixScaling(m_scale.x, m_scale.y, m_scale.z);
-    XMMATRIX rotation = XMMatrixRotationRollPitchYaw(m_rotation.x, m_rotation.y, m_rotation.z);
-    XMMATRIX translation = XMMatrixTranslation(center.x, center.y, center.z);
+	// 飛ばす方向を計算
+	float baseSpeed = 0.3f;
+	float finalSpeed = baseSpeed * (1.0f + power);
+	float ry = shot->m_rotation.y;
+	shot->m_velocity.x = sinf(ry) * finalSpeed;
+	shot->m_velocity.y = 0.0f;
+	shot->m_velocity.z = cosf(ry) * finalSpeed;
 
-    XMMATRIX world = scale * rotation * translation;
-    XMMATRIX view = GetViewMatrix();
-    XMMATRIX projection = GetProjectionMatrix();
-    XMMATRIX wvp = world * view * projection;
+	extern std::vector<GameObject*> g_gameObjects;
+	g_gameObjects.push_back(shot);
+	shot->Start();
+	MODEL* model = nullptr;
+	bool isMoving = false;
+	if (m_selectPlayer == FALSE)
+	{
+		PLAYER* player = g_PlayerArrow1;
+		if (player)
+		{
+			model = player->m_model;
 
-    Shader_SetWorldMatrix(world);
-    Shader_SetMatrix(wvp);
+			float mv = sqrtf(player->m_velocity.x * player->m_velocity.x +
+				player->m_velocity.z * player->m_velocity.z);
+			isMoving = (mv > 0.001f);
+			ModelPlayClip(model, 374, 420, 60.0f, false, 2.0f);
+		}
+	}
+	else
+	{
+		PLAYER2* player = g_PlayerArrow2;
+		if (player)
+		{
+			model = player->m_model;
 
-    ModelDraw(m_model);
+			float mv = sqrtf(player->m_velocity.x * player->m_velocity.x +
+				player->m_velocity.z * player->m_velocity.z);
+			isMoving = (mv > 0.001f);
+			ModelPlayClip(model, 374, 420, 60.0f, false, 2.0f);
+
+		}
+	}
 }
 
-void Arrow::Update(float deltaTime)
+//================================================================
+//	ArrowShotクラス
+//================================================================
+void ArrowShot::Start()
 {
-    if (isActive) 
-    {
-        m_AttackFrameTimer++;
+	m_tag = "Attack";
 
-        // 矢を速度ベクトルで移動
-        center.x += m_velocity.x * deltaTime;
-        center.y += m_velocity.y * deltaTime;
-        center.z += m_velocity.z * deltaTime;
-    }
+	XMFLOAT3 scale = { 0.2f, 0.2f, 0.2f };
+	m_scale = scale;
+	m_collider = AddComponent<BoxCollider>(this, scale);
+	ManagerCollider::AddCollider(m_collider);
 }
 
-bool Arrow::ShouldEndAttack() const
+void ArrowShot::Update()
 {
-    return isActive && (m_AttackFrameTimer >= ATTACK_DURATION_FRAMES);
+	// 矢が刺さってたら
+	if (m_isStuck)
+	{
+		m_stuckLife -= (1.0f / 60.0f);
+		// タイマーを減らす
+		if (m_stuckLife <= 0.0f)
+		{
+			m_isDead = true;
+		}
+	}
+	else // まだ飛んでたら
+	{
+		// 飛ばしてからの寿命
+		m_flyTimer -= (1.0f / 60.0f);
+		if (m_flyTimer <= 0.0f)
+		{
+			m_isDead = true;
+		}
+
+		m_velocity.y -= 0.005f; // 重力
+		// 大きいと重い、小さいとふわっとする
+
+		m_position.x += m_velocity.x;
+		m_position.y += m_velocity.y;
+		m_position.z += m_velocity.z;
+
+		// 常に先端が飛んでる方向を向く
+		m_rotation.x = atan2f(-m_velocity.y, sqrtf(m_velocity.x * m_velocity.x + m_velocity.z * m_velocity.z));
+	}
 }
 
-bool Arrow::IsAttacking() const
+void ArrowShot::Draw()
 {
-    return isActive;
+	//ワールド行列作成
+	XMMATRIX	scale = XMMatrixScaling(
+		m_scale.x*0.1f,
+		m_scale.y*0.1f,
+		m_scale.z*0.1f);
+	XMMATRIX	rotation = XMMatrixRotationRollPitchYaw(
+		m_rotation.x,
+		m_rotation.y + XM_PI,
+		m_rotation.z);
+	XMMATRIX	translation = XMMatrixTranslation(
+		m_position.x,
+		m_position.y,
+		m_position.z);
+	XMMATRIX	world = scale * rotation * translation;
+
+	//シェーダーへ行列をセット
+	Shader_SetWorldMatrix(world);
+
+	ModelDraw(g_modelArrow[0]);
 }
 
-bool Arrow::CheckCollision(XMFLOAT3& playerCenter, XMFLOAT3& playerHalfSize)
+void ArrowShot::OnCollision(const CollisionInfo& info)
 {
-    if (!isActive) return false;
+	// 刺さってたら何もなし
+	if (m_isStuck) return;
 
-    float arrowMinX = center.x - halfSize.x;
-    float arrowMaxX = center.x + halfSize.x;
-    float arrowMinY = center.y - halfSize.y;
-    float arrowMaxY = center.y + halfSize.y;
-    float arrowMinZ = center.z - halfSize.z;
-    float arrowMaxZ = center.z + halfSize.z;
+	if (info.other->m_tag == "Attack") return; // 武器に当たっても無視
+	if (!m_selectPlayer && info.other->m_tag == "Player") return; // 武器はなった本人は無視
+	if (m_selectPlayer && info.other->m_tag == "Player2") return; // 武器はなった本人は無視
+	if (info.other->m_tag == "Item") return;
+	if (info.other->m_tag == "Slope1") return;
+	if (info.other->m_tag == "Slope2") return;
+	if (info.other->m_tag == "BOGP1") return;
+	if (info.other->m_tag == "BOGP2") return;
 
-    float playerMinX = playerCenter.x - playerHalfSize.x;
-    float playerMaxX = playerCenter.x + playerHalfSize.x;
-    float playerMinY = playerCenter.y - playerHalfSize.y;
-    float playerMaxY = playerCenter.y + playerHalfSize.y;
-    float playerMinZ = playerCenter.z - playerHalfSize.z;
-    float playerMaxZ = playerCenter.z + playerHalfSize.z;
+	m_velocity = { 0.0f, 0.0f, 0.0f };
+	m_isStuck = true;
 
-    bool collisionX = (arrowMinX <= playerMaxX) && (arrowMaxX >= playerMinX);
-    bool collisionY = (arrowMinY <= playerMaxY) && (arrowMaxY >= playerMinY);
-    bool collisionZ = (arrowMinZ <= playerMaxZ) && (arrowMaxZ >= playerMinZ);
+	//ヒットストップ用
+	float stopTime1 = 0.1f;
+	float stopTime2 = 0.2f;
+	float stopTime3 = 0.3f;
+	float stopTime4 = 0.5f;
 
-    return collisionX && collisionY && collisionZ;
+	// 1Pか2Pか
+	switch (m_selectPlayer)
+	{
+	case FALSE: // 1Pだったら
+		if (info.other->m_tag == "Player2") // 相手がPlayer2の時のみ
+		{
+			SetPlayer2_IsAttacked(true);
+
+			PlayAudio(g_damageSharp, false);
+			if (m_chargePower < 0.5f)
+			{
+				info.other->TakeDamage(5.0f);
+				//ヒットバック計算式
+				XMFLOAT3 dir = {
+					info.other->m_position.x - this->m_position.x,
+					0.1f,
+					info.other->m_position.z - this->m_position.z
+				};
+
+				//P2に対してヒットアクションを発動
+				//引数:方向vec, HS時間, KB距離
+				g_Player2.m_hitAction.triggerHA(dir, stopTime1, 0.05f);
+
+				Player_PlusScore(5.0f);
+			}
+			else if (m_chargePower < 1.0f)
+			{
+				info.other->TakeDamage(10.0f);
+				//ヒットバック計算式
+				XMFLOAT3 dir = {
+					info.other->m_position.x - this->m_position.x,
+					0.1f,
+					info.other->m_position.z - this->m_position.z
+				};
+
+				//P2に対してヒットアクションを発動
+				//引数:方向vec, HS時間, KB距離
+				g_Player2.m_hitAction.triggerHA(dir, stopTime2, 0.07f);
+				Player_PlusScore(10.0f);
+			}
+			else if (m_chargePower < 2.0f)
+			{
+				info.other->TakeDamage(20.0f);
+				//ヒットバック計算式
+				XMFLOAT3 dir = {
+					info.other->m_position.x - this->m_position.x,
+					0.1f,
+					info.other->m_position.z - this->m_position.z
+				};
+				//P2に対してヒットアクションを発動
+				//引数:方向vec, HS時間, KB距離
+				g_Player2.m_hitAction.triggerHA(dir, stopTime3, 0.09f);
+				Player_PlusScore(20.0f);
+			}
+			else if (m_chargePower > 2.0f)
+			{
+				info.other->TakeDamage(30.0f);
+				//ヒットバック計算式
+				XMFLOAT3 dir = {
+					info.other->m_position.x - this->m_position.x,
+					0.1f,
+					info.other->m_position.z - this->m_position.z
+				};
+
+				//P2に対してヒットアクションを発動
+				//引数:方向vec, HS時間, KB距離
+				g_Player2.m_hitAction.triggerHA(dir, stopTime4, 0.1f);
+				Player_PlusScore(30.0f);
+			}
+			m_isDead = true;
+			g_Player2.m_isAttacked = true;
+
+		}
+		break;
+
+	case TRUE: // 2Pだったら
+		if (info.other->m_tag == "Player") // 相手がPlayerの時のみ
+		{
+			SetPlayer_IsAttacked(true);
+
+			PlayAudio(g_damageSharp, false);
+			if (m_chargePower < 0.5f)
+			{
+				info.other->TakeDamage(5.0f);
+				//ヒットバック計算式
+				XMFLOAT3 dir = {
+					info.other->m_position.x - this->m_position.x,
+					0.1f,
+					info.other->m_position.z - this->m_position.z
+				};
+
+				//P2に対してヒットアクションを発動
+				//引数:方向vec, HS時間, KB距離
+				g_Player.m_hitAction.triggerHA(dir, stopTime1, 0.05f);
+				Player2_PlusScore(5.0f);
+			}
+			else if (m_chargePower < 1.0f)
+			{
+				info.other->TakeDamage(10.0f);
+				//ヒットバック計算式
+				XMFLOAT3 dir = {
+					info.other->m_position.x - this->m_position.x,
+					0.1f,
+					info.other->m_position.z - this->m_position.z
+				};
+
+				//P2に対してヒットアクションを発動
+				//引数:方向vec, HS時間, KB距離
+				g_Player.m_hitAction.triggerHA(dir, stopTime2, 0.07f);
+
+				Player2_PlusScore(10.0f);
+			}
+			else if (m_chargePower < 2.0f)
+			{
+				info.other->TakeDamage(20.0f);
+				//ヒットバック計算式
+				XMFLOAT3 dir = {
+					info.other->m_position.x - this->m_position.x,
+					0.1f,
+					info.other->m_position.z - this->m_position.z
+				};
+
+				//P2に対してヒットアクションを発動
+				//引数:方向vec, HS時間, KB距離
+				g_Player.m_hitAction.triggerHA(dir, stopTime3, 0.09f);
+
+				Player2_PlusScore(20.0f);
+			}
+			else if (m_chargePower > 2.0f)
+			{
+				info.other->TakeDamage(30.0f);
+				//ヒットバック計算式
+				XMFLOAT3 dir = {
+					info.other->m_position.x - this->m_position.x,
+					0.1f,
+					info.other->m_position.z - this->m_position.z
+				};
+
+				//P2に対してヒットアクションを発動
+				//引数:方向vec, HS時間, KB距離
+				g_Player.m_hitAction.triggerHA(dir, stopTime4, 0.1f);
+				Player2_PlusScore(30.0f);
+			}
+			m_isDead = true;
+			g_Player.m_isAttacked = true;
+		}
+		break;
+	}
 }

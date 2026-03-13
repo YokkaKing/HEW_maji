@@ -13,10 +13,18 @@
 //	インクルード
 //================================================================
 #include"direct3d.h"
+#include"selectWeaponTerrain.h"
 
-void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
+void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, const inGameWTselect& select);
 void Game_Finalize();
 void Game_Update();
-void Game_Draw();
+void Game_Draw_Player1();
+void Game_Draw_Player2();
 
+int Game_GetRoundResult();
+void Game_ResetRound();
+void  Game_SetTimeScale(float s);
+float Game_GetTimeScale();
+void Game_SetShowScore(bool on);
+bool Game_IsShowScore();
 #endif // GAME_H

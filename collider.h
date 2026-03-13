@@ -25,6 +25,7 @@ enum class ColliderType
 {
     Box,
     Sphere,
+    Slope,
 };
 
 //================================================================
@@ -44,6 +45,12 @@ public:
     {
         return owner->GetWorldPosition();
     }
+
+    void SetEnable(bool enable) { m_enable = enable; }
+    bool IsEnable() const { return m_enable; }
+
+private:
+    bool m_enable = true; // 当たり判定を取るか
 };
 
 //================================================================
@@ -71,6 +78,22 @@ public:
     float radius = 0.5f;
     SphereCollider(GameObject* o, float r)
         : Collider(o, ColliderType::Sphere), radius(r) {};
+};
+
+//================================================================
+//  台形スロープ（坂道）の当たり判定クラス
+//================================================================
+class TrapezoidSlopeCollider : public Collider {
+public:
+    XMFLOAT3 start;      // 始点中央
+    XMFLOAT3 end;        // 終点中央
+    float startWidth;    // 始点の幅
+    float endWidth;      // 終点の幅
+    float thickness;     // 板の厚み（0.1など薄く設定可能）
+
+    TrapezoidSlopeCollider(GameObject* o, XMFLOAT3 s, XMFLOAT3 e, float sw, float ew, float t = 0.1f)
+        : Collider(o, ColliderType::Slope), start(s), end(e), startWidth(sw), endWidth(ew), thickness(t) {
+    }
 };
 
 #endif // COLLIDER_H

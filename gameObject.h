@@ -26,6 +26,7 @@ using namespace DirectX;
 
 class CollisionInfo;
 class Collider;
+class IWeapon;
 
 //=======================================
 // GameObject（コンポーネント管理）
@@ -40,16 +41,27 @@ public:
     XMFLOAT3 m_velocity{ 0.0f, 0.0f, 0.0f };
     XMFLOAT3 m_acceleration{ 0.0f, 0.0f, 0.0f };
     FIELD m_type = FIELD_BOX; // ブロックの種類
-
+    FLOAT m_maxHp = 100.0f; // 最大体力
+    FLOAT m_currentHp;	    // 現在の体力
     std::string m_tag = "Untagged";
     int m_layer = 0;
 
+    int m_transformCount;
+    int m_itemCount;
+    int m_loseCount;
+	int m_score;
     MODEL* m_model = nullptr;
     bool m_isGround = false;
     FLOAT m_koyoteTime = 0.0f;
+    // 武器のためのやつ
+    IWeapon* m_weaponPtr = nullptr;
 
     GameObject* m_gameObject = nullptr;
 
+    bool m_isDead = false;
+    bool m_isStatic = false;
+    float m_delay = 0.0f;
+	float m_frame = 1.0f / 60.0f;
     std::vector<std::shared_ptr<Component>> components;
     bool m_isEnable = true;
 public:
@@ -85,6 +97,12 @@ public:
         return result;
     }
 
+    // 体力を減らす
+    void TakeDamage(float damage)
+    {
+        m_currentHp -= damage;
+    }
+
     XMFLOAT3 GetWorldPosition() const { return m_position; }
 
     virtual void OnCollision(const CollisionInfo& info) {}
@@ -96,11 +114,9 @@ public:
         m_position.z += dz;
     }
 
-    void Update()
-    {
-        for (auto& c : components)
-            c->Update();
-    }
+    virtual void Update() {};
+
+    virtual void Draw() {}
 };
 
 #endif // GAME_OBJECT_H

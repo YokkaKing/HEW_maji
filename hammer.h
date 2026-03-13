@@ -1,58 +1,83 @@
-#pragma once
-// ===============================
-// hammer.h
-// ===============================
-#include <DirectXMath.h>
-#include "IWeapon.h"
-#include "model.h"
+/*
+* ファイル名	hammer.h
+* タイトル	ハンマー
+* 作成者		三橋拓斗
+* 作成日		12月09日
+* 更新日		12月09日
+*/
+
+#ifndef HAMMER_H
+#define HAMMER_H
+
+//================================================================
+//	インクルード
+//================================================================
+#include<DirectXMath.h>
+#include"IWeapon.h"
+#include"model.h"
+#include"managerCollider.h"
+#include "keyboard.h"
+#include "controller.h"
 using namespace DirectX;
 
 class Hammer : public IWeapon
 {
-public:
-    Hammer();
-
-    // IWeapon の基本メソッド
-    virtual void Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext) override;
-    virtual void Finalize() override;
-    virtual void StartAttack(const XMFLOAT3& playerPosition, const XMFLOAT3& playerRotation) override;
-    virtual void EndAttack() override;
-    virtual void Draw(const XMFLOAT3& playerPosition, const XMFLOAT3& playerRotation) override;
-    virtual void Update(float deltaTime) override;
-    virtual bool ShouldEndAttack() const override;
-    virtual bool IsAttacking() const override;
-
-    // 判定用
-    XMFLOAT3 GetCenter() { return center; }
-    XMFLOAT3 GetHalfSize() { return halfSize; }
-    bool CheckCollision(XMFLOAT3& playerCenter, XMFLOAT3& playerHalfSize);
-
-    // Aボタン入力処理
-    void HandleInput(bool isAPressed, bool isAReleased,const XMFLOAT3& playerPos, const XMFLOAT3& playerRot); //追加
-
-    // ダメージと射程を外部から参照できるようにする
-    float GetDamage() const { return m_Damage; } //追加
-    float GetRange() const { return m_Range; }   //追加
-
 private:
-    XMFLOAT3 center;   // BOXの中心座標
-    XMFLOAT3 halfSize; // BOXの半寸法（ハンマーは大きめ）
-    bool isActive;     // 攻撃中かどうか
+    int m_playerIndex = 0;      // 0 = P1, 1 = P2
+   // int m_chargeKey = 0;        // P1: KK_C, P2: KK_P
+    Keyboard_Keys m_chargeKey;
+    ControllerButton::Button m_chargeButton; // コントローラー用 (X_BUTTON)
+    XMFLOAT3 m_move = { 0,0,0 };  // g_moveHammer
+public:
+    std::shared_ptr<Collider> m_collider; // コライダーへの参照を保持
 
-    int m_AttackFrameTimer;
-    const int ATTACK_DURATION_FRAMES = 40; // ハンマーの攻撃時間（短め）
+    bool m_isAttacking = false;
+    bool m_isAttack = false;
+    float m_attackTimer = 0.0f;
+    const float ATTACK_DURATION = 1.5f;   // 攻撃の有効時間
+    
+    // プレイヤーから見てどこに位置するか
+    XMFLOAT3 m_offset = { 0.0f, 0.0f, 0.5f };
+    // 攻撃したときにどう動くか
+    XMFLOAT3 m_animePosition = { 0.0f, 0.0f, 0.5f };
+    XMFLOAT3 m_animeRotation = { 0.0f, 0.0f, 0.0f };
 
-    // モデル関連
-    MODEL* m_model;
-    XMFLOAT3 m_scale;
-    XMFLOAT3 m_rotation;
-    XMFLOAT3 m_offset;
+    //FLOAT m_coolTime = 0.0f;
 
-    // ダメージと射程
-    float m_Damage; //追加
-    float m_Range;  //追加
+    float m_chargePower = 0.0f; // チャージ
+    bool m_isCharging = false; // チャージしてるか
+    const float MAX_CHARGE = 5.5f;
+    enum CHARGE_STATE {
+        CHARGE_NONE = 0,    // idle
+        CHARGE_IN,          // initial 370->440 playing
+        CHARGE_HOLD,        // stopped/held at frame 440
+        CHARGE_MOVE_LOOP,   // 540->660 loop while moving during charge
+        CHARGE_ATTACK_PLAY  // 440->539 playing when releasing (=attack)
+    };
+    enum ChargeSoundStage
+    {
+        CHARGE_SOUND_NONE = -1,
+        CHARGE_SOUND_STAGE0 = 0,
+        CHARGE_SOUND_STAGE1,
+        CHARGE_SOUND_STAGE2,
+        CHARGE_SOUND_STAGE3_LOOP
+    };
 
-    // チャージ用タイマーと段階
-    int m_ChargeTimer; //追加
-    int m_ChargeLevel; //追加
+    int   m_chargeSoundStage = -1;          // 現在の段階
+    bool  m_chargeLoopPlaying = false;      // 2~3秒ループ中か
+    bool  m_charge5Played = false;          // 最大段階突入時の g_charge5 を再生済みか
+    float m_charge5WaitTimer = 0.0f;        // g_charge5 再生待ちタイマー（秒）
+    CHARGE_STATE m_chargeState = CHARGE_NONE;
+    bool m_wasCharging = false;
+public:
+    Hammer(GameObject* player, bool select);
+    virtual ~Hammer();
+
+    void Update() override;
+    void Draw() override;
+    void Attack() override;
+
+    void OnWeaponCollision(GameObject* target) override;
 };
+
+#endif // HAMMER_H

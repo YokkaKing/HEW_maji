@@ -56,6 +56,7 @@ public:
     // Colliderの登録、削除
     static void AddCollider(std::shared_ptr<Collider> collider);
     static void RemoveCollider(std::shared_ptr<Collider> collider);
+    static void ClearCollider();
 
     // 登録された全コライダー間の衝突チェック
     static void UpdateAllCollisions();
@@ -65,7 +66,6 @@ public:
 
 public:
     static const std::vector<std::shared_ptr<Collider>>& GetColliders(); // colliderの読み取り専用
-
 
 private:
     static std::vector<std::shared_ptr<Collider>> colliders;
@@ -78,6 +78,15 @@ private:
     static CollisionInfo CheckBoxBox(const BoxCollider* box1, const BoxCollider* box2);
     static CollisionInfo CheckSphereSphere(const SphereCollider* sphere1, const SphereCollider* sphere2);
     static CollisionInfo CheckBoxSphere(const BoxCollider* box, const SphereCollider* sphere);
+    static CollisionInfo CheckTrapezoidSlopeSphere(const TrapezoidSlopeCollider* slope, const SphereCollider* sphere);
+    static CollisionInfo CheckBoxTrapezoidSlope(const BoxCollider* box, const TrapezoidSlopeCollider* slope);
+    static CollisionInfo CheckTrapezoidSlopeTrapezoidSlope(const TrapezoidSlopeCollider* slope1, const TrapezoidSlopeCollider* slope2);
+
+    // 衝突判定(回転対応)
+    static CollisionInfo CheckBoxBoxOBB(const BoxCollider* box1, const BoxCollider* box2);
+
+    // 衝突判定(radiusは周囲何メートルの判定を取るか)
+    static void CheckCollisionWithMap(GameObject* obj, float radius);
 };
 
 #endif // MANAGER_COLLIDER_H

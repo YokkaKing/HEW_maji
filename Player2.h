@@ -1,16 +1,16 @@
 /*
-* ƒtƒ@ƒCƒ‹–¼	Player2.h
-* ƒ^ƒCƒgƒ‹	ƒvƒŒƒCƒ„[2
-* ì¬Ò		—é–Ø‹
-* ì¬“ú		12Œ02“ú
-* XV“ú		12Œ02“ú
+* ãƒ•ã‚¡ã‚¤ãƒ«å	Player2.h
+* ã‚¿ã‚¤ãƒˆãƒ«	ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼2
+* ä½œæˆè€…		éˆ´æœ¨è±ª
+* ä½œæˆæ—¥		12æœˆ02æ—¥
+* æ›´æ–°æ—¥		12æœˆ02æ—¥
 */
 
 #ifndef PLAYER2_H
 #define PLAYER2_H
 
 //================================================================
-//	ƒCƒ“ƒNƒ‹[ƒh
+//	ã‚¤ãƒ³ã‚¯ãƒ«ãƒ¼ãƒ‰
 //================================================================
 #include<d3d11.h>
 #include<DirectXMath.h>
@@ -19,45 +19,82 @@ using namespace DirectX;
 #include"model.h"
 #include"gameObject.h"
 #include"IWeapon.h"
+#include"selectWeaponTerrain.h"
+#include"hitAction.h"
 
-enum class EVOLUTION_TYPE2
+enum class TRANSFORM_TYPE2
 {
-	EVOLUTION_TYPE_A, // ‹@“®—Í“Á‰»
-	EVOLUTION_TYPE_B, // §“®E–hŒä“Á‰»
-	EVOLUTION_TYPE_NONE // –¢i‰»
+	TRANSFORM_TYPE_A, // æ©Ÿå‹•åŠ›ç‰¹åŒ–
+	TRANSFORM_TYPE_B, // åˆ¶å‹•ãƒ»é˜²å¾¡ç‰¹åŒ–
+	TRANSFORM_TYPE_NONE // æœªé€²åŒ–
 };
 
-//ƒvƒŒƒCƒ„[‚Ìó‘Ô
+//ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®çŠ¶æ…‹
 enum PLAYER2_STATE
 {
-	PLAYER2_STATE_IDLE = 0,	//‰½‚à‚µ‚È‚¢
-	PLAYER2_STATE_MOVE,		//ˆÚ“®
-	PLAYER2_STATE_DIRECTION,	//•ûŒüw¦
-	PLAYER2_STATE_POWER,		//ˆĞ—Íw¦
+	PLAYER2_STATE_IDLE = 0,	//ä½•ã‚‚ã—ãªã„
+	PLAYER2_STATE_MOVE,		//ç§»å‹•
+	PLAYER2_STATE_DIRECTION,	//æ–¹å‘æŒ‡ç¤º
+	PLAYER2_STATE_POWER,		//å¨åŠ›æŒ‡ç¤º
 };
 
-//ƒvƒŒƒCƒ„[\‘¢‘Ì
+//ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼æ§‹é€ ä½“
 class PLAYER2 : public GameObject
 {
 public:
-	float           FrictionRate;   // ‘¬“xŒ¸Š—¦
-	EVOLUTION_TYPE2  EvolutionType;  // i‰»ƒ^ƒCƒv (A or B or NONE)
-	PLAYER2_STATE	State;		//ó‘Ô
-	IWeapon* m_currentWeapon = nullptr; // Œ»İ‘•”õ’†‚Ì•Ší
-	float			m_maxHp = 100.0f; // Å‘å‘Ì—Í
-	float			m_currentHp;	 // Œ»İ‚Ì‘Ì—Í
-	bool			m_isDead = false; // €–Sƒtƒ‰ƒO
-	XMFLOAT3 m_rotation; // •Ší‚ğ‰ñ“]‚³‚¹‚é
-	//•Ší‘€ìŠÖ”
-	void EquipWeapon(IWeapon* weapon); // •Ší‚ğ‘•”õ‚·‚é
-	void TryAttack(const XMFLOAT3& direction); // UŒ‚‚ğ‚İ‚é
+	float           FrictionRate;   // é€Ÿåº¦æ¸›è¡°ç‡
+	TRANSFORM_TYPE2  TransformType;  // é€²åŒ–ã‚¿ã‚¤ãƒ— (A or B or NONE)
+	int TransformTimer;
+	PLAYER2_STATE	State;		//çŠ¶æ…‹
+	std::unique_ptr<IWeapon> m_currentWeapon = nullptr; // ç¾åœ¨è£…å‚™ä¸­ã®æ­¦å™¨
+	bool			m_isDead = false; // æ­»äº¡ãƒ•ãƒ©ã‚°
+	bool 		  m_isAttacked = false; // æ”»æ’ƒã‚’å—ã‘ãŸã‹ã©ã†ã‹
+	XMFLOAT3 m_rotation; // æ­¦å™¨ã‚’å›è»¢ã•ã›ã‚‹
+	
+	WeaponTerrain m_reservedWT[2] = { WeaponTerrain::NONE, WeaponTerrain::NONE }; // äºˆç´„ã•ã‚ŒãŸå¤‰èº«å…ˆ
+	WeaponTerrain m_currentWT = WeaponTerrain::NONE; // ç¾åœ¨ã®å§¿
+	WeaponTerrain m_baseWT; //åˆæœŸæ­¦å™¨é¸æŠã§é¸ã‚“ã æ­¦å™¨ã‚’ä¿æŒ
+	bool  m_hitAnimPlaying = false;
+	float m_hitAnimTimer = 0.0f;
+
+	float m_moveSpeed; // ç§»å‹•é€Ÿåº¦
+	float m_jumpForce; // ç§»å‹•é€Ÿåº¦
+	float m_moveMul = 1.0f;
+	//æ­¦å™¨æ“ä½œé–¢æ•°
+	bool m_isTransformed = false; // å¤‰èº«ä¸­ãƒ•ãƒ©ã‚°
+	HitAction m_hitAction;
+
+	float m_shakeIntensity = 0.0f;	// ç¾åœ¨ã®æºã‚Œã®å¼·ã•
+	float m_lastHp = 0.0f;			// å‰ãƒ•ãƒ¬ãƒ¼ãƒ ã®HP
 public:
+	void EquipWeapon(std::unique_ptr<IWeapon> weapon); // æ­¦å™¨ã‚’è£…å‚™ã™ã‚‹
 	void OnCollision(const CollisionInfo& info)override;
-	void SetObject(XMFLOAT3 pos, XMFLOAT3 scl, std::string tag, int lay);
-	void TakeDamage(float damage);
+
+	void SetReservedWT(int index, WeaponTerrain wt) {
+		if (index >= 0 && index < 2) {
+			m_reservedWT[index] = wt;
+		}
+	};
+
+	WeaponTerrain GetReservedWT(int index) const {
+		if (index >= 0 && index < 2) {
+			return m_reservedWT[index];
+		}
+		return WeaponTerrain::NONE;
+	}
+
+	WeaponTerrain GetCurrentWT() const { return m_currentWT; }
+	void SetCurrentWT(WeaponTerrain wt) { m_currentWT = wt; }
+
+	bool isDead() const { return m_isDead; }
+	void RoundReset(XMFLOAT3 startPos);
+	void EquipBaseWeapon();
+	HitAction& GetHitAction() { return m_hitAction; }
 };
 
-void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
+extern PLAYER2 g_Player2;
+void Player2_WarmupVisual();
+void Player2Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, WeaponTerrain setWTp2);
 void Player2Finalize();
 void Player2Update();
 void Player2Draw();
@@ -66,6 +103,26 @@ XMFLOAT3 GetPlayer2Position();
 
 void Player2_Jump();
 void Player2_ManualMove();
+float Player2_GetHp();
+float Player2_GetMaxHp();
+bool GetPlayer2_IsAttacked();
+void SetPlayer2_IsAttacked(bool isAttacked);
 PLAYER2* GetPlayer2();
-
+WeaponTerrain GetSetWTP2();
+bool GetChangeP2();
+void SetWTP2(WeaponTerrain wt);
+int Player2_GetTransformCount();
+int Player2_GetItemCount();
+int Player2_GetLoseCount();
+void Player2_PlusTransformCount();
+void Player2_PlusGetItemCount();
+void Player2_PlusLoseCount();
+void Player2_AllCountReset();
+void Player2_PlusScore(int score);
+void SetPlayer2_IsTransformed(bool isTransformed);
+bool GetPlayer2_IsTransformed();
+int Player2_GetScore();
+void Player2_SetPlayerIsAttaking(int flg);
+void Player2_ResetMoveMul();
+void Player2_StartHitAnim();
 #endif // PLAYER2_H
